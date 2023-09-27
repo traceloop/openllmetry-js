@@ -1,0 +1,9 @@
+{
+  "name": "opentelemetry-instrumentation-openai",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "devDependencies": {},
+  "scripts": {
+    "build": "tsc index.ts --outDir dist"
+  }
+}
