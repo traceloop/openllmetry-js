@@ -1,0 +1,28 @@
+name: CI
+on:
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      actions: "read"
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          cache: "npm"
+          node-version-file: ".nvmrc"
+      - uses: nrwl/nx-set-shas@v3
+      - run: npm i
+      - run: npx nx --version
+      - run: npx nx run-many --targets=lint
+      - run: npx prettier --check .
+      - run: npx nx affected --target=lint --parallel=3
+      - run: npx nx affected --target=test --parallel=3 --ci --code-coverage
+      - run: npx nx affected --target=build --parallel=3
