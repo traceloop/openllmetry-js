@@ -1,0 +1,17 @@
+# Debugging GitHub workflows locally
+
+1. Install [act](https://github.com/nektos/act) by running `brew install act`
+2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) (if not installed)
+3. Create a [Github token](https://github.com/settings/tokens)
+4. Run `act -l` to list all available events and actions
+5. Run `act -s GITHUB_TOKEN=<your token> -j<job ID>` on the root directory of the repo (see [here](https://github.com/nektos/act#example-commands) for more options) to run the job you want to test. If you need to supply other secrets you can add them with `-s SECRET=<secret>`.
+
+## Tip
+
+If you get an error like:
+
+```
+Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+```
+
+Run `export DOCKER_HOST=$(docker context inspect --format '{{.Endpoints.docker.Host}}')` and then re-run `act` as written above.
