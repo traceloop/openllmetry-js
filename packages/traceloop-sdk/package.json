@@ -1,0 +1,39 @@
+{
+  "name": "@traceloop/node-server-sdk",
+  "version": "0.0.1",
+  "description": "Traceloop Software Development Kit (SDK) for Node.js",
+  "main": "build/src/index.js",
+  "types": "build/src/index.d.ts",
+  "repository": "traceloop/openllmetry-js",
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
+  },
+  "keywords": [
+    "opentelemetry",
+    "nodejs",
+    "tracing"
+  ],
+  "author": "Traceloop",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "dist/src/**/*.js",
+    "dist/src/**/*.js.map",
+    "dist/src/**/*.d.ts",
+    "doc",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "4.4.4"
+  },
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk"
+}
