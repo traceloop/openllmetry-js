@@ -6,8 +6,8 @@ import {
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
-import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
-import { InitializeOptions } from "../node-server-sdk";
+import { INSTRUMENTATIONS } from "../node-server-sdk";
+import { InitializeOptions } from "../interfaces";
 import { validateConfiguration } from "./validation";
 
 export let _configuration: InitializeOptions;
@@ -45,7 +45,7 @@ export const initialize = async (options: InitializeOptions) => {
       ? new SimpleSpanProcessor(traceExporter)
       : new BatchSpanProcessor(traceExporter),
     traceExporter,
-    instrumentations: [new OpenAIInstrumentation()],
+    instrumentations: INSTRUMENTATIONS,
   });
 
   sdk.start();

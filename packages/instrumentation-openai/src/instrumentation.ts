@@ -33,6 +33,8 @@ import { OpenAIInstrumentationConfig } from "./types";
 import {
   ChatCompletion,
   ChatCompletionCreateParamsNonStreaming,
+  Completion,
+  CompletionCreateParamsNonStreaming,
 } from "openai/resources";
 
 // when mongoose functions are called, we store the original call context
@@ -65,6 +67,11 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       "create",
       this.patchOpenAI("chat"),
     );
+    this._wrap(
+      moduleExports.OpenAI.Completions.prototype,
+      "create",
+      this.patchOpenAI("completion"),
+    );
 
     return moduleExports;
   }
@@ -74,14 +81,20 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
   }
 
-  private patchOpenAI(type: string) {
+  private patchOpenAI(type: "chat" | "completion") {
     const plugin = this;
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
-        const span = plugin.startSpan(
-          type,
-          args[0] as ChatCompletionCreateParamsNonStreaming,
-        );
+        const span =
+          type === "chat"
+            ? plugin.startSpan({
+                type,
+                params: args[0] as ChatCompletionCreateParamsNonStreaming,
+              })
+            : plugin.startSpan({
+                type,
+                params: args[0] as CompletionCreateParamsNonStreaming,
+              });
 
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
@@ -96,17 +109,25 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           },
         );
 
-        const wrappedPromise = wrapPromise(span, execPromise);
+        const wrappedPromise = wrapPromise(type, span, execPromise);
 
         return context.bind(execContext, wrappedPromise as any);
       };
     };
   }
 
-  private startSpan(
-    type: string,
-    params: ChatCompletionCreateParamsNonStreaming,
-  ): Span {
+  private startSpan({
+    type,
+    params,
+  }:
+    | {
+        type: "chat";
+        params: ChatCompletionCreateParamsNonStreaming;
+      }
+    | {
+        type: "completion";
+        params: CompletionCreateParamsNonStreaming;
+      }): Span {
     const attributes: Attributes = {
       [SemanticAttributes.LLM_VENDOR]: "OpenAI",
       [SemanticAttributes.LLM_REQUEST_TYPE]: type,
@@ -131,12 +152,20 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         params.presence_penalty;
     }
 
-    params.messages.forEach((message, index) => {
-      attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.role`] =
-        message.role;
-      attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.content`] =
-        message.content || "";
-    });
+    if (type === "chat") {
+      params.messages.forEach((message, index) => {
+        attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.role`] =
+          message.role;
+        attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.content`] =
+          message.content || "";
+      });
+    } else {
+      if (typeof params.prompt === "string") {
+        attributes[`${SemanticAttributes.LLM_PROMPTS}.0.role`] = "user";
+        attributes[`${SemanticAttributes.LLM_PROMPTS}.0.content`] =
+          params.prompt;
+      }
+    }
 
     return this.tracer.startSpan(`openai.${type}`, {
       kind: SpanKind.CLIENT,
@@ -145,11 +174,19 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }
 }
 
-function wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
+function wrapPromise<T>(
+  type: "chat" | "completion",
+  span: Span,
+  promise: Promise<T>,
+): Promise<T> {
   return promise
     .then((result) => {
       return new Promise<T>((resolve) => {
-        endSpan(span, result as ChatCompletion);
+        if (type === "chat") {
+          endSpan({ type, span, result: result as ChatCompletion });
+        } else {
+          endSpan({ type, span, result: result as Completion });
+        }
         resolve(result);
       });
     })
@@ -167,7 +204,13 @@ function wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
     });
 }
 
-function endSpan(span: Span, result: ChatCompletion) {
+function endSpan({
+  span,
+  type,
+  result,
+}:
+  | { span: Span; type: "chat"; result: ChatCompletion }
+  | { span: Span; type: "completion"; result: Completion }) {
   span.setAttribute(SemanticAttributes.LLM_RESPONSE_MODEL, result.model);
   if (result.usage) {
     span.setAttribute(
@@ -184,31 +227,48 @@ function endSpan(span: Span, result: ChatCompletion) {
     );
   }
 
-  result.choices.forEach((choice, index) => {
-    span.setAttribute(
-      `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-      choice.finish_reason,
-    );
-    span.setAttribute(
-      `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
-      choice.message.role,
-    );
-    span.setAttribute(
-      `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
-      choice.message.content ?? "",
-    );
+  if (type === "chat") {
+    result.choices.forEach((choice, index) => {
+      span.setAttribute(
+        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+        choice.finish_reason,
+      );
+      span.setAttribute(
+        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
+        choice.message.role,
+      );
+      span.setAttribute(
+        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
+        choice.message.content ?? "",
+      );
 
-    if (choice.message.function_call) {
+      if (choice.message.function_call) {
+        span.setAttribute(
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+          choice.message.function_call.name,
+        );
+        span.setAttribute(
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+          choice.message.function_call.arguments,
+        );
+      }
+    });
+  } else {
+    result.choices.forEach((choice, index) => {
       span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-        choice.message.function_call.name,
+        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+        choice.finish_reason,
       );
       span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-        choice.message.function_call.arguments,
+        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
+        "assistant",
       );
-    }
-  });
+      span.setAttribute(
+        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
+        choice.text,
+      );
+    });
+  }
 
   span.end();
 }
