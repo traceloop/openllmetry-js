@@ -37,5 +37,5 @@
     "@traceloop/instrumentation-openai": "^0.0.3"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
-  "gitHead": "c861d1de94fb34c19401d9da90100cc970140b1c"
+  "gitHead": "ec64d42f6101263c5a58df350f98772cfd3f0098"
 }
