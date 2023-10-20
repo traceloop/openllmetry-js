@@ -1,11 +1,10 @@
 {
-  "name": "@traceloop/sample-app",
+  "name": "sample-app",
   "version": "0.0.1",
   "description": "Sample app for using Traceloop SDK",
-  "main": "build/src/index.js",
-  "types": "build/src/index.d.ts",
   "scripts": {
     "build": "tsc --build tsconfig.json",
+    "run:openai": "npm run build && node dist/src/sample_openai.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
@@ -14,8 +13,8 @@
   "engines": {
     "node": ">=14"
   },
-  "dependencies": {},
-  "devDependencies": {
-    "typescript": "4.4.4"
+  "dependencies": {
+    "openai": "^4.12.4",
+    "@traceloop/node-server-sdk": "*"
   }
 }

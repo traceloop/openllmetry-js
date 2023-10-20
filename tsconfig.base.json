@@ -8,7 +8,7 @@
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
     "inlineSources": true,
-    "module": "esnext",
+    "module": "commonjs",
     "newLine": "LF",
     "noEmitOnError": true,
     "noFallthroughCasesInSwitch": true,
@@ -21,7 +21,8 @@
     "strict": true,
     "strictNullChecks": true,
     "target": "es2017",
-    "useUnknownInCatchVariables": false
+    "useUnknownInCatchVariables": false,
+    "resolveJsonModule": true
   },
   "exclude": ["node_modules"]
 }

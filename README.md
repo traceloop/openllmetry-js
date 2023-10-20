@@ -8,11 +8,11 @@
   <p align="center">Open-source observability for your LLM application</p>
 </p>
 <h4 align="center">
-    <a href="https://traceloop.com/docs/javascript-sdk/getting-started"><strong>Get started »</strong></a>
+    <a href="https://traceloop.com/docs/openllmetry/getting-started"><strong>Get started »</strong></a>
     <br />
     <br />
   <a href="https://join.slack.com/t/traceloopcommunity/shared_invite/zt-1plpfpm6r-zOHKI028VkpcWdobX65C~g">Slack</a> |
-  <a href="https://traceloop.com/docs/javascript-sdk/introduction">Docs</a> |
+  <a href="https://traceloop.com/docs/openllmetry/introduction">Docs</a> |
   <a href="https://www.traceloop.com">Website</a>
 </h4>
 
@@ -39,13 +39,13 @@ OpenLLMetry-JS is a set of extensions built on top of [OpenTelemetry](https://op
 
 It's built and maintained by Traceloop under the Apache 2.0 license.
 
-The repo contains standard OpenTelemetry instrumentations for LLM providers and Vector DBs, as well as a Traceloop SDK that makes it easy to get started with OpenLLMetry, while still outputting standard OpenTelemetry data that can be connected to your observability stack.
+The repo contains standard OpenTelemetry instrumentations for LLM providers and Vector DBs, as well as a Traceloop SDK that makes it easy to get started with OpenLLMetry-JS, while still outputting standard OpenTelemetry data that can be connected to your observability stack.
 If you already have OpenTelemetry instrumented, you can just add any of our instrumentations directly.
 
 ## 🚀 Getting Started
 
 The easiest way to get started is to use our SDK.
-For a complete guide, go to our [docs](https://traceloop.com/docs/javascript-sdk/getting-started).
+For a complete guide, go to our [docs](https://traceloop.com/docs/openllmetry/getting-started).
 
 Install the SDK:
 
@@ -56,33 +56,36 @@ npm install --save @traceloop/node-server-sdk
 Then, to start instrumenting your code, just add this line to your code:
 
 ```js
-import { Traceloop } from "@traceloop/node-server-sdk";
+import * as traceloop from "@traceloop/node-server-sdk";
 
-Traceloop.init({ app_name: "your_app_name" });
+traceloop.initialize({ app_name: "your_app_name" });
 ```
 
-That's it. You're now tracing your code with OpenLLMetry!
+That's it. You're now tracing your code with OpenLLMetry-JS!
 If you're running this locally, you may want to disable batch sending, so you can see the traces immediately:
 
 ```js
-Traceloop.init({ app_name: "your_app_name", disable_batch: true });
+traceloop.initialize({ app_name: "your_app_name", disable_batch: true });
 ```
 
 Now, you need to decide where to export the traces to.
 
-## ⏫ Supported destinations
+## ⏫ Supported (and tested) destinations
 
 - [x] Traceloop
+- [x] Dynatrace
 - [x] Datadog
 - [x] New Relic
 - [x] Honeycomb
+- [x] Grafana Tempo
+- [x] OpenTelemetry Collector
 - [x] SigNoz
 
-See [our docs](https://traceloop.com/docs/python-sdk/exporting) for instructions on how to connect to each one.
+See [our docs](https://traceloop.com/docs/openllmetry/exporting) for instructions on how to connect to each one.
 
 ## 🪗 What do we instrument?
 
-OpenLLMetry can instrument everything that [OpenTelemetry already instruments](https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation) - so things like your DB, API calls, and more. On top of that, we built a set of custom extensions that instrument things like your calls to OpenAI or Anthropic, or your Vector DB like Pinecone, Chroma, or Weaviate.
+OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/instrumentation) - so things like your DB, API calls, and more. On top of that, we built a set of custom extensions that instrument things like your calls to OpenAI or Anthropic, or your Vector DB like Pinecone, Chroma, or Weaviate.
 
 ### LLM Providers
 
@@ -109,7 +112,7 @@ OpenLLMetry can instrument everything that [OpenTelemetry already instruments](h
 
 ## 🌱 Contributing
 
-Whether it's big or small, we love contributions ❤️ Check out our guide to see how to [get started](https://traceloop.com/docs/javascript-sdk/contributing/overview).
+Whether it's big or small, we love contributions ❤️ Check out our guide to see how to [get started](https://traceloop.com/docs/openllmetry/contributing/overview).
 
 Not sure where to get started? You can:
 
@@ -120,5 +123,5 @@ Not sure where to get started? You can:
 
 - [Slack](https://join.slack.com/t/traceloopcommunity/shared_invite/zt-1plpfpm6r-zOHKI028VkpcWdobX65C~g) (For live discussion with the community and the Traceloop team)
 - [GitHub Discussions](https://github.com/traceloop/openllmetry-js/discussions) (For help with building and deeper conversations about features)
-- [GitHub Issues](https://github.com/traceloop/openllmetry/issues) (For any bugs and errors you encounter using OpenLLMetry)
+- [GitHub Issues](https://github.com/traceloop/openllmetry-js/issues) (For any bugs and errors you encounter using OpenLLMetry)
 - [Twitter](https://twitter.com/traceloopdev) (Get news fast)
