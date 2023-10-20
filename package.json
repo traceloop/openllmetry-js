@@ -1,6 +1,6 @@
 {
   "name": "openllmetry-js",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "Apache-2.0",
   "scripts": {},
   "private": true,
@@ -15,11 +15,13 @@
     "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.0.1",
+    "lerna": "^7.4.1",
     "nx": "16.9.1",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {}
 }
