@@ -16,7 +16,6 @@ export const initialize = async (options: InitializeOptions) => {
     return;
   }
 
-  validateConfiguration(options);
   console.log(options.baseUrl);
   if (!options.baseUrl) {
     options.baseUrl =
@@ -25,6 +24,9 @@ export const initialize = async (options: InitializeOptions) => {
   if (!options.apiKey) {
     options.apiKey = process.env.TRACELOOP_API_KEY;
   }
+
+  validateConfiguration(options);
+
   _configuration = Object.freeze(options);
 
   startTracing(_configuration);
