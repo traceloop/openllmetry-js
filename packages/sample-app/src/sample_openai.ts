@@ -3,7 +3,7 @@ import OpenAI from "openai";
 
 traceloop.initialize({
   appName: "sample_openai",
-  baseUrl: process.env.TRACELOOP_BASE_URL!,
+  baseUrl: process.env.TRACELOOP_BASE_URL,
   apiKey: process.env.TRACELOOP_API_KEY!,
   disableBatch: true,
 });

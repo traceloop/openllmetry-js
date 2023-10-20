@@ -3,7 +3,7 @@
 <img width="300" src="https://raw.githubusercontent.com/traceloop/openllmetry/main/img/logo.png">
 </a>
 </p>
-<h1 align="center">Open LLMetry</h1>
+<h1 align="center">Open LLMetry JS</h1>
 <p align="center">
   <p align="center">Open-source observability for your LLM application</p>
 </p>
@@ -53,13 +53,15 @@ Install the SDK:
 npm install --save @traceloop/node-server-sdk
 ```
 
-Then, to start instrumenting your code, just add this line to your code:
+Then, to start instrumenting your code, just add these 2 lines to your code:
 
 ```js
 import * as traceloop from "@traceloop/node-server-sdk";
 
 traceloop.initialize({ app_name: "your_app_name" });
 ```
+
+Make sure to `import` the SDK before importing any LLM module.
 
 That's it. You're now tracing your code with OpenLLMetry-JS!
 If you're running this locally, you may want to disable batch sending, so you can see the traces immediately:

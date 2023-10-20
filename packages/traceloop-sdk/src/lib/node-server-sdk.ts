@@ -1,7 +1,7 @@
-import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
+import { initInstrumentations } from "./tracing";
 
 export * from "./errors";
 export { InitializeOptions } from "./interfaces";
 export { initialize } from "./configuration";
 
-export const INSTRUMENTATIONS = [new OpenAIInstrumentation()];
+initInstrumentations();

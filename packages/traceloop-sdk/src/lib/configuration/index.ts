@@ -1,14 +1,6 @@
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import {
-  SimpleSpanProcessor,
-  BatchSpanProcessor,
-} from "@opentelemetry/sdk-trace-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { Resource } from "@opentelemetry/resources";
-import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
-import { INSTRUMENTATIONS } from "../node-server-sdk";
 import { InitializeOptions } from "../interfaces";
 import { validateConfiguration } from "./validation";
+import { startTracing } from "../tracing";
 
 export let _configuration: InitializeOptions;
 
@@ -31,22 +23,5 @@ export const initialize = async (options: InitializeOptions) => {
   }
   _configuration = Object.freeze(options);
 
-  // const traceExporter = new ConsoleSpanExporter();
-  const traceExporter = new OTLPTraceExporter({
-    url: `${_configuration.baseUrl}/v1/traces`,
-    headers: { Authorization: `Bearer ${_configuration.apiKey}` },
-  });
-
-  const sdk = new NodeSDK({
-    resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: _configuration.appName,
-    }),
-    spanProcessor: _configuration.disableBatch
-      ? new SimpleSpanProcessor(traceExporter)
-      : new BatchSpanProcessor(traceExporter),
-    traceExporter,
-    instrumentations: INSTRUMENTATIONS,
-  });
-
-  sdk.start();
+  startTracing(_configuration);
 };
