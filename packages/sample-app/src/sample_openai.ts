@@ -9,23 +9,30 @@ traceloop.initialize({
 });
 const openai = new OpenAI();
 
-async function chat() {
-  const chatCompletion = await openai.chat.completions.create({
-    messages: [{ role: "user", content: "Tell me a joke about OpenTelemetry" }],
-    model: "gpt-3.5-turbo",
-  });
+class SampleOpenAI {
+  @traceloop.workflow("sample_chat")
+  async chat() {
+    const chatCompletion = await openai.chat.completions.create({
+      messages: [
+        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+      ],
+      model: "gpt-3.5-turbo",
+    });
 
-  console.log(chatCompletion.choices[0].message.content);
+    console.log(chatCompletion.choices[0].message.content);
+  }
+
+  @traceloop.workflow("sample_completion")
+  async completion() {
+    const completion = await openai.completions.create({
+      prompt: "Tell me a joke about TypeScript",
+      model: "gpt-3.5-turbo-instruct",
+    });
+
+    console.log(completion.choices[0].text);
+  }
 }
 
-async function completion() {
-  const completion = await openai.completions.create({
-    prompt: "Tell me a joke about TypeScript",
-    model: "gpt-3.5-turbo-instruct",
-  });
-
-  console.log(completion.choices[0].text);
-}
-
-chat();
-completion();
+const sampleOpenAI = new SampleOpenAI();
+sampleOpenAI.chat();
+sampleOpenAI.completion();
