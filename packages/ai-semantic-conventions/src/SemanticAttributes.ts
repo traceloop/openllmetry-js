@@ -42,17 +42,17 @@ export const SemanticAttributes = {
   TRACELOOP_CORRELATION_ID: "traceloop.correlation.id",
 };
 
-export const LLMRequestTypeValues = {
-  COMPLETION: "completion",
-  CHAT: "chat",
-  RERANK: "rerank",
-  UNKNOWN: "unknown",
-};
+export enum LLMRequestTypeValues {
+  COMPLETION = "completion",
+  CHAT = "chat",
+  RERANK = "rerank",
+  UNKNOWN = "unknown",
+}
 
-export const TraceloopSpanKindValues = {
-  WORKFLOW: "workflow",
-  TASK: "task",
-  AGENT: "agent",
-  TOOL: "tool",
-  UNKNOWN: "unknown",
-};
+export enum TraceloopSpanKindValues {
+  WORKFLOW = "workflow",
+  TASK = "task",
+  AGENT = "agent",
+  TOOL = "tool",
+  UNKNOWN = "unknown",
+}

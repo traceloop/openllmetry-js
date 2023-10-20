@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-openai",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "OpenTelemetry ai-specific semantic conventions",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -37,10 +37,11 @@
     "@opentelemetry/core": "^1.8.0",
     "@opentelemetry/instrumentation": "^0.44.0",
     "@opentelemetry/semantic-conventions": "^1.0.0",
-    "@traceloop/ai-semantic-conventions": "*"
+    "@traceloop/ai-semantic-conventions": "^0.0.2"
   },
   "devDependencies": {
     "openai": "^4.12.4"
   },
-  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai"
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
+  "gitHead": "c861d1de94fb34c19401d9da90100cc970140b1c"
 }
