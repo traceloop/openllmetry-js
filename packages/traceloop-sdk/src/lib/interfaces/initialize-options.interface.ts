@@ -9,13 +9,14 @@ export interface InitializeOptions {
   appName?: string;
 
   /**
-   * The API Key for sending traces data. Required.
+   * The API Key for sending traces data. Optional.
+   * Defaults to the TRACELOOP_API_KEY environment variable.
    */
-  apiKey: string;
+  apiKey?: string;
 
   /**
    * The OTLP endpoint for sending traces data. Optional.
-   * Defaults to https://api.traceloop.com/
+   * Defaults to TRACELOOP_BASE_URL environment variable or https://api.traceloop.com/
    */
   baseUrl?: string;
 

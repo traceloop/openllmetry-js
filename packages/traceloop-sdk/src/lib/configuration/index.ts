@@ -19,7 +19,11 @@ export const initialize = async (options: InitializeOptions) => {
   validateConfiguration(options);
   console.log(options.baseUrl);
   if (!options.baseUrl) {
-    options.baseUrl = "https://api.traceloop.com";
+    options.baseUrl =
+      process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com";
+  }
+  if (!options.apiKey) {
+    options.apiKey = process.env.TRACELOOP_API_KEY;
   }
   _configuration = Object.freeze(options);
 
