@@ -42,5 +42,6 @@
   "devDependencies": {
     "openai": "^4.12.4"
   },
-  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai"
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
+  "gitHead": "2b52a7bbac2c2ceae2562ee62dcaafafcd6c1fcd"
 }

@@ -16,5 +16,6 @@
   "dependencies": {
     "@traceloop/node-server-sdk": "^0.0.1",
     "openai": "^4.12.4"
-  }
+  },
+  "gitHead": "2b52a7bbac2c2ceae2562ee62dcaafafcd6c1fcd"
 }
