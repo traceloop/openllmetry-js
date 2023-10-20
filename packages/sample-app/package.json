@@ -14,7 +14,7 @@
     "node": ">=14"
   },
   "dependencies": {
-    "openai": "^4.12.4",
-    "@traceloop/node-server-sdk": "*"
+    "@traceloop/node-server-sdk": "^0.0.1",
+    "openai": "^4.12.4"
   }
 }

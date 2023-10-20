@@ -34,7 +34,7 @@
   "dependencies": {
     "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
     "@opentelemetry/sdk-node": "^0.44.0",
-    "@traceloop/instrumentation-openai": "*"
+    "@traceloop/instrumentation-openai": "^0.0.1"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk"
 }
