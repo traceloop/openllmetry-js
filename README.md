@@ -87,7 +87,7 @@ See [our docs](https://traceloop.com/docs/openllmetry/exporting) for instruction
 
 ## 🪗 What do we instrument?
 
-OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/instrumentation) - so things like your DB, API calls, and more. On top of that, we built a set of custom extensions that instrument things like your calls to OpenAI or Anthropic, or your Vector DB like Pinecone, Chroma, or Weaviate.
+OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments](https://github.com/open-telemetry/opentelemetry-js-contrib/tree/main/plugins/node) - so things like your DB, API calls, and more. On top of that, we built a set of custom extensions that instrument things like your calls to OpenAI or Anthropic, or your Vector DB like Pinecone, Chroma, or Weaviate.
 
 ### LLM Providers
 
