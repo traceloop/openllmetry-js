@@ -28,7 +28,8 @@
     "dist/src/**/*.d.ts",
     "doc",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "package.json"
   ],
   "publishConfig": {
     "access": "public"
