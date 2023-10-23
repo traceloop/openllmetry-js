@@ -44,7 +44,7 @@ export const _STORED_PARENT_SPAN: unique symbol = Symbol("stored-parent-span");
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   constructor(config: OpenAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-openai", "0.0.6", config);
+    super("@traceloop/instrumentation-openai", "0.0.8", config);
   }
 
   protected init(): InstrumentationModuleDefinition<any> {
