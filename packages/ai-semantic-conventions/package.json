@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/ai-semantic-conventions",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "OpenTelemetry ai-specific semantic conventions",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
