@@ -1,6 +1,6 @@
 {
   "name": "sample-app",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Sample app for using Traceloop SDK",
   "scripts": {
     "build": "tsc --build tsconfig.json",
@@ -14,7 +14,7 @@
     "node": ">=14"
   },
   "dependencies": {
-    "@traceloop/node-server-sdk": "^0.0.4",
+    "@traceloop/node-server-sdk": "^0.0.5",
     "openai": "^4.12.4"
   },
   "gitHead": "b60fb6b9f642b81fc7427dd2bdcdd5a7f39e9f18"
