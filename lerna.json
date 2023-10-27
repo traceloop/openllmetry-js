@@ -1,5 +1,6 @@
 {
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
-  "version": "0.0.13-alpha.0",
-  "packages": ["packages/*"]
+  "version": "independent",
+  "packages": ["packages/*"],
+  "useNx": true
 }

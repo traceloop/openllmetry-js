@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.0.13-alpha.0",
+  "version": "0.0.13",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -34,8 +34,9 @@
   "dependencies": {
     "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
     "@opentelemetry/sdk-node": "^0.44.0",
-    "@traceloop/instrumentation-openai": "^0.0.13-alpha.0"
+    "@traceloop/instrumentation-openai": "*",
+    "openai": "^4.12.4"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
-  "gitHead": "d679ea5171f29b16c0a33640a6a81206d4c526ae"
+  "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
 }
