@@ -35,7 +35,7 @@ export const startTracing = (options: InitializeOptions) => {
       url: `${options.baseUrl}/v1/traces`,
       headers: { Authorization: `Bearer ${options.apiKey}` },
     });
-  const _spanProcessor = options.disableBatch
+  _spanProcessor = options.disableBatch
     ? new SimpleSpanProcessor(traceExporter)
     : new BatchSpanProcessor(traceExporter);
 

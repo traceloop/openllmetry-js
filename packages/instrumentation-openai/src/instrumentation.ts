@@ -45,7 +45,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "openai",
-      [">=4.3 <5"],
+      [">=4 <5"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
@@ -53,6 +53,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }
 
   private patch(moduleExports: typeof openai) {
+    console.log("Patching OpenAI...");
     this._wrap(
       moduleExports.OpenAI.Chat.Completions.prototype,
       "create",
