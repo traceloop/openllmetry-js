@@ -63,7 +63,7 @@ export const startTracing = (options: InitializeOptions) => {
   _sdk.start();
 
   if (options.instrumentModules) {
-    openAIInstrumentation.manuallyInstrument(options.instrumentModules.openai);
+    openAIInstrumentation.manuallyInstrument(options.instrumentModules.openAI);
   }
 };
 

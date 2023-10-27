@@ -46,6 +46,6 @@ export interface InitializeOptions {
    * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
    */
   instrumentModules?: {
-    openai: typeof openai;
+    openAI: typeof openai.OpenAI;
   };
 }

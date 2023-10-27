@@ -42,8 +42,17 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     super("@traceloop/instrumentation-openai", "0.0.8", config);
   }
 
-  public manuallyInstrument(module: typeof openai) {
-    this.patch(module);
+  public manuallyInstrument(module: typeof openai.OpenAI) {
+    this._wrap(
+      module.Chat.Completions.prototype,
+      "create",
+      this.patchOpenAI("chat"),
+    );
+    this._wrap(
+      module.Completions.prototype,
+      "create",
+      this.patchOpenAI("completion"),
+    );
   }
 
   protected init(): InstrumentationModuleDefinition<any> {
