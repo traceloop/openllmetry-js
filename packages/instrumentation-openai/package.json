@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-openai",
-  "version": "0.0.13-alpha.5",
+  "version": "0.0.13-alpha.6",
   "description": "OpenTelemetry ai-specific semantic conventions",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
