@@ -42,6 +42,10 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     super("@traceloop/instrumentation-openai", "0.0.8", config);
   }
 
+  public manuallyInstrument(module: typeof openai) {
+    this.patch(module);
+  }
+
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "openai",
@@ -53,7 +57,6 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }
 
   private patch(moduleExports: typeof openai) {
-    console.log("Patching OpenAI...");
     this._wrap(
       moduleExports.OpenAI.Chat.Completions.prototype,
       "create",
@@ -96,8 +99,8 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             });
           },
           (error) => {
-            if (error) {
-            }
+            // if (error) {
+            // }
           },
         );
 

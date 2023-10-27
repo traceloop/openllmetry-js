@@ -1,4 +1,5 @@
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
+import * as openai from "openai";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -39,4 +40,12 @@ export interface InitializeOptions {
    * Defaults to the OTLP exporter.
    */
   exporter?: SpanExporter;
+
+  /**
+   * Explictly specify modules to instrument. Optional.
+   * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
+   */
+  instrumentModules?: {
+    openai: typeof openai;
+  };
 }
