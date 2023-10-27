@@ -28,14 +28,15 @@ export const initInstrumentations = () => {
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
-  const traceExporter = new OTLPTraceExporter({
-    url: `${options.baseUrl}/v1/traces`,
-    headers: { Authorization: `Bearer ${options.apiKey}` },
-  });
-  const spanProcessor =
-    options.exporter ?? options.disableBatch
-      ? new SimpleSpanProcessor(traceExporter)
-      : new BatchSpanProcessor(traceExporter);
+  const traceExporter =
+    options.exporter ??
+    new OTLPTraceExporter({
+      url: `${options.baseUrl}/v1/traces`,
+      headers: { Authorization: `Bearer ${options.apiKey}` },
+    });
+  const spanProcessor = options.disableBatch
+    ? new SimpleSpanProcessor(traceExporter)
+    : new BatchSpanProcessor(traceExporter);
 
   spanProcessor.onStart = (span: Span) => {
     const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);

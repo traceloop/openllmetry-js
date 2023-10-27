@@ -33,7 +33,9 @@ export const initialize = async (options: InitializeOptions) => {
 
   if (!options.suppressLogs) {
     console.log(
-      `Initialized Traceloop SDK, connecting to ${_configuration.baseUrl}`,
+      `Traceloop exporting traces to ${
+        _configuration.exporter ? "a custom exporter" : _configuration.baseUrl
+      }`,
     );
   }
 
