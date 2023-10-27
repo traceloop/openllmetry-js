@@ -8,7 +8,8 @@
   <p align="center">Open-source observability for your LLM application</p>
 </p>
 <h4 align="center">
-    <a href="https://traceloop.com/docs/openllmetry/getting-started-ts"><strong>Get started »</strong></a>
+    Get started with <a href="https://traceloop.com/docs/openllmetry/getting-started-ts"><strong>Node.js </strong></a>
+    or <a href="https://traceloop.com/docs/openllmetry/getting-started-nextjs"><strong>Next.js</strong></a> »
     <br />
     <br />
   <a href="https://join.slack.com/t/traceloopcommunity/shared_invite/zt-1plpfpm6r-zOHKI028VkpcWdobX65C~g">Slack</a> |
@@ -58,7 +59,7 @@ Then, to start instrumenting your code, just add these 2 lines to your code:
 ```js
 import * as traceloop from "@traceloop/node-server-sdk";
 
-traceloop.initialize({ app_name: "your_app_name" });
+traceloop.initialize();
 ```
 
 Make sure to `import` the SDK before importing any LLM module.
@@ -67,7 +68,7 @@ That's it. You're now tracing your code with OpenLLMetry-JS!
 If you're running this locally, you may want to disable batch sending, so you can see the traces immediately:
 
 ```js
-traceloop.initialize({ app_name: "your_app_name", disable_batch: true });
+traceloop.initialize({ disable_batch: true });
 ```
 
 Now, you need to decide where to export the traces to.
