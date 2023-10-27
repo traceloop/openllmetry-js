@@ -17,5 +17,5 @@
     "@traceloop/node-server-sdk": "^0.0.8",
     "openai": "^4.12.4"
   },
-  "gitHead": "a6682f4c13f1580d7c60f98eb00c91085c599030"
+  "gitHead": "d679ea5171f29b16c0a33640a6a81206d4c526ae"
 }
