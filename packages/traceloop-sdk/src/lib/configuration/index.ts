@@ -16,7 +16,6 @@ export const initialize = async (options: InitializeOptions) => {
     return;
   }
 
-  console.log(options.baseUrl);
   if (!options.baseUrl) {
     options.baseUrl =
       process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com";
@@ -24,10 +23,19 @@ export const initialize = async (options: InitializeOptions) => {
   if (!options.apiKey) {
     options.apiKey = process.env.TRACELOOP_API_KEY;
   }
+  if (!options.appName) {
+    options.appName = process.env.npm_package_name;
+  }
 
   validateConfiguration(options);
 
   _configuration = Object.freeze(options);
+
+  if (!options.suppressLogs) {
+    console.log(
+      `Initialized Traceloop SDK, connecting to ${_configuration.baseUrl}`,
+    );
+  }
 
   startTracing(_configuration);
 };

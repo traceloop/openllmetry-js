@@ -2,19 +2,19 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
   SimpleSpanProcessor,
   BatchSpanProcessor,
-  //   ConsoleSpanExporter,
 } from "@opentelemetry/sdk-trace-node";
-import { Span, Context, context } from "@opentelemetry/api";
+import { Span, context } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { SemanticAttributes } from "@traceloop/ai-semantic-conventions";
 import { WORKFLOW_NAME_KEY } from "./tracing";
 
 let _sdk: NodeSDK;
-let instrumentations: any[] = [];
+const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
   instrumentations.push(new OpenAIInstrumentation());
@@ -32,12 +32,12 @@ export const startTracing = (options: InitializeOptions) => {
     url: `${options.baseUrl}/v1/traces`,
     headers: { Authorization: `Bearer ${options.apiKey}` },
   });
-  //   const traceExporter = new ConsoleSpanExporter();
-  const spanProcessor = options.disableBatch
-    ? new SimpleSpanProcessor(traceExporter)
-    : new BatchSpanProcessor(traceExporter);
+  const spanProcessor =
+    options.exporter ?? options.disableBatch
+      ? new SimpleSpanProcessor(traceExporter)
+      : new BatchSpanProcessor(traceExporter);
 
-  spanProcessor.onStart = (span: Span, parentContext: Context) => {
+  spanProcessor.onStart = (span: Span) => {
     const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);
     if (workflowName) {
       span.setAttribute(

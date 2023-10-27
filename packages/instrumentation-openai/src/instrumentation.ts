@@ -37,11 +37,6 @@ import {
   CompletionCreateParamsNonStreaming,
 } from "openai/resources";
 
-// when mongoose functions are called, we store the original call context
-// and then set it as the parent for the spans created by Query/Aggregate exec()
-// calls. this bypass the unlinked spans issue on thenables await operations.
-export const _STORED_PARENT_SPAN: unique symbol = Symbol("stored-parent-span");
-
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   constructor(config: OpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-openai", "0.0.8", config);
@@ -50,7 +45,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "openai",
-      [">=4.12 <5"],
+      [">=4.3 <5"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );

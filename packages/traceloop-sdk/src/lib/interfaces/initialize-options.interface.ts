@@ -1,3 +1,5 @@
+import { SpanExporter } from "@opentelemetry/sdk-trace-base";
+
 /**
  * Options for initializing the Traceloop SDK.
  */
@@ -25,4 +27,16 @@ export interface InitializeOptions {
    * Defaults to false.
    */
   disableBatch?: boolean;
+
+  /**
+   * Suppress all log messages of Traceloop SDK. Optional.
+   * Defaults to false.
+   */
+  suppressLogs?: boolean;
+
+  /**
+   * The OpenTelemetry SpanExporter to be used for sending traces data. Optional.
+   * Defaults to the OTLP exporter.
+   */
+  exporter?: SpanExporter;
 }
