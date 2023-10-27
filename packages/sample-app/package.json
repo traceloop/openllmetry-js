@@ -1,6 +1,6 @@
 {
   "name": "sample-app",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Sample app for using Traceloop SDK",
   "scripts": {
     "build": "tsc --build tsconfig.json",
