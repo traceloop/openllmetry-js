@@ -35,11 +35,11 @@ export const startTracing = (options: InitializeOptions) => {
       url: `${options.baseUrl}/v1/traces`,
       headers: { Authorization: `Bearer ${options.apiKey}` },
     });
-  const spanProcessor = options.disableBatch
+  const _spanProcessor = options.disableBatch
     ? new SimpleSpanProcessor(traceExporter)
     : new BatchSpanProcessor(traceExporter);
 
-  spanProcessor.onStart = (span: Span) => {
+  _spanProcessor.onStart = (span: Span) => {
     const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);
     if (workflowName) {
       span.setAttribute(
@@ -53,7 +53,7 @@ export const startTracing = (options: InitializeOptions) => {
     resource: new Resource({
       [SemanticResourceAttributes.SERVICE_NAME]: options.appName,
     }),
-    spanProcessor,
+    spanProcessor: _spanProcessor,
     traceExporter,
     instrumentations,
   });
