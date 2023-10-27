@@ -14,6 +14,7 @@ import { SemanticAttributes } from "@traceloop/ai-semantic-conventions";
 import { WORKFLOW_NAME_KEY } from "./tracing";
 
 let _sdk: NodeSDK;
+let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
@@ -58,4 +59,8 @@ export const startTracing = (options: InitializeOptions) => {
   });
 
   _sdk.start();
+};
+
+export const forceFlush = async () => {
+  await _spanProcessor.forceFlush();
 };
