@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-openai",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "OpenTelemetry ai-specific semantic conventions",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -38,7 +38,7 @@
     "@opentelemetry/core": "^1.8.0",
     "@opentelemetry/instrumentation": "^0.44.0",
     "@opentelemetry/semantic-conventions": "^1.0.0",
-    "@traceloop/ai-semantic-conventions": "^0.0.11"
+    "@traceloop/ai-semantic-conventions": "^0.0.12"
   },
   "devDependencies": {
     "openai": "^4.12.4"
