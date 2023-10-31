@@ -156,18 +156,20 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         params.presence_penalty;
     }
 
-    if (type === "chat") {
-      params.messages.forEach((message, index) => {
-        attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.role`] =
-          message.role;
-        attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.content`] =
-          message.content || "";
-      });
-    } else {
-      if (typeof params.prompt === "string") {
-        attributes[`${SemanticAttributes.LLM_PROMPTS}.0.role`] = "user";
-        attributes[`${SemanticAttributes.LLM_PROMPTS}.0.content`] =
-          params.prompt;
+    if (shouldSendPrompts()) {
+      if (type === "chat") {
+        params.messages.forEach((message, index) => {
+          attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.role`] =
+            message.role;
+          attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.content`] =
+            message.content || "";
+        });
+      } else {
+        if (typeof params.prompt === "string") {
+          attributes[`${SemanticAttributes.LLM_PROMPTS}.0.role`] = "user";
+          attributes[`${SemanticAttributes.LLM_PROMPTS}.0.content`] =
+            params.prompt;
+        }
       }
     }
 
@@ -231,48 +233,56 @@ function endSpan({
     );
   }
 
-  if (type === "chat") {
-    result.choices.forEach((choice, index) => {
-      span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-        choice.finish_reason,
-      );
-      span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
-        choice.message.role,
-      );
-      span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
-        choice.message.content ?? "",
-      );
+  if (shouldSendPrompts()) {
+    if (type === "chat") {
+      result.choices.forEach((choice, index) => {
+        span.setAttribute(
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+          choice.finish_reason,
+        );
+        span.setAttribute(
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
+          choice.message.role,
+        );
+        span.setAttribute(
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
+          choice.message.content ?? "",
+        );
 
-      if (choice.message.function_call) {
+        if (choice.message.function_call) {
+          span.setAttribute(
+            `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+            choice.message.function_call.name,
+          );
+          span.setAttribute(
+            `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+            choice.message.function_call.arguments,
+          );
+        }
+      });
+    } else {
+      result.choices.forEach((choice, index) => {
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-          choice.message.function_call.name,
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+          choice.finish_reason,
         );
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-          choice.message.function_call.arguments,
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
+          "assistant",
         );
-      }
-    });
-  } else {
-    result.choices.forEach((choice, index) => {
-      span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-        choice.finish_reason,
-      );
-      span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
-        "assistant",
-      );
-      span.setAttribute(
-        `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
-        choice.text,
-      );
-    });
+        span.setAttribute(
+          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
+          choice.text,
+        );
+      });
+    }
   }
 
   span.end();
+}
+
+function shouldSendPrompts() {
+  return (
+    (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "true"
+  );
 }
