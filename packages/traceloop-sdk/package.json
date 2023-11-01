@@ -35,6 +35,9 @@
     "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
     "@opentelemetry/sdk-node": "^0.44.0",
     "@traceloop/instrumentation-openai": "*",
+    "@types/nunjucks": "^3.2.5",
+    "fetch-retry": "^5.0.6",
+    "nunjucks": "^3.2.4",
     "openai": "^4.12.4"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",

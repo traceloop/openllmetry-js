@@ -22,7 +22,7 @@ export class TraceloopError extends Error {
    */
   cause?: Error;
 
-  constructor(message: string, severity: Severity) {
+  constructor(message: string, severity: Severity = SEVERITY.Error) {
     super(message);
     this.severity = severity;
   }
@@ -46,9 +46,12 @@ export class InitializationError extends TraceloopError {
 
 export class ArgumentNotProvidedError extends TraceloopError {
   constructor(argumentName: string) {
-    super(
-      `The "${argumentName}" argument is required and must be a string.`,
-      SEVERITY.Error,
-    );
+    super(`The "${argumentName}" argument is required and must be a string.`);
+  }
+}
+
+export class PromptNotFoundError extends TraceloopError {
+  constructor(key: string) {
+    super(`The prompt "${key}" was not found in the registry.`);
   }
 }

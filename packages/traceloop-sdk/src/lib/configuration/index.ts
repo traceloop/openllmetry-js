@@ -1,6 +1,7 @@
 import { InitializeOptions } from "../interfaces";
 import { validateConfiguration } from "./validation";
 import { startTracing } from "../tracing";
+import { initializeRegistry } from "../prompts/registry";
 
 export let _configuration: InitializeOptions;
 
@@ -26,6 +27,17 @@ export const initialize = async (options: InitializeOptions) => {
   if (!options.appName) {
     options.appName = process.env.npm_package_name;
   }
+  if (options.promptRegistryEnabled) {
+    if (!options.promptRegistryMaxRetries) {
+      options.promptRegistryMaxRetries =
+        Number(process.env.TRACELOOP_PROMPT_MANAGER_MAX_RETRIES) || 3;
+    }
+
+    if (!options.promptRegistryPollingInterval) {
+      options.promptRegistryPollingInterval =
+        Number(process.env.TRACELOOP_PROMPT_MANAGER_POLLING_INTERVAL) || 5;
+    }
+  }
 
   validateConfiguration(options);
 
@@ -40,4 +52,5 @@ export const initialize = async (options: InitializeOptions) => {
   }
 
   startTracing(_configuration);
+  await initializeRegistry(_configuration);
 };
