@@ -7,7 +7,6 @@ const main = async () => {
     apiKey: process.env.TRACELOOP_API_KEY,
     disableBatch: true,
     promptRegistryEnabled: true,
-    baseUrl: "https://api-staging.traceloop.com",
   });
 
   const openai = new OpenAI();
