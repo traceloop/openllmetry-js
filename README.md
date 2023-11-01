@@ -93,7 +93,7 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 
 ### LLM Providers
 
-- [x] OpenAI / Azure OpenAI
+- [x] OpenAI / Azure OpenAI **>v4.0.0**
 - [ ] Anthropic
 - [ ] Cohere
 - [ ] Replicate
