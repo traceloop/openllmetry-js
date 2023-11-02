@@ -4,9 +4,10 @@ import { InitializationError } from "../errors";
 export const validateConfiguration = (options: InitializeOptions): void => {
   const {
     apiKey,
-    promptRegistryEnabled,
-    promptRegistryMaxRetries,
-    promptRegistryPollingInterval,
+    traceloopSyncEnabled,
+    traceloopSyncMaxRetries,
+    traceloopSyncPollingInterval,
+    traceloopSyncDevPollingInterval
   } = options;
   if (!apiKey) {
     throw new InitializationError('"apiKey" is required');
@@ -16,22 +17,31 @@ export const validateConfiguration = (options: InitializeOptions): void => {
     throw new InitializationError('"apiKey" must be a string');
   }
 
-  if (promptRegistryEnabled) {
+  if (traceloopSyncEnabled) {
     if (
-      typeof promptRegistryMaxRetries !== "number" ||
-      promptRegistryMaxRetries <= 0
+      typeof traceloopSyncMaxRetries !== "number" ||
+      traceloopSyncMaxRetries <= 0
     ) {
       throw new InitializationError(
-        '"promptRegistryMaxRetries" must be an integer greater than 0.',
+        '"traceloopSyncMaxRetries" must be an integer greater than 0.',
       );
     }
 
     if (
-      typeof promptRegistryPollingInterval !== "number" ||
-      promptRegistryPollingInterval <= 0
+      typeof traceloopSyncPollingInterval !== "number" ||
+      traceloopSyncPollingInterval <= 0
     ) {
       throw new InitializationError(
-        '"promptRegistryPollingInterval" must be an integer greater than 0.',
+        '"traceloopSyncPollingInterval" must be an integer greater than 0.',
+      );
+    }
+
+    if (
+      typeof traceloopSyncDevPollingInterval !== "number" ||
+      traceloopSyncDevPollingInterval <= 0
+    ) {
+      throw new InitializationError(
+        '"traceloopSyncDevPollingInterval" must be an integer greater than 0.',
       );
     }
   }

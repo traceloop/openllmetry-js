@@ -6,7 +6,7 @@ const main = async () => {
     appName: "sample_prompt_mgmt",
     apiKey: process.env.TRACELOOP_API_KEY,
     disableBatch: true,
-    promptRegistryEnabled: true,
+    traceloopSyncEnabled: true,
   });
 
   const openai = new OpenAI();

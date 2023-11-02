@@ -19,19 +19,23 @@ const populateRegistry = (prompts: any) => {
 };
 
 export const initializeRegistry = async (options: InitializeOptions) => {
-  const { promptRegistryEnabled, promptRegistryPollingInterval } = options;
+  const { traceloopSyncEnabled, traceloopSyncPollingInterval, traceloopSyncDevPollingInterval } = options;
 
-  if (!promptRegistryEnabled) return;
+  if (!traceloopSyncEnabled) return;
 
+  let pollingInterval = traceloopSyncPollingInterval;
   try {
-    const prompts = await fetchPrompts(options);
+    const { prompts, environment } = await fetchPrompts(options);
+    if (environment === "dev") {
+        pollingInterval = traceloopSyncDevPollingInterval;
+    }
     populateRegistry(prompts);
   } catch (err) {}
 
   setInterval(async () => {
     try {
-      const prompts = await fetchPrompts(options);
+      const { prompts } = await fetchPrompts(options);
       populateRegistry(prompts);
     } catch (err) {}
-  }, promptRegistryPollingInterval! * 1000);
+  }, pollingInterval! * 1000);
 };

@@ -50,20 +50,26 @@ export interface InitializeOptions {
   };
 
   /**
-   * Enables the prompt registry. Optional.
-   * Defaults to false.
+   * Enables sync with Traceloop servers for the prompt registry functionality. Optional.
+   * Defaults to true.
    */
-  promptRegistryEnabled?: boolean;
+  traceloopSyncEnabled?: boolean;
 
   /**
    * Defines the number of retires when fetching prompt data for the registry. Optional.
-   * Defaults to TRACELOOP_PROMPT_MANAGER_MAX_RETRIES environment variable or 3 if not set.
+   * Defaults to TRACELOOP_SYNC_MAX_RETRIES environment variable or 3 if not set.
    */
-  promptRegistryMaxRetries?: number;
+  traceloopSyncMaxRetries?: number;
 
   /**
    * Defines the polling interval for the prompt registry. Optional.
-   * Defaults to TRACELOOP_PROMPT_MANAGER_POLLING_INTERVAL environment variable or 5 if not set.
+   * Defaults to TRACELOOP_SYNC_POLLING_INTERVAL environment variable or 60 if not set.
    */
-  promptRegistryPollingInterval?: number;
+  traceloopSyncPollingInterval?: number;
+
+  /**
+   * Defines the polling interval for the prompt registry. Optional.
+   * Defaults to TRACELOOP_SYNC_DEV_POLLING_INTERVAL environment variable or 5 if not set.
+   */
+  traceloopSyncDevPollingInterval?: number;
 }
