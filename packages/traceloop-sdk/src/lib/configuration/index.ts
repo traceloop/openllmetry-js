@@ -39,7 +39,7 @@ export const initialize = async (options: InitializeOptions) => {
     }
 
     if (!options.traceloopSyncDevPollingInterval) {
-      options.traceloopSyncPollingInterval =
+      options.traceloopSyncDevPollingInterval =
         Number(process.env.TRACELOOP_SYNC_DEV_POLLING_INTERVAL) || 5;
     }
   }

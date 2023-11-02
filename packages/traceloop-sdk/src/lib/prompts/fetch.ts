@@ -16,7 +16,6 @@ export const fetchPrompts = async (options: InitializeOptions) => {
     retryOn: function (attempt: any, error: any, response: any) {
       if (attempt >= traceloopSyncMaxRetries!) return false;
       if (response?.status && response.status >= 500) {
-        console.log(`Retrying ${attempt} time(s)`);
         return true;
       }
       return false;

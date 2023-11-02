@@ -16,7 +16,6 @@ const getEffectiveVersion = (prompt: Prompt): PromptVersion => {
 };
 
 export const getPrompt = (key: string, variables: Record<string, any>) => {
-  console.log("getPrompt", key, variables);
   const prompt = getPromptByKey(key);
   const promptVersion = getEffectiveVersion(prompt);
 
