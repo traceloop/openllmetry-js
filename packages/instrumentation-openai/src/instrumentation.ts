@@ -29,10 +29,7 @@ import {
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
 import { SemanticAttributes } from "@traceloop/ai-semantic-conventions";
-import {
-  OpenAIInstrumentationConfig,
-  TraceloopManagedPromptAttributeObject,
-} from "./types";
+import { OpenAIInstrumentationConfig } from "./types";
 import {
   ChatCompletion,
   ChatCompletionCreateParamsNonStreaming,
@@ -96,21 +93,23 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           type === "chat"
             ? plugin.startSpan({
                 type,
-                params: args[0] as ChatCompletionCreateParamsNonStreaming &
-                  TraceloopManagedPromptAttributeObject,
+                params: args[0] as ChatCompletionCreateParamsNonStreaming & {
+                  extraAttributes?: Record<string, any>;
+                },
               })
             : plugin.startSpan({
                 type,
-                params: args[0] as CompletionCreateParamsNonStreaming &
-                  TraceloopManagedPromptAttributeObject,
+                params: args[0] as CompletionCreateParamsNonStreaming & {
+                  extraAttributes?: Record<string, any>;
+                },
               });
 
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           () => {
             return context.with(execContext, () => {
-              if ((args?.[0] as any)?._traceloopManagedPromptAttributes) {
-                delete (args[0] as any)._traceloopManagedPromptAttributes;
+              if ((args?.[0] as any)?.extraAttributes) {
+                delete (args[0] as any).extraAttributes;
               }
               return original.apply(this, args);
             });
@@ -134,13 +133,15 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }:
     | {
         type: "chat";
-        params: ChatCompletionCreateParamsNonStreaming &
-          TraceloopManagedPromptAttributeObject;
+        params: ChatCompletionCreateParamsNonStreaming & {
+          extraAttributes?: Record<string, any>;
+        };
       }
     | {
         type: "completion";
-        params: CompletionCreateParamsNonStreaming &
-          TraceloopManagedPromptAttributeObject;
+        params: CompletionCreateParamsNonStreaming & {
+          extraAttributes?: Record<string, any>;
+        };
       }): Span {
     const attributes: Attributes = {
       [SemanticAttributes.LLM_VENDOR]: "OpenAI",
@@ -166,26 +167,12 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         params.presence_penalty;
     }
 
-    const { key, version, hash, name, variables } = params._traceloopManagedPromptAttributes || {};
-    if (key) {
-      attributes["traceloop.prompt.key"] = key;
-    }
-
-    if (version) {
-      attributes["traceloop.prompt.version"] = version;
-    }
-
-    if (hash) {
-      attributes["traceloop.prompt.version_hash"] = hash;
-    }
-
-    if (name) {
-      attributes["traceloop.prompt.version_name"] = name;
-    }
-
-    if (variables) {
-      Object.keys(variables).forEach((key: string) => {
-        attributes[`traceloop.prompt.variable.${key}`] = variables[key];
+    if (
+      params.extraAttributes !== undefined &&
+      typeof params.extraAttributes === "object"
+    ) {
+      Object.keys(params.extraAttributes).forEach((key: string) => {
+        attributes[key] = params.extraAttributes![key];
       });
     }
 

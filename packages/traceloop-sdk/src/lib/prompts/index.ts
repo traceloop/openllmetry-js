@@ -19,13 +19,23 @@ const managedPromptTracingAttributes = (
   prompt: Prompt,
   promptVersion: PromptVersion,
   variables: Record<string, string>,
-) => ({
-  key: prompt.key,
-  version: promptVersion.version,
-  hash: promptVersion.hash,
-  name: promptVersion.name,
-  variables,
-});
+) => {
+  const variableAttributes = Object.keys(variables).reduce(
+    (acc, key) => {
+      acc[`traceloop.prompt.variable.${key}`] = variables[key];
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+
+  return {
+    "traceloop.prompt.key": prompt.key,
+    "traceloop.prompt.version": promptVersion.version,
+    "traceloop.prompt.version_hash": promptVersion.hash,
+    "traceloop.prompt.version_name": promptVersion.name,
+    ...variableAttributes,
+  };
+};
 
 export const getPrompt = (key: string, variables: Record<string, string>) => {
   const prompt = getPromptByKey(key);
@@ -46,8 +56,8 @@ export const getPrompt = (key: string, variables: Record<string, string>) => {
     };
   }
   delete result["mode"];
-  
-  result._traceloopManagedPromptAttributes = managedPromptTracingAttributes(
+
+  result.extraAttributes = managedPromptTracingAttributes(
     prompt,
     promptVersion,
     variables,
