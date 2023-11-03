@@ -15,7 +15,19 @@ const getEffectiveVersion = (prompt: Prompt): PromptVersion => {
   return version;
 };
 
-export const getPrompt = (key: string, variables: Record<string, any>) => {
+const managedPromptTracingAttributes = (
+  prompt: Prompt,
+  promptVersion: PromptVersion,
+  variables: Record<string, string>,
+) => ({
+  key: prompt.key,
+  version: promptVersion.version,
+  hash: promptVersion.hash,
+  name: promptVersion.name,
+  variables,
+});
+
+export const getPrompt = (key: string, variables: Record<string, string>) => {
   const prompt = getPromptByKey(key);
   const promptVersion = getEffectiveVersion(prompt);
 
@@ -34,6 +46,12 @@ export const getPrompt = (key: string, variables: Record<string, any>) => {
     };
   }
   delete result["mode"];
+  
+  result._traceloopManagedPromptAttributes = managedPromptTracingAttributes(
+    prompt,
+    promptVersion,
+    variables,
+  );
 
   return result;
 };
