@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-export const SemanticAttributes = {
+export const SpanAttributes = {
   LLM_VENDOR: "llm.vendor",
   LLM_REQUEST_TYPE: "llm.request.type",
   LLM_REQUEST_MODEL: "llm.request.model",
@@ -39,7 +39,7 @@ export const SemanticAttributes = {
   TRACELOOP_SPAN_KIND: "traceloop.span.kind",
   TRACELOOP_WORKFLOW_NAME: "traceloop.workflow.name",
   TRACELOOP_ENTITY_NAME: "traceloop.entity.name",
-  TRACELOOP_CORRELATION_ID: "traceloop.correlation.id",
+  TRACELOOP_ASSOCIATION_PROPERTIES: "traceloop.association.properties",
 };
 
 export enum LLMRequestTypeValues {

@@ -10,8 +10,8 @@ import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions"
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
-import { SemanticAttributes } from "@traceloop/ai-semantic-conventions";
-import { WORKFLOW_NAME_KEY } from "./tracing";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -45,9 +45,21 @@ export const startTracing = (options: InitializeOptions) => {
     const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);
     if (workflowName) {
       span.setAttribute(
-        SemanticAttributes.TRACELOOP_WORKFLOW_NAME,
+        SpanAttributes.TRACELOOP_WORKFLOW_NAME,
         workflowName as string,
       );
+    }
+
+    const associationProperties = context
+      .active()
+      .getValue(ASSOCATION_PROPERTIES_KEY);
+    if (associationProperties) {
+      for (const [key, value] of Object.entries(associationProperties)) {
+        span.setAttribute(
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
+          value,
+        );
+      }
     }
   };
 
