@@ -39,7 +39,7 @@ import {
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   constructor(config: OpenAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-openai", "0.0.8", config);
+    super("@traceloop/instrumentation-openai", "0.0.17", config);
   }
 
   public manuallyInstrument(module: typeof openai.OpenAI) {
@@ -65,18 +65,22 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(moduleExports: typeof openai) {
-    this._wrap(
-      moduleExports.OpenAI.Chat.Completions.prototype,
-      "create",
-      this.patchOpenAI("chat"),
-    );
-    this._wrap(
-      moduleExports.OpenAI.Completions.prototype,
-      "create",
-      this.patchOpenAI("completion"),
-    );
-
+  private patch(
+    moduleExports: typeof openai & { openLLMetryPatched?: boolean },
+  ) {
+    if (!moduleExports.openLLMetryPatched) {
+      moduleExports.openLLMetryPatched = true;
+      this._wrap(
+        moduleExports.OpenAI.Chat.Completions.prototype,
+        "create",
+        this.patchOpenAI("chat"),
+      );
+      this._wrap(
+        moduleExports.OpenAI.Completions.prototype,
+        "create",
+        this.patchOpenAI("completion"),
+      );
+    }
     return moduleExports;
   }
 
@@ -86,7 +90,9 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }
 
   private patchOpenAI(type: "chat" | "completion") {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span =
