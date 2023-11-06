@@ -12,7 +12,7 @@ export let _configuration: InitializeOptions;
  * @param options - The options to initialize the SDK. See the {@link InitializeOptions} for details.
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
-export const initialize = async (options: InitializeOptions) => {
+export const initialize = (options: InitializeOptions) => {
   if (_configuration) {
     return;
   }
@@ -68,5 +68,5 @@ export const initialize = async (options: InitializeOptions) => {
   }
 
   startTracing(_configuration);
-  await initializeRegistry(_configuration);
+  initializeRegistry(_configuration);
 };

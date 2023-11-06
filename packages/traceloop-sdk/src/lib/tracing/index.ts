@@ -4,7 +4,7 @@ import {
   BatchSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
 import { Span, context } from "@opentelemetry/api";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base";
 import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
@@ -31,12 +31,8 @@ export const initInstrumentations = () => {
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
-  const traceExporter =
-    options.exporter ??
-    new OTLPTraceExporter({
-      url: `${options.baseUrl}/v1/traces`,
-      headers: { Authorization: `Bearer ${options.apiKey}` },
-    });
+  const traceExporter = new ConsoleSpanExporter();
+
   _spanProcessor = options.disableBatch
     ? new SimpleSpanProcessor(traceExporter)
     : new BatchSpanProcessor(traceExporter);

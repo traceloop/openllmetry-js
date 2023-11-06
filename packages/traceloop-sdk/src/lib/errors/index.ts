@@ -39,7 +39,7 @@ export class NotInitializedError extends TraceloopError {
 
 export class InitializationError extends TraceloopError {
   constructor(message?: string, cause?: Error) {
-    super(message ?? "Failed to initialize Enrolla SDK", SEVERITY.Critical);
+    super(message ?? "Failed to initialize Traceloop SDK", SEVERITY.Critical);
     this.cause = cause;
   }
 }

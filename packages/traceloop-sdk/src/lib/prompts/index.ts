@@ -2,6 +2,7 @@ import { TraceloopError } from "../errors";
 import { Prompt, PromptVersion } from "../interfaces";
 import { getPromptByKey } from "./registry";
 import { renderMessages } from "./template";
+export { waitForInitialization } from "./registry";
 
 const getEffectiveVersion = (prompt: Prompt): PromptVersion => {
   const version = prompt.versions.find(
