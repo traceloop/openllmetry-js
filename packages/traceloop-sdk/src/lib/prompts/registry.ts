@@ -19,15 +19,20 @@ const populateRegistry = (prompts: any) => {
 };
 
 export const initializeRegistry = async (options: InitializeOptions) => {
-  const { traceloopSyncEnabled, traceloopSyncPollingInterval, traceloopSyncDevPollingInterval } = options;
+  const {
+    baseUrl,
+    traceloopSyncEnabled,
+    traceloopSyncPollingInterval,
+    traceloopSyncDevPollingInterval,
+  } = options;
 
-  if (!traceloopSyncEnabled) return;
+  if (!traceloopSyncEnabled || !baseUrl?.includes("traceloop")) return;
 
   let pollingInterval = traceloopSyncPollingInterval;
   try {
     const { prompts, environment } = await fetchPrompts(options);
     if (environment === "dev") {
-        pollingInterval = traceloopSyncDevPollingInterval;
+      pollingInterval = traceloopSyncDevPollingInterval;
     }
     populateRegistry(prompts);
   } catch (err) {}

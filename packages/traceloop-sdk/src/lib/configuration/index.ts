@@ -27,6 +27,17 @@ export const initialize = async (options: InitializeOptions) => {
   if (!options.appName) {
     options.appName = process.env.npm_package_name;
   }
+
+  if (!options.traceloopSyncEnabled) {
+    if (process.env.TRACELOOP_SYNC_ENABLED !== undefined) {
+      options.traceloopSyncEnabled = ["1", "true"].includes(
+        process.env.TRACELOOP_SYNC_ENABLED.toLowerCase(),
+      );
+    } else {
+      options.traceloopSyncEnabled = true;
+    }
+  }
+
   if (options.traceloopSyncEnabled) {
     if (!options.traceloopSyncMaxRetries) {
       options.traceloopSyncMaxRetries =

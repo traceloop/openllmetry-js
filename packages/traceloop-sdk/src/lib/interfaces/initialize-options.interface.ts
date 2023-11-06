@@ -51,7 +51,7 @@ export interface InitializeOptions {
 
   /**
    * Enables sync with Traceloop servers for the prompt registry functionality. Optional.
-   * Defaults to true.
+   * Defaults to TRACELOOP_SYNC_ENABLED environment variable or true if not set.
    */
   traceloopSyncEnabled?: boolean;
 
