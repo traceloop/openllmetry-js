@@ -1,10 +1,11 @@
 {
   "name": "sample-app",
-  "version": "0.0.13-alpha.0",
+  "version": "0.0.1",
   "description": "Sample app for using Traceloop SDK",
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "run:openai": "npm run build && node dist/src/sample_openai.js",
+    "run:decorators": "npm run build && node dist/src/sample_decorators.js",
+    "run:with": "npm run build && node dist/src/sample_with.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },

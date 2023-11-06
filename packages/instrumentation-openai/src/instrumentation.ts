@@ -28,7 +28,7 @@ import {
   InstrumentationNodeModuleDefinition,
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
-import { SemanticAttributes } from "@traceloop/ai-semantic-conventions";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { OpenAIInstrumentationConfig } from "./types";
 import {
   ChatCompletion,
@@ -133,42 +133,40 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         params: CompletionCreateParamsNonStreaming;
       }): Span {
     const attributes: Attributes = {
-      [SemanticAttributes.LLM_VENDOR]: "OpenAI",
-      [SemanticAttributes.LLM_REQUEST_TYPE]: type,
+      [SpanAttributes.LLM_VENDOR]: "OpenAI",
+      [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
-    attributes[SemanticAttributes.LLM_REQUEST_MODEL] = params.model;
+    attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
     if (params.max_tokens) {
-      attributes[SemanticAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
+      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
     }
     if (params.temperature) {
-      attributes[SemanticAttributes.LLM_TEMPERATURE] = params.temperature;
+      attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
     }
     if (params.top_p) {
-      attributes[SemanticAttributes.LLM_TOP_P] = params.top_p;
+      attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
     }
     if (params.frequency_penalty) {
-      attributes[SemanticAttributes.LLM_FREQUENCY_PENALTY] =
+      attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
         params.frequency_penalty;
     }
     if (params.presence_penalty) {
-      attributes[SemanticAttributes.LLM_PRESENCE_PENALTY] =
-        params.presence_penalty;
+      attributes[SpanAttributes.LLM_PRESENCE_PENALTY] = params.presence_penalty;
     }
 
     if (shouldSendPrompts()) {
       if (type === "chat") {
         params.messages.forEach((message, index) => {
-          attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.role`] =
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
             message.role;
-          attributes[`${SemanticAttributes.LLM_PROMPTS}.${index}.content`] =
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
             message.content || "";
         });
       } else {
         if (typeof params.prompt === "string") {
-          attributes[`${SemanticAttributes.LLM_PROMPTS}.0.role`] = "user";
-          attributes[`${SemanticAttributes.LLM_PROMPTS}.0.content`] =
-            params.prompt;
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
         }
       }
     }
@@ -217,18 +215,18 @@ function endSpan({
 }:
   | { span: Span; type: "chat"; result: ChatCompletion }
   | { span: Span; type: "completion"; result: Completion }) {
-  span.setAttribute(SemanticAttributes.LLM_RESPONSE_MODEL, result.model);
+  span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
   if (result.usage) {
     span.setAttribute(
-      SemanticAttributes.LLM_USAGE_TOTAL_TOKENS,
+      SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
       result.usage?.total_tokens,
     );
     span.setAttribute(
-      SemanticAttributes.LLM_USAGE_COMPLETION_TOKENS,
+      SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
       result.usage?.completion_tokens,
     );
     span.setAttribute(
-      SemanticAttributes.LLM_USAGE_PROMPT_TOKENS,
+      SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
       result.usage?.prompt_tokens,
     );
   }
@@ -237,25 +235,25 @@ function endSpan({
     if (type === "chat") {
       result.choices.forEach((choice, index) => {
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+          `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
           choice.finish_reason,
         );
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
+          `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
           choice.message.role,
         );
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
+          `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
           choice.message.content ?? "",
         );
 
         if (choice.message.function_call) {
           span.setAttribute(
-            `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
             choice.message.function_call.name,
           );
           span.setAttribute(
-            `${SemanticAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
             choice.message.function_call.arguments,
           );
         }
@@ -263,15 +261,15 @@ function endSpan({
     } else {
       result.choices.forEach((choice, index) => {
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+          `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
           choice.finish_reason,
         );
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.role`,
+          `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
           "assistant",
         );
         span.setAttribute(
-          `${SemanticAttributes.LLM_COMPLETIONS}.${index}.content`,
+          `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
           choice.text,
         );
       });
