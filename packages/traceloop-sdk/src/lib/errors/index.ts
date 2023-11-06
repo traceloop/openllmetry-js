@@ -22,7 +22,7 @@ export class TraceloopError extends Error {
    */
   cause?: Error;
 
-  constructor(message: string, severity: Severity) {
+  constructor(message: string, severity: Severity = SEVERITY.Error) {
     super(message);
     this.severity = severity;
   }
@@ -39,16 +39,19 @@ export class NotInitializedError extends TraceloopError {
 
 export class InitializationError extends TraceloopError {
   constructor(message?: string, cause?: Error) {
-    super(message ?? "Failed to initialize Enrolla SDK", SEVERITY.Critical);
+    super(message ?? "Failed to initialize Traceloop SDK", SEVERITY.Critical);
     this.cause = cause;
   }
 }
 
 export class ArgumentNotProvidedError extends TraceloopError {
   constructor(argumentName: string) {
-    super(
-      `The "${argumentName}" argument is required and must be a string.`,
-      SEVERITY.Error,
-    );
+    super(`The "${argumentName}" argument is required and must be a string.`);
+  }
+}
+
+export class PromptNotFoundError extends TraceloopError {
+  constructor(key: string) {
+    super(`The prompt "${key}" was not found in the registry.`);
   }
 }

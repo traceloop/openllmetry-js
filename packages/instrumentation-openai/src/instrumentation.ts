@@ -99,17 +99,24 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           type === "chat"
             ? plugin.startSpan({
                 type,
-                params: args[0] as ChatCompletionCreateParamsNonStreaming,
+                params: args[0] as ChatCompletionCreateParamsNonStreaming & {
+                  extraAttributes?: Record<string, any>;
+                },
               })
             : plugin.startSpan({
                 type,
-                params: args[0] as CompletionCreateParamsNonStreaming,
+                params: args[0] as CompletionCreateParamsNonStreaming & {
+                  extraAttributes?: Record<string, any>;
+                },
               });
 
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           () => {
             return context.with(execContext, () => {
+              if ((args?.[0] as any)?.extraAttributes) {
+                delete (args[0] as any).extraAttributes;
+              }
               return original.apply(this, args);
             });
           },
@@ -132,11 +139,15 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }:
     | {
         type: "chat";
-        params: ChatCompletionCreateParamsNonStreaming;
+        params: ChatCompletionCreateParamsNonStreaming & {
+          extraAttributes?: Record<string, any>;
+        };
       }
     | {
         type: "completion";
-        params: CompletionCreateParamsNonStreaming;
+        params: CompletionCreateParamsNonStreaming & {
+          extraAttributes?: Record<string, any>;
+        };
       }): Span {
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "OpenAI",
@@ -159,6 +170,15 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     }
     if (params.presence_penalty) {
       attributes[SpanAttributes.LLM_PRESENCE_PENALTY] = params.presence_penalty;
+    }
+
+    if (
+      params.extraAttributes !== undefined &&
+      typeof params.extraAttributes === "object"
+    ) {
+      Object.keys(params.extraAttributes).forEach((key: string) => {
+        attributes[key] = params.extraAttributes![key];
+      });
     }
 
     if (shouldSendPrompts()) {

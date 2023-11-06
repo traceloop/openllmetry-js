@@ -6,6 +6,7 @@
     "build": "tsc --build tsconfig.json",
     "run:decorators": "npm run build && node dist/src/sample_decorators.js",
     "run:with": "npm run build && node dist/src/sample_with.js",
+    "run:prompt_mgmt": "npm run build && node dist/src/sample_prompt_mgmt.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
