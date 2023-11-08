@@ -42,23 +42,43 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     super("@traceloop/instrumentation-openai", "0.0.17", config);
   }
 
-  public manuallyInstrument(module: typeof openai.OpenAI) {
-    this._wrap(
-      module.Chat.Completions.prototype,
-      "create",
-      this.patchOpenAI("chat"),
-    );
-    this._wrap(
-      module.Completions.prototype,
-      "create",
-      this.patchOpenAI("completion"),
-    );
+  public manuallyInstrument(
+    module: typeof openai.OpenAI & { openLLMetryPatched?: boolean },
+  ) {
+    if (module.openLLMetryPatched) {
+      return;
+    }
+
+    // Old version of OpenAI API (v3.1.0)
+    if ((module as any).OpenAIApi) {
+      this._wrap(
+        (module as any).OpenAIApi.prototype,
+        "createChatCompletion",
+        this.patchOpenAI("chat", "v3"),
+      );
+      this._wrap(
+        (module as any).OpenAIApi.prototype,
+        "createCompletion",
+        this.patchOpenAI("completion", "v3"),
+      );
+    } else {
+      this._wrap(
+        module.Chat.Completions.prototype,
+        "create",
+        this.patchOpenAI("chat"),
+      );
+      this._wrap(
+        module.Completions.prototype,
+        "create",
+        this.patchOpenAI("completion"),
+      );
+    }
   }
 
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "openai",
-      [">=4 <5"],
+      [">=3.1.0 <5"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
@@ -68,7 +88,23 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   private patch(
     moduleExports: typeof openai & { openLLMetryPatched?: boolean },
   ) {
-    if (!moduleExports.openLLMetryPatched) {
+    if (moduleExports.openLLMetryPatched) {
+      return moduleExports;
+    }
+
+    // Old version of OpenAI API (v3.1.0)
+    if ((moduleExports as any).OpenAIApi) {
+      this._wrap(
+        (moduleExports as any).OpenAIApi.prototype,
+        "createChatCompletion",
+        this.patchOpenAI("chat", "v3"),
+      );
+      this._wrap(
+        (moduleExports as any).OpenAIApi.prototype,
+        "createCompletion",
+        this.patchOpenAI("completion", "v3"),
+      );
+    } else {
       moduleExports.openLLMetryPatched = true;
       this._wrap(
         moduleExports.OpenAI.Chat.Completions.prototype,
@@ -85,11 +121,26 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }
 
   private unpatch(moduleExports: typeof openai): void {
-    this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
-    this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
+    // Old version of OpenAI API (v3.1.0)
+    if ((moduleExports as any).OpenAIApi) {
+      this._unwrap(
+        (moduleExports as any).OpenAIApi.prototype,
+        "createChatCompletion",
+      );
+      this._unwrap(
+        (moduleExports as any).OpenAIApi.prototype,
+        "createCompletion",
+      );
+    } else {
+      this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
+      this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
+    }
   }
 
-  private patchOpenAI(type: "chat" | "completion") {
+  private patchOpenAI(
+    type: "chat" | "completion",
+    version: "v3" | "v4" = "v4",
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -126,7 +177,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           },
         );
 
-        const wrappedPromise = wrapPromise(type, span, execPromise);
+        const wrappedPromise = wrapPromise(type, version, span, execPromise);
 
         return context.bind(execContext, wrappedPromise as any);
       };
@@ -206,16 +257,29 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
 
 function wrapPromise<T>(
   type: "chat" | "completion",
+  version: "v3" | "v4",
   span: Span,
   promise: Promise<T>,
 ): Promise<T> {
   return promise
     .then((result) => {
       return new Promise<T>((resolve) => {
-        if (type === "chat") {
-          endSpan({ type, span, result: result as ChatCompletion });
+        if (version === "v3") {
+          if (type === "chat") {
+            endSpan({
+              type,
+              span,
+              result: (result as any).data as ChatCompletion,
+            });
+          } else {
+            endSpan({ type, span, result: (result as any).data as Completion });
+          }
         } else {
-          endSpan({ type, span, result: result as Completion });
+          if (type === "chat") {
+            endSpan({ type, span, result: result as ChatCompletion });
+          } else {
+            endSpan({ type, span, result: result as Completion });
+          }
         }
         resolve(result);
       });
