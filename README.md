@@ -83,7 +83,7 @@ Now, you need to decide where to export the traces to.
 - [x] [Grafana Tempo](https://www.traceloop.com/docs/openllmetry/integrations/grafana)
 - [x] [HyperDX](https://www.traceloop.com/docs/openllmetry/integrations/hyperdx)
 - [x] [SigNoz](https://www.traceloop.com/docs/openllmetry/integrations/signoz)
-- [x] [Splunk]((https://www.traceloop.com/docs/openllmetry/integrations/splunk)
+- [x] [Splunk](https://www.traceloop.com/docs/openllmetry/integrations/splunk)
 - [x] [OpenTelemetry Collector](https://www.traceloop.com/docs/openllmetry/integrations/otel-collector)
 
 See [our docs](https://traceloop.com/docs/openllmetry/integrations/exporting) for instructions on connecting to each one.
