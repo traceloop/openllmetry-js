@@ -34,6 +34,7 @@ const populateRegistry = (prompts: any) => {
 export const initializeRegistry = (options: InitializeOptions) => {
   const {
     baseUrl,
+    suppressLogs,
     traceloopSyncEnabled,
     traceloopSyncPollingInterval,
     traceloopSyncDevPollingInterval,
@@ -55,8 +56,12 @@ export const initializeRegistry = (options: InitializeOptions) => {
         try {
           const { prompts } = await fetchPrompts(options);
           populateRegistry(prompts);
-        } catch (err) {}
-      }, pollingInterval! * 1000);
+        } catch (err) {
+          if (!suppressLogs) {
+            console.error("Failed to fetch prompt data", err);
+          }
+        }
+      }, pollingInterval! * 1000).unref();
 
       return true;
     })

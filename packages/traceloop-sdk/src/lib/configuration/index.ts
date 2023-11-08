@@ -28,7 +28,7 @@ export const initialize = (options: InitializeOptions) => {
     options.appName = process.env.npm_package_name;
   }
 
-  if (!options.traceloopSyncEnabled) {
+  if (options.traceloopSyncEnabled === undefined) {
     if (process.env.TRACELOOP_SYNC_ENABLED !== undefined) {
       options.traceloopSyncEnabled = ["1", "true"].includes(
         process.env.TRACELOOP_SYNC_ENABLED.toLowerCase(),
