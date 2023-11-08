@@ -187,7 +187,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
             message.role;
           attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-            message.content || "";
+            (message.content as string) || "";
         });
       } else {
         if (typeof params.prompt === "string") {

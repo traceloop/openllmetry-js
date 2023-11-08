@@ -9,7 +9,7 @@ traceloop.initialize({
 const openai = new OpenAI();
 
 async function chat() {
-  return traceloop.withWorkflow("sample_chat", async () => {
+  return await traceloop.withWorkflow("sample_chat", async () => {
     const chatCompletion = await openai.chat.completions.create({
       messages: [
         { role: "user", content: "Tell me a joke about OpenTelemetry" },
@@ -22,7 +22,7 @@ async function chat() {
 }
 
 async function completion() {
-  return traceloop.withWorkflow("sample_completion", async () => {
+  return await traceloop.withWorkflow("sample_completion", async () => {
     const completion = await openai.completions.create({
       prompt: "Tell me a joke about TypeScript",
       model: "gpt-3.5-turbo-instruct",
