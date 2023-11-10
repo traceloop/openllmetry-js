@@ -9,11 +9,7 @@ export const validateConfiguration = (options: InitializeOptions): void => {
     traceloopSyncPollingInterval,
     traceloopSyncDevPollingInterval,
   } = options;
-  if (!apiKey) {
-    throw new InitializationError('"apiKey" is required');
-  }
-
-  if (typeof apiKey !== "string") {
+  if (apiKey && typeof apiKey !== "string") {
     throw new InitializationError('"apiKey" must be a string');
   }
 
