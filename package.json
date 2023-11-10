@@ -23,5 +23,7 @@
   "workspaces": [
     "packages/*"
   ],
-  "dependencies": {}
+  "dependencies": {
+    "hnswlib-node": "^1.4.2"
+  }
 }

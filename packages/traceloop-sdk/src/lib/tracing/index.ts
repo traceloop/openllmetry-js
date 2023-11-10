@@ -10,17 +10,20 @@ import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions"
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
+import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
+let langChainInstrumentation: LangChainInstrumentation;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
   openAIInstrumentation = new OpenAIInstrumentation();
-  instrumentations.push(openAIInstrumentation);
+  langChainInstrumentation = new LangChainInstrumentation();
+  instrumentations.push(openAIInstrumentation, langChainInstrumentation);
 };
 
 /**

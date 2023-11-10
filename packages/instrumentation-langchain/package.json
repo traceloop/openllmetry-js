@@ -1,7 +1,7 @@
 {
-  "name": "@traceloop/instrumentation-openai",
-  "version": "0.0.20",
-  "description": "OpenTelemetry instrumentation for OpenAI library",
+  "name": "@traceloop/instrumentation-langchain",
+  "version": "0.0.0",
+  "description": "OpenTelemetry instrumentation for LangchainJS",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "repository": "traceloop/openllmetry-js",
@@ -14,7 +14,8 @@
     "opentelemetry",
     "nodejs",
     "tracing",
-    "openai"
+    "attributes",
+    "langchain"
   ],
   "author": "Traceloop",
   "license": "Apache-2.0",
@@ -40,8 +41,7 @@
     "@traceloop/ai-semantic-conventions": "^0.0.16"
   },
   "devDependencies": {
-    "openai": "^4.12.4"
+    "langchain": "^0.0.184"
   },
-  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
-  "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-langchain"
 }
