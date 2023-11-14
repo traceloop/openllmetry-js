@@ -12,6 +12,7 @@ import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
+import { Telemetry } from "../telemetry/telemetry";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -62,6 +63,18 @@ export const startTracing = (options: InitializeOptions) => {
       }
     }
   };
+
+  if (options.exporter) {
+    Telemetry.getInstance().capture("tracer:init", {
+      exporter: "custom",
+      processor: options.disableBatch ? "simple" : "batch",
+    });
+  } else {
+    Telemetry.getInstance().capture("tracer:init", {
+      exporter: options.baseUrl ?? "",
+      processor: options.disableBatch ? "simple" : "batch",
+    });
+  }
 
   _sdk = new NodeSDK({
     resource: new Resource({
