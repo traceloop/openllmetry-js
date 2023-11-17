@@ -1,6 +1,7 @@
 <p align="center">
 <a href="https://www.traceloop.com/">
 <img width="300" src="https://raw.githubusercontent.com/traceloop/openllmetry/main/img/logo.png">
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=aa5652ef-2a4e-4171-be5e-dd7e5cd6aaea" />
 </a>
 </p>
 <h1 align="center">Open LLMetry JS</h1>
