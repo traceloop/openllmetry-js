@@ -1,10 +1,13 @@
-<p align="center">
-<a href="https://www.traceloop.com/">
-<img width="300" src="https://raw.githubusercontent.com/traceloop/openllmetry/main/img/logo.png">
 <img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=aa5652ef-2a4e-4171-be5e-dd7e5cd6aaea" />
+<p align="center">
+<a href="https://www.traceloop.com/#gh-light-mode-only">
+<img width="600" src="https://raw.githubusercontent.com/traceloop/openllmetry/main/img/logo-light.png">
+</a>
+<a href="https://www.traceloop.com/#gh-dark-mode-only">
+<img width="600" src="https://raw.githubusercontent.com/traceloop/openllmetry/main/img/logo-dark.png">
 </a>
 </p>
-<h1 align="center">Open LLMetry JS</h1>
+<h1 align="center">For Javascript / Typescript</h1>
 <p align="center">
   <p align="center">Open-source observability for your LLM application</p>
 </p>
