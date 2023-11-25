@@ -46,7 +46,7 @@ registerInstrumentations({
 
 Apache 2.0 - See [LICENSE][license-url] for more information.
 
-[slack-url]: https://join.slack.com/t/traceloopcommunity/shared_invite/zt-1plpfpm6r-zOHKI028VkpcWdobX65C~g
+[slack-url]: https://traceloop.com/slack
 [license-url]: https://github.com/traceloop/openllmetry-js/blob/main/LICENSE
 [license-image]: https://img.shields.io/badge/license-Apache_2.0-green.svg?style=flat
 [npm-url]: https://www.npmjs.com/package/@traceloop/instrumentation-openai
