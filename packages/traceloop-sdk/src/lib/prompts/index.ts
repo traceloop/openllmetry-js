@@ -24,7 +24,7 @@ const managedPromptTracingAttributes = (
 ) => {
   const variableAttributes = Object.keys(variables).reduce(
     (acc, key) => {
-      acc[`traceloop.prompt.variable.${key}`] = variables[key];
+      acc[`traceloop.prompt.template_variables.${key}`] = variables[key];
       return acc;
     },
     {} as Record<string, string>,
