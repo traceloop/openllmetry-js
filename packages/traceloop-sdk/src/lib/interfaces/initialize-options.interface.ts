@@ -36,6 +36,12 @@ export interface InitializeOptions {
   suppressLogs?: boolean;
 
   /**
+   * Whether to log prompts, completions and embeddings on traces. Optional.
+   * Defaults to true.
+   */
+  traceContent?: boolean;
+
+  /**
    * The OpenTelemetry SpanExporter to be used for sending traces data. Optional.
    * Defaults to the OTLP exporter.
    */

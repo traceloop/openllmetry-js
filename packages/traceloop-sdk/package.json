@@ -34,7 +34,6 @@
   "dependencies": {
     "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
     "@opentelemetry/sdk-node": "^0.44.0",
-    "@scarf/scarf": "^1.3.0",
     "@traceloop/instrumentation-openai": "^0.0.22",
     "@types/nunjucks": "^3.2.5",
     "fetch-retry": "^5.0.6",

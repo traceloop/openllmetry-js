@@ -38,8 +38,14 @@ import {
 } from "openai/resources";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
+  protected override _config!: OpenAIInstrumentationConfig;
+
   constructor(config: OpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-openai", "0.0.17", config);
+  }
+
+  public override setConfig(config: OpenAIInstrumentationConfig = {}) {
+    super.setConfig(config);
   }
 
   public manuallyInstrument(
@@ -177,7 +183,12 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           },
         );
 
-        const wrappedPromise = wrapPromise(type, version, span, execPromise);
+        const wrappedPromise = plugin._wrapPromise(
+          type,
+          version,
+          span,
+          execPromise,
+        );
 
         return context.bind(execContext, wrappedPromise as any);
       };
@@ -232,7 +243,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       });
     }
 
-    if (shouldSendPrompts()) {
+    if (this._shouldSendPrompts()) {
       if (type === "chat") {
         params.messages.forEach((message, index) => {
           attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
@@ -253,124 +264,128 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       attributes,
     });
   }
-}
 
-function wrapPromise<T>(
-  type: "chat" | "completion",
-  version: "v3" | "v4",
-  span: Span,
-  promise: Promise<T>,
-): Promise<T> {
-  return promise
-    .then((result) => {
-      return new Promise<T>((resolve) => {
-        if (version === "v3") {
-          if (type === "chat") {
-            endSpan({
-              type,
-              span,
-              result: (result as any).data as ChatCompletion,
-            });
+  private _wrapPromise<T>(
+    type: "chat" | "completion",
+    version: "v3" | "v4",
+    span: Span,
+    promise: Promise<T>,
+  ): Promise<T> {
+    return promise
+      .then((result) => {
+        return new Promise<T>((resolve) => {
+          if (version === "v3") {
+            if (type === "chat") {
+              this._endSpan({
+                type,
+                span,
+                result: (result as any).data as ChatCompletion,
+              });
+            } else {
+              this._endSpan({
+                type,
+                span,
+                result: (result as any).data as Completion,
+              });
+            }
           } else {
-            endSpan({ type, span, result: (result as any).data as Completion });
+            if (type === "chat") {
+              this._endSpan({ type, span, result: result as ChatCompletion });
+            } else {
+              this._endSpan({ type, span, result: result as Completion });
+            }
           }
-        } else {
-          if (type === "chat") {
-            endSpan({ type, span, result: result as ChatCompletion });
-          } else {
-            endSpan({ type, span, result: result as Completion });
-          }
-        }
-        resolve(result);
-      });
-    })
-    .catch((error: Error) => {
-      return new Promise<T>((_, reject) => {
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: error.message,
+          resolve(result);
         });
-        span.recordException(error);
-        span.end();
+      })
+      .catch((error: Error) => {
+        return new Promise<T>((_, reject) => {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error.message,
+          });
+          span.recordException(error);
+          span.end();
 
-        reject(error);
+          reject(error);
+        });
       });
-    });
-}
-
-function endSpan({
-  span,
-  type,
-  result,
-}:
-  | { span: Span; type: "chat"; result: ChatCompletion }
-  | { span: Span; type: "completion"; result: Completion }) {
-  span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
-  if (result.usage) {
-    span.setAttribute(
-      SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-      result.usage?.total_tokens,
-    );
-    span.setAttribute(
-      SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-      result.usage?.completion_tokens,
-    );
-    span.setAttribute(
-      SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-      result.usage?.prompt_tokens,
-    );
   }
 
-  if (shouldSendPrompts()) {
-    if (type === "chat") {
-      result.choices.forEach((choice, index) => {
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-          choice.finish_reason,
-        );
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-          choice.message.role,
-        );
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-          choice.message.content ?? "",
-        );
-
-        if (choice.message.function_call) {
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-            choice.message.function_call.name,
-          );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-            choice.message.function_call.arguments,
-          );
-        }
-      });
-    } else {
-      result.choices.forEach((choice, index) => {
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-          choice.finish_reason,
-        );
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-          "assistant",
-        );
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-          choice.text,
-        );
-      });
+  private _endSpan({
+    span,
+    type,
+    result,
+  }:
+    | { span: Span; type: "chat"; result: ChatCompletion }
+    | { span: Span; type: "completion"; result: Completion }) {
+    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
+    if (result.usage) {
+      span.setAttribute(
+        SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+        result.usage?.total_tokens,
+      );
+      span.setAttribute(
+        SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+        result.usage?.completion_tokens,
+      );
+      span.setAttribute(
+        SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+        result.usage?.prompt_tokens,
+      );
     }
+
+    if (this._shouldSendPrompts()) {
+      if (type === "chat") {
+        result.choices.forEach((choice, index) => {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+            choice.finish_reason,
+          );
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+            choice.message.role,
+          );
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+            choice.message.content ?? "",
+          );
+
+          if (choice.message.function_call) {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+              choice.message.function_call.name,
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+              choice.message.function_call.arguments,
+            );
+          }
+        });
+      } else {
+        result.choices.forEach((choice, index) => {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+            choice.finish_reason,
+          );
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+            "assistant",
+          );
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+            choice.text,
+          );
+        });
+      }
+    }
+
+    span.end();
   }
 
-  span.end();
-}
-
-function shouldSendPrompts() {
-  return (
-    (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "true"
-  );
+  private _shouldSendPrompts() {
+    return this._config.traceContent !== undefined
+      ? this._config.traceContent
+      : true;
+  }
 }
