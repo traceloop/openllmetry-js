@@ -32,6 +32,13 @@ export const initInstrumentations = () => {
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
+  if (
+    options.traceContent === false ||
+    (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"
+  ) {
+    openAIInstrumentation.setConfig({ traceContent: false });
+  }
+
   const traceExporter =
     options.exporter ??
     new OTLPTraceExporter({
