@@ -5,16 +5,20 @@ export const TEMPLATING_ENGINE = {
 export type TemplatingEngine =
   (typeof TEMPLATING_ENGINE)[keyof typeof TEMPLATING_ENGINE];
 
+export type Content =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } };
+
 export interface PromptMessage {
   index: number;
-  template: string;
+  template: string | Content[];
   role: string;
   variables: string[];
 }
 
 export interface RenderedMessage {
   role: string;
-  content: string;
+  content: string | Content[];
 }
 
 export interface PromptTarget {

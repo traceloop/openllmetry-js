@@ -52,13 +52,13 @@ export const getPrompt = (key: string, variables: Record<string, string>) => {
       ...promptVersion.llm_config,
       prompt: message?.[0]?.content,
     };
-    if (result?.["stop"].length === 0) delete result["stop"];
   } else {
     result = {
       messages: renderMessages(promptVersion, variables),
       ...promptVersion.llm_config,
     };
   }
+  if (result?.["stop"].length === 0) delete result["stop"];
   delete result["mode"];
 
   result.extraAttributes = managedPromptTracingAttributes(
