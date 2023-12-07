@@ -248,8 +248,13 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         params.messages.forEach((message, index) => {
           attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
             message.role;
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-            (message.content as string) || "";
+          if (typeof message.content === "string") {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+              (message.content as string) || "";
+          } else {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+              JSON.stringify(message.content);
+          }
         });
       } else {
         if (typeof params.prompt === "string") {
