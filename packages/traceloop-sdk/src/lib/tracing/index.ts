@@ -13,6 +13,7 @@ import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
+import { TraceloopSampler } from "./sampler";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -90,6 +91,7 @@ export const startTracing = (options: InitializeOptions) => {
     spanProcessor: _spanProcessor,
     traceExporter,
     instrumentations,
+    sampler: new TraceloopSampler(),
   });
 
   _sdk.start();
