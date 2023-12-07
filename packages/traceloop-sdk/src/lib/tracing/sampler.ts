@@ -17,8 +17,8 @@ export class TraceloopSampler implements Sampler {
     _links: Link[],
   ): SamplingResult {
     let filter = false;
-    FILTERED_ATTRIBUTE_KEYS.forEach((attribute) => {
-      if (attributes?.[attribute]) {
+    FILTERED_ATTRIBUTE_KEYS.forEach((key) => {
+      if (attributes?.[key]) {
         filter = true;
       }
     });
