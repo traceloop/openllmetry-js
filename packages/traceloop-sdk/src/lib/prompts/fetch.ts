@@ -11,6 +11,7 @@ export const fetchPrompts = async (options: InitializeOptions) => {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
+      "X-Traceloop-SDK-Version": "0.0.29",
     },
     retries: traceloopSyncMaxRetries,
     retryOn: function (attempt: any, error: any, response: any) {
