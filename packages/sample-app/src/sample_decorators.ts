@@ -32,11 +32,16 @@ class SampleOpenAI {
   }
 }
 
-traceloop.withAssociationProperties({ userId: "12345" }, async () => {
-  const sampleOpenAI = new SampleOpenAI();
-  const chat = await sampleOpenAI.chat();
-  console.log(chat);
+traceloop.withAssociationProperties(
+  { user_id: "12345", chat_id: "789" },
+  async () => {
+    const sampleOpenAI = new SampleOpenAI();
+    const chat = await sampleOpenAI.chat();
+    console.log(chat);
 
-  const completion = await sampleOpenAI.completion();
-  console.log(completion);
-});
+    const completion = await sampleOpenAI.completion();
+    console.log(completion);
+
+    await traceloop.reportScore({ chat_id: "789" }, 1);
+  },
+);

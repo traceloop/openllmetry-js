@@ -6,12 +6,12 @@ const fetchRetry = require("fetch-retry")(fetch);
 export const fetchPrompts = async (options: InitializeOptions) => {
   const { apiKey, baseUrl, traceloopSyncMaxRetries } = options;
 
-  const response = await fetchRetry(`${baseUrl}/v1/prompts`, {
+  const response = await fetchRetry(`${baseUrl}/v1/traceloop/prompts`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
-      "X-Traceloop-SDK-Version": "0.0.29",
+      "X-Traceloop-SDK-Version": "0.0.30",
     },
     retries: traceloopSyncMaxRetries,
     retryOn: function (attempt: any, error: any, response: any) {
