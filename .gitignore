@@ -29,10 +29,11 @@ node_modules
 /connect.lock
 /coverage
 /libpeerconnection.log
+/typings
 npm-debug.log
+lerna-debug.log
 yarn-error.log
 testem.log
-/typings
 
 # System Files
 .DS_Store
