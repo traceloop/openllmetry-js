@@ -18,8 +18,6 @@ import type * as llamaindex from "llamaindex";
 import {
   context,
   trace,
-  Span,
-  SpanKind,
   SpanStatusCode,
 } from "@opentelemetry/api";
 import {
@@ -30,6 +28,7 @@ import {
 } from "@opentelemetry/instrumentation";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { LlamaIndexInstrumentationConfig } from "./types";
+import { BaseEmbedding, BaseSynthesizer, LLM, BaseRetriever } from 'llamaindex';
 
 export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   protected override _config!: LlamaIndexInstrumentationConfig;
@@ -59,11 +58,24 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private isLLM(llm: any): llm is llamaindex.LLM {
-    if (!llm) {
-      return false;
-    }
-    return (llm as llamaindex.LLM).complete !== undefined;
+  private isLLM(llm: any): llm is LLM {
+    return (
+      llm &&
+      (llm as LLM).complete !== undefined &&
+      (llm as LLM).chat !== undefined
+    );
+  }
+
+  private isEmbedding(embedding: any): embedding is BaseEmbedding {
+    return embedding instanceof BaseEmbedding;
+  }
+
+  private isSynthesizer(synthesizer: any): synthesizer is BaseSynthesizer {
+    return synthesizer && (synthesizer as BaseSynthesizer).synthesize !== undefined;
+  }
+
+  private isRetriever(retriever: any): retriever is BaseRetriever {
+    return retriever && (retriever as BaseRetriever).retrieve !== undefined;
   }
 
   private patch(
@@ -76,13 +88,14 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       moduleExports.RetrieverQueryEngine.prototype,
       "query",
-      this.patchRetrieverQueryEngine({type: "query"}),
+      this.genericWrapper("RetrieverQueryEngine", "query"),
     );
 
     for (const key in moduleExports) {
       // eslint-disable-next-line @typescript-eslint/no-implicit-any
       const cls = (moduleExports as any)[key];
-      if (this.isLLM(cls.prototype as llamaindex.LLM)) {
+      if (this.isLLM(cls.prototype)) {
+        console.log('LLM', cls.name);
         this._wrap(
           cls.prototype,
           "complete",
@@ -93,11 +106,72 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
           "chat",
           this.chatWrapper({ className: cls.name }),
         );
+      } else if (this.isEmbedding(cls.prototype)) {
+        console.log('Embedding', cls.name);
+        this._wrap(
+          cls.prototype,
+          "getQueryEmbedding",
+          this.genericWrapper(cls.name, "getQueryEmbedding")
+        );
+      } else if (this.isSynthesizer(cls.prototype)) {
+        console.log('Synth', cls.name);
+        this._wrap(
+          cls.prototype,
+          "synthesize",
+          this.genericWrapper(cls.name, "synthesize")
+        );
+      } else if (this.isRetriever(cls.prototype)) {
+        console.log('Retriver', cls.name);
+        this._wrap(
+          cls.prototype,
+          "retrieve",
+          this.genericWrapper(cls.name, "retrieve")
+        );
       }
     }
 
+
     return moduleExports;
   }
+
+  private genericWrapper(className: string, methodName: string) {
+    const plugin = this;
+    return (original: Function) => {
+      return function method(this: BaseEmbedding, ...args: unknown[]) {
+        const span = plugin.tracer.startSpan(
+          `llamaindex.${className}.${methodName}`
+        );
+        const execContext = trace.setSpan(context.active(), span);
+        const execPromise = safeExecuteInTheMiddle(
+          () => {
+            return context.with(execContext, () => {
+              return original.apply(this, args);
+            });
+          },
+          (error) => {}
+        );
+        const wrappedPromise = execPromise
+        .then((result: any) => {
+          return new Promise((resolve) => {
+            span.setStatus({ code: SpanStatusCode.OK });
+            span.end();
+            resolve(result);
+          });
+        })
+        .catch((error: Error) => {
+          return new Promise((_, reject) => {
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: error.message,
+            });
+            span.end();
+            reject(error);
+          });
+        })
+        return context.bind(execContext, wrappedPromise as any);
+      }
+    };
+  };
 
   private completeWrapper({
     className
@@ -218,58 +292,6 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
         return context.bind(execContext, wrappedPromise as any);
       };
     }
-  }
-
-  private patchRetrieverQueryEngine({ type }: { type: "query" }) {
-    const plugin = this;
-    return (original: Function) => {
-      return function method(this: any, ...args: unknown[]) {
-        const span = plugin.tracer.startSpan(`llamaindex.RetrieverQueryEngine.${type}`, {
-          kind: SpanKind.CLIENT,
-        });
-
-        const execContext = trace.setSpan(context.active(), span);
-        const execPromise = safeExecuteInTheMiddle(
-          () => {
-            return context.with(execContext, () => {
-              return original.apply(this, args);
-            });
-          },
-          (error) => {}
-        );
-        const wrappedPromise = plugin._wrapPromise(
-          span,
-          execPromise,
-        );
-
-        return context.bind(execContext, wrappedPromise as any);
-      };
-    };
-  }
-
-  private _wrapPromise<T>(
-    span: Span,
-    promise: Promise<T>,
-  ): Promise<T> {
-    return promise
-    .then((result) => {
-      return new Promise<T>((resolve) => {
-        span.end();
-        resolve(result);
-      });
-    })
-    .catch((error: Error) => {
-      return new Promise<T>((_, reject) => {
-        span.setStatus({
-          code: SpanStatusCode.ERROR,
-          message: error.message,
-        });
-        span.recordException(error);
-        span.end();
-
-        reject(error);
-      });
-    });
   }
 
   private _shouldSendPrompts() {
