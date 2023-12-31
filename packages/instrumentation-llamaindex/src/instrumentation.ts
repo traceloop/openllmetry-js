@@ -1,36 +1,35 @@
 /*
- * Copyright Traceloop
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Copyright Traceloop
+  *
+  * Licensed under the Apache License, Version 2.0 (the "License");
+  * you may not use this file except in compliance with the License.
+  * You may obtain a copy of the License at
+  *
+  *      https://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 import type * as llamaindex from "llamaindex";
-//import {
-//  context,
-//  trace,
-//  Span,
-//  Attributes,
-//  SpanKind,
-//  SpanStatusCode,
-//} from "@opentelemetry/api";
+
+import {
+  context,
+  trace,
+  Span,
+  SpanKind,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
   InstrumentationNodeModuleDefinition,
-//  safeExecuteInTheMiddle,
+  safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
-// import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { LlamaIndexInstrumentationConfig } from "./types";
-// import { Document, VectorStoreIndex } from "llamaindex";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   protected override _config!: LlamaIndexInstrumentationConfig;
@@ -49,41 +48,22 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     if (module.openLLMetryPatched) {
       return;
     }
-
-    // Old version of OpenAI API (v3.1.0)
-//    if ((module as any).OpenAIApi) {
-//      this._wrap(
-//        (module as any).OpenAIApi.prototype,
-//        "createChatCompletion",
-//        this.patchOpenAI("chat", "v3"),
-//      );
-//      this._wrap(
-//        (module as any).OpenAIApi.prototype,
-//        "createCompletion",
-//        this.patchOpenAI("completion", "v3"),
-//      );
-//    } else {
-//      this._wrap(
-//        module.Chat.Completions.prototype,
-//        "create",
-//        this.patchOpenAI("chat"),
-//      );
-//      this._wrap(
-//        module.Completions.prototype,
-//        "create",
-//        this.patchOpenAI("completion"),
-//      );
-//    }
   }
 
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "llamaindex",
       [">=0.0.40"],
-      this.patch.bind(this),
-      this.unpatch.bind(this),
+        this.patch.bind(this),
     );
     return module;
+  }
+
+  private isLLM(llm: any): llm is llamaindex.LLM {
+    if (!llm) {
+      return false;
+    }
+    return (llm as llamaindex.LLM).complete !== undefined;
   }
 
   private patch(
@@ -93,299 +73,209 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
       return moduleExports;
     }
 
-    // Old version of OpenAI API (v3.1.0)
-//    if ((moduleExports as any).OpenAIApi) {
-//      this._wrap(
-//        (moduleExports as any).OpenAIApi.prototype,
-//        "createChatCompletion",
-//        this.patchOpenAI("chat", "v3"),
-//      );
-//      this._wrap(
-//        (moduleExports as any).OpenAIApi.prototype,
-//        "createCompletion",
-//        this.patchOpenAI("completion", "v3"),
-//      );
-//    } else {
-//      moduleExports.openLLMetryPatched = true;
-//      this._wrap(
-//        moduleExports.OpenAI.Chat.Completions.prototype,
-//        "create",
-//        this.patchOpenAI("chat"),
-//      );
-//      this._wrap(
-//        moduleExports.OpenAI.Completions.prototype,
-//        "create",
-//        this.patchOpenAI("completion"),
-//      );
-//    }
+    this._wrap(
+      moduleExports.RetrieverQueryEngine.prototype,
+      "query",
+      this.patchRetrieverQueryEngine({type: "query"}),
+    );
+
+    for (const key in moduleExports) {
+      // eslint-disable-next-line @typescript-eslint/no-implicit-any
+      const cls = (moduleExports as any)[key];
+      if (this.isLLM(cls.prototype as llamaindex.LLM)) {
+        this._wrap(
+          cls.prototype,
+          "complete",
+          this.completeWrapper({ className: cls.name }),
+        );
+        this._wrap(
+          cls.prototype,
+          "chat",
+          this.chatWrapper({ className: cls.name }),
+        );
+      }
+    }
+
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof llamaindex): void {
-//    // Old version of OpenAI API (v3.1.0)
-//    if ((moduleExports as any).OpenAIApi) {
-//      this._unwrap(
-//        (moduleExports as any).OpenAIApi.prototype,
-//        "createChatCompletion",
-//      );
-//      this._unwrap(
-//        (moduleExports as any).OpenAIApi.prototype,
-//        "createCompletion",
-//      );
-//    } else {
-//      this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
-//      this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
-//    }
+  private completeWrapper({
+    className
+  }: {
+    className: string
+  }) {
+    const plugin = this;
+    return (original: Function) => {
+      return function method(this: llamaindex.LLM, ...args: unknown[]) {
+        const prompt = args[0];
+
+        const span = plugin.tracer.startSpan(
+          `llamaindex.${className}.complete`
+        );
+
+        span.setAttribute(SpanAttributes.LLM_VENDOR, 'llamaindex');
+        span.setAttribute(SpanAttributes.LLM_REQUEST_MODEL, this.metadata.model);
+        span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "complete");
+        span.setAttribute(SpanAttributes.LLM_TOP_P, this.metadata.topP);
+        if (plugin._shouldSendPrompts()) {
+          span.setAttribute(`${SpanAttributes.LLM_PROMPTS}.0.content`, prompt as string);
+        }
+
+        const execContext = trace.setSpan(context.active(), span);
+        const execPromise = safeExecuteInTheMiddle(
+          () => {
+            return context.with(execContext, () => {
+              return original.apply(this, args);
+            });
+          },
+          (error) => {}
+        );
+        const wrappedPromise = execPromise
+        .then((result: any) => {
+          return new Promise((resolve) => {
+            span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, this.metadata.model);
+            if (plugin._shouldSendPrompts()) {
+              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.0.role`, result.message.role);
+              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.0.content`, result.message.content);
+            }
+            span.setStatus({ code: SpanStatusCode.OK });
+            span.end();
+            resolve(result);
+          });
+        })
+        .catch((error: Error) => {
+          return new Promise((_, reject) => {
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: error.message,
+            });
+            span.end();
+            reject(error);
+          });
+        })
+        return context.bind(execContext, wrappedPromise as any);
+      };
+    }
   }
 
-//  private patchOpenAI(
-//    type: "chat" | "completion",
-//    version: "v3" | "v4" = "v4",
-//  ) {
-//    // eslint-disable-next-line @typescript-eslint/no-this-alias
-//    const plugin = this;
-//    // eslint-disable-next-line @typescript-eslint/ban-types
-//    return (original: Function) => {
-//      return function method(this: any, ...args: unknown[]) {
-//        const span =
-//          type === "chat"
-//            ? plugin.startSpan({
-//                type,
-//                params: args[0] as ChatCompletionCreateParamsNonStreaming & {
-//                  extraAttributes?: Record<string, any>;
-//                },
-//              })
-//            : plugin.startSpan({
-//                type,
-//                params: args[0] as CompletionCreateParamsNonStreaming & {
-//                  extraAttributes?: Record<string, any>;
-//                },
-//              });
-//
-//        const execContext = trace.setSpan(context.active(), span);
-//        const execPromise = safeExecuteInTheMiddle(
-//          () => {
-//            return context.with(execContext, () => {
-//              if ((args?.[0] as any)?.extraAttributes) {
-//                delete (args[0] as any).extraAttributes;
-//              }
-//              return original.apply(this, args);
-//            });
-//          },
-//          (error) => {
-//            // if (error) {
-//            // }
-//          },
-//        );
-//
-//        const wrappedPromise = plugin._wrapPromise(
-//          type,
-//          version,
-//          span,
-//          execPromise,
-//        );
-//
-//        return context.bind(execContext, wrappedPromise as any);
-//      };
-//    };
-//  }
-//
-//  private startSpan({
-//    type,
-//    params,
-//  }:
-//    | {
-//        type: "chat";
-//        params: ChatCompletionCreateParamsNonStreaming & {
-//          extraAttributes?: Record<string, any>;
-//        };
-//      }
-//    | {
-//        type: "completion";
-//        params: CompletionCreateParamsNonStreaming & {
-//          extraAttributes?: Record<string, any>;
-//        };
-//      }): Span {
-//    const attributes: Attributes = {
-//      [SpanAttributes.LLM_VENDOR]: "OpenAI",
-//      [SpanAttributes.LLM_REQUEST_TYPE]: type,
-//    };
-//
-//    attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
-//    if (params.max_tokens) {
-//      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
-//    }
-//    if (params.temperature) {
-//      attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
-//    }
-//    if (params.top_p) {
-//      attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
-//    }
-//    if (params.frequency_penalty) {
-//      attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
-//        params.frequency_penalty;
-//    }
-//    if (params.presence_penalty) {
-//      attributes[SpanAttributes.LLM_PRESENCE_PENALTY] = params.presence_penalty;
-//    }
-//
-//    if (
-//      params.extraAttributes !== undefined &&
-//      typeof params.extraAttributes === "object"
-//    ) {
-//      Object.keys(params.extraAttributes).forEach((key: string) => {
-//        attributes[key] = params.extraAttributes![key];
-//      });
-//    }
-//
-//    if (this._shouldSendPrompts()) {
-//      if (type === "chat") {
-//        params.messages.forEach((message, index) => {
-//          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-//            message.role;
-//          if (typeof message.content === "string") {
-//            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-//              (message.content as string) || "";
-//          } else {
-//            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-//              JSON.stringify(message.content);
-//          }
-//        });
-//      } else {
-//        if (typeof params.prompt === "string") {
-//          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-//          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
-//        }
-//      }
-//    }
-//
-//    return this.tracer.startSpan(`openai.${type}`, {
-//      kind: SpanKind.CLIENT,
-//      attributes,
-//    });
-//  }
-//
-//  private _wrapPromise<T>(
-//    type: "chat" | "completion",
-//    version: "v3" | "v4",
-//    span: Span,
-//    promise: Promise<T>,
-//  ): Promise<T> {
-//    return promise
-//      .then((result) => {
-//        return new Promise<T>((resolve) => {
-//          if (version === "v3") {
-//            if (type === "chat") {
-//              this._endSpan({
-//                type,
-//                span,
-//                result: (result as any).data as ChatCompletion,
-//              });
-//            } else {
-//              this._endSpan({
-//                type,
-//                span,
-//                result: (result as any).data as Completion,
-//              });
-//            }
-//          } else {
-//            if (type === "chat") {
-//              this._endSpan({ type, span, result: result as ChatCompletion });
-//            } else {
-//              this._endSpan({ type, span, result: result as Completion });
-//            }
-//          }
-//          resolve(result);
-//        });
-//      })
-//      .catch((error: Error) => {
-//        return new Promise<T>((_, reject) => {
-//          span.setStatus({
-//            code: SpanStatusCode.ERROR,
-//            message: error.message,
-//          });
-//          span.recordException(error);
-//          span.end();
-//
-//          reject(error);
-//        });
-//      });
-//  }
-//
-//  private _endSpan({
-//    span,
-//    type,
-//    result,
-//  }:
-//    | { span: Span; type: "chat"; result: ChatCompletion }
-//    | { span: Span; type: "completion"; result: Completion }) {
-//    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
-//    if (result.usage) {
-//      span.setAttribute(
-//        SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-//        result.usage?.total_tokens,
-//      );
-//      span.setAttribute(
-//        SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-//        result.usage?.completion_tokens,
-//      );
-//      span.setAttribute(
-//        SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-//        result.usage?.prompt_tokens,
-//      );
-//    }
-//
-//    if (this._shouldSendPrompts()) {
-//      if (type === "chat") {
-//        result.choices.forEach((choice, index) => {
-//          span.setAttribute(
-//            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-//            choice.finish_reason,
-//          );
-//          span.setAttribute(
-//            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-//            choice.message.role,
-//          );
-//          span.setAttribute(
-//            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-//            choice.message.content ?? "",
-//          );
-//
-//          if (choice.message.function_call) {
-//            span.setAttribute(
-//              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-//              choice.message.function_call.name,
-//            );
-//            span.setAttribute(
-//              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-//              choice.message.function_call.arguments,
-//            );
-//          }
-//        });
-//      } else {
-//        result.choices.forEach((choice, index) => {
-//          span.setAttribute(
-//            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-//            choice.finish_reason,
-//          );
-//          span.setAttribute(
-//            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-//            "assistant",
-//          );
-//          span.setAttribute(
-//            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-//            choice.text,
-//          );
-//        });
-//      }
-//    }
-//
-//    span.end();
-//  }
+  private chatWrapper({
+    className
+  }: {
+    className: string
+  }) {
+    const plugin = this;
+    return (original: Function) => {
+      return function method(this: llamaindex.LLM, ...args: unknown[]) {
+        const messages = args[0] as llamaindex.ChatMessage[];
 
-//  private _shouldSendPrompts() {
-//    return this._config.traceContent !== undefined
-//      ? this._config.traceContent
-//      : true;
-//  }
+        const span = plugin.tracer.startSpan(
+          `llamaindex.${className}.chat`
+        );
+
+        span.setAttribute(SpanAttributes.LLM_VENDOR, 'llamaindex');
+        span.setAttribute(SpanAttributes.LLM_REQUEST_MODEL, this.metadata.model);
+        span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
+        span.setAttribute(SpanAttributes.LLM_TOP_P, this.metadata.topP);
+        if (plugin._shouldSendPrompts()) {
+          for (const messageIdx in messages) {
+            span.setAttribute(`${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`, messages[messageIdx].content);
+            span.setAttribute(`${SpanAttributes.LLM_PROMPTS}.${messageIdx}.role`, messages[messageIdx].role);
+          }
+        }
+
+        const execContext = trace.setSpan(context.active(), span);
+        const execPromise = safeExecuteInTheMiddle(
+          () => {
+            return context.with(execContext, () => {
+              return original.apply(this, args);
+            });
+          },
+          (error) => {}
+        );
+        const wrappedPromise = execPromise
+        .then((result: any) => {
+          return new Promise((resolve) => {
+            span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, this.metadata.model);
+            if (plugin._shouldSendPrompts()) {
+              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.0.role`, result.message.role);
+              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.0.content`, result.message.content);
+            }
+            span.setStatus({ code: SpanStatusCode.OK });
+            span.end();
+            resolve(result);
+          });
+        })
+        .catch((error: Error) => {
+          return new Promise((_, reject) => {
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: error.message,
+            });
+            span.end();
+            reject(error);
+          });
+        })
+        return context.bind(execContext, wrappedPromise as any);
+      };
+    }
+  }
+
+  private patchRetrieverQueryEngine({ type }: { type: "query" }) {
+    const plugin = this;
+    return (original: Function) => {
+      return function method(this: any, ...args: unknown[]) {
+        const span = plugin.tracer.startSpan(`llamaindex.RetrieverQueryEngine.${type}`, {
+          kind: SpanKind.CLIENT,
+        });
+
+        const execContext = trace.setSpan(context.active(), span);
+        const execPromise = safeExecuteInTheMiddle(
+          () => {
+            return context.with(execContext, () => {
+              return original.apply(this, args);
+            });
+          },
+          (error) => {}
+        );
+        const wrappedPromise = plugin._wrapPromise(
+          span,
+          execPromise,
+        );
+
+        return context.bind(execContext, wrappedPromise as any);
+      };
+    };
+  }
+
+  private _wrapPromise<T>(
+    span: Span,
+    promise: Promise<T>,
+  ): Promise<T> {
+    return promise
+    .then((result) => {
+      return new Promise<T>((resolve) => {
+        span.end();
+        resolve(result);
+      });
+    })
+    .catch((error: Error) => {
+      return new Promise<T>((_, reject) => {
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: error.message,
+        });
+        span.recordException(error);
+        span.end();
+
+        reject(error);
+      });
+    });
+  }
+
+  private _shouldSendPrompts() {
+    return this._config.traceContent !== undefined
+      ? this._config.traceContent
+      : true;
+  }
 }
+

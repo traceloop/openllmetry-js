@@ -10,6 +10,7 @@ import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions"
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
+import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
@@ -18,11 +19,15 @@ import { TraceloopSampler } from "./sampler";
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
+let llamaIndexInstrumentation: LlamaIndexInstrumentation;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
   openAIInstrumentation = new OpenAIInstrumentation();
   instrumentations.push(openAIInstrumentation);
+
+  llamaIndexInstrumentation = new LlamaIndexInstrumentation();
+  instrumentations.push(llamaIndexInstrumentation);
 };
 
 /**
@@ -38,6 +43,7 @@ export const startTracing = (options: InitializeOptions) => {
     (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"
   ) {
     openAIInstrumentation.setConfig({ traceContent: false });
+    llamaIndexInstrumentation.setConfig({ traceContent: false });
   }
 
   const traceExporter =
@@ -98,6 +104,7 @@ export const startTracing = (options: InitializeOptions) => {
 
   if (options.instrumentModules) {
     openAIInstrumentation.manuallyInstrument(options.instrumentModules.openAI);
+    llamaIndexInstrumentation.manuallyInstrument(options.instrumentModules.llamaIndex);
   }
 };
 
