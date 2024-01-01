@@ -28,7 +28,12 @@ import {
 } from "@opentelemetry/instrumentation";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { LlamaIndexInstrumentationConfig } from "./types";
-import { BaseEmbedding, BaseSynthesizer, LLM, BaseRetriever } from 'llamaindex';
+import {
+    BaseEmbedding,
+    BaseSynthesizer,
+    LLM,
+    BaseRetriever
+} from 'llamaindex';
 
 export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   protected override _config!: LlamaIndexInstrumentationConfig;
@@ -53,7 +58,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "llamaindex",
       [">=0.0.40"],
-        this.patch.bind(this),
+      this.patch.bind(this),
+      this.unpatch.bind(this),
     );
     return module;
   }
@@ -67,7 +73,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   }
 
   private isEmbedding(embedding: any): embedding is BaseEmbedding {
-    return embedding instanceof BaseEmbedding;
+    return embedding instanceof BaseEmbedding && embedding.getQueryEmbedding !== undefined;
   }
 
   private isSynthesizer(synthesizer: any): synthesizer is BaseSynthesizer {
@@ -92,10 +98,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     );
 
     for (const key in moduleExports) {
-      // eslint-disable-next-line @typescript-eslint/no-implicit-any
       const cls = (moduleExports as any)[key];
       if (this.isLLM(cls.prototype)) {
-        console.log('LLM', cls.name);
         this._wrap(
           cls.prototype,
           "complete",
@@ -107,21 +111,18 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
           this.chatWrapper({ className: cls.name }),
         );
       } else if (this.isEmbedding(cls.prototype)) {
-        console.log('Embedding', cls.name);
         this._wrap(
           cls.prototype,
           "getQueryEmbedding",
           this.genericWrapper(cls.name, "getQueryEmbedding")
         );
       } else if (this.isSynthesizer(cls.prototype)) {
-        console.log('Synth', cls.name);
         this._wrap(
           cls.prototype,
           "synthesize",
           this.genericWrapper(cls.name, "synthesize")
         );
       } else if (this.isRetriever(cls.prototype)) {
-        console.log('Retriver', cls.name);
         this._wrap(
           cls.prototype,
           "retrieve",
@@ -130,6 +131,45 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
       }
     }
 
+    return moduleExports;
+  }
+
+  private unpatch(
+    moduleExports: typeof llamaindex & { openLLMetryPatched?: boolean },
+  ) {
+    this._unwrap(
+      moduleExports.RetrieverQueryEngine.prototype,
+      "query",
+    );
+
+    for (const key in moduleExports) {
+      const cls = (moduleExports as any)[key];
+      if (this.isLLM(cls.prototype)) {
+        this._unwrap(
+          cls.prototype,
+          "complete",
+        );
+        this._unwrap(
+          cls.prototype,
+          "chat",
+        );
+      } else if (this.isEmbedding(cls.prototype)) {
+        this._unwrap(
+          cls.prototype,
+          "getQueryEmbedding",
+        );
+      } else if (this.isSynthesizer(cls.prototype)) {
+        this._unwrap(
+          cls.prototype,
+          "synthesize",
+        );
+      } else if (this.isRetriever(cls.prototype)) {
+        this._unwrap(
+          cls.prototype,
+          "retrieve",
+        );
+      }
+    }
 
     return moduleExports;
   }
