@@ -25,7 +25,9 @@ To load a specific plugin, specify it in the registerInstrumentations's configur
 
 ```js
 const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
-const { LlamaIndexInstrumentation } = require("@traceloop/instrumentation-llamaindex");
+const {
+  LlamaIndexInstrumentation,
+} = require("@traceloop/instrumentation-llamaindex");
 const { registerInstrumentations } = require("@opentelemetry/instrumentation");
 
 const provider = new NodeTracerProvider();

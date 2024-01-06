@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-import { context } from '@opentelemetry/api';
-import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks';
-import { LlamaIndexInstrumentation } from '../src/instrumentation';
-import * as assert from 'assert';
-import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
-import type * as llamaindexImport from 'llamaindex';
+import { context } from "@opentelemetry/api";
+import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
+import { LlamaIndexInstrumentation } from "../src/instrumentation";
+import * as assert from "assert";
+import {
+  BasicTracerProvider,
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+} from "@opentelemetry/sdk-trace-base";
+import type * as llamaindexImport from "llamaindex";
 
 const memoryExporter = new InMemorySpanExporter();
 
-describe('Test LlamaIndex instrumentation', () => {
+describe("Test LlamaIndex instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: LlamaIndexInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -35,7 +39,7 @@ describe('Test LlamaIndex instrumentation', () => {
     context.setGlobalContextManager(contextManager);
     instrumentation = new LlamaIndexInstrumentation();
     instrumentation.setTracerProvider(provider);
-    llamaindex = require('llamaindex');
+    llamaindex = require("llamaindex");
   });
 
   afterEach(() => {
@@ -43,11 +47,11 @@ describe('Test LlamaIndex instrumentation', () => {
     context.disable();
   });
 
-  it('should set attributes in span for LLM instrumentation', async () => {
-    const model = 'gpt-3.5-turbo';
-    const prompt = 'Tell me a joke about OpenTelemetry';
+  it("should set attributes in span for LLM instrumentation", async () => {
+    const model = "gpt-3.5-turbo";
+    const prompt = "Tell me a joke about OpenTelemetry";
     const openai = new llamaindex.OpenAI({ model, temperature: 0 });
-    const res =  await openai.complete(prompt);
+    const res = await openai.complete(prompt);
 
     assert.ok(res);
 
@@ -57,51 +61,63 @@ describe('Test LlamaIndex instrumentation', () => {
     const chatAttributes = spans[0].attributes;
     const completionAttributes = spans[1].attributes;
 
-    assert.strictEqual(chatAttributes['llm.vendor'], 'llamaindex');
-    assert.strictEqual(chatAttributes['llm.request.type'], 'chat');
-    assert.strictEqual(chatAttributes['llm.request.model'], model);
-    assert.strictEqual(chatAttributes['llm.top_p'], 1);
-    assert.strictEqual(chatAttributes['llm.prompts.0.content'], prompt);
-    assert.strictEqual(chatAttributes['llm.prompts.0.role'], "user");
-    assert.strictEqual(chatAttributes['llm.completions.0.role'], 'assistant');
-    assert.ok(chatAttributes['llm.completions.0.content']);
+    assert.strictEqual(chatAttributes["llm.vendor"], "llamaindex");
+    assert.strictEqual(chatAttributes["llm.request.type"], "chat");
+    assert.strictEqual(chatAttributes["llm.request.model"], model);
+    assert.strictEqual(chatAttributes["llm.top_p"], 1);
+    assert.strictEqual(chatAttributes["llm.prompts.0.content"], prompt);
+    assert.strictEqual(chatAttributes["llm.prompts.0.role"], "user");
+    assert.strictEqual(chatAttributes["llm.completions.0.role"], "assistant");
+    assert.ok(chatAttributes["llm.completions.0.content"]);
 
-    assert.strictEqual(completionAttributes['llm.vendor'], 'llamaindex');
-    assert.strictEqual(completionAttributes['llm.request.type'], 'complete');
-    assert.strictEqual(completionAttributes['llm.request.model'], model);
-    assert.strictEqual(completionAttributes['llm.top_p'], 1);
-    assert.strictEqual(completionAttributes['llm.prompts.0.content'], prompt);
-    assert.strictEqual(completionAttributes['llm.completions.0.role'], 'assistant');
-    assert.ok(completionAttributes['llm.completions.0.content']);
+    assert.strictEqual(completionAttributes["llm.vendor"], "llamaindex");
+    assert.strictEqual(completionAttributes["llm.request.type"], "complete");
+    assert.strictEqual(completionAttributes["llm.request.model"], model);
+    assert.strictEqual(completionAttributes["llm.top_p"], 1);
+    assert.strictEqual(completionAttributes["llm.prompts.0.content"], prompt);
+    assert.strictEqual(
+      completionAttributes["llm.completions.0.role"],
+      "assistant",
+    );
+    assert.ok(completionAttributes["llm.completions.0.content"]);
   });
 
-  it('should add span for all instrumented methods', async () => {
+  it("should add span for all instrumented methods", async () => {
     const directoryReader = new llamaindex.SimpleDirectoryReader();
-    const documents = await directoryReader.loadData({ directoryPath: 'test' });
+    const documents = await directoryReader.loadData({ directoryPath: "test" });
     const embedModel = new llamaindex.OpenAIEmbedding();
     const vectorStore = new llamaindex.SimpleVectorStore();
 
-    const serviceContext = llamaindex.serviceContextFromDefaults({ embedModel });
-    const storageContext = await llamaindex.storageContextFromDefaults({ vectorStore });
+    const serviceContext = llamaindex.serviceContextFromDefaults({
+      embedModel,
+    });
+    const storageContext = await llamaindex.storageContextFromDefaults({
+      vectorStore,
+    });
 
-    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents, { storageContext, serviceContext });
+    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents, {
+      storageContext,
+      serviceContext,
+    });
 
     const queryEngine = index.asQueryEngine();
 
-    const result = await queryEngine.query('Where was albert einstein born?');
+    const result = await queryEngine.query("Where was albert einstein born?");
 
     assert.ok(result.response);
 
     const spans = memoryExporter.getFinishedSpans();
 
-    const spanNames = spans.map(span => span.name);
+    const spanNames = spans.map((span) => span.name);
 
-    assert.ok(spanNames.includes('llamaindex.OpenAIEmbedding.getQueryEmbedding'));
-    assert.ok(spanNames.includes('llamaindex.VectorIndexRetriever.retrieve'));
-    assert.ok(spanNames.includes('llamaindex.RetrieverQueryEngine.retrieve'));
-    assert.ok(spanNames.includes('llamaindex.OpenAI2.chat'));
-    assert.ok(spanNames.includes('llamaindex.OpenAI2.complete'));
-    assert.ok(spanNames.includes('llamaindex.ResponseSynthesizer.synthesize'));
-    assert.ok(spanNames.includes('llamaindex.RetrieverQueryEngine.query'));
+    assert.ok(
+      spanNames.includes("llamaindex.OpenAIEmbedding.getQueryEmbedding"),
+    );
+    assert.ok(spanNames.includes("llamaindex.VectorIndexRetriever.retrieve"));
+    assert.ok(spanNames.includes("llamaindex.RetrieverQueryEngine.retrieve"));
+    assert.ok(spanNames.includes("llamaindex.OpenAI2.chat"));
+    assert.ok(spanNames.includes("llamaindex.OpenAI2.complete"));
+    assert.ok(spanNames.includes("llamaindex.ResponseSynthesizer.synthesize"));
+    assert.ok(spanNames.includes("llamaindex.RetrieverQueryEngine.query"));
   }).timeout(60000);
 });

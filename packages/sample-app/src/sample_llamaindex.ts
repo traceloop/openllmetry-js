@@ -21,17 +21,22 @@ const vectorStore = new SimpleVectorStore();
 class SampleLlamaIndex {
   @traceloop.workflow("sample_query")
   async query() {
-    const documents = await (new SimpleDirectoryReader()).loadData({ directoryPath: 'packages/sample-app/data/paul_graham' });
+    const documents = await new SimpleDirectoryReader().loadData({
+      directoryPath: "packages/sample-app/data/paul_graham",
+    });
 
     const serviceContext = serviceContextFromDefaults({ embedModel });
     const storageContext = await storageContextFromDefaults({ vectorStore });
 
-    const index = await VectorStoreIndex.fromDocuments(documents, { storageContext, serviceContext });
+    const index = await VectorStoreIndex.fromDocuments(documents, {
+      storageContext,
+      serviceContext,
+    });
 
     const queryEngine = index.asQueryEngine();
 
-    const res = await queryEngine.query('What did the author do growing up?');
-    return res
+    const res = await queryEngine.query("What did the author do growing up?");
+    return res;
   }
 }
 
