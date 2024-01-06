@@ -43,5 +43,6 @@ traceloop.withAssociationProperties(
     const sampleLlamaIndex = new SampleLlamaIndex();
     const result = await sampleLlamaIndex.query();
     console.log(result.response);
+    (await vectorStore.client()).end();
   },
 );
