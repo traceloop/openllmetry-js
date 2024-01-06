@@ -43,12 +43,67 @@ describe('Test LlamaIndex instrumentation', () => {
     context.disable();
   });
 
-  it('should set attributes in span', async () => {
-    const openai = new llamaindex.OpenAI({ model: "gpt-3.5-turbo", temperature: 0 });
-    await openai.complete("What's your name?");
+  it('should set attributes in span for LLM instrumentation', async () => {
+    const model = 'gpt-3.5-turbo';
+    const prompt = 'Tell me a joke about OpenTelemetry';
+    const openai = new llamaindex.OpenAI({ model, temperature: 0 });
+    const res =  await openai.complete(prompt);
+
+    assert.ok(res);
+
     const spans = memoryExporter.getFinishedSpans();
+
     assert.strictEqual(spans.length, 2);
-    assert.strictEqual(spans[0].attributes['llm.request.type'], 'chat');
-    assert.strictEqual(spans[1].attributes['llm.request.type'], 'complete');
+    const chatAttributes = spans[0].attributes;
+    const completionAttributes = spans[1].attributes;
+
+    assert.strictEqual(chatAttributes['llm.vendor'], 'llamaindex');
+    assert.strictEqual(chatAttributes['llm.request.type'], 'chat');
+    assert.strictEqual(chatAttributes['llm.request.model'], model);
+    assert.strictEqual(chatAttributes['llm.top_p'], 1);
+    assert.strictEqual(chatAttributes['llm.prompts.0.content'], prompt);
+    assert.strictEqual(chatAttributes['llm.prompts.0.role'], "user");
+    assert.strictEqual(chatAttributes['llm.completions.0.role'], 'assistant');
+    assert.ok(chatAttributes['llm.completions.0.content']);
+
+    assert.strictEqual(completionAttributes['llm.vendor'], 'llamaindex');
+    assert.strictEqual(completionAttributes['llm.request.type'], 'complete');
+    assert.strictEqual(completionAttributes['llm.request.model'], model);
+    assert.strictEqual(completionAttributes['llm.top_p'], 1);
+    assert.strictEqual(completionAttributes['llm.prompts.0.content'], prompt);
+    assert.strictEqual(completionAttributes['llm.completions.0.role'], 'assistant');
+    assert.ok(completionAttributes['llm.completions.0.content']);
   });
+
+  it('should add span for all instrumented methods', async () => {
+    const directoryReader = new llamaindex.SimpleDirectoryReader();
+    const documents = await directoryReader.loadData({ directoryPath: 'test' });
+    const embedModel = new llamaindex.OpenAIEmbedding();
+    const vectorStore = new llamaindex.PGVectorStore();
+
+    const serviceContext = llamaindex.serviceContextFromDefaults({ embedModel });
+    const storageContext = await llamaindex.storageContextFromDefaults({ vectorStore });
+
+    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents, { storageContext, serviceContext });
+
+    const queryEngine = index.asQueryEngine();
+
+    const result = await queryEngine.query('Where was albert einstein born?');
+
+    assert.ok(result.response);
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    const spanNames = spans.map(span => span.name);
+
+    assert.ok(spanNames.includes('llamaindex.OpenAIEmbedding.getQueryEmbedding'));
+    assert.ok(spanNames.includes('llamaindex.VectorIndexRetriever.retrieve'));
+    assert.ok(spanNames.includes('llamaindex.RetrieverQueryEngine.retrieve'));
+    assert.ok(spanNames.includes('llamaindex.OpenAI2.chat'));
+    assert.ok(spanNames.includes('llamaindex.OpenAI2.complete'));
+    assert.ok(spanNames.includes('llamaindex.ResponseSynthesizer.synthesize'));
+    assert.ok(spanNames.includes('llamaindex.RetrieverQueryEngine.query'));
+
+    (await vectorStore.client()).end();
+  }).timeout(60000);
 });
