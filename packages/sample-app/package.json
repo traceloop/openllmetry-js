@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@traceloop/node-server-sdk": "*",
+    "llamaindex": "^0.0.40",
     "openai": "^4.12.4"
   },
   "private": true,
