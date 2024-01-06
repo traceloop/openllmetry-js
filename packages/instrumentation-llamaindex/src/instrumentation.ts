@@ -175,7 +175,9 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   }
 
   private genericWrapper(className: string, methodName: string) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: BaseEmbedding, ...args: unknown[]) {
         const span = plugin.tracer.startSpan(
@@ -188,7 +190,10 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          (error) => {}
+          (error) => {
+            // if (error) {
+            // }
+          }
         );
         const wrappedPromise = execPromise
         .then((result: any) => {
@@ -211,14 +216,16 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
         return context.bind(execContext, wrappedPromise as any);
       }
     };
-  };
+  }
 
   private completeWrapper({
     className
   }: {
     className: string
   }) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: llamaindex.LLM, ...args: unknown[]) {
         const prompt = args[0];
@@ -242,7 +249,10 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          (error) => {}
+          (error) => {
+            // if (error) {
+            // }
+          }
         );
         const wrappedPromise = execPromise
         .then((result: any) => {
@@ -254,7 +264,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
             }
             span.setStatus({ code: SpanStatusCode.OK });
             span.end();
-            resolve(result);
+            resolve(result)
           });
         })
         .catch((error: Error) => {
@@ -277,7 +287,9 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   }: {
     className: string
   }) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: llamaindex.LLM, ...args: unknown[]) {
         const messages = args[0] as llamaindex.ChatMessage[];
@@ -304,7 +316,10 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          (error) => {}
+          (error) => {
+            // if (error) {
+            // }
+          }
         );
         const wrappedPromise = execPromise
         .then((result: any) => {
