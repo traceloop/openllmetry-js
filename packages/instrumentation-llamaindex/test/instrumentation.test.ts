@@ -79,7 +79,7 @@ describe('Test LlamaIndex instrumentation', () => {
     const directoryReader = new llamaindex.SimpleDirectoryReader();
     const documents = await directoryReader.loadData({ directoryPath: 'test' });
     const embedModel = new llamaindex.OpenAIEmbedding();
-    const vectorStore = new llamaindex.PGVectorStore();
+    const vectorStore = new llamaindex.SimpleVectorStore();
 
     const serviceContext = llamaindex.serviceContextFromDefaults({ embedModel });
     const storageContext = await llamaindex.storageContextFromDefaults({ vectorStore });
@@ -103,7 +103,5 @@ describe('Test LlamaIndex instrumentation', () => {
     assert.ok(spanNames.includes('llamaindex.OpenAI2.complete'));
     assert.ok(spanNames.includes('llamaindex.ResponseSynthesizer.synthesize'));
     assert.ok(spanNames.includes('llamaindex.RetrieverQueryEngine.query'));
-
-    (await vectorStore.client()).end();
   }).timeout(60000);
 });

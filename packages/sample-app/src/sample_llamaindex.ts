@@ -2,7 +2,7 @@ import * as traceloop from "@traceloop/node-server-sdk";
 import {
   OpenAIEmbedding,
   SimpleDirectoryReader,
-  PGVectorStore,
+  SimpleVectorStore,
   VectorStoreIndex,
   serviceContextFromDefaults,
   storageContextFromDefaults,
@@ -16,9 +16,7 @@ traceloop.initialize({
 
 const embedModel = new OpenAIEmbedding();
 
-const vectorStore = new PGVectorStore();
-
-vectorStore.setCollection('quickstart');
+const vectorStore = new SimpleVectorStore();
 
 class SampleLlamaIndex {
   @traceloop.workflow("sample_query")
@@ -43,6 +41,5 @@ traceloop.withAssociationProperties(
     const sampleLlamaIndex = new SampleLlamaIndex();
     const result = await sampleLlamaIndex.query();
     console.log(result.response);
-    (await vectorStore.client()).end();
   },
 );
