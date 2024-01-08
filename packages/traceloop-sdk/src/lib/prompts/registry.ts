@@ -25,9 +25,9 @@ export const getPromptByKey = (key: string) => {
   return _prompts[key];
 };
 
-const populateRegistry = (prompts: any) => {
-  prompts.forEach((prompt: any) => {
-    _prompts[prompt.key] = prompt;
+const populateRegistry = (prompts: unknown[]) => {
+  prompts?.forEach((prompt: unknown) => {
+    _prompts[(prompt as any).key] = prompt as any;
   });
 };
 
