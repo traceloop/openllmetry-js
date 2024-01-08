@@ -71,7 +71,10 @@ describe("Test LlamaIndex instrumentation", () => {
     assert.ok(chatAttributes["llm.completions.0.content"]);
 
     assert.strictEqual(completionAttributes["llm.vendor"], "llamaindex");
-    assert.strictEqual(completionAttributes["llm.request.type"], "complete");
+    assert.strictEqual(
+      completionAttributes["llm.request.type"],
+      "llm.completions",
+    );
     assert.strictEqual(completionAttributes["llm.request.model"], model);
     assert.strictEqual(completionAttributes["llm.top_p"], 1);
     assert.strictEqual(completionAttributes["llm.prompts.0.content"], prompt);
@@ -110,14 +113,13 @@ describe("Test LlamaIndex instrumentation", () => {
 
     const spanNames = spans.map((span) => span.name);
 
-    assert.ok(
-      spanNames.includes("llamaindex.OpenAIEmbedding.getQueryEmbedding"),
-    );
-    assert.ok(spanNames.includes("llamaindex.VectorIndexRetriever.retrieve"));
-    assert.ok(spanNames.includes("llamaindex.RetrieverQueryEngine.retrieve"));
-    assert.ok(spanNames.includes("llamaindex.OpenAI2.chat"));
-    assert.ok(spanNames.includes("llamaindex.OpenAI2.complete"));
-    assert.ok(spanNames.includes("llamaindex.ResponseSynthesizer.synthesize"));
-    assert.ok(spanNames.includes("llamaindex.RetrieverQueryEngine.query"));
+    assert.ok(spanNames.includes("get_query_embedding.task"));
+
+    assert.ok(spanNames.includes("retrieve.task"));
+    assert.ok(spanNames.includes("retrieve.task"));
+    assert.ok(spanNames.includes("open_ai_2.chat"));
+    assert.ok(spanNames.includes("open_ai_2.complete"));
+    assert.ok(spanNames.includes("synthesize.task"));
+    assert.ok(spanNames.includes("query.task"));
   }).timeout(60000);
 });
