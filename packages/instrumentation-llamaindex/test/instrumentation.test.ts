@@ -118,7 +118,7 @@ describe("Test LlamaIndex instrumentation", () => {
     assert.ok(spanNames.includes("retrieve.task"));
     assert.ok(spanNames.includes("retrieve.task"));
     assert.ok(spanNames.includes("open_ai_2.chat"));
-    assert.ok(spanNames.includes("open_ai_2.complete"));
+    assert.ok(spanNames.includes("open_ai_2.completion"));
     assert.ok(spanNames.includes("synthesize.task"));
     assert.ok(spanNames.includes("query.task"));
   }).timeout(60000);

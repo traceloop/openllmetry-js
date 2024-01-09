@@ -27,7 +27,7 @@ export class CustomLLMInstrumentation {
         const prompt = args[0];
 
         const span = plugin.tracer.startSpan(
-          `${lodash.snakeCase(className)}.complete`,
+          `${lodash.snakeCase(className)}.completion`,
         );
 
         span.setAttribute(SpanAttributes.LLM_VENDOR, "llamaindex");
