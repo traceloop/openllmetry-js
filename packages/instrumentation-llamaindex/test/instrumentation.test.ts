@@ -54,6 +54,9 @@ describe("Test LlamaIndex instrumentation", () => {
     const res = await openai.complete(prompt);
 
     assert.ok(res);
+    assert.ok(res.message);
+    assert.ok(res.message.role);
+    assert.ok(res.message.content);
 
     const spans = memoryExporter.getFinishedSpans();
 
