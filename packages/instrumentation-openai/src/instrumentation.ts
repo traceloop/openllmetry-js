@@ -177,10 +177,8 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          (error) => {
-            // if (error) {
-            // }
-          },
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+          () => {},
         );
 
         const wrappedPromise = plugin._wrapPromise(
