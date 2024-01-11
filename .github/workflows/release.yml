@@ -23,20 +23,23 @@ jobs:
       - run: npm ci
       - name: Build
         run: npx nx run-many --target=build --parallel=3
-      - id: cz
-        name: Bump Version, Create Tag and Changelog
-        uses: commitizen-tools/commitizen-action@master
-        with:
-          github_token: ${{ secrets.GH_ACCESS_TOKEN }}
-          changelog_increment_filename: body.md
+      - name: Create Version
+        run: npx lerna version --no-private --conventional-commits --yes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Set Current Version
+        run: |
+          CURRENT_VERSION=$(node -p 'require("./lerna.json").version')
+          echo "CURRENT_VERSION=${CURRENT_VERSION}" >> $GITHUB_ENV
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: "body.md"
-          tag_name: ${{ env.REVISION }}
+          tag_name: ${{ env.CURRENT_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-      - name: Release
-        run: npx lerna publish --no-private --conventional-commits --no-git-tag-version --no-push
+      - name: Publish
+        run: npx lerna publish --no-private from-git --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
