@@ -1,13 +1,21 @@
 import * as lodash from "lodash";
 import type * as llamaindex from "llamaindex";
 
-import { Tracer, SpanStatusCode, trace, context } from "@opentelemetry/api";
+import {
+  Tracer,
+  Span,
+  SpanStatusCode,
+  trace,
+  context,
+} from "@opentelemetry/api";
 import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 import { LlamaIndexInstrumentationConfig } from "./types";
-import { shouldSendPrompts } from "./utils";
+import { shouldSendPrompts, generatorWrapper } from "./utils";
+
+type LLM = llamaindex.LLM;
 
 export class CustomLLMInstrumentation {
   private config: LlamaIndexInstrumentationConfig;
@@ -22,15 +30,19 @@ export class CustomLLMInstrumentation {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
-    return (original: Function) => {
-      return function method(this: llamaindex.LLM, ...args: unknown[]) {
+    return (original: LLM["complete"]) => {
+      return function method(
+        this: LLM,
+        ...args: Parameters<LLM["complete"]>
+      ): ReturnType<LLM["complete"]> {
         const prompt = args[0];
+        const streaming = args[2];
 
         const span = plugin.tracer.startSpan(
           `${lodash.snakeCase(className)}.completion`,
         );
 
-        span.setAttribute(SpanAttributes.LLM_VENDOR, "llamaindex");
+        span.setAttribute(SpanAttributes.LLM_VENDOR, className);
         span.setAttribute(
           SpanAttributes.LLM_REQUEST_MODEL,
           this.metadata.model,
@@ -60,22 +72,12 @@ export class CustomLLMInstrumentation {
         const wrappedPromise = execPromise
           .then((result: any) => {
             return new Promise((resolve) => {
-              span.setAttribute(
-                SpanAttributes.LLM_RESPONSE_MODEL,
-                this.metadata.model,
+              result = plugin.handleResponse(
+                result,
+                span,
+                this.metadata,
+                streaming,
               );
-              if (shouldSendPrompts(plugin.config)) {
-                span.setAttribute(
-                  `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-                  result.message.role,
-                );
-                span.setAttribute(
-                  `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-                  result.message.content,
-                );
-              }
-              span.setStatus({ code: SpanStatusCode.OK });
-              span.end();
               resolve(result);
             });
           })
@@ -98,15 +100,16 @@ export class CustomLLMInstrumentation {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
-    return (original: Function) => {
-      return function method(this: llamaindex.LLM, ...args: unknown[]) {
-        const messages = args[0] as llamaindex.ChatMessage[];
+    return (original: LLM["chat"]) => {
+      return function method(this: LLM, ...args: Parameters<LLM["chat"]>) {
+        const messages = args[0];
+        const streaming = args[2];
 
         const span = plugin.tracer.startSpan(
           `${lodash.snakeCase(className)}.chat`,
         );
 
-        span.setAttribute(SpanAttributes.LLM_VENDOR, "llamaindex");
+        span.setAttribute(SpanAttributes.LLM_VENDOR, className);
         span.setAttribute(
           SpanAttributes.LLM_REQUEST_MODEL,
           this.metadata.model,
@@ -139,22 +142,12 @@ export class CustomLLMInstrumentation {
         const wrappedPromise = execPromise
           .then((result: any) => {
             return new Promise((resolve) => {
-              span.setAttribute(
-                SpanAttributes.LLM_RESPONSE_MODEL,
-                this.metadata.model,
+              result = plugin.handleResponse(
+                result,
+                span,
+                this.metadata,
+                streaming,
               );
-              if (shouldSendPrompts(plugin.config)) {
-                span.setAttribute(
-                  `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-                  result.message.role,
-                );
-                span.setAttribute(
-                  `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-                  result.message.content,
-                );
-              }
-              span.setStatus({ code: SpanStatusCode.OK });
-              span.end();
               resolve(result);
             });
           })
@@ -171,5 +164,47 @@ export class CustomLLMInstrumentation {
         return context.bind(execContext, wrappedPromise as any);
       };
     };
+  }
+
+  handleResponse(
+    result: any,
+    span: Span,
+    metadata: llamaindex.LLMMetadata,
+    streaming: boolean | undefined,
+  ) {
+    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, metadata.model);
+    if (!shouldSendPrompts(this.config)) {
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+      return result;
+    }
+
+    // Handle streming response of type `AsyncGenerator<string, void, unknown>`
+    if (streaming) {
+      result = generatorWrapper(result, (message) => {
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+          message,
+        );
+        span.setStatus({ code: SpanStatusCode.OK });
+        span.end();
+      });
+
+      return result;
+    }
+
+    // Handle response of type `ChatMessage`
+    span.setAttribute(
+      `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+      result.message.role,
+    );
+    span.setAttribute(
+      `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+      result.message.content,
+    );
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+
+    return result;
   }
 }

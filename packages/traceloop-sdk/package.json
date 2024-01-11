@@ -39,8 +39,6 @@
     "@types/nunjucks": "^3.2.5",
     "fetch-retry": "^5.0.6",
     "nunjucks": "^3.2.4",
-    "openai": ">=4.0.0",
-    "llamaindex": ">=0.0.40",
     "posthog-node": "^3.1.3",
     "uuid": "^9.0.1"
   },

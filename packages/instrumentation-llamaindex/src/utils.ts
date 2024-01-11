@@ -11,6 +11,18 @@ export const shouldSendPrompts = (config: LlamaIndexInstrumentationConfig) => {
   return config.traceContent !== undefined ? config.traceContent : true;
 };
 
+export async function* generatorWrapper(
+  streamingResult: AsyncGenerator<string, void, unknown>,
+  fn: (message: string) => void,
+) {
+  let message = "";
+  for await (const messageChunk of streamingResult) {
+    message += messageChunk;
+    yield messageChunk;
+  }
+  fn(message);
+}
+
 export function genericWrapper(methodName: string, tracer: Tracer) {
   // eslint-disable-next-line @typescript-eslint/ban-types
   return (original: Function) => {

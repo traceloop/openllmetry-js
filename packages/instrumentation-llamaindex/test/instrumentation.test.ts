@@ -33,13 +33,16 @@ describe("Test LlamaIndex instrumentation", () => {
   let contextManager: AsyncHooksContextManager;
   let llamaindex: typeof llamaindexImport;
 
-  beforeEach(() => {
+  before(() => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-    contextManager = new AsyncHooksContextManager().enable();
-    context.setGlobalContextManager(contextManager);
     instrumentation = new LlamaIndexInstrumentation();
     instrumentation.setTracerProvider(provider);
     llamaindex = require("llamaindex");
+  });
+
+  beforeEach(() => {
+    contextManager = new AsyncHooksContextManager().enable();
+    context.setGlobalContextManager(contextManager);
   });
 
   afterEach(() => {
@@ -64,16 +67,17 @@ describe("Test LlamaIndex instrumentation", () => {
     const chatAttributes = spans[0].attributes;
     const completionAttributes = spans[1].attributes;
 
-    assert.strictEqual(chatAttributes["llm.vendor"], "llamaindex");
+    assert.strictEqual(chatAttributes["llm.vendor"], "OpenAI2");
     assert.strictEqual(chatAttributes["llm.request.type"], "chat");
     assert.strictEqual(chatAttributes["llm.request.model"], model);
     assert.strictEqual(chatAttributes["llm.top_p"], 1);
     assert.strictEqual(chatAttributes["llm.prompts.0.content"], prompt);
     assert.strictEqual(chatAttributes["llm.prompts.0.role"], "user");
+    assert.strictEqual(completionAttributes["llm.response.model"], model);
     assert.strictEqual(chatAttributes["llm.completions.0.role"], "assistant");
     assert.ok(chatAttributes["llm.completions.0.content"]);
 
-    assert.strictEqual(completionAttributes["llm.vendor"], "llamaindex");
+    assert.strictEqual(completionAttributes["llm.vendor"], "OpenAI2");
     assert.strictEqual(
       completionAttributes["llm.request.type"],
       "llm.completions",
@@ -81,10 +85,51 @@ describe("Test LlamaIndex instrumentation", () => {
     assert.strictEqual(completionAttributes["llm.request.model"], model);
     assert.strictEqual(completionAttributes["llm.top_p"], 1);
     assert.strictEqual(completionAttributes["llm.prompts.0.content"], prompt);
+    assert.strictEqual(completionAttributes["llm.response.model"], model);
     assert.strictEqual(
       completionAttributes["llm.completions.0.role"],
       "assistant",
     );
+    assert.ok(completionAttributes["llm.completions.0.content"]);
+  });
+
+  it("should set attributes in span for LLM instrumentation in case of streaming response", async () => {
+    const model = "gpt-3.5-turbo";
+    const prompt = "Tell me a joke about OpenTelemetry";
+    const openai = new llamaindex.OpenAI({ model, temperature: 0 });
+    const res = await openai.complete(prompt, undefined, true);
+
+    assert.ok(res);
+    let message = "";
+    for await (const messageChunk of res) {
+      message += messageChunk;
+    }
+    assert.ok(message);
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    assert.strictEqual(spans.length, 2);
+    const chatAttributes = spans[0].attributes;
+    const completionAttributes = spans[1].attributes;
+
+    assert.strictEqual(chatAttributes["llm.vendor"], "OpenAI2");
+    assert.strictEqual(chatAttributes["llm.request.type"], "chat");
+    assert.strictEqual(chatAttributes["llm.request.model"], model);
+    assert.strictEqual(chatAttributes["llm.top_p"], 1);
+    assert.strictEqual(chatAttributes["llm.prompts.0.content"], prompt);
+    assert.strictEqual(chatAttributes["llm.prompts.0.role"], "user");
+    assert.strictEqual(completionAttributes["llm.response.model"], model);
+    assert.ok(chatAttributes["llm.completions.0.content"]);
+
+    assert.strictEqual(completionAttributes["llm.vendor"], "OpenAI2");
+    assert.strictEqual(
+      completionAttributes["llm.request.type"],
+      "llm.completions",
+    );
+    assert.strictEqual(completionAttributes["llm.request.model"], model);
+    assert.strictEqual(completionAttributes["llm.top_p"], 1);
+    assert.strictEqual(completionAttributes["llm.prompts.0.content"], prompt);
+    assert.strictEqual(completionAttributes["llm.response.model"], model);
     assert.ok(completionAttributes["llm.completions.0.content"]);
   });
 
