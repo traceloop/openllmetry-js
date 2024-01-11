@@ -1,17 +1,18 @@
 name: CI
+
 on:
-  pull_request:
+  pull_request_target:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - "main"
 
 jobs:
-  build-and-test:
-    name: Build and test
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-    permissions:
-      contents: "read"
-      actions: "read"
-      pull-requests: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v3
@@ -23,6 +24,42 @@ jobs:
       - run: npx nx --version
       - run: npx nx run-many --targets=lint
       - run: npx prettier --check .
-      - run: npx nx affected --target=lint --parallel=3
-      - run: npx nx affected --target=test --parallel=3 --ci --code-coverage
-      - run: npx nx affected --target=build --parallel=3
+
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      actions: "read"
+      pull-requests: write
+    steps:
+      - name: Get User Permission
+        id: checkAccess
+        uses: actions-cool/check-user-permission@v2
+        with:
+          require: write
+          username: ${{ github.triggering_actor }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check User Permission
+        if: steps.checkAccess.outputs.require-result == 'false'
+        run: |
+          echo "${{ github.triggering_actor }} does not have permissions on this repo."
+          echo "Current permission level is ${{ steps.checkAccess.outputs.user-permission }}"
+          echo "Job originally triggered by ${{ github.actor }}"
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          cache: "npm"
+          node-version-file: ".nvmrc"
+      - uses: nrwl/nx-set-shas@v3
+      - run: npm i
+      - name: Build
+        run: npx nx affected --target=build --parallel=3
+      - name: Test
+        run: npx nx affected --target=test --parallel=3 --ci --code-coverage
