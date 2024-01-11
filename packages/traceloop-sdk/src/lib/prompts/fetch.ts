@@ -1,6 +1,6 @@
 import { InitializeOptions } from "../interfaces";
-import { _configuration } from "../configuration";
 import fetch from "node-fetch";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const fetchRetry = require("fetch-retry")(fetch);
 
 export const fetchPrompts = async (options: InitializeOptions) => {

@@ -18,7 +18,8 @@
               }
             ]
           }
-        ]
+        ],
+        "@typescript-eslint/no-explicit-any": "warning"
       }
     },
     {
