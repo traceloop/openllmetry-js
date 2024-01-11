@@ -24,7 +24,10 @@ jobs:
       - name: Build
         run: npx nx run-many --target=build --parallel=3
       - name: Create Version
-        run: npx lerna version --no-private --conventional-commits --yes
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor}}@users.noreply.github.com"
+          npx lerna version --no-private --conventional-commits --yes
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
