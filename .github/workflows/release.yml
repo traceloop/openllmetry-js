@@ -22,11 +22,15 @@ jobs:
       - run: npm ci
       - name: Build
         run: npx nx run-many --target=build --parallel=3
-      - name: Create Version
+      - name: Git Identity
         run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor}}@users.noreply.github.com"
-          npx lerna version --no-private --conventional-commits --yes
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Version
+        run: npx lerna version --no-private --conventional-commits --yes
         env:
           GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
