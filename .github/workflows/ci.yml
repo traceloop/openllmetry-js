@@ -20,8 +20,7 @@ jobs:
           cache: "npm"
           node-version-file: ".nvmrc"
       - uses: nrwl/nx-set-shas@v3
-      - run: npm i
-      - run: npx nx --version
+      - run: npm ci
       - run: npx nx run-many --targets=lint
       - run: npx prettier --check .
 
@@ -58,7 +57,7 @@ jobs:
           cache: "npm"
           node-version-file: ".nvmrc"
       - uses: nrwl/nx-set-shas@v3
-      - run: npm i
+      - run: npm ci
       - name: Build
         run: npx nx affected --target=build --parallel=3
       - name: Test
