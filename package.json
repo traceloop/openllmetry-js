@@ -11,6 +11,7 @@
     "@nx/linter": "^17.2.8",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.51.0",
     "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-node": "^11.1.0",
@@ -23,5 +24,9 @@
   "workspaces": [
     "packages/*"
   ],
-  "dependencies": {}
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
 }
