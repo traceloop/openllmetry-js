@@ -1,0 +1,42 @@
+name: Release - Traceloop SDK & Standalone Instrumentations
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-node@v3
+        with:
+          cache: "npm"
+          node-version-file: ".nvmrc"
+      - uses: nrwl/nx-set-shas@v3
+      - run: npm ci
+      - name: Build
+        run: npx nx run-many --target=build --parallel=3
+      - id: cz
+        name: Bump Version, Create Tag and Changelog
+        uses: commitizen-tools/commitizen-action@master
+        with:
+          github_token: ${{ secrets.GH_ACCESS_TOKEN }}
+          changelog_increment_filename: body.md
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: "body.md"
+          tag_name: ${{ env.REVISION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      - name: Release
+        run: npx lerna publish --no-private --conventional-commits --no-git-tag-version --no-push
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
