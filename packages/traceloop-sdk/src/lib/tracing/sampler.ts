@@ -3,7 +3,7 @@ import {
   SamplingResult,
   SamplingDecision,
 } from "@opentelemetry/sdk-trace-base";
-import { Context, SpanKind, Attributes, Link } from "@opentelemetry/api";
+import { Context, SpanKind, Attributes } from "@opentelemetry/api";
 
 const FILTERED_ATTRIBUTE_KEYS = ["next.span_name"];
 
@@ -14,7 +14,6 @@ export class TraceloopSampler implements Sampler {
     _spanName: string,
     _spanKind: SpanKind,
     attributes: Attributes,
-    _links: Link[],
   ): SamplingResult {
     let filter = false;
     FILTERED_ATTRIBUTE_KEYS.forEach((key) => {

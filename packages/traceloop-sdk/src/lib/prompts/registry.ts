@@ -1,5 +1,4 @@
 import { InitializeOptions, Prompt } from "../interfaces";
-import { _configuration } from "../configuration";
 import { InitializationError, PromptNotFoundError } from "../errors";
 import { fetchPrompts } from "./fetch";
 
