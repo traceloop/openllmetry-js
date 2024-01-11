@@ -64,3 +64,5 @@ jobs:
         run: npx nx affected --target=build --parallel=3
       - name: Test
         run: npx nx affected --target=test --parallel=3 --ci --code-coverage
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
