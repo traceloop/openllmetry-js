@@ -28,7 +28,7 @@ export function genericWrapper(methodName: string, tracer: Tracer) {
           });
         },
         // eslint-disable-next-line @typescript-eslint/no-empty-function
-        (error) => {},
+        () => {},
       );
       const wrappedPromise = execPromise
         .then((result: any) => {

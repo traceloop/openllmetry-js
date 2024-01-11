@@ -55,7 +55,7 @@ export class CustomLLMInstrumentation {
             });
           },
           // eslint-disable-next-line @typescript-eslint/no-empty-function
-          (error) => {},
+          () => {},
         );
         const wrappedPromise = execPromise
           .then((result: any) => {
@@ -134,7 +134,7 @@ export class CustomLLMInstrumentation {
             });
           },
           // eslint-disable-next-line @typescript-eslint/no-empty-function
-          (error) => {},
+          () => {},
         );
         const wrappedPromise = execPromise
           .then((result: any) => {
