@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.0.30",
+  "version": "0.0.31",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -34,8 +34,8 @@
   "dependencies": {
     "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
     "@opentelemetry/sdk-node": "^0.44.0",
-    "@traceloop/instrumentation-openai": "^0.0.24",
-    "@traceloop/instrumentation-llamaindex": "^0.0.24",
+    "@traceloop/instrumentation-llamaindex": "^0.0.31",
+    "@traceloop/instrumentation-openai": "^0.0.31",
     "@types/nunjucks": "^3.2.5",
     "fetch-retry": "^5.0.6",
     "nunjucks": "^3.2.4",
@@ -43,8 +43,8 @@
     "uuid": "^9.0.1"
   },
   "peerDependencies": {
-    "openai": ">=4.0.0",
-    "llamaindex": ">=0.0.40"
+    "llamaindex": ">=0.0.40",
+    "openai": ">=4.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",
