@@ -4,6 +4,7 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
+import { withAssociationProperties } from "./association";
 
 function withEntity<
   A extends unknown[],
@@ -11,6 +12,7 @@ function withEntity<
 >(
   type: TraceloopSpanKindValues,
   name: string,
+  associationProperties: { [name: string]: string },
   fn: F,
   thisArg?: ThisParameterType<F>,
   ...args: A
@@ -22,46 +24,57 @@ function withEntity<
       : context.active();
 
   if (fn.constructor.name === "AsyncFunction") {
-    return getTracer().startActiveSpan(
+    return withAssociationProperties(associationProperties, () =>
+      getTracer().startActiveSpan(
+        `${name}.${type}`,
+        {},
+        workflowContext,
+        async (span: Span) => {
+          if (
+            type === TraceloopSpanKindValues.WORKFLOW ||
+            type === TraceloopSpanKindValues.AGENT
+          ) {
+            span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
+          }
+          span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
+          span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
+          const res = await fn.apply(thisArg, args);
+          span.end();
+          return res;
+        },
+      ),
+    );
+  }
+  return withAssociationProperties(associationProperties, () =>
+    getTracer().startActiveSpan(
       `${name}.${type}`,
       {},
       workflowContext,
-      async (span: Span) => {
-        if (
-          type === TraceloopSpanKindValues.WORKFLOW ||
-          type === TraceloopSpanKindValues.AGENT
-        ) {
-          span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
-        }
+      (span) => {
         span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
         span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
-        const res = await fn.apply(thisArg, args);
+        const res = fn.apply(thisArg, args);
         span.end();
         return res;
       },
-    );
-  }
-  return getTracer().startActiveSpan(
-    `${name}.${type}`,
-    {},
-    workflowContext,
-    (span) => {
-      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
-      span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
-      const res = fn.apply(thisArg, args);
-      span.end();
-      return res;
-    },
+    ),
   );
 }
 
 export function withWorkflow<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(name: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
+>(
+  name: string,
+  associationProperties: { [name: string]: string },
+  fn: F,
+  thisArg?: ThisParameterType<F>,
+  ...args: A
+) {
   return withEntity(
     TraceloopSpanKindValues.WORKFLOW,
     name,
+    associationProperties,
     fn,
     thisArg,
     ...args,
@@ -72,21 +85,48 @@ export function withTask<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
 >(name: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
-  return withEntity(TraceloopSpanKindValues.TASK, name, fn, thisArg, ...args);
+  return withEntity(
+    TraceloopSpanKindValues.TASK,
+    name,
+    {},
+    fn,
+    thisArg,
+    ...args,
+  );
 }
 
 export function withAgent<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(name: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
-  return withEntity(TraceloopSpanKindValues.AGENT, name, fn, thisArg, ...args);
+>(
+  name: string,
+  associationProperties: { [name: string]: string },
+  fn: F,
+  thisArg?: ThisParameterType<F>,
+  ...args: A
+) {
+  return withEntity(
+    TraceloopSpanKindValues.AGENT,
+    name,
+    associationProperties,
+    fn,
+    thisArg,
+    ...args,
+  );
 }
 
 export function withTool<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
 >(name: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
-  return withEntity(TraceloopSpanKindValues.TOOL, name, fn, thisArg, ...args);
+  return withEntity(
+    TraceloopSpanKindValues.TOOL,
+    name,
+    {},
+    fn,
+    thisArg,
+    ...args,
+  );
 }
 
 function entity(type: TraceloopSpanKindValues, name?: string) {
@@ -103,6 +143,7 @@ function entity(type: TraceloopSpanKindValues, name?: string) {
         return await withEntity(
           type,
           entityName,
+          {},
           originalMethod,
           target,
           ...args,
@@ -110,7 +151,14 @@ function entity(type: TraceloopSpanKindValues, name?: string) {
       };
     } else {
       descriptor.value = function (...args: any[]) {
-        return withEntity(type, entityName, originalMethod, target, ...args);
+        return withEntity(
+          type,
+          entityName,
+          {},
+          originalMethod,
+          target,
+          ...args,
+        );
       };
     }
   };
