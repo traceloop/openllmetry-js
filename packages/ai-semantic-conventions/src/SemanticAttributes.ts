@@ -40,6 +40,11 @@ export const SpanAttributes = {
   TRACELOOP_WORKFLOW_NAME: "traceloop.workflow.name",
   TRACELOOP_ENTITY_NAME: "traceloop.entity.name",
   TRACELOOP_ASSOCIATION_PROPERTIES: "traceloop.association.properties",
+
+  // LLM Pre/Post Processing
+  TRACELOOP_CUSTOM_PROCESSING_STEP_TYPE: "traceloop.processing.type",
+  TRACELOOP_CUSTOM_PROCESSING_INPUT: "traceloop.processing.input",
+  TRACELOOP_CUSTOM_PROCESSING_OUTPUT: "traceloop.processing.output",
 };
 
 export enum LLMRequestTypeValues {
@@ -55,4 +60,9 @@ export enum TraceloopSpanKindValues {
   AGENT = "agent",
   TOOL = "tool",
   UNKNOWN = "unknown",
+}
+
+export enum TraceloopCustomProcessingStepTypeValues {
+  PRE_PROCESSING = "pre_process",
+  POST_PROCESSING = "post_process",
 }

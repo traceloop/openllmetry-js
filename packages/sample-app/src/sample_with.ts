@@ -12,12 +12,24 @@ async function chat() {
   return await traceloop.withWorkflow("sample_chat", {}, async () => {
     const chatCompletion = await openai.chat.completions.create({
       messages: [
-        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+        {
+          role: "user",
+          content:
+            "Tell me a joke about OpenTelemetry and explain in a separate line",
+        },
       ],
       model: "gpt-3.5-turbo",
     });
 
-    return chatCompletion.choices[0].message.content;
+    const jokeWithExplanation = chatCompletion.choices[0].message.content;
+    const onlyExplanation = jokeWithExplanation?.split("Explanation:")[1];
+
+    traceloop.reportPostProcessing(
+      jokeWithExplanation || "",
+      onlyExplanation || "",
+    );
+
+    return onlyExplanation;
   });
 }
 

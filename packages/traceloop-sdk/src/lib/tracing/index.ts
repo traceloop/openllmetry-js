@@ -11,8 +11,15 @@ import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
+import {
+  SpanAttributes,
+  TraceloopCustomProcessingStepTypeValues,
+} from "@traceloop/ai-semantic-conventions";
+import {
+  ASSOCATION_PROPERTIES_KEY,
+  WORKFLOW_NAME_KEY,
+  reportCustomProcessing,
+} from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { TraceloopSampler } from "./sampler";
 
@@ -112,4 +119,20 @@ export const startTracing = (options: InitializeOptions) => {
 
 export const forceFlush = async () => {
   await _spanProcessor.forceFlush();
+};
+
+export const reportPreProcessing = (input: string, output: string) => {
+  reportCustomProcessing(
+    TraceloopCustomProcessingStepTypeValues.PRE_PROCESSING,
+    input,
+    output,
+  );
+};
+
+export const reportPostProcessing = (input: string, output: string) => {
+  reportCustomProcessing(
+    TraceloopCustomProcessingStepTypeValues.POST_PROCESSING,
+    input,
+    output,
+  );
 };
