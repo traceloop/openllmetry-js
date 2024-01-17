@@ -38,8 +38,18 @@ function withEntity<
           }
           span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
+
           const res = await fn.apply(thisArg, args);
+
+          if (typeof res !== "function") {
+            span.setAttribute(
+              SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+              JSON.stringify(res),
+            );
+          }
+
           span.end();
+
           return res;
         },
       ),
