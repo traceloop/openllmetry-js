@@ -5,6 +5,7 @@ import {
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
 import { withAssociationProperties } from "./association";
+import { shouldSendTraces } from ".";
 
 function withEntity<
   A extends unknown[],
@@ -41,7 +42,7 @@ function withEntity<
 
           const res = await fn.apply(thisArg, args);
 
-          if (typeof res !== "function") {
+          if (typeof res !== "function" && shouldSendTraces()) {
             span.setAttribute(
               SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
               JSON.stringify(res),
