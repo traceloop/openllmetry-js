@@ -10,6 +10,10 @@ export function withAssociationProperties<
   thisArg?: ThisParameterType<F>,
   ...args: A
 ) {
+  if (Object.keys(properties).length === 0) {
+    return fn.apply(thisArg, args);
+  }
+
   const newContext = context
     .active()
     .setValue(ASSOCATION_PROPERTIES_KEY, properties);
