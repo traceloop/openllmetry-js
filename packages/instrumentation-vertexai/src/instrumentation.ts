@@ -52,12 +52,18 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
+  private model: string = "";
+
+  private setModal(newValue: string) {
+    this.model = newValue;
+  }
+
   public manuallyInstrument(module: typeof vertexAI) {
-    // this._wrap(
-    //   module.VertexAI_Preview.prototype,
-    //   "getGenerativeModel",
-    //   this.patchVertexAI(),
-    // );
+    this._wrap(
+      module.VertexAI_Preview.prototype,
+      "getGenerativeModel",
+      this.patchVertexAI(),
+    );
     this._wrap(
       module.GenerativeModel.prototype,
       "generateContent",
@@ -66,11 +72,11 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   }
 
   private patch(moduleExports: typeof vertexAI) {
-    // this._wrap(
-    //   moduleExports.VertexAI_Preview.prototype,
-    //   "getGenerativeModel",
-    //   this.patchVertexAI(),
-    // );
+    this._wrap(
+      moduleExports.VertexAI_Preview.prototype,
+      "getGenerativeModel",
+      this.patchVertexAI(),
+    );
     this._wrap(
       moduleExports.GenerativeModel.prototype,
       "generateContent",
@@ -80,10 +86,10 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   }
 
   private unpatch(moduleExports: typeof vertexAI): void {
-    // this._unwrap(
-    //   moduleExports.VertexAI_Preview.prototype,
-    //   "getGenerativeModel",
-    // );
+    this._unwrap(
+      moduleExports.VertexAI_Preview.prototype,
+      "getGenerativeModel",
+    );
     this._unwrap(moduleExports.GenerativeModel.prototype, "generateContent");
   }
 
@@ -94,8 +100,24 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     return (original: Function) => {
       return function method(
         this: any,
-        ...args: vertexAI.GenerateContentRequest[]
+        ...args: (vertexAI.GenerateContentRequest & vertexAI.ModelParams)[]
       ) {
+        // To set the model name only
+        if (args[0].model) {
+          plugin.setModal(args[0].model);
+          return context.bind(
+            context.active(),
+            safeExecuteInTheMiddle(
+              () => {
+                return context.with(context.active(), () => {
+                  return original.apply(this, args);
+                });
+              },
+              () => {},
+            ),
+          );
+        }
+
         const span = plugin._startSpan({
           params: args[0],
         });
@@ -108,15 +130,8 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
           () => {},
         );
-
-        // Its to get the model name
-        // if (args[0].model) {
-        //   this.model = args[0].model;
-        //   return context.bind(execContext, execPromise);
-        // }
 
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
 
@@ -135,8 +150,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
-    // attributes[SpanAttributes.LLM_REQUEST_MODEL] = "";
-
+    attributes[SpanAttributes.LLM_REQUEST_MODEL] = this.model;
     if (
       params.generation_config !== undefined &&
       typeof params.generation_config === "object"
@@ -163,6 +177,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
         this._formatPartsData(params.contents[0].parts);
     }
+
     return this.tracer.startSpan(`vertexai.completion`, {
       kind: SpanKind.CLIENT,
       attributes,
@@ -201,8 +216,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     span: Span;
     result: vertexAI.GenerateContentResult;
   }) {
-    // span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, '');
-
+    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, this.model);
     if (result.response.usageMetadata) {
       if (result.response.usageMetadata.totalTokenCount !== undefined)
         span.setAttribute(
