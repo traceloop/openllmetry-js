@@ -11,6 +11,7 @@ import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
+import { VertexAIInstrumentation } from "@traceloop/instrumentation-vertexai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
@@ -20,6 +21,8 @@ let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation;
+let vertexAIInstrumentation: VertexAIInstrumentation;
+
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
@@ -28,6 +31,9 @@ export const initInstrumentations = () => {
 
   llamaIndexInstrumentation = new LlamaIndexInstrumentation();
   instrumentations.push(llamaIndexInstrumentation);
+
+  vertexAIInstrumentation = new VertexAIInstrumentation();
+  instrumentations.push(vertexAIInstrumentation);
 };
 
 /**
@@ -44,6 +50,7 @@ export const startTracing = (options: InitializeOptions) => {
   ) {
     openAIInstrumentation.setConfig({ traceContent: false });
     llamaIndexInstrumentation.setConfig({ traceContent: false });
+    vertexAIInstrumentation.setConfig({ traceContent: false });
   }
 
   const traceExporter =
@@ -106,6 +113,9 @@ export const startTracing = (options: InitializeOptions) => {
     openAIInstrumentation.manuallyInstrument(options.instrumentModules.openAI);
     llamaIndexInstrumentation.manuallyInstrument(
       options.instrumentModules.llamaIndex,
+    );
+    vertexAIInstrumentation.manuallyInstrument(
+      options.instrumentModules.vertexAI,
     );
   }
 };
