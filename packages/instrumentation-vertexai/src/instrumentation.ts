@@ -29,14 +29,9 @@ import {
 } from "@opentelemetry/instrumentation";
 import { VertexAIInstrumentationConfig } from "./types";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import {
-  GenerateContentRequest,
-  GenerateContentResponse,
-  Part,
-  VertexAI,
-} from "@google-cloud/vertexai";
+import * as vertexAI from "@google-cloud/vertexai";
 
-export class VertexAIInstrumentation extends InstrumentationBase {
+export class VertexAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: VertexAIInstrumentationConfig;
 
   constructor(config: VertexAIInstrumentationConfig = {}) {
@@ -47,20 +42,49 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<unknown> {
-    const module = new InstrumentationNodeModuleDefinition<unknown>(
+  protected init(): InstrumentationModuleDefinition<any> {
+    const module = new InstrumentationNodeModuleDefinition<any>(
       "@google-cloud/vertexai",
       [">=0.2.1"],
+      this.patch.bind(this),
+      this.unpatch.bind(this),
     );
     return module;
   }
 
-  public manuallyInstrument(module: typeof VertexAI) {
+  public manuallyInstrument(module: typeof vertexAI) {
+    // this._wrap(
+    //   module.VertexAI_Preview.prototype,
+    //   "getGenerativeModel",
+    //   this.patchVertexAI(),
+    // );
     this._wrap(
-      module.prototype.preview.getGenerativeModel.prototype,
+      module.GenerativeModel.prototype,
       "generateContent",
       this.patchVertexAI(),
     );
+  }
+
+  private patch(moduleExports: typeof vertexAI) {
+    // this._wrap(
+    //   moduleExports.VertexAI_Preview.prototype,
+    //   "getGenerativeModel",
+    //   this.patchVertexAI(),
+    // );
+    this._wrap(
+      moduleExports.GenerativeModel.prototype,
+      "generateContent",
+      this.patchVertexAI(),
+    );
+    return moduleExports;
+  }
+
+  private unpatch(moduleExports: typeof vertexAI): void {
+    // this._unwrap(
+    //   moduleExports.VertexAI_Preview.prototype,
+    //   "getGenerativeModel",
+    // );
+    this._unwrap(moduleExports.GenerativeModel.prototype, "generateContent");
   }
 
   private patchVertexAI() {
@@ -68,12 +92,16 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
-      return function method(this: any, ...args: GenerateContentRequest[]) {
+      return function method(
+        this: any,
+        ...args: vertexAI.GenerateContentRequest[]
+      ) {
         const span = plugin._startSpan({
           params: args[0],
         });
 
         const execContext = trace.setSpan(context.active(), span);
+
         const execPromise = safeExecuteInTheMiddle(
           () => {
             return context.with(execContext, () => {
@@ -84,6 +112,12 @@ export class VertexAIInstrumentation extends InstrumentationBase {
           () => {},
         );
 
+        // Its to get the model name
+        // if (args[0].model) {
+        //   this.model = args[0].model;
+        //   return context.bind(execContext, execPromise);
+        // }
+
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
 
         return context.bind(execContext, wrappedPromise as any);
@@ -91,13 +125,17 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     };
   }
 
-  private _startSpan({ params }: { params: GenerateContentRequest }): Span {
+  private _startSpan({
+    params,
+  }: {
+    params: vertexAI.GenerateContentRequest;
+  }): Span {
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "VertexAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = "Test Model";
+    // attributes[SpanAttributes.LLM_REQUEST_MODEL] = "";
 
     if (
       params.generation_config !== undefined &&
@@ -125,7 +163,6 @@ export class VertexAIInstrumentation extends InstrumentationBase {
       attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
         this._formatPartsData(params.contents[0].parts);
     }
-
     return this.tracer.startSpan(`vertexai.completion`, {
       kind: SpanKind.CLIENT,
       attributes,
@@ -136,7 +173,10 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     return promise
       .then((result) => {
         return new Promise<T>((resolve) => {
-          this._endSpan({ span, result: result as GenerateContentResponse });
+          this._endSpan({
+            span,
+            result: result as vertexAI.GenerateContentResult,
+          });
           resolve(result);
         });
       })
@@ -159,31 +199,32 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     result,
   }: {
     span: Span;
-    result: GenerateContentResponse;
+    result: vertexAI.GenerateContentResult;
   }) {
-    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, "Test Model");
-    if (result.usageMetadata) {
-      if (result.usageMetadata.totalTokenCount !== undefined)
+    // span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, '');
+
+    if (result.response.usageMetadata) {
+      if (result.response.usageMetadata.totalTokenCount !== undefined)
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-          result.usageMetadata.totalTokenCount,
+          result.response.usageMetadata.totalTokenCount,
         );
 
-      if (result.usageMetadata.candidates_token_count)
+      if (result.response.usageMetadata.candidates_token_count)
         span.setAttribute(
           SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-          result.usageMetadata.candidates_token_count,
+          result.response.usageMetadata.candidates_token_count,
         );
 
-      if (result.usageMetadata.prompt_token_count)
+      if (result.response.usageMetadata.prompt_token_count)
         span.setAttribute(
           SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-          result.usageMetadata?.prompt_token_count,
+          result.response.usageMetadata?.prompt_token_count,
         );
     }
 
-    if (this._shouldSendPrompts()) {
-      result.candidates.forEach((candidate, index) => {
+    if (this._shouldSendPrompts() && result.response) {
+      result.response.candidates.forEach((candidate, index) => {
         if (candidate.finishReason)
           span.setAttribute(
             `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
@@ -207,7 +248,7 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     span.end();
   }
 
-  private _formatPartsData(parts: Part[]): Array<string> {
+  private _formatPartsData(parts: vertexAI.Part[]): string {
     const result = parts
       .map((part) => {
         if (part.text) return part.text;
@@ -219,7 +260,7 @@ export class VertexAIInstrumentation extends InstrumentationBase {
       })
       .filter(Boolean);
 
-    return result;
+    return result.join("\n");
   }
 
   private _shouldSendPrompts() {
