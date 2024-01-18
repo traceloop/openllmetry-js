@@ -1,4 +1,11 @@
+import * as traceloop from "@traceloop/node-server-sdk";
 import { VertexAI } from "@google-cloud/vertexai";
+
+traceloop.initialize({
+  appName: "sample_vertexai",
+  apiKey: process.env.TRACELOOP_API_KEY,
+  disableBatch: true,
+});
 
 async function createNonStreamingContent() {
   // Initialize Vertex with your Cloud project and location
@@ -32,6 +39,7 @@ async function createNonStreamingContent() {
 
   console.log(fullTextResponse);
 }
+
 createNonStreamingContent().catch((err) => {
   console.error(err.message);
 });
