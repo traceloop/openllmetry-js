@@ -16,6 +16,7 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { TraceloopSampler } from "./sampler";
+import { _configuration } from "../configuration";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -44,10 +45,7 @@ export const initInstrumentations = () => {
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
-  if (
-    options.traceContent === false ||
-    (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"
-  ) {
+  if (!shouldSendTraces()) {
     openAIInstrumentation.setConfig({ traceContent: false });
     llamaIndexInstrumentation.setConfig({ traceContent: false });
     vertexAIInstrumentation.setConfig({ traceContent: false });
@@ -118,6 +116,17 @@ export const startTracing = (options: InitializeOptions) => {
       options.instrumentModules.vertexAI,
     );
   }
+};
+
+export const shouldSendTraces = () => {
+  if (
+    _configuration.traceContent === false ||
+    (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"
+  ) {
+    return false;
+  }
+
+  return true;
 };
 
 export const forceFlush = async () => {

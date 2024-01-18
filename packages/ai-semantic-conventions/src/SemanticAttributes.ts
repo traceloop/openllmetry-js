@@ -41,6 +41,8 @@ export const SpanAttributes = {
   TRACELOOP_WORKFLOW_NAME: "traceloop.workflow.name",
   TRACELOOP_ENTITY_NAME: "traceloop.entity.name",
   TRACELOOP_ASSOCIATION_PROPERTIES: "traceloop.association.properties",
+  TRACELOOP_ENTITY_INPUT: "traceloop.entity.input",
+  TRACELOOP_ENTITY_OUTPUT: "traceloop.entity.output",
 };
 
 export enum LLMRequestTypeValues {
