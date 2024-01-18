@@ -127,7 +127,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     // this._unwrap(moduleExports.GenerativeModel.prototype, "generateContent");
     this._unwrap(
       moduleExports.GenerativeModel.prototype,
-      "generateContentStream"
+      "generateContentStream",
     );
   }
 
@@ -175,7 +175,6 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
         });
 
         const execContext = trace.setSpan(context.active(), span);
-
         const execPromise = safeExecuteInTheMiddle(
           () => {
             return context.with(execContext, () => {

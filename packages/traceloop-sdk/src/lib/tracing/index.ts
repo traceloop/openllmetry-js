@@ -114,6 +114,11 @@ export const startTracing = (options: InitializeOptions) => {
     llamaIndexInstrumentation.manuallyInstrument(
       options.instrumentModules.llamaIndex,
     );
+  }
+  if (
+    options.instrumentModules?.google_vertexai &&
+    options.instrumentModules?.google_aiplatform
+  ) {
     vertexAIInstrumentation.manuallyInstrument(
       options.instrumentModules.google_vertexai,
       options.instrumentModules.google_aiplatform,
