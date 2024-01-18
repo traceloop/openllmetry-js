@@ -175,6 +175,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
         });
 
         const execContext = trace.setSpan(context.active(), span);
+
         const execPromise = safeExecuteInTheMiddle(
           () => {
             return context.with(execContext, () => {
@@ -183,6 +184,12 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
           },
           () => {},
         );
+
+        // Its to get the model name
+        // if (args[0].model) {
+        //   this.model = args[0].model;
+        //   return context.bind(execContext, execPromise);
+        // }
 
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
 
