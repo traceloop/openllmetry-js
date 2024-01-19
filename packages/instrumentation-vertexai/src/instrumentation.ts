@@ -52,10 +52,10 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private model: string = "";
+  private modelConfig: vertexAI.ModelParams = { model: "" };
 
-  private setModal(newValue: string) {
-    this.model = newValue;
+  private setModal(newValue: vertexAI.ModelParams) {
+    this.modelConfig = { ...newValue };
   }
 
   public manuallyInstrument(module: typeof vertexAI) {
@@ -104,7 +104,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       ) {
         // To set the model name only
         if (args[0].model) {
-          plugin.setModal(args[0].model);
+          plugin.setModal(args[0]);
           return context.bind(
             context.active(),
             safeExecuteInTheMiddle(
@@ -150,28 +150,33 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = this.model;
+    console.log(">>> this.modelConfig", this.modelConfig);
+
+    attributes[SpanAttributes.LLM_REQUEST_MODEL] = this.modelConfig.model;
+
     if (
-      params.generation_config !== undefined &&
-      typeof params.generation_config === "object"
+      this.modelConfig.generation_config !== undefined &&
+      typeof this.modelConfig.generation_config === "object"
     ) {
-      if (params.generation_config.max_output_tokens) {
+      if (this.modelConfig.generation_config.max_output_tokens) {
         attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
-          params.generation_config.max_output_tokens;
+          this.modelConfig.generation_config.max_output_tokens;
       }
-      if (params.generation_config.temperature) {
+      if (this.modelConfig.generation_config.temperature) {
         attributes[SpanAttributes.LLM_TEMPERATURE] =
-          params.generation_config.temperature;
+          this.modelConfig.generation_config.temperature;
       }
-      if (params.generation_config.top_p) {
-        attributes[SpanAttributes.LLM_TOP_P] = params.generation_config.top_p;
+      if (this.modelConfig.generation_config.top_p) {
+        attributes[SpanAttributes.LLM_TOP_P] =
+          this.modelConfig.generation_config.top_p;
       }
-      if (params.generation_config.top_k) {
-        attributes[SpanAttributes.LLM_TOP_K] = params.generation_config.top_k;
+      if (this.modelConfig.generation_config.top_k) {
+        attributes[SpanAttributes.LLM_TOP_K] =
+          this.modelConfig.generation_config.top_k;
       }
     }
 
-    if (this._shouldSendPrompts()) {
+    if (this._shouldSendPrompts() && params.contents) {
       attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
         params.contents[0].role ?? "user";
       attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
@@ -216,47 +221,53 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     span: Span;
     result: vertexAI.GenerateContentResult;
   }) {
-    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, this.model);
-    if (result.response.usageMetadata) {
-      if (result.response.usageMetadata.totalTokenCount !== undefined)
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-          result.response.usageMetadata.totalTokenCount,
-        );
+    span.setAttribute(
+      SpanAttributes.LLM_RESPONSE_MODEL,
+      this.modelConfig.model,
+    );
 
-      if (result.response.usageMetadata.candidates_token_count)
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-          result.response.usageMetadata.candidates_token_count,
-        );
-
-      if (result.response.usageMetadata.prompt_token_count)
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-          result.response.usageMetadata?.prompt_token_count,
-        );
-    }
-
-    if (this._shouldSendPrompts() && result.response) {
-      result.response.candidates.forEach((candidate, index) => {
-        if (candidate.finishReason)
+    if (result.response) {
+      if (result.response.usageMetadata) {
+        if (result.response.usageMetadata.totalTokenCount !== undefined)
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-            candidate.finishReason,
+            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+            result.response.usageMetadata.totalTokenCount,
           );
 
-        if (candidate.content) {
+        if (result.response.usageMetadata.candidates_token_count)
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-            candidate.content.role ?? "assistant",
+            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+            result.response.usageMetadata.candidates_token_count,
           );
 
+        if (result.response.usageMetadata.prompt_token_count)
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-            this._formatPartsData(candidate.content.parts),
+            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+            result.response.usageMetadata?.prompt_token_count,
           );
-        }
-      });
+      }
+
+      if (this._shouldSendPrompts()) {
+        result.response.candidates.forEach((candidate, index) => {
+          if (candidate.finishReason)
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+              candidate.finishReason,
+            );
+
+          if (candidate.content) {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+              candidate.content.role ?? "assistant",
+            );
+
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+              this._formatPartsData(candidate.content.parts),
+            );
+          }
+        });
+      }
     }
 
     span.end();

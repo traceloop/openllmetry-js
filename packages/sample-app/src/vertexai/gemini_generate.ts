@@ -20,6 +20,9 @@ async function createNonStreamingContent() {
     // Instantiate the model
     const generativeModel = vertexAI.preview.getGenerativeModel({
       model: "gemini-pro-vision",
+      generation_config: {
+        max_output_tokens: 256,
+      },
     });
 
     const request = {
