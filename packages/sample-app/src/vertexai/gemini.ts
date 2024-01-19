@@ -72,7 +72,6 @@ async function createNonStreamingContent() {
 //       const responseStream =
 //         await generativeModel.generateContentStream(request);
 
-
 //     // Wait for the response stream to complete
 //     const aggregatedResponse = await responseStream.response;
 
@@ -91,6 +90,6 @@ traceloop.withAssociationProperties({}, async () => {
   //   const completionResponse = await createNonStreamingContent();
   //   console.log(completionResponse);
   // } else {
-    console.log(await createNonStreamingContent());
+  console.log(await createNonStreamingContent());
   // }
 });
