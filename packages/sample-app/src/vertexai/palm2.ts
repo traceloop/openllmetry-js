@@ -1,13 +1,11 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import * as aiplatform from "@google-cloud/aiplatform";
 import { google } from "@google-cloud/aiplatform/build/protos/protos";
-import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-node";
 
 traceloop.initialize({
   appName: "sample_vertexai_palm2",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
-  exporter: new ConsoleSpanExporter(),
 });
 
 const project = process.env.VERTEXAI_PROJECT_ID ?? "";
@@ -24,44 +22,40 @@ const predictionServiceClient = new PredictionServiceClient({
   apiEndpoint: "us-central1-aiplatform.googleapis.com",
 });
 
-// async function callPredictForText(
-//   publisher = "google",
-//   model = "text-bison@001",
-// ) {
-//   // Configure the parent resource
-//   const endpoint = `projects/${project}/locations/${location}/publishers/${publisher}/models/${model}`;
+async function callPredictForText(
+  publisher = "google",
+  model = "text-bison@001",
+) {
+  // Configure the parent resource
+  const endpoint = `projects/${project}/locations/${location}/publishers/${publisher}/models/${model}`;
 
-//   const prompt = {
-//     prompt: "What are the cardinal directions?",
-//   };
-//   const instanceValue = helpers.toValue(prompt);
-//   const instances = [instanceValue] as google.protobuf.IValue[];
+  const prompt = {
+    prompt: "What are the cardinal directions?",
+  };
+  const instanceValue = helpers.toValue(prompt);
+  const instances = [instanceValue] as google.protobuf.IValue[];
 
-//   const parameter = {
-//     temperature: 0.2,
-//     maxOutputTokens: 256,
-//     topP: 0.95,
-//     topK: 40,
-//   };
-//   const parameters = helpers.toValue(parameter);
+  const parameter = {
+    temperature: 0.2,
+    maxOutputTokens: 256,
+    topP: 0.95,
+    topK: 40,
+  };
+  const parameters = helpers.toValue(parameter);
 
-//   const request = {
-//     endpoint,
-//     instances,
-//     parameters,
-//   };
+  const request = {
+    endpoint,
+    instances,
+    parameters,
+  };
 
-//   // Predict request
-//   const response = await predictionServiceClient.predict(request);
-//   // console.log(response[0]?.predictions?.[0]?.structValue?.fields);
+  // Predict request
+  const [response] = await predictionServiceClient.predict(request);
 
-//   const res = new google.cloud.aiplatform.v1.PredictResponse(response[0]);
-//   console.log(res.deployedModelId);
-//   console.log(
-//     res.toJSON().predictions[0].structValue.fields.content.stringValue,
-//   );
-//   // console.log(google.cloud.aiplatform.v1.PredictResponse.toObject(res));
-// }
+  console.log(
+    response?.predictions?.[0].structValue?.fields?.content.stringValue,
+  );
+}
 
 async function callPredictForChat(
   publisher = "google",
@@ -119,5 +113,6 @@ async function callPredictForChat(
 }
 
 traceloop.withAssociationProperties({}, async () => {
+  await callPredictForText();
   await callPredictForChat();
 });
