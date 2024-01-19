@@ -30,6 +30,8 @@ import {
 import { VertexAIInstrumentationConfig } from "./types";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import * as vertexAI from "@google-cloud/vertexai";
+import * as aiplatform from "@google-cloud/aiplatform";
+import { CallOptions, Callback } from "google-gax";
 
 export class VertexAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: VertexAIInstrumentationConfig;
@@ -42,14 +44,22 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition<any>[] {
+    const vertexAIModule = new InstrumentationNodeModuleDefinition<any>(
       "@google-cloud/vertexai",
       [">=0.2.1"],
-      this.patch.bind(this),
-      this.unpatch.bind(this),
+      this.vertexai_wrap.bind(this),
+      this.vertexai_unwrap.bind(this),
     );
-    return module;
+
+    const aiPlatformModule = new InstrumentationNodeModuleDefinition<any>(
+      "@google-cloud/aiplatform",
+      [">=3.10.0"],
+      this.aiplatform_wrap.bind(this),
+      this.aiplatform_unwrap.bind(this),
+    );
+
+    return [vertexAIModule, aiPlatformModule];
   }
 
   private modelConfig: vertexAI.ModelParams = { model: "" };
@@ -58,34 +68,45 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     this.modelConfig = { ...newValue };
   }
 
-  public manuallyInstrument(module: typeof vertexAI) {
+  public manuallyInstrument(
+    module1: typeof vertexAI,
+    module2: typeof aiplatform,
+  ) {
+    // For Gemini
     this._wrap(
-      module.VertexAI_Preview.prototype,
+      module1.VertexAI_Preview.prototype,
       "getGenerativeModel",
-      this.patchVertexAI(),
+      this.wrapperMethodForGemini(),
     );
     this._wrap(
-      module.GenerativeModel.prototype,
+      module1.GenerativeModel.prototype,
       "generateContent",
-      this.patchVertexAI(),
+      this.wrapperMethodForGemini(),
+    );
+
+    // For PaLM2
+    this._wrap(
+      module2.PredictionServiceClient.prototype,
+      "predict",
+      this.wrapperMethodForPalm2(),
     );
   }
 
-  private patch(moduleExports: typeof vertexAI) {
+  private vertexai_wrap(moduleExports: typeof vertexAI) {
     this._wrap(
       moduleExports.VertexAI_Preview.prototype,
       "getGenerativeModel",
-      this.patchVertexAI(),
+      this.wrapperMethodForGemini(),
     );
     this._wrap(
       moduleExports.GenerativeModel.prototype,
       "generateContent",
-      this.patchVertexAI(),
+      this.wrapperMethodForGemini(),
     );
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof vertexAI): void {
+  private vertexai_unwrap(moduleExports: typeof vertexAI): void {
     this._unwrap(
       moduleExports.VertexAI_Preview.prototype,
       "getGenerativeModel",
@@ -93,7 +114,21 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     this._unwrap(moduleExports.GenerativeModel.prototype, "generateContent");
   }
 
-  private patchVertexAI() {
+  private aiplatform_wrap(moduleExports: typeof aiplatform) {
+    this._wrap(
+      moduleExports.PredictionServiceClient.prototype,
+      "predict",
+      this.wrapperMethodForPalm2(),
+    );
+
+    return moduleExports;
+  }
+
+  private aiplatform_unwrap(moduleExports: typeof aiplatform): void {
+    this._unwrap(moduleExports.PredictionServiceClient.prototype, "predict");
+  }
+
+  private wrapperMethodForGemini() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -140,6 +175,135 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     };
   }
 
+  private wrapperMethodForPalm2() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const plugin = this;
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    return (original: Function) => {
+      return function method(
+        this: any,
+        ...args:
+          | [
+              request?: aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest,
+              options?: CallOptions,
+            ]
+          | [
+              request: aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest,
+              options: CallOptions,
+              callback: Callback<
+                aiplatform.protos.google.cloud.aiplatform.v1.IPredictResponse,
+                | aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest
+                | null
+                | undefined,
+                object | null | undefined
+              >,
+            ]
+          | [
+              request: aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest,
+              callback: Callback<
+                aiplatform.protos.google.cloud.aiplatform.v1.IPredictResponse,
+                | aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest
+                | null
+                | undefined,
+                object | null | undefined
+              >,
+            ]
+      ) {
+        const span = plugin._startSpan2({
+          params: args[0],
+        });
+
+        const execContext = trace.setSpan(context.active(), span);
+
+        const execPromise = safeExecuteInTheMiddle(
+          () => {
+            return context.with(execContext, () => {
+              return original.apply(this, args);
+            });
+          },
+          () => {},
+        );
+
+        const wrappedPromise = plugin._wrapPromise2(span, execPromise);
+
+        return context.bind(execContext, wrappedPromise as any);
+      };
+    };
+  }
+
+  private _startSpan2({
+    params,
+  }: {
+    params:
+      | aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest
+      | undefined;
+  }): Span {
+    const attributes: Attributes = {
+      [SpanAttributes.LLM_VENDOR]: "VertexAI",
+      [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
+    };
+
+    if (params !== undefined) {
+      if (params.endpoint) {
+        const model = params.endpoint.split("/").pop();
+        attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
+        attributes[SpanAttributes.LLM_RESPONSE_MODEL] = model;
+      }
+      if (params?.parameters) {
+        if (
+          params?.parameters.structValue?.fields?.maxOutputTokens.numberValue
+        ) {
+          attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+            params?.parameters.structValue?.fields?.maxOutputTokens.numberValue;
+        }
+        if (params?.parameters.structValue?.fields?.temperature.numberValue) {
+          attributes[SpanAttributes.LLM_TEMPERATURE] =
+            params?.parameters.structValue?.fields?.temperature.numberValue;
+        }
+        if (params?.parameters.structValue?.fields?.topP.numberValue) {
+          attributes[SpanAttributes.LLM_TOP_P] =
+            params?.parameters.structValue?.fields?.topP.numberValue;
+        }
+        if (params?.parameters.structValue?.fields?.topK.numberValue) {
+          attributes[SpanAttributes.LLM_TOP_K] =
+            params?.parameters.structValue?.fields?.topK.numberValue;
+        }
+      }
+
+      if (
+        this._shouldSendPrompts() &&
+        params.instances &&
+        params.instances?.length !== 0
+      ) {
+        if (
+          params.instances[0].structValue?.fields &&
+          "prompt" in params.instances[0].structValue.fields &&
+          params.instances[0].structValue?.fields?.prompt.stringValue
+        ) {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+            params.instances[0].structValue?.fields?.prompt.stringValue;
+        } else if (
+          params.instances[0].structValue &&
+          params.instances[0].structValue.fields?.messages.listValue
+            ?.values?.[0].structValue?.fields?.content.stringValue
+        ) {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
+            params.instances[0].structValue.fields?.messages.listValue
+              ?.values?.[0].structValue?.fields?.author.stringValue ?? "user";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+            params.instances[0].structValue.fields?.messages.listValue
+              ?.values?.[0].structValue?.fields?.content.stringValue;
+        }
+      }
+    }
+
+    return this.tracer.startSpan(`vertexai.completion`, {
+      kind: SpanKind.CLIENT,
+      attributes,
+    });
+  }
+
   private _startSpan({
     params,
   }: {
@@ -149,8 +313,6 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_VENDOR]: "VertexAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
-
-    console.log(">>> this.modelConfig", this.modelConfig);
 
     attributes[SpanAttributes.LLM_REQUEST_MODEL] = this.modelConfig.model;
 
@@ -176,7 +338,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       }
     }
 
-    if (this._shouldSendPrompts() && params.contents) {
+    if (this._shouldSendPrompts() && "contents" in params) {
       attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
         params.contents[0].role ?? "user";
       attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
@@ -212,6 +374,137 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
           reject(error);
         });
       });
+  }
+
+  private _wrapPromise2<T>(span: Span, promise: Promise<T>): Promise<T> {
+    return promise
+      .then((result) => {
+        return new Promise<T>((resolve) => {
+          this._endSpan2({
+            span,
+            result: result as [
+              aiplatform.protos.google.cloud.aiplatform.v1.IPredictResponse,
+              (
+                | aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest
+                | undefined
+              ),
+              object | undefined,
+            ],
+          });
+          resolve(result);
+        });
+      })
+      .catch((error: Error) => {
+        return new Promise<T>((_, reject) => {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error.message,
+          });
+          span.recordException(error);
+          span.end();
+
+          reject(error);
+        });
+      });
+  }
+
+  private _endSpan2({
+    span,
+    result,
+  }: {
+    span: Span;
+    result: [
+      aiplatform.protos.google.cloud.aiplatform.v1.IPredictResponse,
+      aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest | undefined,
+      object | undefined,
+    ];
+  }) {
+    if (result[0].model)
+      span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result[0].model);
+
+    if (result) {
+      if (result[0].metadata) {
+        if (
+          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+            .structValue?.fields?.outputTokenCount.structValue?.fields
+            ?.totalTokens.numberValue === "number"
+        )
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+            result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
+              ?.fields?.outputTokenCount.structValue?.fields?.totalTokens
+              .numberValue,
+          );
+
+        if (
+          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+            .structValue?.fields?.inputTokenCount.structValue?.fields
+            ?.totalTokens.numberValue === "number"
+        )
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+            result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
+              ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
+              .numberValue,
+          );
+
+        if (
+          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+            .structValue?.fields?.inputTokenCount.structValue?.fields
+            ?.totalTokens.numberValue === "number" &&
+          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+            .structValue?.fields?.outputTokenCount.structValue?.fields
+            ?.totalTokens.numberValue === "number"
+        )
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+            result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
+              ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
+              .numberValue +
+              result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
+                ?.fields?.outputTokenCount.structValue?.fields?.totalTokens
+                .numberValue,
+          );
+      }
+
+      if (this._shouldSendPrompts()) {
+        result[0].predictions?.forEach((prediction, index) => {
+          if (
+            prediction.structValue?.fields &&
+            "content" in prediction.structValue.fields &&
+            !!prediction.structValue?.fields?.content.stringValue
+          ) {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+              "assistant",
+            );
+
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+              prediction.structValue?.fields?.content.stringValue,
+            );
+          } else if (
+            prediction.structValue?.fields &&
+            "candidates" in prediction.structValue.fields &&
+            !!prediction.structValue?.fields?.candidates.listValue?.values?.[0]
+              ?.structValue?.fields?.content.stringValue
+          ) {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+              "assistant",
+            );
+
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+              prediction.structValue?.fields?.candidates.listValue?.values?.[0]
+                ?.structValue?.fields?.content.stringValue,
+            );
+          }
+        });
+      }
+    }
+
+    span.end();
   }
 
   private _endSpan({

@@ -113,7 +113,8 @@ export const startTracing = (options: InitializeOptions) => {
       options.instrumentModules.llamaIndex,
     );
     vertexAIInstrumentation.manuallyInstrument(
-      options.instrumentModules.vertexAI,
+      options.instrumentModules.google_vertexai,
+      options.instrumentModules.google_aiplatform,
     );
   }
 };
