@@ -27,7 +27,7 @@ import type * as vertexAiImport from "@google-cloud/vertexai";
 
 const memoryExporter = new InMemorySpanExporter();
 
-describe("Test LlamaIndex instrumentation", () => {
+describe("Test Gemini GenerativeModel Instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: VertexAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -50,7 +50,7 @@ describe("Test LlamaIndex instrumentation", () => {
     context.disable();
   });
 
-  it("should set attributes in span for LLM instrumentation", async () => {
+  it("should set request and response attributes in span for Text prompts", async () => {
     const vertexAI = new vertexAi.VertexAI({
       project: process.env.VERTEXAI_PROJECT_ID ?? "",
       location: process.env.VERTEXAI_LOCATION ?? "",

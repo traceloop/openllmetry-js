@@ -1,7 +1,7 @@
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
 import * as openai from "openai";
 import * as llamaIndex from "llamaindex";
-import { VertexAI } from "@google-cloud/vertexai";
+import * as vertexai from "@google-cloud/vertexai";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -56,7 +56,7 @@ export interface InitializeOptions {
   instrumentModules?: {
     openAI: typeof openai.OpenAI;
     llamaIndex: typeof llamaIndex;
-    vertexAI: VertexAI;
+    vertexAI: typeof vertexai;
   };
 
   /**

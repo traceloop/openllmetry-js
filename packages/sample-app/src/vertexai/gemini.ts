@@ -1,12 +1,10 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { VertexAI } from "@google-cloud/vertexai";
-// import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-node";
 
 traceloop.initialize({
-  appName: "sample_vertexai",
+  appName: "sample_vertexai_gemini",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
-  // exporter: new ConsoleSpanExporter(),
 });
 
 // Initialize Vertex with your Cloud project and location
