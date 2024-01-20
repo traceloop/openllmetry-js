@@ -107,8 +107,10 @@ export const startTracing = (options: InitializeOptions) => {
 
   _sdk.start();
 
-  if (options.instrumentModules) {
+  if (options.instrumentModules?.openAI) {
     openAIInstrumentation.manuallyInstrument(options.instrumentModules.openAI);
+  }
+  if (options.instrumentModules?.llamaIndex) {
     llamaIndexInstrumentation.manuallyInstrument(
       options.instrumentModules.llamaIndex,
     );
