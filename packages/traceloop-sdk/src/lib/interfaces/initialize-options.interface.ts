@@ -53,8 +53,8 @@ export interface InitializeOptions {
    * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
    */
   instrumentModules?: {
-    openAI: typeof openai.OpenAI;
-    llamaIndex: typeof llamaIndex;
+    openAI?: typeof openai.OpenAI;
+    llamaIndex?: typeof llamaIndex;
   };
 
   /**
