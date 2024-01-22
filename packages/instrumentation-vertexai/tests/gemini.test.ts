@@ -50,7 +50,7 @@ describe("Test Gemini GenerativeModel Instrumentation", () => {
     context.disable();
   });
 
-  it("should set request and response attributes in span for Text prompts", async () => {
+  it("should set request and response attributes in span for Text prompts with non-stream response", async () => {
     const vertexAI = new vertexAi.VertexAI({
       project: process.env.VERTEXAI_PROJECT_ID ?? "",
       location: process.env.VERTEXAI_LOCATION ?? "",
@@ -99,5 +99,65 @@ describe("Test Gemini GenerativeModel Instrumentation", () => {
       attributes["llm.completions.0.content"],
       fullTextResponse,
     );
+  });
+
+  it("should set request and response attributes in span for Text prompts with streaming response", async () => {
+    const vertexAI = new vertexAi.VertexAI({
+      project: process.env.VERTEXAI_PROJECT_ID ?? "",
+      location: process.env.VERTEXAI_LOCATION ?? "",
+    });
+
+    const model = "gemini-pro-vision";
+
+    const generativeModel = vertexAI.preview.getGenerativeModel({
+      model,
+      generation_config: {
+        top_p: 0.9,
+        max_output_tokens: 256,
+      },
+    });
+    const prompt = "What are the 4 cardinal directions?";
+    const request = {
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
+    };
+    const responseStream = await generativeModel.generateContentStream(request);
+
+    const fullTextResponse = [];
+    for await (const item of responseStream.stream) {
+      fullTextResponse.push(item.candidates[0].content.parts[0].text);
+    }
+
+    assert.ok(fullTextResponse);
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    assert.notStrictEqual(spans.length, 0);
+
+    const attributes = spans[0].attributes;
+
+    assert.strictEqual(attributes["llm.vendor"], "VertexAI");
+    assert.strictEqual(attributes["llm.request.type"], "completion");
+    assert.strictEqual(attributes["llm.request.model"], model);
+    assert.strictEqual(
+      attributes["llm.top_p"],
+      generativeModel.generation_config?.top_p,
+    );
+    assert.strictEqual(
+      attributes["llm.request.max_tokens"],
+      generativeModel.generation_config?.max_output_tokens,
+    );
+    assert.strictEqual(attributes["llm.prompts.0.content"], prompt);
+    assert.strictEqual(attributes["llm.prompts.0.role"], "user");
+    assert.strictEqual(attributes["llm.response.model"], model);
+    assert.strictEqual(attributes["llm.completions.0.role"], "assistant");
+
+    fullTextResponse.forEach((resp, index) => {
+      assert.strictEqual(attributes[`llm.completions.${index}.content`], resp);
+    });
   });
 });
