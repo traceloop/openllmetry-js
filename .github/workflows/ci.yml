@@ -58,6 +58,12 @@ jobs:
         with:
           cache: "npm"
           node-version-file: ".nvmrc"
+      
+      - uses: "google-github-actions/auth@v2"
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
       - uses: nrwl/nx-set-shas@v3
       - run: npm ci
       - name: Build
