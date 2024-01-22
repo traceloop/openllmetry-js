@@ -46,51 +46,51 @@ async function createNonStreamingContent() {
   });
 }
 
-async function createStreamingContent() {
-  return await traceloop.withWorkflow(
-    "sample_stream_completion",
-    {},
-    async () => {
-      // Instantiate the model
-      const generativeModel = vertexAI.preview.getGenerativeModel({
-        model: "gemini-pro-vision",
-        generation_config: {
-          max_output_tokens: 256,
-        },
-      });
+// async function createStreamingContent() {
+//   return await traceloop.withWorkflow(
+//     "sample_stream_completion",
+//     {},
+//     async () => {
+//       // Instantiate the model
+//       const generativeModel = vertexAI.preview.getGenerativeModel({
+//         model: "gemini-pro-vision",
+//         generation_config: {
+//           max_output_tokens: 256,
+//         },
+//       });
 
-      const request = {
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: "What are the 4 cardinal directions?" }],
-          },
-        ],
-      };
+//       const request = {
+//         contents: [
+//           {
+//             role: "user",
+//             parts: [{ text: "What is Node.js?" }],
+//           },
+//         ],
+//       };
 
-      // Create the response stream
-      const responseStream =
-        await generativeModel.generateContentStream(request);
+//       // Create the response stream
+//       const responseStream =
+//         await generativeModel.generateContentStream(request);
 
-      const fullTextResponse = [];
-      // Log the text response as it streams
-      for await (const item of responseStream.stream) {
-        fullTextResponse.push(item.candidates[0].content.parts[0].text);
-      }
 
-      return fullTextResponse;
-    },
-  );
-}
+//     // Wait for the response stream to complete
+//     const aggregatedResponse = await responseStream.response;
+
+//     // Select the text from the response
+//     const fullTextResponse =
+//       aggregatedResponse.candidates[0].content.parts[0].text;
+
+//     return fullTextResponse;
+//   });
+// }
 
 traceloop.withAssociationProperties({}, async () => {
-  const executedFuncId = 1;
+  // const executedFuncId = 1;
 
-  if (executedFuncId === 1) {
-    const completionResponse = await createNonStreamingContent();
-    console.log(completionResponse);
-  } else {
-    const completionResponse = await createStreamingContent();
-    console.log(completionResponse);
-  }
+  // if (executedFuncId === 1) {
+  //   const completionResponse = await createNonStreamingContent();
+  //   console.log(completionResponse);
+  // } else {
+    console.log(await createNonStreamingContent());
+  // }
 });

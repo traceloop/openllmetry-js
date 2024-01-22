@@ -79,11 +79,11 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       this.wrapperMethodForGemini(),
     );
     // For both stream & non-stream
-    this._wrap(
-      module1.GenerativeModel.prototype,
-      "generateContent",
-      this.wrapperMethodForGemini(),
-    );
+    // this._wrap(
+    //   module1.GenerativeModel.prototype,
+    //   "generateContent",
+    //   this.wrapperMethodForGemini(),
+    // );
     this._wrap(
       module1.GenerativeModel.prototype,
       "generateContentStream",
@@ -105,11 +105,11 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       this.wrapperMethodForGemini(),
     );
     // For both stream & non-stream
-    this._wrap(
-      moduleExports.GenerativeModel.prototype,
-      "generateContent",
-      this.wrapperMethodForGemini(),
-    );
+    // this._wrap(
+    //   moduleExports.GenerativeModel.prototype,
+    //   "generateContent",
+    //   this.wrapperMethodForGemini(),
+    // );
     this._wrap(
       moduleExports.GenerativeModel.prototype,
       "generateContentStream",
@@ -124,12 +124,10 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       moduleExports.VertexAI_Preview.prototype,
       "getGenerativeModel",
     );
-    // For both stream & non-stream
-    this._unwrap(moduleExports.GenerativeModel.prototype, "generateContent");
-    this._wrap(
+    // this._unwrap(moduleExports.GenerativeModel.prototype, "generateContent");
+    this._unwrap(
       moduleExports.GenerativeModel.prototype,
-      "generateContentStream",
-      this.wrapperMethodForGemini(),
+      "generateContentStream"
     );
   }
 
