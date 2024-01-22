@@ -4,7 +4,7 @@
   "description": "Sample app for using Traceloop SDK",
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "run:gemini": "npm run build && node dist/src/vertexai/generate.js",
+    "run:gemini": "npm run build && node dist/src/vertexai/gemini.js",
     "run:palm2": "npm run build && node dist/src/vertexai/palm2.js",
     "run:decorators": "npm run build && node dist/src/sample_decorators.js",
     "run:with": "npm run build && node dist/src/sample_with.js",
