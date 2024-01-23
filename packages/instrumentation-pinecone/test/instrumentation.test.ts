@@ -39,15 +39,15 @@ describe("Test LlamaIndex instrumentation", () => {
     instrumentation = new PineconeInstrumentation();
     instrumentation.setTracerProvider(provider);
     await pc.createIndex({
-      name: 'tests',
+      name: "tests",
       dimension: 8,
-      metric: 'euclidean',
+      metric: "euclidean",
       spec: {
         serverless: {
-          cloud: 'aws',
-          region: 'us-west-2'
-        }
-      }
+          cloud: "aws",
+          region: "us-west-2",
+        },
+      },
     });
     pc_index = pc.index("tests");
   });
@@ -58,21 +58,21 @@ describe("Test LlamaIndex instrumentation", () => {
     await pc_index.deleteAll();
     await pc_index.namespace("ns1").upsert([
       {
-        "id": "vec1",
-        "values": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+        id: "vec1",
+        values: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
       },
       {
-        "id": "vec2",
-        "values": [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
+        id: "vec2",
+        values: [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2],
       },
       {
-        "id": "vec3",
-        "values": [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3]
+        id: "vec3",
+        values: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
       },
       {
-        "id": "vec4",
-        "values": [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4]
-      }
+        id: "vec4",
+        values: [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4],
+      },
     ]);
   });
 
@@ -83,14 +83,14 @@ describe("Test LlamaIndex instrumentation", () => {
 
   after(() => {
     pc.deleteIndex("tests");
-  })
+  });
 
   it("should set attributes in span for DB upsert", async () => {
     const input = [
       {
-        "id": "vec5",
-        "values": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
-      }
+        id: "vec5",
+        values: [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+      },
     ];
     await pc_index.upsert(input);
 
@@ -105,9 +105,9 @@ describe("Test LlamaIndex instrumentation", () => {
 
   it("should set attributes in span for DB query", async () => {
     await pc_index.namespace("ns1").query({
-        topK: 1,
-        vector: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
-        includeValues: true
+      topK: 1,
+      vector: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
+      includeValues: true,
     });
 
     const spans = memoryExporter.getFinishedSpans();
@@ -120,8 +120,8 @@ describe("Test LlamaIndex instrumentation", () => {
   });
 
   it("should set attributes in span for DB deletes", async () => {
-    await pc_index.deleteOne('vec1');
-    await pc_index.deleteMany(['vec2', 'vec3']);
+    await pc_index.deleteOne("vec1");
+    await pc_index.deleteMany(["vec2", "vec3"]);
     await pc_index.deleteAll();
 
     const spans = memoryExporter.getFinishedSpans();
@@ -134,6 +134,5 @@ describe("Test LlamaIndex instrumentation", () => {
       const attributes = span.attributes;
       assert.strictEqual(attributes["llm.vector_db_name"], "Pinecone");
     }
-
   }).timeout(60000);
 });

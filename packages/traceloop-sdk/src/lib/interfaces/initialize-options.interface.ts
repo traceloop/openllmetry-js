@@ -1,7 +1,7 @@
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
 import * as openai from "openai";
 import * as llamaIndex from "llamaindex";
-import * as pinecone from '@pinecone-database/pinecone';
+import * as pinecone from "@pinecone-database/pinecone";
 
 /**
  * Options for initializing the Traceloop SDK.

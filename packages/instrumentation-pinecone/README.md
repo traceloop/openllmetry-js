@@ -25,7 +25,9 @@ To load a specific plugin, specify it in the registerInstrumentations's configur
 
 ```js
 const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
-const { PineconeInstrumentation } = require("@traceloop/instrumentation-pinecone");
+const {
+  PineconeInstrumentation,
+} = require("@traceloop/instrumentation-pinecone");
 const { registerInstrumentations } = require("@opentelemetry/instrumentation");
 
 const provider = new NodeTracerProvider();

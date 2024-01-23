@@ -15,12 +15,7 @@
  */
 import type * as pinecone from "@pinecone-database/pinecone";
 
-import {
-  context,
-  trace,
-  Tracer,
-  SpanStatusCode,
-} from "@opentelemetry/api";
+import { context, trace, Tracer, SpanStatusCode } from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationConfig,
@@ -31,7 +26,6 @@ import {
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 export class PineconeInstrumentation extends InstrumentationBase<any> {
-
   constructor(config: InstrumentationConfig = {}) {
     super("@traceloop/instrumentation-pinecone", "0.0.17", config);
   }
@@ -48,7 +42,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "pinecone",
-      [">=2.0.1"],  // TODO: Figure out version here.
+      [">=2.0.1"], // TODO: Figure out version here.
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
@@ -104,10 +98,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span = tracer.startSpan(`pinecone.${methodName}`);
-        span.setAttribute(
-          SpanAttributes.VECTOR_DB_VENDOR,
-          "Pinecone",
-        );
+        span.setAttribute(SpanAttributes.VECTOR_DB_VENDOR, "Pinecone");
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           () => {
@@ -116,7 +107,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
             });
           },
           // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => { },
+          () => {},
         );
         const wrappedPromise = execPromise
           .then((result: any) => {
