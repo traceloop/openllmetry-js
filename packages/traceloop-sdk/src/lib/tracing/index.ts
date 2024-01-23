@@ -11,6 +11,7 @@ import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
+import { PineconeInstrumentation} from "@traceloop/instrumentation-pinecone";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
@@ -21,6 +22,7 @@ let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation;
+let pineconeInstrumentation: PineconeInstrumentation;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
@@ -29,6 +31,9 @@ export const initInstrumentations = () => {
 
   llamaIndexInstrumentation = new LlamaIndexInstrumentation();
   instrumentations.push(llamaIndexInstrumentation);
+
+  pineconeInstrumentation = new PineconeInstrumentation();
+  instrumentations.push(pineconeInstrumentation);
 };
 
 /**
@@ -106,6 +111,11 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.llamaIndex) {
     llamaIndexInstrumentation.manuallyInstrument(
       options.instrumentModules.llamaIndex,
+    );
+  }
+  if (options.instrumentModules?.pinecone) {
+    pineconeInstrumentation.manuallyInstrument(
+      options.instrumentModules.pinecone,
     );
   }
 };
