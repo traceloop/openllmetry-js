@@ -186,8 +186,6 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
         this._formatPartsData(params.contents[0].parts);
     }
 
-    console.log(">>> attributes", attributes);
-
     return this.tracer.startSpan(`vertexai.completion`, {
       kind: SpanKind.CLIENT,
       attributes,
@@ -200,9 +198,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
         return new Promise<T>((resolve) => {
           this._endSpan({
             span,
-            result: result as
-              | vertexAI.GenerateContentResult
-              | vertexAI.StreamGenerateContentResult,
+            result: result as vertexAI.StreamGenerateContentResult,
           });
           resolve(result);
         });
@@ -226,9 +222,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     result,
   }: {
     span: Span;
-    result:
-      | vertexAI.GenerateContentResult
-      | vertexAI.StreamGenerateContentResult;
+    result: vertexAI.StreamGenerateContentResult;
   }) {
     span.setAttribute(
       SpanAttributes.LLM_RESPONSE_MODEL,
@@ -282,47 +276,6 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
             index += 1;
           }
         })();
-      }
-    } else if (!("then" in result.response)) {
-      if (result.response.usageMetadata) {
-        if (result.response.usageMetadata.totalTokenCount !== undefined)
-          span.setAttribute(
-            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-            result.response.usageMetadata.totalTokenCount,
-          );
-
-        if (result.response.usageMetadata.candidates_token_count)
-          span.setAttribute(
-            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-            result.response.usageMetadata.candidates_token_count,
-          );
-
-        if (result.response.usageMetadata.prompt_token_count)
-          span.setAttribute(
-            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-            result.response.usageMetadata?.prompt_token_count,
-          );
-      }
-      if (this._shouldSendPrompts()) {
-        result.response.candidates.forEach((candidate, index) => {
-          if (candidate.finishReason)
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-              candidate.finishReason,
-            );
-
-          if (candidate.content) {
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-              candidate.content.role ?? "assistant",
-            );
-
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-              this._formatPartsData(candidate.content.parts),
-            );
-          }
-        });
       }
     }
 
