@@ -24,6 +24,7 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import { Pinecone, Index } from "@pinecone-database/pinecone";
+import * as pc_module from "@pinecone-database/pinecone";
 
 const memoryExporter = new InMemorySpanExporter();
 const pc = new Pinecone();
@@ -38,6 +39,7 @@ describe("Test LlamaIndex instrumentation", () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new PineconeInstrumentation();
     instrumentation.setTracerProvider(provider);
+    instrumentation.manuallyInstrument(pc_module);
     await pc.createIndex({
       name: "tests",
       dimension: 8,
@@ -74,6 +76,7 @@ describe("Test LlamaIndex instrumentation", () => {
         values: [0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4],
       },
     ]);
+    memoryExporter.reset();
   });
 
   afterEach(() => {
@@ -97,10 +100,10 @@ describe("Test LlamaIndex instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     assert.strictEqual(spans.length, 1);
-    assert.strictEqual(spans[0].name, "upsert");
+    assert.strictEqual(spans[0].name, "pinecone.upsert");
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes["llm.vector_db_name"], "Pinecone");
+    assert.strictEqual(attributes["vector_db.vendor"], "Pinecone");
   });
 
   it("should set attributes in span for DB query", async () => {
@@ -113,10 +116,10 @@ describe("Test LlamaIndex instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     assert.strictEqual(spans.length, 1);
-    assert.strictEqual(spans[0].name, "query");
+    assert.strictEqual(spans[0].name, "pinecone.query");
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes["llm.vector_db_name"], "Pinecone");
+    assert.strictEqual(attributes["vector_db.vendor"], "Pinecone");
   });
 
   it("should set attributes in span for DB deletes", async () => {
@@ -130,9 +133,9 @@ describe("Test LlamaIndex instrumentation", () => {
 
     for (let index = 0; index < spans.length; index++) {
       const span = spans[index];
-      assert.strictEqual(span.name, "delete");
+      assert.strictEqual(span.name, "pinecone.delete");
       const attributes = span.attributes;
-      assert.strictEqual(attributes["llm.vector_db_name"], "Pinecone");
+      assert.strictEqual(attributes["vector_db.vendor"], "Pinecone");
     }
   }).timeout(60000);
 });
