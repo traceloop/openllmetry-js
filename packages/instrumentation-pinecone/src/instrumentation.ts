@@ -36,7 +36,31 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     if (module.openLLMetryPatched) {
       return;
     }
-    // TODO: Need to add code here?
+    this._wrap(
+      module.Index.prototype,
+      "query",
+      this.genericWrapper("query", this.tracer),
+    );
+    this._wrap(
+      module.Index.prototype,
+      "upsert",
+      this.genericWrapper("upsert", this.tracer),
+    );
+    this._wrap(
+      module.Index.prototype,
+      "deleteAll",
+      this.genericWrapper("delete", this.tracer),
+    );
+    this._wrap(
+      module.Index.prototype,
+      "deleteMany",
+      this.genericWrapper("delete", this.tracer),
+    );
+    this._wrap(
+      module.Index.prototype,
+      "deleteOne",
+      this.genericWrapper("delete", this.tracer),
+    );
   }
 
   protected init(): InstrumentationModuleDefinition<any> {
@@ -55,7 +79,6 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     if (moduleExports.openLLMetryPatched) {
       return moduleExports;
     }
-
     this._wrap(
       moduleExports.Index.prototype,
       "query",
