@@ -1,14 +1,18 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { Pinecone } from "@pinecone-database/pinecone";
+import * as pc_module from "@pinecone-database/pinecone";
 
 traceloop.initialize({
   appName: "sample_pinecone",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
+  instrumentModules: {
+    pinecone: pc_module
+  }
 });
 
 const pc = new Pinecone({
-  apiKey: process.env.PINECONE_API_KEY || "DOES_NOT_EXIST",
+  apiKey: process.env.PINECONE_API_KEY || "DOESNOTEXIST",
 });
 
 class SamplePinecone {
@@ -78,7 +82,7 @@ traceloop.withAssociationProperties(
   { user_id: "12345", chat_id: "789" },
   async () => {
     const samplePinecone = new SamplePinecone();
-    samplePinecone.initialize_index();
+    await samplePinecone.initialize_index();
     await samplePinecone.index_upsert();
     const result = await samplePinecone.index_query();
     console.log(result);
