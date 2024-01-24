@@ -7,8 +7,8 @@ traceloop.initialize({
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
   instrumentModules: {
-    pinecone: pc_module
-  }
+    pinecone: pc_module,
+  },
 });
 
 const pc = new Pinecone({
