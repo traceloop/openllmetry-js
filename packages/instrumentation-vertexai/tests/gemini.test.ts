@@ -16,7 +16,7 @@
 
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
-import { VertexAIInstrumentation } from "../src/instrumentation";
+import { VertexAIInstrumentation } from "../src/vertexai-instrumentation";
 import * as assert from "assert";
 import {
   BasicTracerProvider,

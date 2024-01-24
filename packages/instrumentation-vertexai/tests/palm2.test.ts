@@ -16,7 +16,7 @@
 
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
-import { VertexAIInstrumentation } from "../src/instrumentation";
+import { AIPlatformInstrumentation } from "../src/aiplatform-instrumentation";
 import * as assert from "assert";
 import {
   BasicTracerProvider,
@@ -30,13 +30,13 @@ const memoryExporter = new InMemorySpanExporter();
 
 describe("Test PaLM2 PredictionServiceClient Instrumentation", () => {
   const provider = new BasicTracerProvider();
-  let instrumentation: VertexAIInstrumentation;
+  let instrumentation: AIPlatformInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let aiplatform: typeof aiplatformImport;
 
   before(() => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-    instrumentation = new VertexAIInstrumentation();
+    instrumentation = new AIPlatformInstrumentation();
     instrumentation.setTracerProvider(provider);
     aiplatform = require("@google-cloud/aiplatform");
   });

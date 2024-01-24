@@ -1,11 +1,13 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import * as aiplatform from "@google-cloud/aiplatform";
 import { google } from "@google-cloud/aiplatform/build/protos/protos";
+import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-node";
 
 traceloop.initialize({
   appName: "sample_vertexai_palm2",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
+  exporter: new ConsoleSpanExporter(),
 });
 
 const project = process.env.VERTEXAI_PROJECT_ID ?? "";
@@ -55,6 +57,41 @@ async function callPredictForText(
   console.log(
     response?.predictions?.[0].structValue?.fields?.content.stringValue,
   );
+}
+
+async function callStreamingPredictForText(
+  publisher = "google",
+  model = "text-bison",
+) {
+  // Configure the parent resource
+  const endpoint = `projects/${project}/locations/${location}/publishers/${publisher}/models/${model}`;
+
+  const request = {
+    endpoint,
+    inputs: [
+      {
+        prompt: "What are the cardinal directions?",
+      },
+    ],
+    parameters: {
+      temperature: 0.2,
+      maxOutputTokens: 256,
+      topP: 0.95,
+      topK: 40,
+    },
+  };
+  const reqObject =
+    google.cloud.aiplatform.v1.StreamingPredictRequest.fromObject(request);
+  console.log(
+    ">>> inputs",
+    google.cloud.aiplatform.v1.StreamingPredictRequest.toObject(reqObject),
+  );
+
+  // Predict request
+  const response =
+    await predictionServiceClient.serverStreamingPredict(reqObject);
+
+  response.on("data", (data) => console.log(data));
 }
 
 async function callPredictForChat(
@@ -115,4 +152,5 @@ async function callPredictForChat(
 traceloop.withAssociationProperties({}, async () => {
   await callPredictForText();
   await callPredictForChat();
+  await callStreamingPredictForText();
 });

@@ -11,7 +11,10 @@ import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
-import { VertexAIInstrumentation } from "@traceloop/instrumentation-vertexai";
+import {
+  VertexAIInstrumentation,
+  AIPlatformInstrumentation,
+} from "@traceloop/instrumentation-vertexai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
@@ -22,7 +25,8 @@ let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation;
-let vertexAIInstrumentation: VertexAIInstrumentation;
+let vertexaiInstrumentation: VertexAIInstrumentation;
+let aiplatformInstrumentation: AIPlatformInstrumentation;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -33,8 +37,11 @@ export const initInstrumentations = () => {
   llamaIndexInstrumentation = new LlamaIndexInstrumentation();
   instrumentations.push(llamaIndexInstrumentation);
 
-  vertexAIInstrumentation = new VertexAIInstrumentation();
-  instrumentations.push(vertexAIInstrumentation);
+  vertexaiInstrumentation = new VertexAIInstrumentation();
+  instrumentations.push(vertexaiInstrumentation);
+
+  aiplatformInstrumentation = new AIPlatformInstrumentation();
+  instrumentations.push(aiplatformInstrumentation);
 };
 
 /**
@@ -48,7 +55,8 @@ export const startTracing = (options: InitializeOptions) => {
   if (!shouldSendTraces()) {
     openAIInstrumentation.setConfig({ traceContent: false });
     llamaIndexInstrumentation.setConfig({ traceContent: false });
-    vertexAIInstrumentation.setConfig({ traceContent: false });
+    vertexaiInstrumentation.setConfig({ traceContent: false });
+    aiplatformInstrumentation.setConfig({ traceContent: false });
   }
 
   const traceExporter =
@@ -115,12 +123,14 @@ export const startTracing = (options: InitializeOptions) => {
       options.instrumentModules.llamaIndex,
     );
   }
-  if (
-    options.instrumentModules?.google_vertexai &&
-    options.instrumentModules?.google_aiplatform
-  ) {
-    vertexAIInstrumentation.manuallyInstrument(
+  if (options.instrumentModules?.google_vertexai) {
+    vertexaiInstrumentation.manuallyInstrument(
       options.instrumentModules.google_vertexai,
+    );
+  }
+
+  if (options.instrumentModules?.google_aiplatform) {
+    aiplatformInstrumentation.manuallyInstrument(
       options.instrumentModules.google_aiplatform,
     );
   }

@@ -14,5 +14,6 @@
  * limitations under the License.
  */
 
-export * from "./instrumentation";
+export * from "./aiplatform-instrumentation";
 export * from "./types";
+export * from "./vertexai-instrumentation";
