@@ -13,14 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// import { HttpHandlerOptions as __HttpHandlerOptions } from "@smithy/types";
-import {
-  Span,
-  SpanKind,
-  SpanStatusCode,
-  context,
-  trace,
-} from "@opentelemetry/api";
 import {
   Span,
   Attributes,

@@ -16,8 +16,8 @@ import {
   VertexAIInstrumentation,
   AIPlatformInstrumentation,
 } from "@traceloop/instrumentation-vertexai";
-import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
+import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
@@ -31,8 +31,8 @@ let llamaIndexInstrumentation: LlamaIndexInstrumentation;
 let pineconeInstrumentation: PineconeInstrumentation;
 let vertexaiInstrumentation: VertexAIInstrumentation;
 let aiplatformInstrumentation: AIPlatformInstrumentation;
-let bedrockInstrumentation: BedrockInstrumentation;
 let langChainInstrumentation: LangChainInstrumentation;
+let bedrockInstrumentation: BedrockInstrumentation;
 
 const instrumentations: Instrumentation[] = [];
 
