@@ -74,4 +74,4 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           VERTEXAI_LOCATION: ${{ secrets.VERTEXAI_LOCATION }}
-          VERTEXAI_PROJECT_ID: ${{ secrets.VERTEXAI_PROJECT_ID }}
+          VERTEXAI_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
