@@ -154,7 +154,7 @@ describe("Test Gemini GenerativeModel Instrumentation", () => {
     assert.strictEqual(attributes["llm.prompts.0.content"], prompt);
     assert.strictEqual(attributes["llm.prompts.0.role"], "user");
     assert.strictEqual(attributes["llm.response.model"], model);
-    assert.strictEqual(attributes["llm.completions.0.role"], "assistant");
+    assert.strictEqual(attributes["llm.completions.0.role"], "model");
 
     fullTextResponse.forEach((resp, index) => {
       assert.strictEqual(attributes[`llm.completions.${index}.content`], resp);

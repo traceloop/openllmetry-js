@@ -132,12 +132,6 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
           () => {},
         );
 
-        // Its to get the model name
-        // if (args[0].model) {
-        //   this.model = args[0].model;
-        //   return context.bind(execContext, execPromise);
-        // }
-
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
 
         return context.bind(execContext, wrappedPromise as any);
@@ -194,14 +188,12 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
 
   private _wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
     return promise
-      .then((result) => {
-        return new Promise<T>((resolve) => {
-          this._endSpan({
-            span,
-            result: result as vertexAI.StreamGenerateContentResult,
-          });
-          resolve(result);
+      .then(async (result) => {
+        await this._endSpan({
+          span,
+          result: result as vertexAI.StreamGenerateContentResult,
         });
+        return new Promise<T>((resolve) => resolve(result));
       })
       .catch((error: Error) => {
         return new Promise<T>((_, reject) => {
@@ -217,7 +209,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       });
   }
 
-  private _endSpan({
+  private async _endSpan({
     span,
     result,
   }: {
@@ -229,54 +221,46 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       this.modelConfig.model,
     );
 
-    if ("then" in result.response && "stream" in result) {
-      result.response.then((response) => {
-        if (response.usageMetadata?.totalTokenCount !== undefined)
+    const streamResponse = await result.response;
+
+    if (streamResponse.usageMetadata?.totalTokenCount !== undefined)
+      span.setAttribute(
+        SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+        streamResponse.usageMetadata.totalTokenCount,
+      );
+
+    if (streamResponse.usageMetadata?.candidates_token_count)
+      span.setAttribute(
+        SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+        streamResponse.usageMetadata.candidates_token_count,
+      );
+
+    if (streamResponse.usageMetadata?.prompt_token_count)
+      span.setAttribute(
+        SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+        streamResponse.usageMetadata.prompt_token_count,
+      );
+
+    if (this._shouldSendPrompts()) {
+      streamResponse.candidates.forEach((candidate, index) => {
+        if (candidate.finishReason)
           span.setAttribute(
-            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-            response.usageMetadata.totalTokenCount,
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+            candidate.finishReason,
           );
 
-        if (response.usageMetadata?.candidates_token_count)
+        if (candidate.content) {
           span.setAttribute(
-            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-            response.usageMetadata.candidates_token_count,
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+            candidate.content.role ?? "assistant",
           );
 
-        if (response.usageMetadata?.prompt_token_count)
           span.setAttribute(
-            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-            response.usageMetadata.prompt_token_count,
+            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+            this._formatPartsData(candidate.content.parts),
           );
+        }
       });
-
-      if (this._shouldSendPrompts()) {
-        (async () => {
-          let index = 0;
-          for await (const item of result.stream) {
-            const candidate = item.candidates[0];
-            if (candidate.finishReason)
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-                candidate.finishReason,
-              );
-
-            if (candidate.content) {
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-                candidate.content.role ?? "assistant",
-              );
-
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-                this._formatPartsData(candidate.content.parts),
-              );
-            }
-
-            index += 1;
-          }
-        })();
-      }
     }
 
     span.setStatus({ code: SpanStatusCode.OK });

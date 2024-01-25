@@ -13,38 +13,38 @@ const vertexAI = new VertexAI({
   location: process.env.VERTEXAI_LOCATION ?? "",
 });
 
-// async function createNonStreamingContent() {
-//   return await traceloop.withWorkflow("sample_completion", {}, async () => {
-//     // Instantiate the model
-//     const generativeModel = vertexAI.preview.getGenerativeModel({
-//       model: "gemini-pro-vision",
-//       generation_config: {
-//         max_output_tokens: 256,
-//       },
-//     });
+async function createNonStreamingContent() {
+  return await traceloop.withWorkflow("sample_completion", {}, async () => {
+    // Instantiate the model
+    const generativeModel = vertexAI.preview.getGenerativeModel({
+      model: "gemini-pro-vision",
+      generation_config: {
+        max_output_tokens: 256,
+      },
+    });
 
-//     const request = {
-//       contents: [
-//         {
-//           role: "user",
-//           parts: [{ text: "What are the 4 cardinal directions?" }],
-//         },
-//       ],
-//     };
+    const request = {
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: "What are the 4 cardinal directions?" }],
+        },
+      ],
+    };
 
-//     // Create the response stream
-//     const responseStream = await generativeModel.generateContent(request);
+    // Create the response stream
+    const responseStream = await generativeModel.generateContent(request);
 
-//     // Wait for the response stream to complete
-//     const aggregatedResponse = await responseStream.response;
+    // Wait for the response stream to complete
+    const aggregatedResponse = await responseStream.response;
 
-//     // Select the text from the response
-//     const fullTextResponse =
-//       aggregatedResponse.candidates[0].content.parts[0].text;
+    // Select the text from the response
+    const fullTextResponse =
+      aggregatedResponse.candidates[0].content.parts[0].text;
 
-//     return fullTextResponse;
-//   });
-// }
+    return fullTextResponse;
+  });
+}
 
 async function createStreamingContent() {
   return await traceloop.withWorkflow(
@@ -63,7 +63,7 @@ async function createStreamingContent() {
         contents: [
           {
             role: "user",
-            parts: [{ text: "What is Node.js?" }],
+            parts: [{ text: "What are the 4 cardinal directions?" }],
           },
         ],
       };
@@ -85,12 +85,6 @@ async function createStreamingContent() {
 }
 
 traceloop.withAssociationProperties({}, async () => {
-  // const executedFuncId = 1;
-
-  // if (executedFuncId === 1) {
-  //   const completionResponse = await createNonStreamingContent();
-  //   console.log(completionResponse);
-  // } else {
+  console.log(await createNonStreamingContent());
   console.log(await createStreamingContent());
-  // }
 });
