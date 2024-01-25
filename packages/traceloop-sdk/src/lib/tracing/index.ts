@@ -57,6 +57,9 @@ export const initInstrumentations = () => {
 
   langChainInstrumentation = new LangChainInstrumentation();
   instrumentations.push(openAIInstrumentation, langChainInstrumentation);
+
+  bedrockInstrumentation = new BedrockInstrumentation();
+  instrumentations.push(bedrockInstrumentation);
 };
 
 /**
