@@ -34,6 +34,7 @@
   "dependencies": {
     "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
     "@opentelemetry/sdk-node": "^0.44.0",
+    "@traceloop/instrumentation-bedrock": "^0.2.0",
     "@traceloop/instrumentation-llamaindex": "^0.2.0",
     "@traceloop/instrumentation-openai": "^0.2.0",
     "@traceloop/instrumentation-vertexai": "^0.2.0",
