@@ -29,7 +29,7 @@
     "@pinecone-database/pinecone": "^2.0.1",
     "@google-cloud/vertexai": "^0.2.1",
     "@google-cloud/aiplatform": "^3.10.0",
-    "langchain": "^0.0.184",
+    "langchain": "^0.1.7"
   },
   "private": true,
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

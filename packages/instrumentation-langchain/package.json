@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 20000"
   },
   "keywords": [
     "opentelemetry",
@@ -35,13 +36,18 @@
     "access": "public"
   },
   "dependencies": {
+    "@langchain/openai": "^0.0.13",
     "@opentelemetry/core": "^1.8.0",
     "@opentelemetry/instrumentation": "^0.44.0",
     "@opentelemetry/semantic-conventions": "^1.0.0",
     "@traceloop/ai-semantic-conventions": "^0.0.16"
   },
   "devDependencies": {
-    "langchain": "^0.0.184"
+    "@types/expect": "^24.3.0",
+    "@types/mocha": "^10.0.6",
+    "hnswlib-node": "^2.1.0",
+    "langchain": "^0.1.7",
+    "ts-mocha": "^10.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-langchain"
 }
