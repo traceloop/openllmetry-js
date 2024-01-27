@@ -102,7 +102,7 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 - ⏳ Cohere
 - ⏳ Replicate
 - ⏳ HuggingFace
-- ⏳ Vertex AI (GCP)
+- ✅ Vertex AI (GCP)
 - ⏳ Bedrock (AWS)
 
 ### Vector DBs

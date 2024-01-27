@@ -25,6 +25,7 @@ export const SpanAttributes = {
   LLM_USAGE_PROMPT_TOKENS: "llm.usage.prompt_tokens",
   LLM_TEMPERATURE: "llm.temperature",
   LLM_TOP_P: "llm.top_p",
+  LLM_TOP_K: "llm.top_k",
   LLM_FREQUENCY_PENALTY: "llm.frequency_penalty",
   LLM_PRESENCE_PENALTY: "llm.presence_penalty",
   LLM_PROMPTS: "llm.prompts",

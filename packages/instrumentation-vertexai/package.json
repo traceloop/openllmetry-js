@@ -1,22 +1,23 @@
 {
-  "name": "@traceloop/instrumentation-openai",
+  "name": "@traceloop/instrumentation-vertexai",
   "version": "0.2.0",
-  "description": "OpenAI Instrumentaion",
+  "description": "Google's VertexAI Instrumentation",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "repository": "traceloop/openllmetry-js",
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test": "ts-mocha -p tsconfig.json 'tests/**/*.test.ts' --timeout 20000"
   },
   "keywords": [
     "opentelemetry",
     "nodejs",
     "tracing",
-    "openai"
+    "vertexai"
   ],
-  "author": "Traceloop",
+  "author": "Swaroop<maddisaiswaroop@gmail.com>",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=14"
@@ -40,7 +41,8 @@
     "@traceloop/ai-semantic-conventions": "^0.2.0"
   },
   "devDependencies": {
-    "openai": "^4.12.4"
+    "@google-cloud/aiplatform": "^3.10.0",
+    "@google-cloud/vertexai": "^0.2.1"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

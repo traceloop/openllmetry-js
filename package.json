@@ -2,7 +2,10 @@
   "name": "openllmetry-js",
   "version": "0.0.1",
   "license": "Apache-2.0",
-  "scripts": {},
+  "scripts": {
+    "build:all": "npx nx run-many -t build",
+    "build:effected": "npx nx affected -t build"
+  },
   "private": true,
   "devDependencies": {
     "@commitlint/cli": "^18.4.4",

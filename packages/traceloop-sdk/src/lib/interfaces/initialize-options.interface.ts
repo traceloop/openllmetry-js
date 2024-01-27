@@ -2,6 +2,8 @@ import { SpanExporter } from "@opentelemetry/sdk-trace-base";
 import * as openai from "openai";
 import * as llamaIndex from "llamaindex";
 import * as pinecone from "@pinecone-database/pinecone";
+import * as google_vertexai from "@google-cloud/vertexai";
+import * as google_aiplatform from "@google-cloud/aiplatform";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -57,6 +59,8 @@ export interface InitializeOptions {
     openAI?: typeof openai.OpenAI;
     llamaIndex?: typeof llamaIndex;
     pinecone?: typeof pinecone;
+    google_vertexai?: typeof google_vertexai;
+    google_aiplatform?: typeof google_aiplatform;
   };
 
   /**
