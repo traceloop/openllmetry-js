@@ -1,8 +1,17 @@
+import * as traceloop from "@traceloop/node-server-sdk";
 import {
   BedrockRuntimeClient,
   InvokeModelCommand,
-  InvokeModelWithResponseStreamCommand,
+  // InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
+import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base";
+
+traceloop.initialize({
+  appName: "sample_aws_claude",
+  apiKey: process.env.TRACELOOP_API_KEY,
+  disableBatch: true,
+  exporter: new ConsoleSpanExporter(),
+});
 
 // Create a BedrockRuntimeClient with your configuration
 const client = new BedrockRuntimeClient({
@@ -51,29 +60,30 @@ async function generateTextContent() {
   });
 }
 
-async function generateTextContentWithStreaming() {
-  // Create an InvokeModelWithResponseStreamCommand with the input parameters
-  const command = new InvokeModelWithResponseStreamCommand(input);
+// async function generateTextContentWithStreaming() {
+//   // Create an InvokeModelWithResponseStreamCommand with the input parameters
+//   const command = new InvokeModelWithResponseStreamCommand(input);
 
-  // Send the command to invoke the model and await the response
-  const response = await client.send(command);
+//   // Send the command to invoke the model and await the response
+//   const response = await client.send(command);
 
-  // Save the raw response
-  const rawRes = response.body;
+//   // Save the raw response
+//   const rawRes = response.body;
 
-  if (rawRes) {
-    for await (const value of rawRes) {
-      // Convert it to a JSON String
-      const jsonString = new TextDecoder().decode(value.chunk?.bytes);
+//   if (rawRes) {
+//     for await (const value of rawRes) {
+//       // Convert it to a JSON String
+//       const jsonString = new TextDecoder().decode(value.chunk?.bytes);
 
-      // Parse the JSON string
-      const parsedResponse = JSON.parse(jsonString);
+//       // Parse the JSON string
+//       const parsedResponse = JSON.parse(jsonString);
 
-      console.log(parsedResponse);
-    }
-  }
-}
+//       console.log(parsedResponse);
+//     }
+//   }
+// }
 
-generateTextContent();
-
-generateTextContentWithStreaming();
+traceloop.withAssociationProperties({}, async () => {
+  await generateTextContent();
+  // await generateTextContentWithStreaming();
+});
