@@ -108,18 +108,25 @@ describe("Test LlamaIndex instrumentation", () => {
 
   it("should set attributes in span for DB query", async () => {
     await pc_index.namespace("ns1").query({
-      topK: 1,
+      topK: 3,
       vector: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
       includeValues: true,
+      includeMetadata: true,
     });
 
     const spans = memoryExporter.getFinishedSpans();
 
     assert.strictEqual(spans.length, 1);
-    assert.strictEqual(spans[0].name, "pinecone.query");
-
     const attributes = spans[0].attributes;
     assert.strictEqual(attributes["vector_db.vendor"], "Pinecone");
+
+    const span = spans[0];
+    assert.strictEqual(span.events.length, 5);
+    assert.strictEqual(span.events[0].name, "pinecone.query.request");
+    assert.strictEqual(span.events[1].name, "pinecone.query.result");
+    assert.strictEqual(span.events[2].name, "pinecone.query.result.0");
+    assert.strictEqual(span.events[3].name, "pinecone.query.result.1");
+    assert.strictEqual(span.events[4].name, "pinecone.query.result.2");
   });
 
   it("should set attributes in span for DB deletes", async () => {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type * as pinecone from "@pinecone-database/pinecone";
+import * as pinecone from "@pinecone-database/pinecone";
 
 import { context, trace, Tracer, SpanStatusCode } from "@opentelemetry/api";
 import {
@@ -36,11 +36,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     if (module.openLLMetryPatched) {
       return;
     }
-    this._wrap(
-      module.Index.prototype,
-      "query",
-      this.genericWrapper("query", this.tracer),
-    );
+    this._wrap(module.Index.prototype, "query", this.queryWrapper(this.tracer));
     this._wrap(
       module.Index.prototype,
       "upsert",
@@ -82,7 +78,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       moduleExports.Index.prototype,
       "query",
-      this.genericWrapper("query", this.tracer),
+      this.queryWrapper(this.tracer),
     );
     this._wrap(
       moduleExports.Index.prototype,
@@ -136,6 +132,75 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
           .then((result: any) => {
             return new Promise((resolve) => {
               span.setStatus({ code: SpanStatusCode.OK });
+              span.end();
+              resolve(result);
+            });
+          })
+          .catch((error: Error) => {
+            return new Promise((_, reject) => {
+              span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message: error.message,
+              });
+              span.end();
+              reject(error);
+            });
+          });
+        return context.bind(execContext, wrappedPromise as any);
+      };
+    };
+  }
+
+  private queryWrapper(tracer: Tracer) {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    return (original: Function) => {
+      return function method(this: any, ...args: unknown[]) {
+        const span = tracer.startSpan(`pinecone.query`);
+        span.setAttribute(SpanAttributes.VECTOR_DB_VENDOR, "Pinecone");
+        const execContext = trace.setSpan(context.active(), span);
+        let options = args[0] as pinecone.QueryOptions;
+        span.addEvent("pinecone.query.request", {
+          topK: options.topK,
+          includeValues: options.includeValues,
+          includeMetadata: options.includeMetadata,
+          id: (options as pinecone.QueryByRecordId).id,
+          vector: (options as pinecone.QueryByVectorValues).vector,
+          filter: JSON.stringify(options.filter ? options.filter : {}),
+        });
+        const execPromise = safeExecuteInTheMiddle(
+          () => {
+            return context.with(execContext, () => {
+              return original.apply(this, args);
+            });
+          },
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
+          () => {},
+        );
+        const wrappedPromise = execPromise
+          .then((result: any) => {
+            return new Promise((resolve) => {
+              span.setStatus({ code: SpanStatusCode.OK });
+              let result_obj =
+                result as pinecone.QueryResponse<pinecone.RecordMetadata>;
+              span.addEvent("pinecone.query.result", {
+                namespace: result_obj.namespace,
+                readUnits: result_obj.usage?.readUnits,
+                matches_length: result_obj.matches.length,
+              });
+              for (let i = 0; i < result_obj.matches.length; i++) {
+                const match = result_obj.matches[i];
+                let event_attributes: { [key: string]: any } = {
+                  score: match.score,
+                  id: match.id,
+                  values: match.values,
+                  sparseValuesIndices: match.sparseValues?.indices,
+                  sparseValuesValues: match.sparseValues?.values,
+                };
+                for (let record in match.metadata) {
+                  event_attributes[record as string] = match.metadata[record];
+                }
+                span.addEvent(`pinecone.query.result.${i}`, event_attributes);
+              }
               span.end();
               resolve(result);
             });
