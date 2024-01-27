@@ -158,7 +158,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
         const span = tracer.startSpan(`pinecone.query`);
         span.setAttribute(SpanAttributes.VECTOR_DB_VENDOR, "Pinecone");
         const execContext = trace.setSpan(context.active(), span);
-        let options = args[0] as pinecone.QueryOptions;
+        const options = args[0] as pinecone.QueryOptions;
         span.addEvent("pinecone.query.request", {
           topK: options.topK,
           includeValues: options.includeValues,
@@ -180,7 +180,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
           .then((result: any) => {
             return new Promise((resolve) => {
               span.setStatus({ code: SpanStatusCode.OK });
-              let result_obj =
+              const result_obj =
                 result as pinecone.QueryResponse<pinecone.RecordMetadata>;
               span.addEvent("pinecone.query.result", {
                 namespace: result_obj.namespace,
@@ -189,14 +189,14 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
               });
               for (let i = 0; i < result_obj.matches.length; i++) {
                 const match = result_obj.matches[i];
-                let event_attributes: { [key: string]: any } = {
+                const event_attributes: { [key: string]: any } = {
                   score: match.score,
                   id: match.id,
                   values: match.values,
                   sparseValuesIndices: match.sparseValues?.indices,
                   sparseValuesValues: match.sparseValues?.values,
                 };
-                for (let record in match.metadata) {
+                for (const record in match.metadata) {
                   event_attributes[record as string] = match.metadata[record];
                 }
                 span.addEvent(`pinecone.query.result.${i}`, event_attributes);
