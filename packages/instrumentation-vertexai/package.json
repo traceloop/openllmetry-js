@@ -15,8 +15,7 @@
     "opentelemetry",
     "nodejs",
     "tracing",
-    "attributes",
-    "semantic conventions"
+    "vertexai"
   ],
   "author": "Swaroop<maddisaiswaroop@gmail.com>",
   "license": "Apache-2.0",
