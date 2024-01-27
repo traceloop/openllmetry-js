@@ -131,6 +131,8 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.pinecone) {
     pineconeInstrumentation.manuallyInstrument(
       options.instrumentModules.pinecone,
+    );
+  }
   if (options.instrumentModules?.google_vertexai) {
     vertexaiInstrumentation.manuallyInstrument(
       options.instrumentModules.google_vertexai,
