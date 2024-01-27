@@ -16,6 +16,7 @@
     "run:prompt_mgmt": "npm run build && node dist/src/sample_prompt_mgmt.js",
     "run:sample_vision": "npm run build && node dist/src/sample_vision_prompt.js",
     "run:sampler": "npm run build && node dist/src/sample_sampler.js",
+    "run:llamaindex": "npm run build && node dist/src/sample_llamaindex.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
