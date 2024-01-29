@@ -70,6 +70,8 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       this.wrapperMethod(),
     );
     console.log(">>> wrap after");
+
+    return module;
   }
 
   private unwrap(module: typeof bedrock) {
@@ -79,10 +81,13 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   }
 
   private wrapperMethod() {
+    console.log(">>> 1");
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
+    console.log(">>> 2");
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: any) => {
+      console.log(">>> 3", Object.getOwnPropertyNames(original));
       return function method(
         this: any,
         ...args: any
