@@ -36,33 +36,13 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     if (module.openLLMetryPatched) {
       return;
     }
-    this._wrap(module.Index.prototype, "query", this.queryWrapper(this.tracer));
-    this._wrap(
-      module.Index.prototype,
-      "upsert",
-      this.genericWrapper("upsert", this.tracer),
-    );
-    this._wrap(
-      module.Index.prototype,
-      "deleteAll",
-      this.genericWrapper("delete", this.tracer),
-    );
-    this._wrap(
-      module.Index.prototype,
-      "deleteMany",
-      this.genericWrapper("delete", this.tracer),
-    );
-    this._wrap(
-      module.Index.prototype,
-      "deleteOne",
-      this.genericWrapper("delete", this.tracer),
-    );
+    this.patch(module);
   }
 
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
-      "pinecone",
-      [">=2.0.1"], // TODO: Figure out version here.
+      "@pinecone-database/pinecone",
+      [">=2.0.1"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );

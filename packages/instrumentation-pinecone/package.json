@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 20000"
   },
   "keywords": [
     "opentelemetry",
@@ -17,7 +18,7 @@
     "attributes",
     "semantic conventions"
   ],
-  "author": "Traceloop",
+  "author": "Kartikay<kartikaybagla@gmail.com>",
   "license": "Apache-2.0",
   "engines": {
     "node": ">=14"

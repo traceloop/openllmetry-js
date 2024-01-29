@@ -29,7 +29,7 @@ import * as pc_module from "@pinecone-database/pinecone";
 const memoryExporter = new InMemorySpanExporter();
 const pc = new Pinecone();
 
-describe("Test LlamaIndex instrumentation", () => {
+describe("Test Pinecone instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: PineconeInstrumentation;
   let contextManager: AsyncHooksContextManager;

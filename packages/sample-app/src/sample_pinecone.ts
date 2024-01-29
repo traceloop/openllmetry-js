@@ -1,14 +1,10 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { Pinecone } from "@pinecone-database/pinecone";
-import * as pc_module from "@pinecone-database/pinecone";
 
 traceloop.initialize({
   appName: "sample_pinecone",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
-  instrumentModules: {
-    pinecone: pc_module,
-  },
 });
 
 const pc = new Pinecone({

@@ -12,6 +12,7 @@
     "run:sample_vision": "npm run build && node dist/src/sample_vision_prompt.js",
     "run:sampler": "npm run build && node dist/src/sample_sampler.js",
     "run:llamaindex": "npm run build && node dist/src/sample_llamaindex.js",
+    "run:pinecone": "npm run build && node dist/src/sample_pinecone.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
