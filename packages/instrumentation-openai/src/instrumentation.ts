@@ -255,9 +255,12 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           }
         });
       } else {
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
         if (typeof params.prompt === "string") {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
           attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
+        } else {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+            JSON.stringify(params.prompt);
         }
       }
     }

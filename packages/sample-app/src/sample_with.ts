@@ -24,7 +24,7 @@ async function chat() {
 async function completion() {
   return await traceloop.withWorkflow("sample_completion", {}, async () => {
     const completion = await openai.completions.create({
-      prompt: "Tell me a joke about TypeScript",
+      prompt: ["Tell me a joke about TypeScript"],
       model: "gpt-3.5-turbo-instruct",
     });
 
