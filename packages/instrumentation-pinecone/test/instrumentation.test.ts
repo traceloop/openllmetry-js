@@ -70,6 +70,9 @@ describe("Test Pinecone instrumentation", () => {
       {
         id: "vec3",
         values: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
+        metadata: {
+          test_meta: 42,
+        },
       },
       {
         id: "vec4",
@@ -121,12 +124,15 @@ describe("Test Pinecone instrumentation", () => {
     assert.strictEqual(attributes["vector_db.vendor"], "Pinecone");
 
     const span = spans[0];
-    assert.strictEqual(span.events.length, 5);
+    assert.strictEqual(span.events.length, 8);
     assert.strictEqual(span.events[0].name, "pinecone.query.request");
     assert.strictEqual(span.events[1].name, "pinecone.query.result");
     assert.strictEqual(span.events[2].name, "pinecone.query.result.0");
-    assert.strictEqual(span.events[3].name, "pinecone.query.result.1");
-    assert.strictEqual(span.events[4].name, "pinecone.query.result.2");
+    assert.strictEqual(span.events[3].name, "pinecone.query.result.0.metadata");
+    assert.strictEqual(span.events[4].name, "pinecone.query.result.1");
+    assert.strictEqual(span.events[5].name, "pinecone.query.result.1.metadata");
+    assert.strictEqual(span.events[6].name, "pinecone.query.result.2");
+    assert.strictEqual(span.events[7].name, "pinecone.query.result.2.metadata");
   });
 
   it("should set attributes in span for DB deletes", async () => {
