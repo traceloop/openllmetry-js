@@ -107,15 +107,15 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 
 ### Vector DBs
 
-- ⏳ Pinecone
+- ✅ Pinecone
 - ⏳ Chroma
 - ⏳ Weaviate
 - ⏳ Milvus
 
 ### Frameworks
 
-- ✅ LlamaIndex
 - ⏳ LangChain
+- ✅ LlamaIndex
 
 ## 🌱 Contributing
 
