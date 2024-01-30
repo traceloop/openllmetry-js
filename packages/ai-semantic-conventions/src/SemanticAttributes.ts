@@ -45,6 +45,33 @@ export const SpanAttributes = {
   TRACELOOP_ENTITY_OUTPUT: "traceloop.entity.output",
 };
 
+export const EventAttributes = {
+  // Vector DB Query Request
+  VECTOR_DB_QUERY_TOP_K: "vector_db.query.top_k",
+  VECTOR_DB_QUERY_INCLUDE_VALUES: "vector_db.query.include_values",
+  VECTOR_DB_QUERY_INCLUDE_METADATA: "vector_db.query.include_metadata",
+  VECTOR_DB_QUERY_ID: "vector_db.query.id",
+  VECTOR_DB_QUERY_EMBEDDINGS_VECTOR: "vector_db.query.embeddings.vector",
+  VECTOR_DB_QUERY_METADATA_FILTER: "vector_db.query.metadata_filter",
+
+  // Vector DB Query Response
+  VECTOR_DB_QUERY_RESULT_NAMESPACE: "vector_db.query.result.namespace",
+  VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED:
+    "vector_db.query.result.read_units",
+  VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH:
+    "vector_db.query.result.matches_length",
+
+  // Vector DB Query Response of each result
+  VECTOR_DB_QUERY_RESULT_SCORE: "vector_db.query.result.{i}.score",
+  VECTOR_DB_QUERY_RESULT_ID: "vector_db.query.result.{i}.id",
+  VECTOR_DB_QUERY_RESULT_VALUES: "vector_db.query.result.{i}.values",
+  VECTOR_DB_QUERY_RESULT_SPARSE_INDICES:
+    "vector_db.query.result.{i}.sparse.indices",
+  VECTOR_DB_QUERY_RESULT_SPARSE_VALUES:
+    "vector_db.query.result.{i}.sparse.values",
+  VECTOR_DB_QUERY_RESULT_METADATA: "vector_db.query.result.{i}.metadata",
+};
+
 export enum LLMRequestTypeValues {
   COMPLETION = "completion",
   CHAT = "chat",
