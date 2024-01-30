@@ -56,15 +56,19 @@ export const EventAttributes = {
 
   // Vector DB Query Response
   VECTOR_DB_QUERY_RESULT_NAMESPACE: "vector_db.query.result.namespace",
-  VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED: "vector_db.query.result.read_units",
-  VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH: "vector_db.query.result.matches_length",
+  VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED:
+    "vector_db.query.result.read_units",
+  VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH:
+    "vector_db.query.result.matches_length",
 
   // Vector DB Query Response of each result
   VECTOR_DB_QUERY_RESULT_SCORE: "vector_db.query.result.{i}.score",
   VECTOR_DB_QUERY_RESULT_ID: "vector_db.query.result.{i}.id",
   VECTOR_DB_QUERY_RESULT_VALUES: "vector_db.query.result.{i}.values",
-  VECTOR_DB_QUERY_RESULT_SPARSE_INDICES: "vector_db.query.result.{i}.sparse.indices",
-  VECTOR_DB_QUERY_RESULT_SPARSE_VALUES: "vector_db.query.result.{i}.sparse.values",
+  VECTOR_DB_QUERY_RESULT_SPARSE_INDICES:
+    "vector_db.query.result.{i}.sparse.indices",
+  VECTOR_DB_QUERY_RESULT_SPARSE_VALUES:
+    "vector_db.query.result.{i}.sparse.values",
   VECTOR_DB_QUERY_RESULT_METADATA: "vector_db.query.result.{i}.metadata",
 };
 
