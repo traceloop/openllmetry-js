@@ -38,6 +38,7 @@
     "@traceloop/instrumentation-llamaindex": "^0.2.0",
     "@traceloop/instrumentation-openai": "^0.2.0",
     "@traceloop/instrumentation-vertexai": "^0.2.0",
+    "@traceloop/instrumentation-pinecone": "^0.1.0",
     "@types/nunjucks": "^3.2.5",
     "fetch-retry": "^5.0.6",
     "nunjucks": "^3.2.4",
@@ -47,7 +48,8 @@
   "peerDependencies": {
     "@google-cloud/vertexai": "^0.2.1",
     "llamaindex": ">=0.0.40",
-    "openai": ">=4.0.0"
+    "openai": ">=4.0.0",
+    "@pinecone-database/pinecone": "^2.0.1"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",

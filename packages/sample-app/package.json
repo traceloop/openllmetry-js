@@ -17,6 +17,7 @@
     "run:sample_vision": "npm run build && node dist/src/sample_vision_prompt.js",
     "run:sampler": "npm run build && node dist/src/sample_sampler.js",
     "run:llamaindex": "npm run build && node dist/src/sample_llamaindex.js",
+    "run:pinecone": "npm run build && node dist/src/sample_pinecone.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
@@ -29,6 +30,7 @@
     "@traceloop/node-server-sdk": "*",
     "llamaindex": "^0.0.40",
     "openai": "^4.12.4",
+    "@pinecone-database/pinecone": "^2.0.1",
     "@google-cloud/vertexai": "^0.2.1",
     "@google-cloud/aiplatform": "^3.10.0",
     "@aws-sdk/client-bedrock-runtime": "^3.499.0"
