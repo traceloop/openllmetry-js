@@ -80,6 +80,8 @@ traceloop.withAssociationProperties(
     const samplePinecone = new SamplePinecone();
     await samplePinecone.initialize_index();
     await samplePinecone.index_upsert();
+    // wait 30 seconds for pinecone to update to go through otherwise result can have 0 values.
+    await new Promise( resolve => setTimeout(resolve, 30000) );
     const result = await samplePinecone.index_query();
     console.log(result);
     await samplePinecone.index_delete();
