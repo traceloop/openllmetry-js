@@ -40,17 +40,18 @@ describe("Test Pinecone instrumentation", () => {
     instrumentation = new PineconeInstrumentation();
     instrumentation.setTracerProvider(provider);
     instrumentation.manuallyInstrument(pc_module);
-    await pc.createIndex({
-      name: "tests",
-      dimension: 8,
-      metric: "euclidean",
-      spec: {
-        serverless: {
-          cloud: "aws",
-          region: "us-west-2",
-        },
-      },
-    });
+    // TODO: create index manually in your Pinecone Instance
+    // await pc.createIndex({
+    //   name: "tests",
+    //   dimension: 8,
+    //   metric: "euclidean",
+    //   spec: {
+    //     serverless: {
+    //       cloud: "aws",
+    //       region: "us-west-2",
+    //     },
+    //   },
+    // });
     pc_index = pc.index("tests");
   });
 
@@ -88,7 +89,7 @@ describe("Test Pinecone instrumentation", () => {
   });
 
   after(() => {
-    pc.deleteIndex("tests");
+    //pc.deleteIndex("tests");
   });
 
   it("should set attributes in span for DB upsert", async () => {
