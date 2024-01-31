@@ -36,7 +36,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@langchain/openai": "^0.0.13",
     "@opentelemetry/core": "^1.8.0",
     "@opentelemetry/instrumentation": "^0.44.0",
     "@opentelemetry/semantic-conventions": "^1.0.0",
@@ -47,7 +46,10 @@
     "@types/mocha": "^10.0.6",
     "hnswlib-node": "^2.1.0",
     "langchain": "^0.1.7",
-    "ts-mocha": "^10.0.0"
+    "@langchain/openai": "^0.0.13",
+    "ts-mocha": "^10.0.0",
+    "@langchain/community": "0.0.21",
+    "mocha": "^10.2.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-langchain"
 }

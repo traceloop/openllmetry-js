@@ -34,6 +34,7 @@ import { pull } from "langchain/hub";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ChatOpenAI, OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 import { LangChainInstrumentation } from "../src/instrumentation";
 
@@ -51,6 +52,7 @@ describe("Test LlamaIndex instrumentation", () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new LangChainInstrumentation();
     instrumentation.setTracerProvider(provider);
+
     langchainAgentsModule = require("langchain/agents");
     langchainToolsModule = require("langchain/tools");
     langchainChainsModule = require("langchain/chains");
@@ -66,9 +68,27 @@ describe("Test LlamaIndex instrumentation", () => {
     context.disable();
   });
 
-  it("should set attributes in span for tools and agent instrumentation", async () => {
+  it("should set attributes in span for tools instrumentation", async () => {
+    const wikipediaQuery = new langchainToolsModule.WikipediaQueryRun({
+      topKResults: 3,
+      maxDocContentLength: 100,
+    });
+
+    const result = await wikipediaQuery.call("Langchain");
+
+    const spans = memoryExporter.getFinishedSpans();
+    const wikipediaSpan = spans.find(
+      (span) => span.name === "langchain.task.WikipediaQueryRun",
+    );
+
+    assert.ok(result);
+    assert.ok(wikipediaSpan);
+    assert.strictEqual(wikipediaSpan.attributes["traceloop.span.kind"], "task");
+  });
+
+  it("should set attributes in span for agent instrumentation", async () => {
     const llm = new ChatOpenAI({});
-    const tools = [new Calculator(), new langchainToolsModule.SerpAPI()];
+    const tools = [new Calculator()];
     const prompt = await pull<ChatPromptTemplate>(
       "hwchase17/openai-tools-agent",
     );
@@ -78,16 +98,15 @@ describe("Test LlamaIndex instrumentation", () => {
       tools,
     });
     const result = await agentExecutor.invoke({
-      input:
-        "By searching the Internet, find how many albums has Boldy James dropped since 2010 and how many albums has Nas dropped since 2010? Find who dropped more albums and show the difference in percent.",
+      input: "Solve `5 * (10 + 2)`",
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const spanNames = spans.map((span) => span.name);
+    const agentSpan = spans.find((span) => span.name === "langchain.agent");
 
     assert.ok(result);
-    assert.ok(spanNames.includes("langchain.task.SerpAPI"));
-    assert.ok(spanNames.includes("langchain.agent"));
+    assert.ok(agentSpan);
+    assert.strictEqual(agentSpan.attributes["traceloop.span.kind"], "workflow");
   }).timeout(60000);
 
   it("should set attributes in span for chain instrumentation", async () => {
@@ -122,13 +141,38 @@ describe("Test LlamaIndex instrumentation", () => {
       k: 8,
     });
     const spans = memoryExporter.getFinishedSpans();
-    const spanNames = spans.map((span) => span.name);
+
+    const llmChainSpan = spans.find(
+      (span) => span.name === "langchain.task.LLMChain",
+    );
+    const stuffDocumentsChainSpan = spans.find(
+      (span) => span.name === "langchain.task.StuffDocumentsChain",
+    );
+    const retrievalQASpan = spans.find(
+      (span) => span.name === "retrieval_qa.workflow",
+    );
+    const retrievalQAChainSpan = spans.find(
+      (span) => span.name === "langchain.task.RetrievalQAChain",
+    );
 
     assert.ok(answer);
-    assert.ok(spanNames.includes("langchain.task.LLMChain"));
-    assert.ok(spanNames.includes("langchain.task.StuffDocumentsChain"));
-    assert.ok(spanNames.includes("retrieval_qa.workflow"));
-    assert.ok(spanNames.includes("langchain.task.RetrievalQAChain"));
+    assert.ok(llmChainSpan);
+    assert.ok(stuffDocumentsChainSpan);
+    assert.ok(retrievalQASpan);
+    assert.ok(retrievalQAChainSpan);
+    assert.strictEqual(llmChainSpan.attributes["traceloop.span.kind"], "task");
+    assert.strictEqual(
+      stuffDocumentsChainSpan.attributes["traceloop.span.kind"],
+      "task",
+    );
+    assert.strictEqual(
+      retrievalQASpan.attributes["traceloop.span.kind"],
+      "workflow",
+    );
+    assert.strictEqual(
+      retrievalQAChainSpan.attributes["traceloop.span.kind"],
+      "task",
+    );
   }).timeout(300000);
 
   it("should set attributes in span for retrieval qa instrumentation", async () => {
@@ -152,11 +196,60 @@ describe("Test LlamaIndex instrumentation", () => {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const spanNames = spans.map((span) => span.name);
+    const stuffDocumentsChainSpan = spans.find(
+      (span) => span.name === "langchain.task.StuffDocumentsChain",
+    );
+    const llmChainSpan = spans.find(
+      (span) => span.name === "langchain.task.LLMChain",
+    );
+    const retrievalQASpan = spans.find(
+      (span) => span.name === "retrieval_qa.workflow",
+    );
 
     assert.ok(answer);
-    assert.ok(spanNames.includes("langchain.task.StuffDocumentsChain"));
-    assert.ok(spanNames.includes("langchain.task.LLMChain"));
-    assert.ok(spanNames.includes("retrieval_qa.workflow"));
+    assert.ok(llmChainSpan);
+    assert.ok(stuffDocumentsChainSpan);
+    assert.ok(retrievalQASpan);
+    assert.strictEqual(llmChainSpan.attributes["traceloop.span.kind"], "task");
+    assert.strictEqual(
+      stuffDocumentsChainSpan.attributes["traceloop.span.kind"],
+      "task",
+    );
+    assert.strictEqual(
+      retrievalQASpan.attributes["traceloop.span.kind"],
+      "workflow",
+    );
+  }).timeout(300000);
+
+  it("should set correct attributes in span for LCEL", async () => {
+    const wikipediaQuery = new langchainToolsModule.WikipediaQueryRun({
+      topKResults: 3,
+      maxDocContentLength: 100,
+    });
+
+    const prompt = PromptTemplate.fromTemplate(
+      `Turn the following user input into a search query for a wikipedia:
+         {input}`,
+    );
+
+    const model = new ChatOpenAI({});
+
+    const chain = prompt
+      .pipe(model)
+      .pipe(new StringOutputParser())
+      .pipe(wikipediaQuery);
+
+    const result = await chain.invoke({
+      input: "Who is the current prime minister of Malaysia?",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const wikipediaSpan = spans.find(
+      (span) => span.name === "langchain.task.WikipediaQueryRun",
+    );
+
+    assert.ok(result);
+    assert.ok(wikipediaSpan);
+    assert.strictEqual(wikipediaSpan.attributes["traceloop.span.kind"], "task");
   }).timeout(300000);
 });
