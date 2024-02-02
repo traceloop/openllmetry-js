@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// import { HttpHandlerOptions as __HttpHandlerOptions } from "@smithy/types";
 import {
   Span,
+  Attributes,
   SpanKind,
   SpanStatusCode,
   context,
@@ -29,6 +29,10 @@ import {
 } from "@opentelemetry/instrumentation";
 import { BedrockInstrumentationConfig } from "./types";
 import * as bedrock from "@aws-sdk/client-bedrock-runtime";
+import {
+  LLMRequestTypeValues,
+  SpanAttributes,
+} from "@traceloop/ai-semantic-conventions";
 
 export class BedrockInstrumentation extends InstrumentationBase<any> {
   protected override _config!: BedrockInstrumentationConfig;
@@ -49,69 +53,37 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       this.unwrap.bind(this),
     );
 
-    console.log(">>> init done");
     return module;
   }
 
   public manuallyInstrument(module: typeof bedrock) {
-    console.log(">>> manualinstrument");
     this._wrap(
-      module.BedrockRuntime.prototype,
-      "invokeModel",
+      module.BedrockRuntimeClient.prototype,
+      "send",
       this.wrapperMethod(),
     );
   }
 
   private wrap(module: typeof bedrock) {
-    console.log(">>> wrap");
     this._wrap(
-      module.BedrockRuntime.prototype,
-      "invokeModel",
+      module.BedrockRuntimeClient.prototype,
+      "send",
       this.wrapperMethod(),
     );
-    console.log(">>> wrap after");
 
     return module;
   }
 
   private unwrap(module: typeof bedrock) {
-    console.log(">>> unwrap");
-    this._unwrap(module.BedrockRuntime.prototype, "invokeModel");
-    console.log(">>> unwrap after");
+    this._unwrap(module.BedrockRuntimeClient.prototype, "send");
   }
 
   private wrapperMethod() {
-    console.log(">>> 1");
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    console.log(">>> 2");
     // eslint-disable-next-line @typescript-eslint/ban-types
-    return (original: any) => {
-      console.log(">>> 3", Object.getOwnPropertyNames(original));
-      return function method(
-        this: any,
-        ...args: any
-        // | [
-        //       args: bedrock.InvokeModelCommandInput,
-        //       options?: __HttpHandlerOptions | undefined,
-        //     ]
-        //   | [
-        //       args: bedrock.InvokeModelCommandInput,
-        //       cb: (
-        //         err: any,
-        //         data?: bedrock.InvokeModelCommandOutput | undefined,
-        //       ) => void,
-        //     ]
-        //   | [
-        //       args: bedrock.InvokeModelCommandInput,
-        //       options: __HttpHandlerOptions,
-        //       cb: (
-        //         err: any,
-        //         data?: bedrock.InvokeModelCommandOutput | undefined,
-        //       ) => void,
-        //     ]
-      ) {
-        console.log(">>> args", args[0]);
+    return (original: Function) => {
+      return function method(this: any, ...args: any) {
         const span = plugin._startSpan({
           params: args[0],
         });
@@ -123,21 +95,21 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
             });
           },
           () => {},
-        ) as Promise<bedrock.InvokeModelCommandOutput>;
+        );
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
         return context.bind(execContext, wrappedPromise);
       };
     };
   }
   private _wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
-    console.log(">>> into _wrapPromise");
     return promise
       .then(async (result) => {
-        console.log(">>> into result", result);
         return new Promise<T>((resolve) => {
           this._endSpan({
             span,
-            result: result as bedrock.InvokeModelCommandOutput,
+            result: result as
+              | bedrock.InvokeModelCommandOutput
+              | bedrock.InvokeModelWithResponseStreamCommandOutput, //ReturnType<bedrock.BedrockRuntimeClient["send"]>,
           });
           resolve(result);
         });
@@ -159,11 +131,43 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   private _startSpan({
     params,
   }: {
-    params: bedrock.InvokeModelCommandInput;
+    params: Parameters<bedrock.BedrockRuntimeClient["send"]>[0];
   }): Span {
     console.log(">>> params", params);
+
+    const [vendor, model] = params.input.modelId
+      ? params.input.modelId.split(".")
+      : ["", ""];
+
+    const attributes: Attributes = {
+      [SpanAttributes.LLM_VENDOR]: vendor,
+      [SpanAttributes.LLM_REQUEST_MODEL]: model,
+      [SpanAttributes.LLM_RESPONSE_MODEL]: model,
+      [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
+    };
+
+    if (typeof params.input.body === "string") {
+      const requestBody = JSON.parse(params.input.body);
+
+      if (vendor === "anthropic") {
+        attributes[SpanAttributes.LLM_TOP_P] = requestBody["top_p"];
+        attributes[SpanAttributes.LLM_TEMPERATURE] = requestBody["temperature"];
+        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+          requestBody["max_tokens_to_sample"];
+
+        if (this._shouldSendPrompts()) {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+            requestBody.prompt;
+        }
+      }
+    }
+
+    console.log(">>> attributes", attributes);
+
     return this.tracer.startSpan(`bedrock.completion`, {
       kind: SpanKind.CLIENT,
+      attributes,
     });
   }
 
@@ -172,8 +176,77 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     result,
   }: {
     span: Span;
-    result: bedrock.InvokeModelCommandOutput;
+    result:
+      | bedrock.InvokeModelCommandOutput
+      | bedrock.InvokeModelWithResponseStreamCommandOutput;
   }) {
-    console.log(">>> result", span, result);
+    console.log(">>> result", result);
+    if ("body" in result) {
+      const attributes =
+        "attributes" in span ? (span["attributes"] as Record<string, any>) : {};
+
+      if (
+        SpanAttributes.LLM_VENDOR in attributes &&
+        this._shouldSendPrompts()
+      ) {
+        bedrock.ResponseStream;
+        if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
+          const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
+          let counter = 0;
+          for await (const value of rawRes) {
+            // Convert it to a JSON String
+            const jsonString = new TextDecoder().decode(value.chunk?.bytes);
+            // Parse the JSON string
+            const parsedResponse = JSON.parse(jsonString);
+
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${counter}.finish_reason`,
+              parsedResponse["stop_reason"],
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${counter}.role`,
+              "assistant",
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${counter}.content`,
+              parsedResponse["completion"],
+            );
+
+            counter += 1;
+          }
+        } else if (typeof result.body === "function") {
+          // Convert it to a JSON String
+          const jsonString = new TextDecoder().decode(result.body);
+          // Parse the JSON string
+          const parsedResponse = JSON.parse(jsonString);
+
+          if (attributes[SpanAttributes.LLM_VENDOR] === "anthropic") {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+              parsedResponse["stop_reason"],
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+              "assistant",
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+              parsedResponse["completion"],
+            );
+          }
+        }
+      }
+    }
+
+    console.log(">>> span", span);
+
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+  }
+
+  private _shouldSendPrompts() {
+    return this._config.traceContent !== undefined
+      ? this._config.traceContent
+      : true;
   }
 }
