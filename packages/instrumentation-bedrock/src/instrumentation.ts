@@ -104,15 +104,14 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   private _wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
     return promise
       .then(async (result) => {
-        return new Promise<T>((resolve) => {
-          this._endSpan({
-            span,
-            result: result as
-              | bedrock.InvokeModelCommandOutput
-              | bedrock.InvokeModelWithResponseStreamCommandOutput, //ReturnType<bedrock.BedrockRuntimeClient["send"]>,
-          });
-          resolve(result);
+        await this._endSpan({
+          span,
+          result: result as
+            | bedrock.InvokeModelCommandOutput
+            | bedrock.InvokeModelWithResponseStreamCommandOutput,
         });
+
+        return new Promise<T>((resolve) => resolve(result));
       })
       .catch((error: Error) => {
         return new Promise<T>((_, reject) => {
@@ -151,6 +150,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
 
       if (vendor === "anthropic") {
         attributes[SpanAttributes.LLM_TOP_P] = requestBody["top_p"];
+        attributes[SpanAttributes.LLM_TOP_K] = requestBody["top_k"];
         attributes[SpanAttributes.LLM_TEMPERATURE] = requestBody["temperature"];
         attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
           requestBody["max_tokens_to_sample"];
@@ -158,7 +158,10 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
         if (this._shouldSendPrompts()) {
           attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
           attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-            requestBody.prompt;
+            requestBody.prompt
+              // The format is removing when we are setting span attribute
+              .replace("\n\nHuman:", "")
+              .replace("\n\nAssistant:", "");
         }
       }
     }
@@ -180,7 +183,6 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       | bedrock.InvokeModelCommandOutput
       | bedrock.InvokeModelWithResponseStreamCommandOutput;
   }) {
-    console.log(">>> result", result);
     if ("body" in result) {
       const attributes =
         "attributes" in span ? (span["attributes"] as Record<string, any>) : {};
@@ -192,33 +194,69 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
         bedrock.ResponseStream;
         if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
           const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
-          let counter = 0;
+
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+            "assistant",
+          );
+          let content = "";
           for await (const value of rawRes) {
             // Convert it to a JSON String
             const jsonString = new TextDecoder().decode(value.chunk?.bytes);
             // Parse the JSON string
             const parsedResponse = JSON.parse(jsonString);
 
+            content += parsedResponse["completion"];
+
+            if (
+              "stop_reason" in parsedResponse &&
+              !parsedResponse["stop_reason"]
+            ) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+                parsedResponse["stop_reason"],
+              );
+            }
+
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${counter}.finish_reason`,
-              parsedResponse["stop_reason"],
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${counter}.role`,
-              "assistant",
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${counter}.content`,
-              parsedResponse["completion"],
+              `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+              content,
             );
 
-            counter += 1;
+            if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
+              span.setAttribute(
+                SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+                parsedResponse["amazon-bedrock-invocationMetrics"][
+                  "inputTokenCount"
+                ],
+              );
+              span.setAttribute(
+                SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+                parsedResponse["amazon-bedrock-invocationMetrics"][
+                  "outputTokenCount"
+                ],
+              );
+
+              span.setAttribute(
+                SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+                parsedResponse["amazon-bedrock-invocationMetrics"][
+                  "inputTokenCount"
+                ] +
+                  parsedResponse["amazon-bedrock-invocationMetrics"][
+                    "outputTokenCount"
+                  ],
+              );
+            }
           }
-        } else if (typeof result.body === "function") {
+        } else if (result.body instanceof Object.getPrototypeOf(Uint8Array)) {
           // Convert it to a JSON String
-          const jsonString = new TextDecoder().decode(result.body);
+          const jsonString = new TextDecoder().decode(
+            result.body as Uint8Array,
+          );
           // Parse the JSON string
           const parsedResponse = JSON.parse(jsonString);
+
+          console.log(">>> parsedResponse", parsedResponse);
 
           if (attributes[SpanAttributes.LLM_VENDOR] === "anthropic") {
             span.setAttribute(
@@ -233,12 +271,35 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
               `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
               parsedResponse["completion"],
             );
+
+            if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
+              span.setAttribute(
+                SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+                parsedResponse["amazon-bedrock-invocationMetrics"][
+                  "inputTokenCount"
+                ],
+              );
+              span.setAttribute(
+                SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+                parsedResponse["amazon-bedrock-invocationMetrics"][
+                  "outputTokenCount"
+                ],
+              );
+
+              span.setAttribute(
+                SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+                parsedResponse["amazon-bedrock-invocationMetrics"][
+                  "inputTokenCount"
+                ] +
+                  parsedResponse["amazon-bedrock-invocationMetrics"][
+                    "outputTokenCount"
+                  ],
+              );
+            }
           }
         }
       }
     }
-
-    console.log(">>> span", span);
 
     span.setStatus({ code: SpanStatusCode.OK });
     span.end();
