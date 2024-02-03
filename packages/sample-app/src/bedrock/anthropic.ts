@@ -4,18 +4,16 @@ import {
   InvokeModelCommand,
   InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-// import { ConsoleSpanExporter } from "@opentelemetry/sdk-trace-base";
 
 traceloop.initialize({
-  appName: "sample_aws_claude",
+  appName: "sample_bedrock_anthropic",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
-  // exporter: new ConsoleSpanExporter(),
 });
 
 // Create a BedrockRuntimeClient with your configuration
 const client = new BedrockRuntimeClient({
-  region: "us-east-1",
+  region: process.env.AWS_REGION ?? "",
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "",
