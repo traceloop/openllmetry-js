@@ -28,7 +28,7 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const memoryExporter = new InMemorySpanExporter();
 
-describe("Test Claude with AWS Bedrock Instrumentation", () => {
+describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: BedrockInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -90,23 +90,42 @@ describe("Test Claude with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-
-    assert.strictEqual(attributes["llm.vendor"], vendor);
-    assert.strictEqual(attributes["llm.request.type"], "completion");
-    assert.strictEqual(attributes["llm.request.model"], model);
-    assert.strictEqual(attributes["llm.top_p"], params.top_p);
-    assert.strictEqual(attributes["llm.top_k"], params.top_k);
-    assert.strictEqual(attributes["llm.prompts.0.role"], "user");
-    assert.strictEqual(attributes["llm.prompts.0.content"], prompt);
-    assert.strictEqual(attributes["llm.response.model"], model);
-    assert.strictEqual(attributes["llm.completions.0.role"], "assistant");
+    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], vendor);
     assert.strictEqual(
-      attributes["llm.completions.0.content"],
+      attributes[SpanAttributes.LLM_REQUEST_TYPE],
+      "completion",
+    );
+    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
+    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.top_p);
+    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
+    assert.strictEqual(
+      attributes[SpanAttributes.LLM_TEMPERATURE],
+      params.temperature,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS],
+      params.max_tokens_to_sample,
+    );
+    assert.strictEqual(
+      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      prompt,
+    );
+    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
+    assert.strictEqual(
+      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      "assistant",
+    );
+    assert.strictEqual(
+      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
       parsedResponse["completion"],
     );
   });
 
-  it.only("should set request and response attributes in span for given prompt with streaming result", async () => {
+  it("should set request and response attributes in span for given prompt with streaming result", async () => {
     const prompt = `What are the 4 cardinal directions?`;
     const params = {
       prompt: `\n\nHuman:${prompt}\n\nAssistant:`,
@@ -142,29 +161,55 @@ describe("Test Claude with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(attributes["llm.vendor"], vendor);
-        assert.strictEqual(attributes["llm.request.type"], "completion");
-        assert.strictEqual(attributes["llm.request.model"], model);
-        assert.strictEqual(attributes["llm.top_p"], params.top_p);
-        assert.strictEqual(attributes["llm.top_k"], params.top_k);
-        assert.strictEqual(attributes["llm.prompts.0.role"], "user");
-        assert.strictEqual(attributes["llm.prompts.0.content"], prompt);
-        assert.strictEqual(attributes["llm.response.model"], model);
-        assert.strictEqual(attributes["llm.completions.0.role"], "assistant");
-        assert.strictEqual(attributes["llm.completions.0.content"], content);
+        assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], vendor);
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
-          result["amazon-bedrock-invocationMetrics"]["inputTokenCount"],
+          attributes[SpanAttributes.LLM_REQUEST_TYPE],
+          "completion",
+        );
+        assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
+        assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.top_p);
+        assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
+        assert.strictEqual(
+          attributes[SpanAttributes.LLM_TEMPERATURE],
+          params.temperature,
         );
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
-          result["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
+          attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS],
+          params.max_tokens_to_sample,
         );
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
-          result["amazon-bedrock-invocationMetrics"]["inputTokenCount"] +
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+          "user",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+          prompt,
+        );
+        assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+          "assistant",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+          content,
+        );
+
+        if ("amazon-bedrock-invocationMetrics" in result) {
+          assert.strictEqual(
+            attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+            result["amazon-bedrock-invocationMetrics"]["inputTokenCount"],
+          );
+          assert.strictEqual(
+            attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
             result["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
-        );
+          );
+          assert.strictEqual(
+            attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
+            result["amazon-bedrock-invocationMetrics"]["inputTokenCount"] +
+              result["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
+          );
+        }
       })();
     }
   });

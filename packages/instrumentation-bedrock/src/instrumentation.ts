@@ -257,6 +257,26 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     requestBody: Record<string, any>,
   ) {
     switch (vendor) {
+      case "ai21": {
+        return {
+          [SpanAttributes.LLM_TOP_P]: requestBody["topP"],
+          [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+          [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["maxTokens"],
+          [SpanAttributes.LLM_PRESENCE_PENALTY]:
+            requestBody["presencePenalty"]["scale"],
+          [SpanAttributes.LLM_FREQUENCY_PENALTY]:
+            requestBody["frequencyPenalty"]["scale"],
+
+          // Prompt & Role
+          ...(this._shouldSendPrompts()
+            ? {
+                [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
+                [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
+                  requestBody["prompt"],
+              }
+            : {}),
+        };
+      }
       case "amazon": {
         return {
           [SpanAttributes.LLM_TOP_P]:
@@ -272,25 +292,6 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
                 [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
                 [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
                   requestBody["inputText"],
-              }
-            : {}),
-        };
-      }
-      case "ai21": {
-        return {
-          [SpanAttributes.LLM_TOP_P]: requestBody["topP"],
-          [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
-          [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["maxTokens"],
-          [SpanAttributes.LLM_PRESENCE_PENALTY]: requestBody["presencePenalty"],
-          [SpanAttributes.LLM_FREQUENCY_PENALTY]:
-            requestBody["frequencyPenalty"],
-
-          // Prompt & Role
-          ...(this._shouldSendPrompts()
-            ? {
-                [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
-                [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
-                  requestBody["prompt"],
               }
             : {}),
         };
@@ -361,6 +362,19 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     isStream: boolean = false,
   ) {
     switch (vendor) {
+      case "ai21": {
+        return {
+          [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
+            response["completions"][0]["finishReason"]["reason"],
+          [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
+          ...(this._shouldSendPrompts()
+            ? {
+                [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+                  response["completions"][0]["data"]["text"],
+              }
+            : {}),
+        };
+      }
       case "amazon": {
         return {
           [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]: isStream
@@ -382,19 +396,6 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
                 [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]: isStream
                   ? response["outputText"]
                   : response["results"][0]["outputText"],
-              }
-            : {}),
-        };
-      }
-      case "ai21": {
-        return {
-          [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
-            response["completions"][0]["finishReason"]["reason"],
-          [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
-          ...(this._shouldSendPrompts()
-            ? {
-                [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
-                  response["completions"][0]["data"]["text"],
               }
             : {}),
         };
