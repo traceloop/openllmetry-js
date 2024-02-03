@@ -62,7 +62,7 @@ async function generateTextContent() {
 
 async function generateTextContentWithStreaming() {
   return await traceloop.withWorkflow(
-    "sample_strean_completion",
+    "sample_stream_completion",
     {},
     async () => {
       // Create an InvokeModelWithResponseStreamCommand with the input parameters
