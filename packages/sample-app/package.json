@@ -4,6 +4,7 @@
   "description": "Sample app for using Traceloop SDK",
   "scripts": {
     "build": "tsc --build tsconfig.json",
+    "run:ai21": "npm run build && node dist/src/bedrock/ai21.js",
     "run:anthropic": "npm run build && node dist/src/bedrock/anthropic.js",
     "run:cohere": "npm run build && node dist/src/bedrock/cohere.js",
     "run:gemini": "npm run build && node dist/src/vertexai/gemini.js",
