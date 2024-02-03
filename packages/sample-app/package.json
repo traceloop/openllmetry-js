@@ -7,6 +7,7 @@
     "run:ai21": "npm run build && node dist/src/bedrock/ai21.js",
     "run:anthropic": "npm run build && node dist/src/bedrock/anthropic.js",
     "run:cohere": "npm run build && node dist/src/bedrock/cohere.js",
+    "run:meta": "npm run build && node dist/src/bedrock/meta.js",
     "run:gemini": "npm run build && node dist/src/vertexai/gemini.js",
     "run:palm2": "npm run build && node dist/src/vertexai/palm2.js",
     "run:decorators": "npm run build && node dist/src/sample_decorators.js",
