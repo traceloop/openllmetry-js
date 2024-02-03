@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "run:ai21": "npm run build && node dist/src/bedrock/ai21.js",
+    "run:amazon": "npm run build && node dist/src/bedrock/amazon.js",
     "run:anthropic": "npm run build && node dist/src/bedrock/anthropic.js",
     "run:cohere": "npm run build && node dist/src/bedrock/cohere.js",
     "run:meta": "npm run build && node dist/src/bedrock/meta.js",
