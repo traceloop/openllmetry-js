@@ -132,13 +132,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   }: {
     params: Parameters<bedrock.BedrockRuntimeClient["send"]>[0];
   }): Span {
-    console.log(">>> params", params);
-
     const [vendor, model] = params.input.modelId
       ? params.input.modelId.split(".")
       : ["", ""];
 
-    const attributes: Attributes = {
+    let attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: vendor,
       [SpanAttributes.LLM_REQUEST_MODEL]: model,
       [SpanAttributes.LLM_RESPONSE_MODEL]: model,
@@ -148,25 +146,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     if (typeof params.input.body === "string") {
       const requestBody = JSON.parse(params.input.body);
 
-      if (vendor === "anthropic") {
-        attributes[SpanAttributes.LLM_TOP_P] = requestBody["top_p"];
-        attributes[SpanAttributes.LLM_TOP_K] = requestBody["top_k"];
-        attributes[SpanAttributes.LLM_TEMPERATURE] = requestBody["temperature"];
-        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
-          requestBody["max_tokens_to_sample"];
-
-        if (this._shouldSendPrompts()) {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-            requestBody.prompt
-              // The format is removing when we are setting span attribute
-              .replace("\n\nHuman:", "")
-              .replace("\n\nAssistant:", "");
-        }
-      }
+      attributes = {
+        ...attributes,
+        ...this._setRequestAttributes(vendor, requestBody),
+      };
     }
-
-    console.log(">>> attributes", attributes);
 
     return this.tracer.startSpan(`bedrock.completion`, {
       kind: SpanKind.CLIENT,
@@ -187,41 +171,16 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       const attributes =
         "attributes" in span ? (span["attributes"] as Record<string, any>) : {};
 
-      if (
-        SpanAttributes.LLM_VENDOR in attributes &&
-        this._shouldSendPrompts()
-      ) {
-        bedrock.ResponseStream;
+      if (SpanAttributes.LLM_VENDOR in attributes) {
         if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
           const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
 
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-            "assistant",
-          );
-          let content = "";
+          let streamedContent = "";
           for await (const value of rawRes) {
             // Convert it to a JSON String
             const jsonString = new TextDecoder().decode(value.chunk?.bytes);
             // Parse the JSON string
             const parsedResponse = JSON.parse(jsonString);
-
-            content += parsedResponse["completion"];
-
-            if (
-              "stop_reason" in parsedResponse &&
-              !parsedResponse["stop_reason"]
-            ) {
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-                parsedResponse["stop_reason"],
-              );
-            }
-
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-              content,
-            );
 
             if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
               span.setAttribute(
@@ -247,6 +206,29 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
                   ],
               );
             }
+
+            let responseAttributes = this._setResponseAttributes(
+              attributes[SpanAttributes.LLM_VENDOR],
+              parsedResponse,
+              true,
+            );
+
+            // ! NOTE: This make sure the content always have all streamed chunks
+            if (this._shouldSendPrompts()) {
+              // Update local value with attribute value that was set by _setResponseAttributes
+              streamedContent +=
+                responseAttributes[
+                  `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+                ];
+              // re-assign the new value to responseAttributes
+              responseAttributes = {
+                ...responseAttributes,
+                [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+                  streamedContent,
+              };
+            }
+
+            span.setAttributes(responseAttributes);
           }
         } else if (result.body instanceof Object.getPrototypeOf(Uint8Array)) {
           // Convert it to a JSON String
@@ -256,53 +238,199 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
           // Parse the JSON string
           const parsedResponse = JSON.parse(jsonString);
 
-          console.log(">>> parsedResponse", parsedResponse);
+          const responseAttributes = this._setResponseAttributes(
+            attributes[SpanAttributes.LLM_VENDOR],
+            parsedResponse,
+          );
 
-          if (attributes[SpanAttributes.LLM_VENDOR] === "anthropic") {
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-              parsedResponse["stop_reason"],
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-              "assistant",
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-              parsedResponse["completion"],
-            );
-
-            if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
-              span.setAttribute(
-                SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-                parsedResponse["amazon-bedrock-invocationMetrics"][
-                  "inputTokenCount"
-                ],
-              );
-              span.setAttribute(
-                SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-                parsedResponse["amazon-bedrock-invocationMetrics"][
-                  "outputTokenCount"
-                ],
-              );
-
-              span.setAttribute(
-                SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-                parsedResponse["amazon-bedrock-invocationMetrics"][
-                  "inputTokenCount"
-                ] +
-                  parsedResponse["amazon-bedrock-invocationMetrics"][
-                    "outputTokenCount"
-                  ],
-              );
-            }
-          }
+          span.setAttributes(responseAttributes);
         }
       }
     }
 
     span.setStatus({ code: SpanStatusCode.OK });
     span.end();
+  }
+
+  private _setRequestAttributes(
+    vendor: string,
+    requestBody: Record<string, any>,
+  ) {
+    if (vendor === "amazon") {
+      return {
+        [SpanAttributes.LLM_TOP_P]: requestBody["textGenerationConfig"]["topP"],
+        [SpanAttributes.LLM_TEMPERATURE]:
+          requestBody["textGenerationConfig"]["temperature"],
+        [SpanAttributes.LLM_REQUEST_MAX_TOKENS]:
+          requestBody["textGenerationConfig"]["maxTokenCount"],
+
+        // Prompt & Role
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
+              [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
+                requestBody["inputText"],
+            }
+          : {}),
+      };
+    } else if (vendor === "ai21") {
+      return {
+        [SpanAttributes.LLM_TOP_P]: requestBody["topP"],
+        [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+        [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["maxTokens"],
+        [SpanAttributes.LLM_PRESENCE_PENALTY]: requestBody["presencePenalty"],
+        [SpanAttributes.LLM_FREQUENCY_PENALTY]: requestBody["frequencyPenalty"],
+
+        // Prompt & Role
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
+              [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
+                requestBody["prompt"],
+            }
+          : {}),
+      };
+    } else if (vendor === "anthropic") {
+      return {
+        [SpanAttributes.LLM_TOP_P]: requestBody["top_p"],
+        [SpanAttributes.LLM_TOP_K]: requestBody["top_k"],
+        [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+        [SpanAttributes.LLM_REQUEST_MAX_TOKENS]:
+          requestBody["max_tokens_to_sample"],
+
+        // Prompt & Role
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
+              [`${SpanAttributes.LLM_PROMPTS}.0.content`]: requestBody["prompt"]
+                // The format is removing when we are setting span attribute
+                .replace("\n\nHuman:", "")
+                .replace("\n\nAssistant:", ""),
+            }
+          : {}),
+      };
+    } else if (vendor === "cohere") {
+      return {
+        [SpanAttributes.LLM_TOP_P]: requestBody["p"],
+        [SpanAttributes.LLM_TOP_K]: requestBody["k"],
+        [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+        [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["max_tokens"],
+
+        // Prompt & Role
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
+              [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
+                requestBody["prompt"],
+            }
+          : {}),
+      };
+    } else if (vendor === "meta") {
+      return {
+        [SpanAttributes.LLM_TOP_P]: requestBody["top_p"],
+        [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+        [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["max_gen_len"],
+
+        // Prompt & Role
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
+              [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
+                requestBody["prompt"],
+            }
+          : {}),
+      };
+    } else {
+      return {};
+    }
+  }
+
+  private _setResponseAttributes(
+    vendor: string,
+    response: Record<string, any>,
+    isStream: boolean = false,
+  ) {
+    if (vendor === "amazon") {
+      return {
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]: isStream
+          ? response["completionReason"]
+          : response["results"][0]["completionReason"],
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
+        [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]:
+          response["inputTextTokenCount"],
+        [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: isStream
+          ? response["totalOutputTextTokenCount"]
+          : response["results"][0]["tokenCount"],
+        [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: isStream
+          ? response["inputTextTokenCount"] +
+            response["totalOutputTextTokenCount"]
+          : response["inputTextTokenCount"] +
+            response["results"][0]["tokenCount"],
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]: isStream
+                ? response["outputText"]
+                : response["results"][0]["outputText"],
+            }
+          : {}),
+      };
+    } else if (vendor === "ai21") {
+      return {
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
+          response["completions"][0]["finishReason"]["reason"],
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+                response["completions"][0]["data"]["text"],
+            }
+          : {}),
+      };
+    } else if (vendor === "anthropic") {
+      return {
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
+          response["stop_reason"],
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+                response["completion"],
+            }
+          : {}),
+      };
+    } else if (vendor === "cohere") {
+      return {
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
+          response["generations"][0]["finish_reason"],
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+                response["generations"][0]["text"],
+            }
+          : {}),
+      };
+    } else if (vendor === "meta") {
+      return {
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
+          response["stop_reason"],
+        [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
+        [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]:
+          response["prompt_token_count"],
+        [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]:
+          response["generation_token_count"],
+        [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]:
+          response["prompt_token_count"] + response["generation_token_count"],
+        ...(this._shouldSendPrompts()
+          ? {
+              [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+                response["generation"],
+            }
+          : {}),
+      };
+    } else {
+      return {};
+    }
   }
 
   private _shouldSendPrompts() {

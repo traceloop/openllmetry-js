@@ -55,7 +55,7 @@ async function generateTextContent() {
       // Parse the JSON string
       const parsedResponse = JSON.parse(jsonString);
 
-      console.log(parsedResponse);
+      console.log(">>> non-stream", parsedResponse);
     });
   });
 }
@@ -82,7 +82,7 @@ async function generateTextContentWithStreaming() {
           // Parse the JSON string
           const parsedResponse = JSON.parse(jsonString);
 
-          console.log(parsedResponse);
+          console.log(">>> streamed part", parsedResponse);
         }
       }
     },
