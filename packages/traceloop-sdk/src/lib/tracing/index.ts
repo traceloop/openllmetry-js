@@ -52,9 +52,6 @@ export const initInstrumentations = () => {
   aiplatformInstrumentation = new AIPlatformInstrumentation();
   instrumentations.push(aiplatformInstrumentation);
 
-  bedrockInstrumentation = new BedrockInstrumentation();
-  instrumentations.push(bedrockInstrumentation);
-
   langChainInstrumentation = new LangChainInstrumentation();
   instrumentations.push(openAIInstrumentation, langChainInstrumentation);
 
