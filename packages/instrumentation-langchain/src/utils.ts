@@ -1,0 +1,59 @@
+import { trace, context, Tracer, SpanStatusCode } from "@opentelemetry/api";
+import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
+import {
+  TraceloopSpanKindValues,
+  SpanAttributes,
+} from "@traceloop/ai-semantic-conventions";
+
+export function genericWrapper(
+  tracer: Tracer,
+  spanKind: TraceloopSpanKindValues,
+  spanName?: string,
+) {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  return (original: Function) => {
+    return function method(this: any, ...args: unknown[]) {
+      const span = tracer.startSpan(
+        spanName || `langchain.${spanKind}.${this.constructor.name}`,
+      );
+      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, spanKind);
+      const execContext = trace.setSpan(context.active(), span);
+      const execPromise = safeExecuteInTheMiddle(
+        () => {
+          return context.with(execContext, () => {
+            return original.apply(this, args);
+          });
+        },
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        () => {},
+      );
+      const wrappedPromise = execPromise
+        .then((result: any) => {
+          return new Promise((resolve) => {
+            span.setStatus({ code: SpanStatusCode.OK });
+            span.end();
+            resolve(result);
+          });
+        })
+        .catch((error: Error) => {
+          return new Promise((_, reject) => {
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: error.message,
+            });
+            span.end();
+            reject(error);
+          });
+        });
+      return context.bind(execContext, wrappedPromise as any);
+    };
+  };
+}
+
+export function taskWrapper(tracer: Tracer, spanName?: string) {
+  return genericWrapper(tracer, TraceloopSpanKindValues.TASK, spanName);
+}
+
+export function workflowWrapper(tracer: Tracer, spanName: string) {
+  return genericWrapper(tracer, TraceloopSpanKindValues.WORKFLOW, spanName);
+}

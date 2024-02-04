@@ -18,6 +18,7 @@
     "run:sampler": "npm run build && node dist/src/sample_sampler.js",
     "run:llamaindex": "npm run build && node dist/src/sample_llamaindex.js",
     "run:pinecone": "npm run build && node dist/src/sample_pinecone.js",
+    "run:langchain": "npm run build && node dist/src/sample_langchain.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
@@ -33,7 +34,8 @@
     "@pinecone-database/pinecone": "^2.0.1",
     "@google-cloud/vertexai": "^0.2.1",
     "@google-cloud/aiplatform": "^3.10.0",
-    "@aws-sdk/client-bedrock-runtime": "^3.499.0"
+    "@aws-sdk/client-bedrock-runtime": "^3.499.0",
+    "langchain": "^0.1.7"
   },
   "private": true,
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

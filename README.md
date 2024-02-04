@@ -114,8 +114,8 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 
 ### Frameworks
 
-- ⏳ LangChain
 - ✅ LlamaIndex
+- ✅ LangChain
 
 ## 🌱 Contributing
 
