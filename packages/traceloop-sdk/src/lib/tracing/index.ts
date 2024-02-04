@@ -57,7 +57,6 @@ export const initInstrumentations = () => {
 
   bedrockInstrumentation = new BedrockInstrumentation();
   instrumentations.push(bedrockInstrumentation);
-
 };
 
 /**
