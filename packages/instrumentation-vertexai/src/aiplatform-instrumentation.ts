@@ -193,8 +193,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
             params.instances[0].structValue.fields?.messages.listValue
               ?.values?.[0].structValue?.fields?.author.stringValue ?? "user";
           attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-            params.instances[0].structValue.fields?.messages.listValue
-              ?.values?.[0].structValue?.fields?.content.stringValue;
+            params.instances[0].structValue.fields?.messages.listValue?.values?.[0].structValue?.fields?.content.stringValue;
         }
       }
     }

@@ -21,6 +21,7 @@
     "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.0.1",
+    "hnswlib-node": "^2.1.0",
     "husky": "^8.0.3",
     "lerna": "^7.4.1",
     "nx": "^17.2.8",
