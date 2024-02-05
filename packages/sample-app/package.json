@@ -4,6 +4,11 @@
   "description": "Sample app for using Traceloop SDK",
   "scripts": {
     "build": "tsc --build tsconfig.json",
+    "run:ai21": "npm run build && node dist/src/bedrock/ai21.js",
+    "run:amazon": "npm run build && node dist/src/bedrock/amazon.js",
+    "run:anthropic": "npm run build && node dist/src/bedrock/anthropic.js",
+    "run:cohere": "npm run build && node dist/src/bedrock/cohere.js",
+    "run:meta": "npm run build && node dist/src/bedrock/meta.js",
     "run:gemini": "npm run build && node dist/src/vertexai/gemini.js",
     "run:palm2": "npm run build && node dist/src/vertexai/palm2.js",
     "run:decorators": "npm run build && node dist/src/sample_decorators.js",
@@ -29,7 +34,8 @@
     "@pinecone-database/pinecone": "^2.0.1",
     "@google-cloud/vertexai": "^0.2.1",
     "@google-cloud/aiplatform": "^3.10.0",
-    "langchain": "^0.1.7"
+    "langchain": "^0.1.7",
+    "@aws-sdk/client-bedrock-runtime": "^3.499.0"
   },
   "private": true,
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

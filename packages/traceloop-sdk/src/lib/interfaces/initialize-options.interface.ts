@@ -4,6 +4,7 @@ import * as llamaIndex from "llamaindex";
 import * as pinecone from "@pinecone-database/pinecone";
 import * as google_vertexai from "@google-cloud/vertexai";
 import * as google_aiplatform from "@google-cloud/aiplatform";
+import * as aws_bedrock from "@aws-sdk/client-bedrock-runtime";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -61,6 +62,7 @@ export interface InitializeOptions {
     pinecone?: typeof pinecone;
     google_vertexai?: typeof google_vertexai;
     google_aiplatform?: typeof google_aiplatform;
+    bedrock?: typeof aws_bedrock;
   };
 
   /**

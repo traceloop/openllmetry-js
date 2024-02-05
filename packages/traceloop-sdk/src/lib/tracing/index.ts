@@ -17,6 +17,7 @@ import {
   AIPlatformInstrumentation,
 } from "@traceloop/instrumentation-vertexai";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
+import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
@@ -31,6 +32,8 @@ let pineconeInstrumentation: PineconeInstrumentation;
 let vertexaiInstrumentation: VertexAIInstrumentation;
 let aiplatformInstrumentation: AIPlatformInstrumentation;
 let langChainInstrumentation: LangChainInstrumentation;
+let bedrockInstrumentation: BedrockInstrumentation;
+
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
@@ -51,6 +54,9 @@ export const initInstrumentations = () => {
 
   langChainInstrumentation = new LangChainInstrumentation();
   instrumentations.push(openAIInstrumentation, langChainInstrumentation);
+
+  bedrockInstrumentation = new BedrockInstrumentation();
+  instrumentations.push(bedrockInstrumentation);
 };
 
 /**
@@ -66,6 +72,7 @@ export const startTracing = (options: InitializeOptions) => {
     llamaIndexInstrumentation.setConfig({ traceContent: false });
     vertexaiInstrumentation.setConfig({ traceContent: false });
     aiplatformInstrumentation.setConfig({ traceContent: false });
+    bedrockInstrumentation.setConfig({ traceContent: false });
   }
 
   const traceExporter =
@@ -146,6 +153,12 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.google_aiplatform) {
     aiplatformInstrumentation.manuallyInstrument(
       options.instrumentModules.google_aiplatform,
+    );
+  }
+
+  if (options.instrumentModules?.bedrock) {
+    bedrockInstrumentation.manuallyInstrument(
+      options.instrumentModules.bedrock,
     );
   }
 };
