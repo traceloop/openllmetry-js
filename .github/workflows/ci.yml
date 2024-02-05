@@ -61,6 +61,7 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Configure AWS Credentials
+        id: aws-creds
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
@@ -83,3 +84,6 @@ jobs:
           VERTEXAI_LOCATION: ${{ secrets.VERTEXAI_LOCATION }}
           VERTEXAI_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+          AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.access_key_id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.secret_access_key }}
