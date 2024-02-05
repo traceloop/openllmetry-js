@@ -23,7 +23,7 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
-import * as bedrock from "@aws-sdk/client-bedrock-runtime";
+import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const memoryExporter = new InMemorySpanExporter();
@@ -32,12 +32,14 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: BedrockInstrumentation;
   let contextManager: AsyncHooksContextManager;
-  let bedrockRuntimeClient: bedrock.BedrockRuntimeClient;
+  let bedrock: typeof bedrockModule;
+  let bedrockRuntimeClient: bedrockModule.BedrockRuntimeClient;
 
-  before(() => {
+  before(async () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new BedrockInstrumentation();
     instrumentation.setTracerProvider(provider);
+    bedrock = await import("@aws-sdk/client-bedrock-runtime");
 
     bedrockRuntimeClient = new bedrock.BedrockRuntimeClient();
   });
