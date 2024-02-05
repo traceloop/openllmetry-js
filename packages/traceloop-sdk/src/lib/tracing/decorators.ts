@@ -40,6 +40,13 @@ function withEntity<
           span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
+          if (shouldSendTraces()) {
+            span.setAttribute(
+              SpanAttributes.TRACELOOP_ENTITY_INPUT,
+              JSON.stringify(args),
+            );
+          }
+
           const res = await fn.apply(thisArg, args);
 
           if (typeof res !== "function" && shouldSendTraces()) {
@@ -79,7 +86,6 @@ export function withWorkflow<
   name: string,
   associationProperties: { [name: string]: string },
   fn: F,
-  thisArg?: ThisParameterType<F>,
   ...args: A
 ) {
   return withEntity(
@@ -87,7 +93,7 @@ export function withWorkflow<
     name,
     associationProperties,
     fn,
-    thisArg,
+    undefined,
     ...args,
   );
 }
@@ -95,13 +101,13 @@ export function withWorkflow<
 export function withTask<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(name: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
+>(name: string, fn: F, ...args: A) {
   return withEntity(
     TraceloopSpanKindValues.TASK,
     name,
     {},
     fn,
-    thisArg,
+    undefined,
     ...args,
   );
 }
