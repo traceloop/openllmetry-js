@@ -60,6 +60,13 @@ jobs:
           cache: "npm"
           node-version-file: ".nvmrc"
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+          role-to-assume: ${{ secrets.AWS_DEFAULT_ROLE }}
+          role-session-name: GithubActions
+
       - uses: "google-github-actions/auth@v2"
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
