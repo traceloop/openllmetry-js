@@ -12,13 +12,7 @@ traceloop.initialize({
 });
 
 // Create a BedrockRuntimeClient with your configuration
-const client = new BedrockRuntimeClient({
-  region: process.env.AWS_REGION ?? "",
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "",
-  },
-});
+const client = new BedrockRuntimeClient();
 
 const prompt = 'Translate the word "Good Morning" to French';
 
