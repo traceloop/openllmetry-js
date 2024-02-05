@@ -119,7 +119,6 @@ export function withAgent<
   name: string,
   associationProperties: { [name: string]: string },
   fn: F,
-  thisArg?: ThisParameterType<F>,
   ...args: A
 ) {
   return withEntity(
@@ -127,7 +126,7 @@ export function withAgent<
     name,
     associationProperties,
     fn,
-    thisArg,
+    undefined,
     ...args,
   );
 }
@@ -135,13 +134,13 @@ export function withAgent<
 export function withTool<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(name: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
+>(name: string, fn: F, ...args: A) {
   return withEntity(
     TraceloopSpanKindValues.TOOL,
     name,
     {},
     fn,
-    thisArg,
+    undefined,
     ...args,
   );
 }
