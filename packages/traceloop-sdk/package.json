@@ -37,6 +37,7 @@
     "@traceloop/ai-semantic-conventions": "^0.3.11",
     "@traceloop/instrumentation-azure": "^0.3.11",
     "@traceloop/instrumentation-bedrock": "^0.3.11",
+    "@traceloop/instrumentation-cohere": "^0.3.11",
     "@traceloop/instrumentation-langchain": "^0.3.7",
     "@traceloop/instrumentation-llamaindex": "^0.3.11",
     "@traceloop/instrumentation-openai": "^0.3.11",
