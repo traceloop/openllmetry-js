@@ -18,6 +18,7 @@ import {
 } from "@traceloop/instrumentation-vertexai";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
+import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
@@ -33,6 +34,7 @@ let vertexaiInstrumentation: VertexAIInstrumentation;
 let aiplatformInstrumentation: AIPlatformInstrumentation;
 let langChainInstrumentation: LangChainInstrumentation;
 let bedrockInstrumentation: BedrockInstrumentation;
+let cohereInstrumentation: CohereInstrumentation;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -57,6 +59,9 @@ export const initInstrumentations = () => {
 
   bedrockInstrumentation = new BedrockInstrumentation();
   instrumentations.push(bedrockInstrumentation);
+
+  cohereInstrumentation = new CohereInstrumentation();
+  instrumentations.push(cohereInstrumentation);
 };
 
 /**
@@ -73,6 +78,7 @@ export const startTracing = (options: InitializeOptions) => {
     vertexaiInstrumentation.setConfig({ traceContent: false });
     aiplatformInstrumentation.setConfig({ traceContent: false });
     bedrockInstrumentation.setConfig({ traceContent: false });
+    cohereInstrumentation.setConfig({ traceContent: false });
   }
 
   const traceExporter =
@@ -160,6 +166,10 @@ export const startTracing = (options: InitializeOptions) => {
     bedrockInstrumentation.manuallyInstrument(
       options.instrumentModules.bedrock,
     );
+  }
+
+  if (options.instrumentModules?.cohere) {
+    cohereInstrumentation.manuallyInstrument(options.instrumentModules.cohere);
   }
 };
 

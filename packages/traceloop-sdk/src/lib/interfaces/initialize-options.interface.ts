@@ -5,6 +5,7 @@ import * as pinecone from "@pinecone-database/pinecone";
 import * as google_vertexai from "@google-cloud/vertexai";
 import * as google_aiplatform from "@google-cloud/aiplatform";
 import * as aws_bedrock from "@aws-sdk/client-bedrock-runtime";
+import * as cohere from "cohere-ai";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -63,6 +64,7 @@ export interface InitializeOptions {
     google_vertexai?: typeof google_vertexai;
     google_aiplatform?: typeof google_aiplatform;
     bedrock?: typeof aws_bedrock;
+    cohere?: typeof cohere;
   };
 
   /**
