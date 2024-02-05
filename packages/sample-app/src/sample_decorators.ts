@@ -22,9 +22,9 @@ class SampleOpenAI {
   }
 
   @traceloop.workflow("sample_completion")
-  async completion() {
+  async completion(jokeSubject: string) {
     const completion = await openai.completions.create({
-      prompt: "Tell me a joke about TypeScript",
+      prompt: `Tell me a joke about ${jokeSubject}`,
       model: "gpt-3.5-turbo-instruct",
     });
 
@@ -39,7 +39,7 @@ traceloop.withAssociationProperties(
     const chat = await sampleOpenAI.chat();
     console.log(chat);
 
-    const completion = await sampleOpenAI.completion();
+    const completion = await sampleOpenAI.completion("TypeScript");
     console.log(completion);
 
     await traceloop.reportScore({ chat_id: "789" }, 1);
