@@ -150,6 +150,9 @@ export const startTracing = (options: InitializeOptions) => {
     bedrockInstrumentation?.setConfig({
       traceContent: false,
     });
+    cohereInstrumentation?.setConfig({
+      traceContent: false,
+    });
   }
 
   const traceExporter =
