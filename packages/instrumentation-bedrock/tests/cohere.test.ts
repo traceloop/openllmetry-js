@@ -41,17 +41,7 @@ describe("Test Cohere with AWS Bedrock Instrumentation", () => {
     instrumentation.setTracerProvider(provider);
     bedrock = require("@aws-sdk/client-bedrock-runtime");
 
-    const region = process.env.AWS_REGION ?? "";
-    const accessKeyId = process.env.AWS_ACCESS_KEY_ID ?? "";
-    const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ?? "";
-
-    bedrockRuntimeClient = new bedrock.BedrockRuntimeClient({
-      region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    });
+    bedrockRuntimeClient = new bedrock.BedrockRuntimeClient();
   });
 
   beforeEach(() => {
