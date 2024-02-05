@@ -84,6 +84,3 @@ jobs:
           VERTEXAI_LOCATION: ${{ secrets.VERTEXAI_LOCATION }}
           VERTEXAI_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-          AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          AWS_ACCESS_KEY_ID: ${{ steps.aws-creds.outputs.aws-access-key-id }}
-          AWS_SECRET_ACCESS_KEY: ${{ steps.aws-creds.outputs.aws-secret-access-key }}
