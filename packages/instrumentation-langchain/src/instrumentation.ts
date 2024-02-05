@@ -25,7 +25,7 @@ import type * as ToolsModule from "langchain/tools";
 
 export class LangChainInstrumentation extends InstrumentationBase<any> {
   constructor(config: LangChainInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-langchain", "0.0.1", config);
+    super("@traceloop/instrumentation-langchain", "0.3.0", config);
   }
 
   public manuallyInstrument(module: any & { openLLMetryPatched?: boolean }) {

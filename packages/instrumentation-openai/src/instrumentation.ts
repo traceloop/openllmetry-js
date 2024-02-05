@@ -41,7 +41,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: OpenAIInstrumentationConfig;
 
   constructor(config: OpenAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-openai", "0.0.17", config);
+    super("@traceloop/instrumentation-openai", "0.3.0", config);
   }
 
   public override setConfig(config: OpenAIInstrumentationConfig = {}) {

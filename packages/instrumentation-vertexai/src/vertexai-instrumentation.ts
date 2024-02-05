@@ -35,7 +35,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: VertexAIInstrumentationConfig;
 
   constructor(config: VertexAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-vertexai", "0.0.17", config);
+    super("@traceloop/instrumentation-vertexai", "0.3.0", config);
   }
 
   public override setConfig(config: VertexAIInstrumentationConfig = {}) {

@@ -31,7 +31,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   protected override _config!: LlamaIndexInstrumentationConfig;
 
   constructor(config: LlamaIndexInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-llamaindex", "0.0.17", config);
+    super("@traceloop/instrumentation-llamaindex", "0.3.0", config);
   }
 
   public override setConfig(config: LlamaIndexInstrumentationConfig = {}) {

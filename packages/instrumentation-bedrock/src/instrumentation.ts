@@ -38,7 +38,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   protected override _config!: BedrockInstrumentationConfig;
 
   constructor(config: BedrockInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-bedrock", "0.0.17", config);
+    super("@traceloop/instrumentation-bedrock", "0.3.0", config);
   }
 
   public override setConfig(config: BedrockInstrumentationConfig = {}) {
