@@ -174,6 +174,10 @@ export const startTracing = (options: InitializeOptions) => {
       options.instrumentModules.bedrock,
     );
   }
+
+  if (options.instrumentModules?.cohere) {
+    cohereInstrumentation.manuallyInstrument(options.instrumentModules.cohere);
+  }
 };
 
 export const shouldSendTraces = () => {

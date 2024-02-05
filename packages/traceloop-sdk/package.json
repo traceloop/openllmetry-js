@@ -36,6 +36,7 @@
     "@opentelemetry/sdk-node": "^0.44.0",
     "@traceloop/instrumentation-azure": "^0.3.5",
     "@traceloop/instrumentation-bedrock": "^0.3.5",
+    "@traceloop/instrumentation-cohere": "^0.3.5",
     "@traceloop/instrumentation-langchain": "^0.3.5",
     "@traceloop/instrumentation-llamaindex": "^0.3.5",
     "@traceloop/instrumentation-openai": "^0.3.6",
