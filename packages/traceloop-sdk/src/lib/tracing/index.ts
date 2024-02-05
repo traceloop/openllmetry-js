@@ -23,6 +23,7 @@ import {
   VertexAIInstrumentation,
   AIPlatformInstrumentation,
 } from "@traceloop/instrumentation-vertexai";
+import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -33,6 +34,7 @@ let vertexaiInstrumentation: VertexAIInstrumentation;
 let aiplatformInstrumentation: AIPlatformInstrumentation;
 let langChainInstrumentation: LangChainInstrumentation;
 let bedrockInstrumentation: BedrockInstrumentation;
+let cohereInstrumentation: CohereInstrumentation;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -57,6 +59,9 @@ export const initInstrumentations = () => {
 
   bedrockInstrumentation = new BedrockInstrumentation();
   instrumentations.push(bedrockInstrumentation);
+
+  cohereInstrumentation = new CohereInstrumentation();
+  instrumentations.push(cohereInstrumentation);
 };
 
 /**
@@ -73,6 +78,7 @@ export const startTracing = (options: InitializeOptions) => {
     vertexaiInstrumentation.setConfig({ traceContent: false });
     aiplatformInstrumentation.setConfig({ traceContent: false });
     bedrockInstrumentation.setConfig({ traceContent: false });
+    cohereInstrumentation.setConfig({ traceContent: false });
   }
 
   const traceExporter =
