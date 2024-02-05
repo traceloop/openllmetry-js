@@ -40,7 +40,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
   protected override _config!: CohereInstrumentationConfig;
 
   constructor(config: CohereInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-cohere", "0.3.5", config);
+    super("@traceloop/instrumentation-cohere", "0.3.11", config);
   }
 
   public override setConfig(config: CohereInstrumentationConfig = {}) {
