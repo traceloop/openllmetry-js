@@ -3,7 +3,7 @@
 [![NPM Published Version][npm-img]][npm-url]
 [![Apache License][license-image]][license-image]
 
-This module provides automatic instrumentation for [`AWS Bedrock SDK`](https://www.npmjs.com/package/@aws-sdk/client-bedrock-runtime?activeTab=readme) module, which may be loaded using the [`@opentelemetry/sdk-trace-node`](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-node) package and is included in the [`@traceloop/node-server-sdk`](https://www.npmjs.com/package/@traceloop/node-server-sdk) bundle.
+This module provides automatic instrumentation for [`AWS Bedrock Runtime Client SDK`](https://www.npmjs.com/package/@aws-sdk/client-bedrock-runtime?activeTab=readme) module, which may be loaded using the [`@opentelemetry/sdk-trace-node`](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-node) package and is included in the [`@traceloop/node-server-sdk`](https://www.npmjs.com/package/@traceloop/node-server-sdk) bundle.
 
 If total installation size is not constrained, it is recommended to use the [`@traceloop/node-server-sdk`](https://www.npmjs.com/package/@traceloop/node-server-sdk) bundle for the most seamless instrumentation experience.
 
@@ -17,7 +17,7 @@ npm install --save @traceloop/instrumentation-bedrock
 
 ## Supported Versions
 
-- `>=3.10.0`
+- `>=3.499.0`
 
 ## Usage
 
