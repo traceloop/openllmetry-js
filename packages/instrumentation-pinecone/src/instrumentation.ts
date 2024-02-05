@@ -30,7 +30,7 @@ import {
 
 export class PineconeInstrumentation extends InstrumentationBase<any> {
   constructor(config: InstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-pinecone", "0.0.17", config);
+    super("@traceloop/instrumentation-pinecone", "0.3.0", config);
   }
 
   public manuallyInstrument(
