@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -34,12 +34,12 @@
   "dependencies": {
     "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
     "@opentelemetry/sdk-node": "^0.44.0",
-    "@traceloop/instrumentation-bedrock": "*",
-    "@traceloop/instrumentation-llamaindex": "*",
-    "@traceloop/instrumentation-langchain": "*",
-    "@traceloop/instrumentation-openai": "*",
-    "@traceloop/instrumentation-vertexai": "*",
-    "@traceloop/instrumentation-pinecone": "*",
+    "@traceloop/instrumentation-bedrock": "^0.3.0",
+    "@traceloop/instrumentation-langchain": "^0.3.0",
+    "@traceloop/instrumentation-llamaindex": "^0.3.0",
+    "@traceloop/instrumentation-openai": "^0.3.0",
+    "@traceloop/instrumentation-pinecone": "^0.3.0",
+    "@traceloop/instrumentation-vertexai": "^0.3.0",
     "@types/nunjucks": "^3.2.5",
     "fetch-retry": "^5.0.6",
     "nunjucks": "^3.2.4",
@@ -48,10 +48,10 @@
   },
   "peerDependencies": {
     "@google-cloud/vertexai": "^0.2.1",
-    "llamaindex": ">=0.0.40",
-    "openai": ">=4.0.0",
     "@pinecone-database/pinecone": "^2.0.1",
-    "langchain": ">=0.1.7"
+    "langchain": ">=0.1.7",
+    "llamaindex": ">=0.0.40",
+    "openai": ">=4.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",

@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-langchain",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "OpenTelemetry instrumentation for LangchainJS",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -42,14 +42,14 @@
     "@traceloop/ai-semantic-conventions": "^0.0.16"
   },
   "devDependencies": {
+    "@langchain/community": "0.0.21",
+    "@langchain/openai": "^0.0.13",
     "@types/expect": "^24.3.0",
     "@types/mocha": "^10.0.6",
     "hnswlib-node": "^2.1.0",
     "langchain": "^0.1.7",
-    "@langchain/openai": "^0.0.13",
-    "ts-mocha": "^10.0.0",
-    "@langchain/community": "0.0.21",
-    "mocha": "^10.2.0"
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-langchain"
 }
