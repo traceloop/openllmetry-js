@@ -15,16 +15,24 @@ import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { TraceloopSampler } from "./sampler";
 import { _configuration } from "../configuration";
+import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
+import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
+import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
+import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
+import {
+  VertexAIInstrumentation,
+  AIPlatformInstrumentation,
+} from "@traceloop/instrumentation-vertexai";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
-// let llamaIndexInstrumentation: LlamaIndexInstrumentation;
-// let pineconeInstrumentation: PineconeInstrumentation;
-// let vertexaiInstrumentation: VertexAIInstrumentation;
-// let aiplatformInstrumentation: AIPlatformInstrumentation;
-// let langChainInstrumentation: LangChainInstrumentation;
-// let bedrockInstrumentation: BedrockInstrumentation;
+let llamaIndexInstrumentation: LlamaIndexInstrumentation;
+let pineconeInstrumentation: PineconeInstrumentation;
+let vertexaiInstrumentation: VertexAIInstrumentation;
+let aiplatformInstrumentation: AIPlatformInstrumentation;
+let langChainInstrumentation: LangChainInstrumentation;
+let bedrockInstrumentation: BedrockInstrumentation;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -32,23 +40,23 @@ export const initInstrumentations = () => {
   openAIInstrumentation = new OpenAIInstrumentation();
   instrumentations.push(openAIInstrumentation);
 
-  // llamaIndexInstrumentation = new LlamaIndexInstrumentation();
-  // instrumentations.push(llamaIndexInstrumentation);
+  llamaIndexInstrumentation = new LlamaIndexInstrumentation();
+  instrumentations.push(llamaIndexInstrumentation);
 
-  // pineconeInstrumentation = new PineconeInstrumentation();
-  // instrumentations.push(pineconeInstrumentation);
+  pineconeInstrumentation = new PineconeInstrumentation();
+  instrumentations.push(pineconeInstrumentation);
 
-  // vertexaiInstrumentation = new VertexAIInstrumentation();
-  // instrumentations.push(vertexaiInstrumentation);
+  vertexaiInstrumentation = new VertexAIInstrumentation();
+  instrumentations.push(vertexaiInstrumentation);
 
-  // aiplatformInstrumentation = new AIPlatformInstrumentation();
-  // instrumentations.push(aiplatformInstrumentation);
+  aiplatformInstrumentation = new AIPlatformInstrumentation();
+  instrumentations.push(aiplatformInstrumentation);
 
-  // langChainInstrumentation = new LangChainInstrumentation();
-  // instrumentations.push(openAIInstrumentation, langChainInstrumentation);
+  langChainInstrumentation = new LangChainInstrumentation();
+  instrumentations.push(openAIInstrumentation, langChainInstrumentation);
 
-  // bedrockInstrumentation = new BedrockInstrumentation();
-  // instrumentations.push(bedrockInstrumentation);
+  bedrockInstrumentation = new BedrockInstrumentation();
+  instrumentations.push(bedrockInstrumentation);
 };
 
 /**
@@ -61,10 +69,10 @@ export const initInstrumentations = () => {
 export const startTracing = (options: InitializeOptions) => {
   if (!shouldSendTraces()) {
     openAIInstrumentation.setConfig({ traceContent: false });
-    // llamaIndexInstrumentation.setConfig({ traceContent: false });
-    // vertexaiInstrumentation.setConfig({ traceContent: false });
-    // aiplatformInstrumentation.setConfig({ traceContent: false });
-    // bedrockInstrumentation.setConfig({ traceContent: false });
+    llamaIndexInstrumentation.setConfig({ traceContent: false });
+    vertexaiInstrumentation.setConfig({ traceContent: false });
+    aiplatformInstrumentation.setConfig({ traceContent: false });
+    bedrockInstrumentation.setConfig({ traceContent: false });
   }
 
   const traceExporter =
