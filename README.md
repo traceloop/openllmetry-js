@@ -71,7 +71,7 @@ That's it. You're now tracing your code with OpenLLMetry-JS!
 If you're running this locally, you may want to disable batch sending, so you can see the traces immediately:
 
 ```js
-traceloop.initialize({ disable_batch: true });
+traceloop.initialize({ disableBatch: true });
 ```
 
 Now, you need to decide where to export the traces to.
