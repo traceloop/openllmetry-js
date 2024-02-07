@@ -3,7 +3,7 @@ import { validateConfiguration } from "./validation";
 import { startTracing } from "../tracing";
 import { initializeRegistry } from "../prompts/registry";
 
-export let _configuration: InitializeOptions;
+export let _configuration: InitializeOptions | undefined;
 
 /**
  * Initializes the Traceloop SDK.

@@ -134,36 +134,41 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.openAI) {
     openAIInstrumentation.manuallyInstrument(options.instrumentModules.openAI);
   }
-  // if (options.instrumentModules?.llamaIndex) {
-  //   llamaIndexInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.llamaIndex,
-  //   );
-  // }
-  // if (options.instrumentModules?.pinecone) {
-  //   pineconeInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.pinecone,
-  //   );
-  // }
-  // if (options.instrumentModules?.google_vertexai) {
-  //   vertexaiInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.google_vertexai,
-  //   );
-  // }
+  if (options.instrumentModules?.llamaIndex) {
+    llamaIndexInstrumentation.manuallyInstrument(
+      options.instrumentModules.llamaIndex,
+    );
+  }
+  if (options.instrumentModules?.pinecone) {
+    pineconeInstrumentation.manuallyInstrument(
+      options.instrumentModules.pinecone,
+    );
+  }
+  if (options.instrumentModules?.google_vertexai) {
+    vertexaiInstrumentation.manuallyInstrument(
+      options.instrumentModules.google_vertexai,
+    );
+  }
 
-  // if (options.instrumentModules?.google_aiplatform) {
-  //   aiplatformInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.google_aiplatform,
-  //   );
-  // }
+  if (options.instrumentModules?.google_aiplatform) {
+    aiplatformInstrumentation.manuallyInstrument(
+      options.instrumentModules.google_aiplatform,
+    );
+  }
 
-  // if (options.instrumentModules?.bedrock) {
-  //   bedrockInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.bedrock,
-  //   );
-  // }
+  if (options.instrumentModules?.bedrock) {
+    bedrockInstrumentation.manuallyInstrument(
+      options.instrumentModules.bedrock,
+    );
+  }
 };
 
 export const shouldSendTraces = () => {
+  if (!_configuration) {
+    console.log("Warning: Traceloop not initialized");
+    return false;
+  }
+
   if (
     _configuration.traceContent === false ||
     (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"
