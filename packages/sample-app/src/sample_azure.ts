@@ -42,6 +42,6 @@ traceloop.withAssociationProperties({ userId: "12345" }, async () => {
   const chatResponse = await chat();
   console.log(chatResponse);
 
-    const completionResponse = await completion("Typescript");
-    console.log(completionResponse);
+  const completionResponse = await completion("Typescript");
+  console.log(completionResponse);
 });

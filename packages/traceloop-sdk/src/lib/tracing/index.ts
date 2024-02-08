@@ -28,7 +28,7 @@ import {
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
-let azureOpenAIInstrumentation : AzureOpenAIInstrumentation;
+let azureOpenAIInstrumentation: AzureOpenAIInstrumentation;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation;
 let pineconeInstrumentation: PineconeInstrumentation;
 let vertexaiInstrumentation: VertexAIInstrumentation;
