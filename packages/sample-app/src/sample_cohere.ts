@@ -25,36 +25,44 @@ const sampleGenerate = async () => {
 };
 
 const sampleGenerateStream = async () => {
-  const streamedResponse = await cohere.generateStream({
-    prompt: "What happened to Pluto?",
-    k: 1,
-    temperature: 2,
-  });
+  return await traceloop.withWorkflow(
+    "sample_generate_stream",
+    {},
+    async () => {
+      const streamedResponse = await cohere.generateStream({
+        prompt: "What happened to Pluto?",
+        k: 1,
+        temperature: 2,
+      });
 
-  for await (const message of streamedResponse) {
-    if (message.eventType === "text-generation") {
-      // { eventType: 'text-generation', text: ' Pluto', isFinished: false }
-      console.log(message.text);
-    }
-  }
+      for await (const message of streamedResponse) {
+        if (message.eventType === "text-generation") {
+          // { eventType: 'text-generation', text: ' Pluto', isFinished: false }
+          console.log(message.text);
+        }
+      }
+    },
+  );
 };
 
 const sampleChat = async () => {
-  const chatResponse = await cohere.chat({
-    chatHistory: [
-      { role: "USER", message: "Who discovered gravity?" },
-      {
-        role: "CHATBOT",
-        message:
-          "The man who is widely credited with discovering gravity is Sir Isaac Newton",
-      },
-    ],
-    message: "What year was he born?",
-    // perform web search before answering the question. You can also use your own custom connector.
-    connectors: [{ id: "web-search" }],
-  });
+  return await traceloop.withWorkflow("sample_chat", {}, async () => {
+    const chatResponse = await cohere.chat({
+      chatHistory: [
+        { role: "USER", message: "Who discovered gravity?" },
+        {
+          role: "CHATBOT",
+          message:
+            "The man who is widely credited with discovering gravity is Sir Isaac Newton",
+        },
+      ],
+      message: "What year was he born?",
+      // perform web search before answering the question. You can also use your own custom connector.
+      connectors: [{ id: "web-search" }],
+    });
 
-  console.log(chatResponse);
+    console.log(chatResponse);
+  });
 };
 
 const sampleChatStream = async () => {
