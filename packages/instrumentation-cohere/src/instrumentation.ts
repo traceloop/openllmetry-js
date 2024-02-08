@@ -35,7 +35,7 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 import { Stream } from "cohere-ai/core";
 
-type LLM_COMPLETION_TYPE = "chat" | "complete" | "rerank";
+type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
 export class CohereInstrumentation extends InstrumentationBase<any> {
   protected override _config!: CohereInstrumentationConfig;
 
@@ -62,12 +62,12 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       module.CohereClient.prototype,
       "generate",
-      this.wrapperMethod("complete"),
+      this.wrapperMethod("completion"),
     );
     this._wrap(
       module.CohereClient.prototype,
       "generateStream",
-      this.wrapperMethod("complete"),
+      this.wrapperMethod("completion"),
     );
     this._wrap(
       module.CohereClient.prototype,
@@ -92,12 +92,12 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       module.CohereClient.prototype,
       "generate",
-      this.wrapperMethod("complete"),
+      this.wrapperMethod("completion"),
     );
     this._wrap(
       module.CohereClient.prototype,
       "generateStream",
-      this.wrapperMethod("complete"),
+      this.wrapperMethod("completion"),
     );
     this._wrap(
       module.CohereClient.prototype,
@@ -222,7 +222,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     }
 
     if (this._shouldSendPrompts()) {
-      if (type === "complete" && "prompt" in params) {
+      if (type === "completion" && "prompt" in params) {
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.prompt;
       } else if (type === "chat" && "message" in params) {
@@ -248,8 +248,6 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
       }
     }
 
-    console.log(">>> attributes", attributes);
-
     return this.tracer.startSpan(`cohere.${type}`, {
       kind: SpanKind.CLIENT,
       attributes,
@@ -270,7 +268,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
       | cohere.Cohere.StreamedChatResponse
       | cohere.Cohere.RerankResponse;
   }) {
-    if (type === "complete") {
+    if (type === "completion") {
       if (result instanceof Stream) {
         for await (const message of result) {
           if (message.eventType === "stream-end") {
@@ -484,7 +482,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
 
   private _getLlmRequestTypeByMethod(type: string) {
     if (type === "chat") return LLMRequestTypeValues.CHAT;
-    else if (type === "complete") return LLMRequestTypeValues.COMPLETION;
+    else if (type === "completion") return LLMRequestTypeValues.COMPLETION;
     else if (type === "rerank") return LLMRequestTypeValues.RERANK;
     else return LLMRequestTypeValues.UNKNOWN;
   }
