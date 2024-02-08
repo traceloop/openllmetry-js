@@ -97,7 +97,8 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 
 ### LLM Providers
 
-- ✅ OpenAI / Azure OpenAI **>v4.0.0**
+- ✅ OpenAI
+- ✅ Azure OpenAI
 - ⏳ Anthropic
 - ⏳ Cohere
 - ⏳ Replicate
@@ -114,8 +115,8 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 
 ### Frameworks
 
-- ✅ LlamaIndex
 - ✅ LangChain
+- ✅ LlamaIndex
 
 ## 🌱 Contributing
 

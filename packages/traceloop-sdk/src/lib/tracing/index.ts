@@ -9,12 +9,13 @@ import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
-import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { TraceloopSampler } from "./sampler";
 import { _configuration } from "../configuration";
+import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
+import { AzureOpenAIInstrumentation } from "@traceloop/instrumentation-azure";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
 import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
@@ -28,6 +29,7 @@ import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
+let azureOpenAIInstrumentation: AzureOpenAIInstrumentation;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation;
 let pineconeInstrumentation: PineconeInstrumentation;
 let vertexaiInstrumentation: VertexAIInstrumentation;
@@ -42,6 +44,9 @@ export const initInstrumentations = () => {
   openAIInstrumentation = new OpenAIInstrumentation();
   instrumentations.push(openAIInstrumentation);
 
+  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
+  instrumentations.push(azureOpenAIInstrumentation);
+
   llamaIndexInstrumentation = new LlamaIndexInstrumentation();
   instrumentations.push(llamaIndexInstrumentation);
 
@@ -55,7 +60,7 @@ export const initInstrumentations = () => {
   instrumentations.push(aiplatformInstrumentation);
 
   langChainInstrumentation = new LangChainInstrumentation();
-  instrumentations.push(openAIInstrumentation, langChainInstrumentation);
+  instrumentations.push(langChainInstrumentation);
 
   bedrockInstrumentation = new BedrockInstrumentation();
   instrumentations.push(bedrockInstrumentation);
@@ -74,6 +79,7 @@ export const initInstrumentations = () => {
 export const startTracing = (options: InitializeOptions) => {
   if (!shouldSendTraces()) {
     openAIInstrumentation.setConfig({ traceContent: false });
+    azureOpenAIInstrumentation.setConfig({ traceContent: false });
     llamaIndexInstrumentation.setConfig({ traceContent: false });
     vertexaiInstrumentation.setConfig({ traceContent: false });
     aiplatformInstrumentation.setConfig({ traceContent: false });
@@ -140,40 +146,42 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.openAI) {
     openAIInstrumentation.manuallyInstrument(options.instrumentModules.openAI);
   }
-  // if (options.instrumentModules?.llamaIndex) {
-  //   llamaIndexInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.llamaIndex,
-  //   );
-  // }
-  // if (options.instrumentModules?.pinecone) {
-  //   pineconeInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.pinecone,
-  //   );
-  // }
-  // if (options.instrumentModules?.google_vertexai) {
-  //   vertexaiInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.google_vertexai,
-  //   );
-  // }
+  
+  if (options.instrumentModules?.llamaIndex) {
+    llamaIndexInstrumentation.manuallyInstrument(
+      options.instrumentModules.llamaIndex,
+    );
+  }
+  if (options.instrumentModules?.pinecone) {
+    pineconeInstrumentation.manuallyInstrument(
+      options.instrumentModules.pinecone,
+    );
+  }
+  if (options.instrumentModules?.google_vertexai) {
+    vertexaiInstrumentation.manuallyInstrument(
+      options.instrumentModules.google_vertexai,
+    );
+  }
 
-  // if (options.instrumentModules?.google_aiplatform) {
-  //   aiplatformInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.google_aiplatform,
-  //   );
-  // }
+  if (options.instrumentModules?.google_aiplatform) {
+    aiplatformInstrumentation.manuallyInstrument(
+      options.instrumentModules.google_aiplatform,
+    );
+  }
 
-  // if (options.instrumentModules?.bedrock) {
-  //   bedrockInstrumentation.manuallyInstrument(
-  //     options.instrumentModules.bedrock,
-  //   );
-  // }
-
-  if (options.instrumentModules?.cohere) {
-    cohereInstrumentation.manuallyInstrument(options.instrumentModules.cohere);
+  if (options.instrumentModules?.bedrock) {
+    bedrockInstrumentation.manuallyInstrument(
+      options.instrumentModules.bedrock,
+    );
   }
 };
 
 export const shouldSendTraces = () => {
+  if (!_configuration) {
+    console.log("Warning: Traceloop not initialized");
+    return false;
+  }
+
   if (
     _configuration.traceContent === false ||
     (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"

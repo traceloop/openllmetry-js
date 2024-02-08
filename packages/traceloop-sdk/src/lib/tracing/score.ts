@@ -4,6 +4,11 @@ export async function reportScore(
   associationProperty: { [name: string]: string },
   score: number,
 ) {
+  if (!_configuration) {
+    console.log("Warning: Traceloop not initialized");
+    return;
+  }
+
   if (Object.keys(associationProperty).length > 1) {
     throw new Error("Too many association properties");
   }
