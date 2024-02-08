@@ -25,7 +25,6 @@ import {
 } from "@traceloop/instrumentation-vertexai";
 import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 
-
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation;
@@ -168,6 +167,10 @@ export const startTracing = (options: InitializeOptions) => {
   //     options.instrumentModules.bedrock,
   //   );
   // }
+
+  if (options.instrumentModules?.cohere) {
+    cohereInstrumentation.manuallyInstrument(options.instrumentModules.cohere);
+  }
 };
 
 export const shouldSendTraces = () => {
