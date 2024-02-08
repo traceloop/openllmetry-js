@@ -378,7 +378,6 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
           result.token_count?.total_tokens,
-        );
       }
     }
 
