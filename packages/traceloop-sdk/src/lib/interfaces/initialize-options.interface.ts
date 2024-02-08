@@ -1,10 +1,4 @@
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
-import * as openai from "openai";
-import * as llamaIndex from "llamaindex";
-import * as pinecone from "@pinecone-database/pinecone";
-import * as google_vertexai from "@google-cloud/vertexai";
-import * as google_aiplatform from "@google-cloud/aiplatform";
-import * as aws_bedrock from "@aws-sdk/client-bedrock-runtime";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -57,12 +51,12 @@ export interface InitializeOptions {
    * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
    */
   instrumentModules?: {
-    openAI?: typeof openai.OpenAI;
-    llamaIndex?: typeof llamaIndex;
-    pinecone?: typeof pinecone;
-    google_vertexai?: typeof google_vertexai;
-    google_aiplatform?: typeof google_aiplatform;
-    bedrock?: typeof aws_bedrock;
+    openAI?: any;
+    llamaIndex?: any;
+    pinecone?: any;
+    google_vertexai?: any;
+    google_aiplatform?: any;
+    bedrock?: any;
   };
 
   /**

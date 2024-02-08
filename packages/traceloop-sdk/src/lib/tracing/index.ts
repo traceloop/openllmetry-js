@@ -38,30 +38,55 @@ let bedrockInstrumentation: BedrockInstrumentation;
 
 const instrumentations: Instrumentation[] = [];
 
+const hasModule = (module: string) => {
+  try {
+    require.resolve(module);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 export const initInstrumentations = () => {
-  openAIInstrumentation = new OpenAIInstrumentation();
-  instrumentations.push(openAIInstrumentation);
+  if (hasModule("openai")) {
+    openAIInstrumentation = new OpenAIInstrumentation();
+    instrumentations.push(openAIInstrumentation);
+  }
 
-  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
-  instrumentations.push(azureOpenAIInstrumentation);
+  if (hasModule("@azure/openai")) {
+    azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
+    instrumentations.push(azureOpenAIInstrumentation);
+  }
 
-  llamaIndexInstrumentation = new LlamaIndexInstrumentation();
-  instrumentations.push(llamaIndexInstrumentation);
+  if (hasModule("llamaindex")) {
+    llamaIndexInstrumentation = new LlamaIndexInstrumentation();
+    instrumentations.push(llamaIndexInstrumentation);
+  }
 
-  pineconeInstrumentation = new PineconeInstrumentation();
-  instrumentations.push(pineconeInstrumentation);
+  if (hasModule("@pinecone-database/pinecone")) {
+    pineconeInstrumentation = new PineconeInstrumentation();
+    instrumentations.push(pineconeInstrumentation);
+  }
 
-  vertexaiInstrumentation = new VertexAIInstrumentation();
-  instrumentations.push(vertexaiInstrumentation);
+  if (hasModule("@google-cloud/vertexai")) {
+    vertexaiInstrumentation = new VertexAIInstrumentation();
+    instrumentations.push(vertexaiInstrumentation);
+  }
 
-  aiplatformInstrumentation = new AIPlatformInstrumentation();
-  instrumentations.push(aiplatformInstrumentation);
+  if (hasModule("@google-cloud/aiplatform")) {
+    aiplatformInstrumentation = new AIPlatformInstrumentation();
+    instrumentations.push(aiplatformInstrumentation);
+  }
 
-  langChainInstrumentation = new LangChainInstrumentation();
-  instrumentations.push(langChainInstrumentation);
+  if (hasModule("langchain")) {
+    langChainInstrumentation = new LangChainInstrumentation();
+    instrumentations.push(langChainInstrumentation);
+  }
 
-  bedrockInstrumentation = new BedrockInstrumentation();
-  instrumentations.push(bedrockInstrumentation);
+  if (hasModule("@aws-sdk/client-bedrock-runtime")) {
+    bedrockInstrumentation = new BedrockInstrumentation();
+    instrumentations.push(bedrockInstrumentation);
+  }
 };
 
 /**
