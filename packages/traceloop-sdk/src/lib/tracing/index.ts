@@ -20,7 +20,6 @@ import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
 import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
 import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
-import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 import {
   VertexAIInstrumentation,
   AIPlatformInstrumentation,
