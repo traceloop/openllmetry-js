@@ -20,7 +20,7 @@ const sampleGenerate = async () => {
       temperature: 2,
     });
 
-    console.log(response);
+    return response.generations?.[0].text;
   });
 };
 
@@ -35,12 +35,15 @@ const sampleGenerateStream = async () => {
         temperature: 2,
       });
 
+      let finalResponse;
       for await (const message of streamedResponse) {
-        if (message.eventType === "text-generation") {
+        if (message.eventType === "stream-end") {
           // { eventType: 'text-generation', text: ' Pluto', isFinished: false }
-          console.log(message.text);
+          finalResponse = message.response;
         }
       }
+
+      return finalResponse?.generations?.[0].text;
     },
   );
 };
@@ -61,7 +64,7 @@ const sampleChat = async () => {
       connectors: [{ id: "web-search" }],
     });
 
-    console.log(chatResponse);
+    return chatResponse.text;
   });
 };
 
@@ -81,11 +84,13 @@ const sampleChatStream = async () => {
       connectors: [{ id: "web-search" }],
     });
 
+    let lastResponse;
     for await (const message of chatStream) {
       if (message.eventType === "stream-end") {
-        console.log(message);
+        lastResponse = message.response;
       }
     }
+    return lastResponse;
   });
 };
 
@@ -111,7 +116,7 @@ const sampleRerank = async () => {
       returnDocuments: true,
     });
 
-    console.log(rerank);
+    return rerank.results;
   });
 };
 
