@@ -38,15 +38,24 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 
 import { LangChainInstrumentation } from "../src/instrumentation";
 
+import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
+import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FSPersister from "@pollyjs/persister-fs";
+
 const memoryExporter = new InMemorySpanExporter();
 
-describe("Test LlamaIndex instrumentation", () => {
+Polly.register(NodeHttpAdapter);
+Polly.register(FSPersister);
+
+describe("Test Langchain instrumentation", async function () {
   const provider = new BasicTracerProvider();
   let instrumentation: LangChainInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let langchainAgentsModule: typeof AgentsModule;
   let langchainToolsModule: typeof ToolsModule;
   let langchainChainsModule: typeof ChainsModule;
+
+  setupPolly({ adapters: ["node-http"], persister: "fs" });
 
   before(() => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
@@ -58,12 +67,19 @@ describe("Test LlamaIndex instrumentation", () => {
     langchainChainsModule = require("langchain/chains");
   });
 
-  beforeEach(() => {
+  beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
+
+    const { server } = this.polly as Polly;
+    server.any().on("beforePersist", (_req, recording) => {
+      recording.request.headers = recording.request.headers.filter(
+        ({ name }: { name: string }) => name !== "authorization",
+      );
+    });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     memoryExporter.reset();
     context.disable();
   });
@@ -86,7 +102,7 @@ describe("Test LlamaIndex instrumentation", () => {
     assert.strictEqual(wikipediaSpan.attributes["traceloop.span.kind"], "task");
   });
 
-  it("should set attributes in span for agent instrumentation", async () => {
+  it("should set attributes in span for agent instrumentation", async function () {
     const llm = new ChatOpenAI({});
     const tools = [new Calculator()];
     const prompt = await pull<ChatPromptTemplate>(
