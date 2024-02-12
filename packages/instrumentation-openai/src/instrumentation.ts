@@ -91,6 +91,8 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
+  override enable() {}
+
   private patch(
     moduleExports: typeof openai & { openLLMetryPatched?: boolean },
   ) {
