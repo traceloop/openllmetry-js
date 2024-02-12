@@ -26,7 +26,14 @@ import {
 import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
+import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
+import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FSPersister from "@pollyjs/persister-fs";
+
 const memoryExporter = new InMemorySpanExporter();
+
+Polly.register(NodeHttpAdapter);
+Polly.register(FSPersister);
 
 describe("Test Meta with AWS Bedrock Instrumentation", () => {
   const provider = new BasicTracerProvider();
@@ -34,6 +41,13 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
   let contextManager: AsyncHooksContextManager;
   let bedrock: typeof bedrockModule;
   let bedrockRuntimeClient: bedrockModule.BedrockRuntimeClient;
+
+  setupPolly({
+    adapters: ["node-http"],
+    persister: "fs",
+    recordIfMissing: process.env.RECORD_MODE === "NEW",
+    matchRequestsBy: { headers: false },
+  });
 
   before(async () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
@@ -44,9 +58,20 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
     bedrockRuntimeClient = new bedrock.BedrockRuntimeClient();
   });
 
-  beforeEach(() => {
+  beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
+
+    const { server } = this.polly as Polly;
+    server.any().on("beforePersist", (_req, recording) => {
+      recording.request.headers = recording.request.headers.filter(
+        ({ name }: { name: string }) =>
+          name != "authorization" &&
+          name != "x-amz-content-sha256" &&
+          name != "amz-sdk-invocation-id" &&
+          name != "x-amz-date",
+      );
+    });
   });
 
   afterEach(() => {

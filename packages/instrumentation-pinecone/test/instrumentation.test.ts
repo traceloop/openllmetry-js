@@ -42,7 +42,11 @@ describe("Test Pinecone instrumentation", function () {
   let contextManager: AsyncHooksContextManager;
   let pc_index: Index;
 
-  setupPolly({ adapters: ["fetch"], persister: "fs" });
+  setupPolly({
+    adapters: ["fetch"],
+    persister: "fs",
+    // recordIfMissing: process.env.RECORD_MODE === "NEW",
+  });
 
   before(async () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));

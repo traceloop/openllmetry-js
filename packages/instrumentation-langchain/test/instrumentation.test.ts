@@ -55,9 +55,16 @@ describe("Test Langchain instrumentation", async function () {
   let langchainToolsModule: typeof ToolsModule;
   let langchainChainsModule: typeof ChainsModule;
 
-  setupPolly({ adapters: ["node-http"], persister: "fs" });
+  setupPolly({
+    adapters: ["node-http"],
+    persister: "fs",
+    recordIfMissing: process.env.RECORD_MODE === "NEW",
+  });
 
   before(() => {
+    if (process.env.RECORD_MODE !== "NEW") {
+      process.env.OPENAI_API_KEY = "test";
+    }
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new LangChainInstrumentation();
     instrumentation.setTracerProvider(provider);

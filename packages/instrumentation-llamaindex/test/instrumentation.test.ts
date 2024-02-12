@@ -40,9 +40,17 @@ describe("Test LlamaIndex instrumentation", async function () {
   let contextManager: AsyncHooksContextManager;
   let llamaindex: typeof llamaindexImport;
 
-  setupPolly({ adapters: ["node-http"], persister: "fs" });
+  setupPolly({
+    adapters: ["node-http"],
+    persister: "fs",
+    recordIfMissing: process.env.RECORD_MODE === "NEW",
+  });
 
   before(() => {
+    if (process.env.RECORD_MODE !== "NEW") {
+      process.env.OPENAI_API_KEY = "test";
+    }
+
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new LlamaIndexInstrumentation();
     instrumentation.setTracerProvider(provider);
