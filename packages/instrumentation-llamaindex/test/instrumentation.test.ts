@@ -44,6 +44,9 @@ describe("Test LlamaIndex instrumentation", async function () {
     adapters: ["node-http"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
+    matchRequestsBy: {
+      headers: false,
+    },
   });
 
   before(() => {
