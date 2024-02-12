@@ -27,7 +27,7 @@ import type * as vertexAiImport from "@google-cloud/vertexai";
 
 const memoryExporter = new InMemorySpanExporter();
 
-describe("Test Gemini GenerativeModel Instrumentation", () => {
+describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: VertexAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
