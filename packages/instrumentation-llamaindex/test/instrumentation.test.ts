@@ -25,13 +25,22 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import type * as llamaindexImport from "llamaindex";
 
+import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
+import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FSPersister from "@pollyjs/persister-fs";
+
 const memoryExporter = new InMemorySpanExporter();
 
-describe("Test LlamaIndex instrumentation", () => {
+Polly.register(NodeHttpAdapter);
+Polly.register(FSPersister);
+
+describe("Test LlamaIndex instrumentation", async function () {
   const provider = new BasicTracerProvider();
   let instrumentation: LlamaIndexInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let llamaindex: typeof llamaindexImport;
+
+  setupPolly({ adapters: ["node-http"], persister: "fs" });
 
   before(() => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
@@ -40,9 +49,16 @@ describe("Test LlamaIndex instrumentation", () => {
     llamaindex = require("llamaindex");
   });
 
-  beforeEach(() => {
+  beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
+
+    const { server } = this.polly as Polly;
+    server.any().on("beforePersist", (_req, recording) => {
+      recording.request.headers = recording.request.headers.filter(
+        ({ name }: { name: string }) => name !== "authorization",
+      );
+    });
   });
 
   afterEach(() => {
