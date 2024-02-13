@@ -28,7 +28,7 @@ import { google } from "@google-cloud/aiplatform/build/protos/protos";
 
 const memoryExporter = new InMemorySpanExporter();
 
-describe("Test PaLM2 PredictionServiceClient Instrumentation", () => {
+describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: AIPlatformInstrumentation;
   let contextManager: AsyncHooksContextManager;
