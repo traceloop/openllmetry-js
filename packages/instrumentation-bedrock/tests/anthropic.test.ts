@@ -55,7 +55,14 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     instrumentation.setTracerProvider(provider);
     bedrock = await import("@aws-sdk/client-bedrock-runtime");
 
-    bedrockRuntimeClient = new bedrock.BedrockRuntimeClient();
+    bedrockRuntimeClient = new bedrock.BedrockRuntimeClient(
+      process.env.RECORD_MODE !== "NEW"
+        ? {
+            region: "us-east-1",
+            credentials: { accessKeyId: "test", secretAccessKey: "test" },
+          }
+        : {},
+    );
   });
 
   beforeEach(function () {
