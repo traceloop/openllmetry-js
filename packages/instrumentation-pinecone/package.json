@@ -42,7 +42,10 @@
     "@traceloop/ai-semantic-conventions": "^0.3.5"
   },
   "devDependencies": {
-    "@pinecone-database/pinecone": "^2.0.1"
+    "@pinecone-database/pinecone": "^2.0.1",
+    "@pollyjs/adapter-fetch": "^6.0.6",
+    "@pollyjs/core": "^6.0.6",
+    "@pollyjs/persister-fs": "^6.0.6"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-pinecone",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
