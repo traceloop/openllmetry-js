@@ -26,7 +26,14 @@ import {
 import * as cohereModule from "cohere-ai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
+import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
+import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FSPersister from "@pollyjs/persister-fs";
+
 const memoryExporter = new InMemorySpanExporter();
+
+Polly.register(NodeHttpAdapter);
+Polly.register(FSPersister);
 
 describe("Test Rerank with Cohere Instrumentation", () => {
   const provider = new BasicTracerProvider();
@@ -34,6 +41,13 @@ describe("Test Rerank with Cohere Instrumentation", () => {
   let contextManager: AsyncHooksContextManager;
   let cohere: typeof cohereModule;
   let cohereClient: cohereModule.CohereClient;
+
+  setupPolly({
+    adapters: ["node-http"],
+    persister: "fs",
+    recordIfMissing: process.env.RECORD_MODE === "NEW",
+    matchRequestsBy: { headers: false },
+  });
 
   before(async () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
@@ -46,9 +60,16 @@ describe("Test Rerank with Cohere Instrumentation", () => {
     });
   });
 
-  beforeEach(() => {
+  beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
+
+    const { server } = this.polly as Polly;
+    server.any().on("beforePersist", (_req, recording) => {
+      recording.request.headers = recording.request.headers.filter(
+        ({ name }: { name: string }) => name !== "authorization",
+      );
+    });
   });
 
   afterEach(() => {
