@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-azure",
-  "version": "0.3.0",
+  "version": "0.3.5",
   "description": "Azure OpenAI Instrumentaion",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -36,9 +36,9 @@
   },
   "dependencies": {
     "@opentelemetry/core": "^1.8.0",
-    "@opentelemetry/instrumentation": "^0.44.0",
+    "@opentelemetry/instrumentation": "^0.48.0",
     "@opentelemetry/semantic-conventions": "^1.0.0",
-    "@traceloop/ai-semantic-conventions": "^0.3.0"
+    "@traceloop/ai-semantic-conventions": "^0.3.5"
   },
   "devDependencies": {
     "@azure/openai": "^1.0.0-beta.10"
