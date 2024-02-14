@@ -57,6 +57,7 @@ xwxw   * This is a workaround specific to Next.js, see https://www.traceloop.com
     google_vertexai?: any;
     google_aiplatform?: any;
     bedrock?: any;
+    cohere?: any;
   };
 
   /**
