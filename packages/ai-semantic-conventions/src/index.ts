@@ -14,3 +14,8 @@
  * limitations under the License.
  */
 export * from "./SemanticAttributes";
+
+export type AIInstrumentation = {
+  setConfig: (config: { traceContent: boolean }) => void;
+  manuallyInstrument: (module: any) => void;
+};
