@@ -41,7 +41,7 @@ const hasModule = (module: string) => {
   }
 };
 
-export const initInstrumentations = () => {
+export const initInstrumentations = async () => {
   if (hasModule("openai")) {
     const {
       OpenAIInstrumentation,
