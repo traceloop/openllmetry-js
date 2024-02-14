@@ -27,12 +27,12 @@ import * as cohereModule from "cohere-ai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
-import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 
 const memoryExporter = new InMemorySpanExporter();
 
-Polly.register(NodeHttpAdapter);
+Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test Chat with Cohere Instrumentation", () => {
@@ -43,7 +43,7 @@ describe("Test Chat with Cohere Instrumentation", () => {
   let cohereClient: cohereModule.CohereClient;
 
   setupPolly({
-    adapters: ["node-http"],
+    adapters: [FetchAdapter],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
     matchRequestsBy: { headers: false },
@@ -56,7 +56,7 @@ describe("Test Chat with Cohere Instrumentation", () => {
     cohere = await import("cohere-ai");
 
     cohereClient = new cohere.CohereClient({
-      token: process.env.COHERE_API_KEY ?? "",
+      token: process.env.RECORD_MODE === "NEW" ? "test" : "",
     });
   });
 
