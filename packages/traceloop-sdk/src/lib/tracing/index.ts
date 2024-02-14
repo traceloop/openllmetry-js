@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
   SimpleSpanProcessor,
@@ -39,67 +40,67 @@ const hasModule = (module: string) => {
   }
 };
 
-export const initInstrumentations = async () => {
+export const initInstrumentations = () => {
   if (hasModule("openai")) {
-    const { OpenAIInstrumentation } = await import(
-      "@traceloop/instrumentation-openai"
-    );
+    const {
+      OpenAIInstrumentation,
+    } = require("@traceloop/instrumentation-openai");
     openAIInstrumentation = new OpenAIInstrumentation();
     instrumentations.push(openAIInstrumentation as Instrumentation);
   }
 
   if (hasModule("@azure/openai")) {
-    const { AzureOpenAIInstrumentation } = await import(
-      "@traceloop/instrumentation-azure"
-    );
+    const {
+      AzureOpenAIInstrumentation,
+    } = require("@traceloop/instrumentation-azure");
     azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
     instrumentations.push(azureOpenAIInstrumentation as Instrumentation);
   }
 
   if (hasModule("llamaindex")) {
-    const { LlamaIndexInstrumentation } = await import(
-      "@traceloop/instrumentation-llamaindex"
-    );
+    const {
+      LlamaIndexInstrumentation,
+    } = require("@traceloop/instrumentation-llamaindex");
     llamaIndexInstrumentation = new LlamaIndexInstrumentation();
     instrumentations.push(llamaIndexInstrumentation as Instrumentation);
   }
 
   if (hasModule("@pinecone-database/pinecone")) {
-    const { PineconeInstrumentation } = await import(
-      "@traceloop/instrumentation-pinecone"
-    );
+    const {
+      PineconeInstrumentation,
+    } = require("@traceloop/instrumentation-pinecone");
     pineconeInstrumentation = new PineconeInstrumentation();
     instrumentations.push(pineconeInstrumentation as Instrumentation);
   }
 
   if (hasModule("@google-cloud/vertexai")) {
-    const { VertexAIInstrumentation } = await import(
-      "@traceloop/instrumentation-vertexai"
-    );
+    const {
+      VertexAIInstrumentation,
+    } = require("@traceloop/instrumentation-vertexai");
     vertexaiInstrumentation = new VertexAIInstrumentation();
     instrumentations.push(vertexaiInstrumentation as Instrumentation);
   }
 
   if (hasModule("@google-cloud/aiplatform")) {
-    const { AIPlatformInstrumentation } = await import(
-      "@traceloop/instrumentation-vertexai"
-    );
+    const {
+      AIPlatformInstrumentation,
+    } = require("@traceloop/instrumentation-vertexai");
     aiplatformInstrumentation = new AIPlatformInstrumentation();
     instrumentations.push(aiplatformInstrumentation as Instrumentation);
   }
 
   if (hasModule("langchain")) {
-    const { LangChainInstrumentation } = await import(
-      "@traceloop/instrumentation-langchain"
-    );
+    const {
+      LangChainInstrumentation,
+    } = require("@traceloop/instrumentation-langchain");
     langChainInstrumentation = new LangChainInstrumentation();
     instrumentations.push(langChainInstrumentation as Instrumentation);
   }
 
   if (hasModule("@aws-sdk/client-bedrock-runtime")) {
-    const { BedrockInstrumentation } = await import(
-      "@traceloop/instrumentation-bedrock"
-    );
+    const {
+      BedrockInstrumentation,
+    } = require("@traceloop/instrumentation-bedrock");
     bedrockInstrumentation = new BedrockInstrumentation();
     instrumentations.push(bedrockInstrumentation as Instrumentation);
   }
