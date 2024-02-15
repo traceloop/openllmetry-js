@@ -57,7 +57,7 @@ export interface InitializeOptions {
     google_vertexai?: any;
     google_aiplatform?: any;
     bedrock?: any;
-    azureOpenAi?: any;
+    azureOpenAI?: any;
   };
 
   /**

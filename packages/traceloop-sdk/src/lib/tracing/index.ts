@@ -223,9 +223,9 @@ export const startTracing = (options: InitializeOptions) => {
     );
   }
 
-  if (options.instrumentModules?.azureOpenAi) {
+  if (options.instrumentModules?.azureOpenAI) {
     (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.azureOpenAi,
+      options.instrumentModules.azureOpenAI,
     );
   }
 };
