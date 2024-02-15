@@ -244,15 +244,15 @@ export const startTracing = (options: InitializeOptions) => {
     );
   }
 
-  if (options.instrumentModules?.cohere) {
-    (cohereInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.cohere,
-    );
-  }
-
   if (options.instrumentModules?.azureOpenAI) {
     (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
       options.instrumentModules.azureOpenAI,
+    );
+  }
+
+  if (options.instrumentModules?.cohere) {
+    (cohereInstrumentation as AIInstrumentation).manuallyInstrument(
+      options.instrumentModules.cohere,
     );
   }
 };
