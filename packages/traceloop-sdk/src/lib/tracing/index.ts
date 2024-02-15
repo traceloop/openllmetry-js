@@ -240,6 +240,12 @@ export const startTracing = (options: InitializeOptions) => {
       options.instrumentModules.cohere,
     );
   }
+
+  if (options.instrumentModules?.azureOpenAI) {
+    (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
+      options.instrumentModules.azureOpenAI,
+    );
+  }
 };
 
 export const shouldSendTraces = () => {
