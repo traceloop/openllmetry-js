@@ -222,6 +222,12 @@ export const startTracing = (options: InitializeOptions) => {
       options.instrumentModules.bedrock,
     );
   }
+
+  if (options.instrumentModules?.azureOpenAi) {
+    (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
+      options.instrumentModules.azureOpenAi,
+    );
+  }
 };
 
 export const shouldSendTraces = () => {
