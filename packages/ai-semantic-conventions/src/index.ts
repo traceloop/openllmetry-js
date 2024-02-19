@@ -15,7 +15,7 @@
  */
 export * from "./SemanticAttributes";
 
-export type AIInstrumentation = {
+export interface AIInstrumentation {
   setConfig: (config: { traceContent: boolean }) => void;
   manuallyInstrument: (module: any) => void;
-};
+}
