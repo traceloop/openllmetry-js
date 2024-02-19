@@ -19,14 +19,13 @@ import { AIInstrumentation } from "@traceloop/ai-semantic-conventions";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
-let openAIInstrumentation: unknown;
-let azureOpenAIInstrumentation: unknown;
-let llamaIndexInstrumentation: unknown;
-let pineconeInstrumentation: unknown;
-let vertexaiInstrumentation: unknown;
-let aiplatformInstrumentation: unknown;
-let langChainInstrumentation: unknown;
-let bedrockInstrumentation: unknown;
+let openAIInstrumentation: AIInstrumentation | undefined;
+let azureOpenAIInstrumentation: AIInstrumentation | undefined;
+let llamaIndexInstrumentation: AIInstrumentation | undefined;
+let pineconeInstrumentation: AIInstrumentation | undefined;
+let vertexaiInstrumentation: AIInstrumentation | undefined;
+let aiplatformInstrumentation: AIInstrumentation | undefined;
+let bedrockInstrumentation: AIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -44,64 +43,71 @@ export const initInstrumentations = () => {
     const {
       OpenAIInstrumentation,
     } = require("@traceloop/instrumentation-openai");
-    openAIInstrumentation = new OpenAIInstrumentation();
-    instrumentations.push(openAIInstrumentation as Instrumentation);
+    const instrumentation = new OpenAIInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    openAIInstrumentation = instrumentation;
   }
 
   if (hasModule("@azure/openai")) {
     const {
       AzureOpenAIInstrumentation,
     } = require("@traceloop/instrumentation-azure");
-    azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
-    instrumentations.push(azureOpenAIInstrumentation as Instrumentation);
+    const instrumentation = new AzureOpenAIInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    azureOpenAIInstrumentation = instrumentation;
   }
 
   if (hasModule("llamaindex")) {
     const {
       LlamaIndexInstrumentation,
     } = require("@traceloop/instrumentation-llamaindex");
-    llamaIndexInstrumentation = new LlamaIndexInstrumentation();
-    instrumentations.push(llamaIndexInstrumentation as Instrumentation);
+    const instrumentation = new LlamaIndexInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    llamaIndexInstrumentation = instrumentation;
   }
 
   if (hasModule("@pinecone-database/pinecone")) {
     const {
       PineconeInstrumentation,
     } = require("@traceloop/instrumentation-pinecone");
-    pineconeInstrumentation = new PineconeInstrumentation();
-    instrumentations.push(pineconeInstrumentation as Instrumentation);
+    const instrumentation = new PineconeInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    pineconeInstrumentation = instrumentation;
   }
 
   if (hasModule("@google-cloud/vertexai")) {
     const {
       VertexAIInstrumentation,
     } = require("@traceloop/instrumentation-vertexai");
-    vertexaiInstrumentation = new VertexAIInstrumentation();
-    instrumentations.push(vertexaiInstrumentation as Instrumentation);
+    const instrumentation = new VertexAIInstrumentation();
+    instrumentations.push(instrumentation);
+    vertexaiInstrumentation = instrumentation;
   }
 
   if (hasModule("@google-cloud/aiplatform")) {
     const {
       AIPlatformInstrumentation,
     } = require("@traceloop/instrumentation-vertexai");
-    aiplatformInstrumentation = new AIPlatformInstrumentation();
-    instrumentations.push(aiplatformInstrumentation as Instrumentation);
+    const instrumentation = new AIPlatformInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    aiplatformInstrumentation = instrumentation;
   }
 
   if (hasModule("langchain")) {
     const {
       LangChainInstrumentation,
     } = require("@traceloop/instrumentation-langchain");
-    langChainInstrumentation = new LangChainInstrumentation();
-    instrumentations.push(langChainInstrumentation as Instrumentation);
+    const instrumentation = new LangChainInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
   }
 
   if (hasModule("@aws-sdk/client-bedrock-runtime")) {
     const {
       BedrockInstrumentation,
     } = require("@traceloop/instrumentation-bedrock");
-    bedrockInstrumentation = new BedrockInstrumentation();
-    instrumentations.push(bedrockInstrumentation as Instrumentation);
+    const instrumentation = new BedrockInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    bedrockInstrumentation = instrumentation;
   }
 };
 
@@ -114,22 +120,22 @@ export const initInstrumentations = () => {
  */
 export const startTracing = (options: InitializeOptions) => {
   if (!shouldSendTraces()) {
-    (openAIInstrumentation as AIInstrumentation).setConfig({
+    openAIInstrumentation?.setConfig({
       traceContent: false,
     });
-    (azureOpenAIInstrumentation as AIInstrumentation).setConfig({
+    azureOpenAIInstrumentation?.setConfig({
       traceContent: false,
     });
-    (llamaIndexInstrumentation as AIInstrumentation).setConfig({
+    llamaIndexInstrumentation?.setConfig({
       traceContent: false,
     });
-    (vertexaiInstrumentation as AIInstrumentation).setConfig({
+    vertexaiInstrumentation?.setConfig({
       traceContent: false,
     });
-    (aiplatformInstrumentation as AIInstrumentation).setConfig({
+    aiplatformInstrumentation?.setConfig({
       traceContent: false,
     });
-    (bedrockInstrumentation as AIInstrumentation).setConfig({
+    bedrockInstrumentation?.setConfig({
       traceContent: false,
     });
   }
