@@ -31,6 +31,7 @@ import { OpenAIInstrumentation } from "../src/instrumentation";
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FSPersister from "@pollyjs/persister-fs";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -94,9 +95,12 @@ describe("Test OpenAI instrumentation", async function () {
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(completionSpan.attributes["llm.prompts.0.role"], "user");
     assert.strictEqual(
-      completionSpan.attributes["llm.prompts.0.content"],
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -120,13 +124,16 @@ describe("Test OpenAI instrumentation", async function () {
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(completionSpan.attributes["llm.prompts.0.role"], "user");
     assert.strictEqual(
-      completionSpan.attributes["llm.prompts.0.content"],
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.strictEqual(
-      completionSpan.attributes["llm.completions.0.content"],
+      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
       result,
     );
   });
@@ -144,9 +151,12 @@ describe("Test OpenAI instrumentation", async function () {
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(completionSpan.attributes["llm.prompts.0.role"], "user");
     assert.strictEqual(
-      completionSpan.attributes["llm.prompts.0.content"],
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -170,9 +180,12 @@ describe("Test OpenAI instrumentation", async function () {
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(completionSpan.attributes["llm.prompts.0.role"], "user");
     assert.strictEqual(
-      completionSpan.attributes["llm.prompts.0.content"],
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
