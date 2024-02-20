@@ -10,12 +10,14 @@ import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { TraceloopSampler } from "./sampler";
 import { _configuration } from "../configuration";
-import { AIInstrumentation } from "@traceloop/ai-semantic-conventions";
+import {
+  AIInstrumentation,
+  SpanAttributes,
+} from "@traceloop/ai-semantic-conventions";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -26,6 +28,7 @@ let pineconeInstrumentation: AIInstrumentation | undefined;
 let vertexaiInstrumentation: AIInstrumentation | undefined;
 let aiplatformInstrumentation: AIInstrumentation | undefined;
 let bedrockInstrumentation: AIInstrumentation | undefined;
+let cohereInstrumentation: AIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -80,7 +83,7 @@ export const initInstrumentations = () => {
       VertexAIInstrumentation,
     } = require("@traceloop/instrumentation-vertexai");
     const instrumentation = new VertexAIInstrumentation();
-    instrumentations.push(instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
     vertexaiInstrumentation = instrumentation;
   }
 
@@ -111,11 +114,12 @@ export const initInstrumentations = () => {
   }
 
   if (hasModule("cohere-ai")) {
-    const { CohereInstrumentation } = await import(
-      "@traceloop/instrumentation-cohere"
-    );
-    cohereInstrumentation = new CohereInstrumentation();
+    const {
+      CohereInstrumentation,
+    } = require("@traceloop/instrumentation-cohere");
+    const instrumentation = new CohereInstrumentation();
     instrumentations.push(cohereInstrumentation as Instrumentation);
+    cohereInstrumentation = instrumentation;
   }
 };
 
