@@ -121,9 +121,9 @@ const sampleRerank = async () => {
 };
 
 traceloop.withAssociationProperties({}, async () => {
-  await sampleGenerate();
-  await sampleGenerateStream();
-  await sampleChat();
-  await sampleChatStream();
-  await sampleRerank();
+  console.log(await sampleGenerate());
+  console.log(await sampleGenerateStream());
+  console.log(await sampleChat());
+  console.log(await sampleChatStream());
+  console.log(await sampleRerank());
 });
