@@ -41,13 +41,13 @@ const hasModule = (module: string) => {
   }
 };
 
-export const initInstrumentations = async () => {
+export const initInstrumentations = () => {
   if (hasModule("openai")) {
     const {
       OpenAIInstrumentation,
     } = require("@traceloop/instrumentation-openai");
     const instrumentation = new OpenAIInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
     openAIInstrumentation = instrumentation;
   }
 
@@ -56,7 +56,7 @@ export const initInstrumentations = async () => {
       AzureOpenAIInstrumentation,
     } = require("@traceloop/instrumentation-azure");
     const instrumentation = new AzureOpenAIInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
     azureOpenAIInstrumentation = instrumentation;
   }
 
@@ -65,7 +65,7 @@ export const initInstrumentations = async () => {
       LlamaIndexInstrumentation,
     } = require("@traceloop/instrumentation-llamaindex");
     const instrumentation = new LlamaIndexInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
     llamaIndexInstrumentation = instrumentation;
   }
 
@@ -74,7 +74,7 @@ export const initInstrumentations = async () => {
       PineconeInstrumentation,
     } = require("@traceloop/instrumentation-pinecone");
     const instrumentation = new PineconeInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
     pineconeInstrumentation = instrumentation;
   }
 
@@ -83,7 +83,7 @@ export const initInstrumentations = async () => {
       VertexAIInstrumentation,
     } = require("@traceloop/instrumentation-vertexai");
     const instrumentation = new VertexAIInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation);
     vertexaiInstrumentation = instrumentation;
   }
 
@@ -92,7 +92,7 @@ export const initInstrumentations = async () => {
       AIPlatformInstrumentation,
     } = require("@traceloop/instrumentation-vertexai");
     const instrumentation = new AIPlatformInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
     aiplatformInstrumentation = instrumentation;
   }
 
@@ -101,7 +101,7 @@ export const initInstrumentations = async () => {
       LangChainInstrumentation,
     } = require("@traceloop/instrumentation-langchain");
     const instrumentation = new LangChainInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
   }
 
   if (hasModule("@aws-sdk/client-bedrock-runtime")) {
@@ -109,7 +109,7 @@ export const initInstrumentations = async () => {
       BedrockInstrumentation,
     } = require("@traceloop/instrumentation-bedrock");
     const instrumentation = new BedrockInstrumentation();
-    instrumentations.push(instrumentation as unknown as Instrumentation);
+    instrumentations.push(instrumentation as Instrumentation);
     bedrockInstrumentation = instrumentation;
   }
 
@@ -256,12 +256,6 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.cohere) {
     (cohereInstrumentation as AIInstrumentation).manuallyInstrument(
       options.instrumentModules.cohere,
-    );
-  }
-
-  if (options.instrumentModules?.azureOpenAI) {
-    (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.azureOpenAI,
     );
   }
 };
