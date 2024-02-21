@@ -103,7 +103,7 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 - ✅ OpenAI
 - ✅ Azure OpenAI
 - ⏳ Anthropic
-- ⏳ Cohere
+- ✅ Cohere
 - ⏳ Replicate
 - ⏳ HuggingFace
 - ✅ Vertex AI (GCP)

@@ -10,12 +10,14 @@ import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { TraceloopSampler } from "./sampler";
 import { _configuration } from "../configuration";
-import { AIInstrumentation } from "@traceloop/ai-semantic-conventions";
+import {
+  AIInstrumentation,
+  SpanAttributes,
+} from "@traceloop/ai-semantic-conventions";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -26,6 +28,7 @@ let pineconeInstrumentation: AIInstrumentation | undefined;
 let vertexaiInstrumentation: AIInstrumentation | undefined;
 let aiplatformInstrumentation: AIInstrumentation | undefined;
 let bedrockInstrumentation: AIInstrumentation | undefined;
+let cohereInstrumentation: AIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -109,6 +112,15 @@ export const initInstrumentations = () => {
     instrumentations.push(instrumentation as Instrumentation);
     bedrockInstrumentation = instrumentation;
   }
+
+  if (hasModule("cohere-ai")) {
+    const {
+      CohereInstrumentation,
+    } = require("@traceloop/instrumentation-cohere");
+    const instrumentation = new CohereInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    cohereInstrumentation = instrumentation;
+  }
 };
 
 /**
@@ -136,6 +148,9 @@ export const startTracing = (options: InitializeOptions) => {
       traceContent: false,
     });
     bedrockInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    cohereInstrumentation?.setConfig({
       traceContent: false,
     });
   }
@@ -201,16 +216,19 @@ export const startTracing = (options: InitializeOptions) => {
       options.instrumentModules.openAI,
     );
   }
+
   if (options.instrumentModules?.llamaIndex) {
     (llamaIndexInstrumentation as AIInstrumentation).manuallyInstrument(
       options.instrumentModules.llamaIndex,
     );
   }
+
   if (options.instrumentModules?.pinecone) {
     (pineconeInstrumentation as AIInstrumentation).manuallyInstrument(
       options.instrumentModules.pinecone,
     );
   }
+
   if (options.instrumentModules?.google_vertexai) {
     (vertexaiInstrumentation as AIInstrumentation).manuallyInstrument(
       options.instrumentModules.google_vertexai,
@@ -232,6 +250,12 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.azureOpenAI) {
     (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
       options.instrumentModules.azureOpenAI,
+    );
+  }
+
+  if (options.instrumentModules?.cohere) {
+    (cohereInstrumentation as AIInstrumentation).manuallyInstrument(
+      options.instrumentModules.cohere,
     );
   }
 };

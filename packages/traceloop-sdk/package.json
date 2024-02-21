@@ -37,6 +37,7 @@
     "@traceloop/ai-semantic-conventions": "^0.3.11",
     "@traceloop/instrumentation-azure": "^0.3.11",
     "@traceloop/instrumentation-bedrock": "^0.3.11",
+    "@traceloop/instrumentation-cohere": "^0.3.11",
     "@traceloop/instrumentation-langchain": "^0.3.7",
     "@traceloop/instrumentation-llamaindex": "^0.3.11",
     "@traceloop/instrumentation-openai": "^0.3.11",
@@ -47,6 +48,13 @@
     "nunjucks": "^3.2.4",
     "posthog-node": "^3.1.3",
     "uuid": "^9.0.1"
+  },
+  "peerDependencies": {
+    "@google-cloud/vertexai": "^0.2.1",
+    "@pinecone-database/pinecone": "^2.0.1",
+    "langchain": ">=0.1.7",
+    "llamaindex": ">=0.0.40",
+    "openai": ">=4.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",
