@@ -59,6 +59,7 @@ xwxw   * This is a workaround specific to Next.js, see https://www.traceloop.com
     bedrock?: any;
     azureOpenAI?: any;
     cohere?: any;
+    chromadb?: any;
   };
 
   /**

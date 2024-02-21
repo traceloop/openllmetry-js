@@ -29,6 +29,7 @@ let vertexaiInstrumentation: AIInstrumentation | undefined;
 let aiplatformInstrumentation: AIInstrumentation | undefined;
 let bedrockInstrumentation: AIInstrumentation | undefined;
 let cohereInstrumentation: AIInstrumentation | undefined;
+let chromadbInstrumentation: AIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -121,6 +122,15 @@ export const initInstrumentations = () => {
     instrumentations.push(instrumentation as Instrumentation);
     cohereInstrumentation = instrumentation;
   }
+
+  if (hasModule("chromadb")) {
+    const {
+      ChromaDBInstrumentation,
+    } = require("@traceloop/instrumentation-chromadb");
+    const instrumentation = new ChromaDBInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    chromadbInstrumentation = instrumentation;
+  }
 };
 
 /**
@@ -151,6 +161,9 @@ export const startTracing = (options: InitializeOptions) => {
       traceContent: false,
     });
     cohereInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    chromadbInstrumentation?.setConfig({
       traceContent: false,
     });
   }
@@ -256,6 +269,12 @@ export const startTracing = (options: InitializeOptions) => {
   if (options.instrumentModules?.cohere) {
     (cohereInstrumentation as AIInstrumentation).manuallyInstrument(
       options.instrumentModules.cohere,
+    );
+  }
+
+  if (options.instrumentModules?.chromadb) {
+    (chromadbInstrumentation as AIInstrumentation).manuallyInstrument(
+      options.instrumentModules.chromadb,
     );
   }
 };
