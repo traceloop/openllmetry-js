@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "run:cohere": "npm run build && node dist/src/sample_cohere.js",
+    "run:chromadb": "npm run build && node dist/src/sample_chromadb.js",
     "run:bedrock:ai21": "npm run build && node dist/src/bedrock/ai21.js",
     "run:bedrock:amazon": "npm run build && node dist/src/bedrock/amazon.js",
     "run:bedrock:anthropic": "npm run build && node dist/src/bedrock/anthropic.js",
@@ -39,7 +40,8 @@
     "cohere-ai": "^7.7.5",
     "langchain": "^0.1.7",
     "llamaindex": "^0.0.40",
-    "openai": "^4.12.4"
+    "openai": "^4.12.4",
+    "chromadb": "^1.8.1"
   },
   "private": true,
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

@@ -34,8 +34,8 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
 
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
-      "cohere-ai",
-      [">=7.7.5"],
+      "chromadb",
+      ["^1.8.1"],
       this.wrap.bind(this),
       this.unwrap.bind(this),
     );
