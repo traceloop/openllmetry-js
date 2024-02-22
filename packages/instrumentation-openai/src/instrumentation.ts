@@ -16,6 +16,7 @@
 import type * as openai from "openai";
 import {
   context,
+  trace,
   Span,
   Attributes,
   SpanKind,
@@ -170,10 +171,10 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
                 },
               });
 
-        //const execContext = trace.setSpan(context.active(), span);
+        const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           () => {
-            return context.with(context.active(), () => {
+            return context.with(execContext, () => {
               if ((args?.[0] as any)?.extraAttributes) {
                 delete (args[0] as any).extraAttributes;
               }
@@ -192,7 +193,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           ).stream
         ) {
           return context.bind(
-            context.active(),
+            execContext,
             plugin._streamingWrapPromise({
               span,
               type,
@@ -208,7 +209,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           execPromise,
         );
 
-        return context.bind(context.active(), wrappedPromise as any);
+        return context.bind(execContext, wrappedPromise as any);
       };
     };
   }
@@ -285,13 +286,14 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       }
     }
 
+    const parentSpan = trace.getActiveSpan();
     return this.tracer.startSpan(
       `openai.${type}`,
       {
         kind: SpanKind.CLIENT,
         attributes,
       },
-      context.active(),
+      parentSpan && trace.setSpan(context.active(), parentSpan),
     );
   }
 

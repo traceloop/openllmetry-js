@@ -63,6 +63,7 @@ function withEntity<
                 );
               }
               span.end();
+              return result;
             });
           }
 
