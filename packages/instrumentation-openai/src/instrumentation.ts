@@ -286,7 +286,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       }
     }
 
-    const parentSpan = trace.getActiveSpan();
+    const parentSpan = trace.getSpan(context.active());
     return this.tracer.startSpan(
       `openai.${type}`,
       {
