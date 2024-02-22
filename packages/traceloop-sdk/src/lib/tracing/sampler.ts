@@ -4,7 +4,6 @@ import {
   SamplingDecision,
 } from "@opentelemetry/sdk-trace-base";
 import { Context, SpanKind, Attributes } from "@opentelemetry/api";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const FILTERED_ATTRIBUTE_KEYS = ["next.span_name"];
 
@@ -18,10 +17,7 @@ export class TraceloopSampler implements Sampler {
   ): SamplingResult {
     let filter = false;
     FILTERED_ATTRIBUTE_KEYS.forEach((key) => {
-      if (
-        attributes?.[key] &&
-        !attributes?.[SpanAttributes.TRACELOOP_WORKFLOW_NAME]
-      ) {
+      if (attributes?.[key]) {
         filter = true;
       }
     });
