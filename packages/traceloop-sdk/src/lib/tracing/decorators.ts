@@ -41,12 +41,12 @@ function withEntity<
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
           if (shouldSendTraces()) {
-            if (args.length === 1) {
+            if (args.length === 1 && typeof args[0] === "object") {
               span.setAttribute(
                 SpanAttributes.TRACELOOP_ENTITY_INPUT,
                 JSON.stringify({ args: [], kwargs: args[0] }),
               );
-            } else if (args.length > 1) {
+            } else {
               span.setAttribute(
                 SpanAttributes.TRACELOOP_ENTITY_INPUT,
                 JSON.stringify({ args, kwargs: {} }),
