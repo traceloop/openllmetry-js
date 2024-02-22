@@ -4,7 +4,7 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
-import { withAssociationProperties } from "./association";
+// import { withAssociationProperties } from "./association";
 import { shouldSendTraces } from ".";
 
 function withEntity<
@@ -25,60 +25,60 @@ function withEntity<
       : context.active();
 
   // return withAssociationProperties(associationProperties, async () =>
-    return getTracer().startActiveSpan(
-      `${name}.${type}`,
-      {},
-      workflowContext,
-      async (span: Span) => {
-        if (
-          type === TraceloopSpanKindValues.WORKFLOW ||
-          type === TraceloopSpanKindValues.AGENT
-        ) {
-          span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
-        }
-        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
-        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
+  return getTracer().startActiveSpan(
+    `${name}.${type}`,
+    {},
+    workflowContext,
+    async (span: Span) => {
+      if (
+        type === TraceloopSpanKindValues.WORKFLOW ||
+        type === TraceloopSpanKindValues.AGENT
+      ) {
+        span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
+      }
+      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
+      span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
-        if (shouldSendTraces()) {
-          if (args.length === 1 && typeof args[0] === "object") {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args: [], kwargs: args[0] }),
-            );
-          } else {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args, kwargs: {} }),
-            );
-          }
+      if (shouldSendTraces()) {
+        if (args.length === 1 && typeof args[0] === "object") {
+          span.setAttribute(
+            SpanAttributes.TRACELOOP_ENTITY_INPUT,
+            JSON.stringify({ args: [], kwargs: args[0] }),
+          );
+        } else {
+          span.setAttribute(
+            SpanAttributes.TRACELOOP_ENTITY_INPUT,
+            JSON.stringify({ args, kwargs: {} }),
+          );
         }
-        const res = fn.apply(thisArg, args);
-        try {
-          if (res instanceof Promise) {
-            const result = await res;
-            if (shouldSendTraces()) {
-              span.setAttribute(
-                SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                JSON.stringify(result),
-              );
-            }
-            span.end();
-            return result;
-          }
-
+      }
+      const res = fn.apply(thisArg, args);
+      try {
+        if (res instanceof Promise) {
+          const result = await res;
           if (shouldSendTraces()) {
             span.setAttribute(
               SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-              JSON.stringify(res),
+              JSON.stringify(result),
             );
           }
-          return res;
-        } finally {
           span.end();
+          return result;
         }
-      },
-    ),
-  // );
+
+        if (shouldSendTraces()) {
+          span.setAttribute(
+            SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+            JSON.stringify(res),
+          );
+        }
+        return res;
+      } finally {
+        span.end();
+      }
+    },
+    // ),
+  );
 }
 
 export function withWorkflow<
