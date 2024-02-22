@@ -53,19 +53,30 @@ function withEntity<
               );
             }
           }
+          const res = fn.apply(thisArg, args);
+          try {
+            if (res instanceof Promise) {
+              const result = await res;
+              if (shouldSendTraces()) {
+                span.setAttribute(
+                  SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                  JSON.stringify(result),
+                );
+              }
+              span.end();
+              return result;
+            }
 
-          const res = await fn.apply(thisArg, args);
-
-          if (typeof res !== "function" && shouldSendTraces()) {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-              JSON.stringify(res),
-            );
+            if (shouldSendTraces()) {
+              span.setAttribute(
+                SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                JSON.stringify(res),
+              );
+            }
+            return res;
+          } finally {
+            span.end();
           }
-
-          span.end();
-
-          return res;
         },
       ),
     );
