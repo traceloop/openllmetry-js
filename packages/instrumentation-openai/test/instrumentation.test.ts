@@ -138,6 +138,39 @@ describe("Test OpenAI instrumentation", async function () {
     );
   });
 
+  it("should set attributes in span for streaming chat with new API", async () => {
+    const stream = await openai.beta.chat.completions.stream({
+      messages: [
+        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+      ],
+      model: "gpt-3.5-turbo",
+      stream: true,
+    });
+
+    let result = "";
+    for await (const chunk of stream) {
+      result += chunk.choices[0]?.delta?.content || "";
+    }
+
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "openai.chat");
+
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "Tell me a joke about OpenTelemetry",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      result,
+    );
+  });
+
   it("should set attributes in span for completion", async () => {
     const result = await openai.completions.create({
       prompt: "Tell me a joke about OpenTelemetry",
