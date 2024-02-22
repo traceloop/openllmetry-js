@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-cohere",
-  "version": "0.3.11",
+  "version": "0.4.0",
   "description": "Cohere Instrumentation",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -39,13 +39,13 @@
     "@opentelemetry/core": "^1.8.0",
     "@opentelemetry/instrumentation": "^0.44.0",
     "@opentelemetry/semantic-conventions": "^1.0.0",
-    "@traceloop/ai-semantic-conventions": "^0.3.11"
+    "@traceloop/ai-semantic-conventions": "^0.4.0"
   },
   "devDependencies": {
-    "cohere-ai": "^7.7.5",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
-    "@pollyjs/persister-fs": "^6.0.6"
+    "@pollyjs/persister-fs": "^6.0.6",
+    "cohere-ai": "^7.7.5"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
