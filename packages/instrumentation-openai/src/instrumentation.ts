@@ -32,10 +32,14 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { OpenAIInstrumentationConfig } from "./types";
 import {
   ChatCompletion,
+  ChatCompletionChunk,
   ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionCreateParamsStreaming,
   Completion,
   CompletionCreateParamsNonStreaming,
+  CompletionCreateParamsStreaming,
 } from "openai/resources";
+import { Stream } from "openai/streaming";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: OpenAIInstrumentationConfig;
@@ -181,6 +185,23 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           () => {},
         );
 
+        if (
+          (
+            args[0] as
+              | ChatCompletionCreateParamsStreaming
+              | CompletionCreateParamsStreaming
+          ).stream
+        ) {
+          return context.bind(
+            execContext,
+            plugin._streamingWrapPromise({
+              span,
+              type,
+              promise: execPromise,
+            }),
+          );
+        }
+
         const wrappedPromise = plugin._wrapPromise(
           type,
           version,
@@ -269,6 +290,103 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       kind: SpanKind.CLIENT,
       attributes,
     });
+  }
+
+  private async *_streamingWrapPromise({
+    span,
+    type,
+    promise,
+  }:
+    | {
+        span: Span;
+        type: "chat";
+        promise: Promise<Stream<ChatCompletionChunk>>;
+      }
+    | {
+        span: Span;
+        type: "completion";
+        promise: Promise<Stream<Completion>>;
+      }) {
+    if (type === "chat") {
+      const result: ChatCompletion = {
+        id: "0",
+        created: -1,
+        model: "",
+        choices: [
+          {
+            index: 0,
+            logprobs: null,
+            finish_reason: "stop",
+            message: { role: "assistant", content: "" },
+          },
+        ],
+        object: "chat.completion",
+      };
+      for await (const chunk of await promise) {
+        yield chunk;
+
+        result.id = chunk.id;
+        result.created = chunk.created;
+        result.model = chunk.model;
+
+        if (chunk.choices[0]?.finish_reason) {
+          result.choices[0].finish_reason = chunk.choices[0].finish_reason;
+        }
+        if (chunk.choices[0]?.logprobs) {
+          result.choices[0].logprobs = chunk.choices[0].logprobs;
+        }
+        if (chunk.choices[0]?.delta.content) {
+          result.choices[0].message.content += chunk.choices[0].delta.content;
+        }
+        if (
+          chunk.choices[0]?.delta.function_call &&
+          chunk.choices[0]?.delta.function_call.arguments &&
+          chunk.choices[0]?.delta.function_call.name
+        ) {
+          // I needed to re-build the object so that Typescript will understand that `name` and `argument` are not null.
+          result.choices[0].message.function_call = {
+            name: chunk.choices[0].delta.function_call.name,
+            arguments: chunk.choices[0].delta.function_call.arguments,
+          };
+        }
+      }
+
+      this._endSpan({ span, type, result });
+    } else {
+      const result: Completion = {
+        id: "0",
+        created: -1,
+        model: "",
+        choices: [
+          {
+            index: 0,
+            logprobs: null,
+            finish_reason: "stop",
+            text: "",
+          },
+        ],
+        object: "text_completion",
+      };
+      for await (const chunk of await promise) {
+        yield chunk;
+
+        result.id = chunk.id;
+        result.created = chunk.created;
+        result.model = chunk.model;
+
+        if (chunk.choices[0]?.finish_reason) {
+          result.choices[0].finish_reason = chunk.choices[0].finish_reason;
+        }
+        if (chunk.choices[0]?.logprobs) {
+          result.choices[0].logprobs = chunk.choices[0].logprobs;
+        }
+        if (chunk.choices[0]?.text) {
+          result.choices[0].text += chunk.choices[0].text;
+        }
+      }
+
+      this._endSpan({ span, type, result });
+    }
   }
 
   private _wrapPromise<T>(

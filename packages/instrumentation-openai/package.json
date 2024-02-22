@@ -8,7 +8,8 @@
   "scripts": {
     "build": "tsc --build tsconfig.json",
     "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 20000"
   },
   "keywords": [
     "opentelemetry",
@@ -40,7 +41,14 @@
     "@traceloop/ai-semantic-conventions": "^0.3.11"
   },
   "devDependencies": {
-    "openai": "^4.12.4"
+    "openai": "^4.12.4",
+    "@pollyjs/adapter-node-http": "^6.0.6",
+    "@pollyjs/core": "^6.0.6",
+    "@pollyjs/persister-fs": "^6.0.6",
+    "@types/expect": "^24.3.0",
+    "@types/mocha": "^10.0.6",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
