@@ -343,7 +343,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           chunk.choices[0]?.delta.function_call.arguments &&
           chunk.choices[0]?.delta.function_call.name
         ) {
-          // I needed to re-build the object so that Typescript will understand that `name` and `arguement` are not null.
+          // I needed to re-build the object so that Typescript will understand that `name` and `argument` are not null.
           result.choices[0].message.function_call = {
             name: chunk.choices[0].delta.function_call.name,
             arguments: chunk.choices[0].delta.function_call.arguments,
