@@ -193,4 +193,72 @@ describe("Test SDK Decorators", () => {
       "Tell me a joke about OpenTelemetry",
     );
   });
+
+  it("should not log prompts if traceContent is disabled", async () => {
+    traceloop.toggleShouldSendTraces(false);
+
+    const jokeSubject = "OpenTelemetry";
+    const result = await traceloop.withWorkflow(
+      "sample_chat",
+      {},
+      async () => {
+        const chatCompletion = await openai.chat.completions.create({
+          messages: [
+            { role: "user", content: `Tell me a joke about ${jokeSubject}` },
+          ],
+          model: "gpt-3.5-turbo",
+        });
+
+        return chatCompletion.choices[0].message.content;
+      },
+      { jokeSubject },
+    );
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    const workflowSpan = spans.find(
+      (span) => span.name === "sample_chat.workflow",
+    );
+    const chatSpan = spans.find((span) => span.name === "openai.chat");
+
+    assert.ok(result);
+    assert.ok(workflowSpan);
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
+      "sample_chat",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_SPAN_KIND}`],
+      "workflow",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      "sample_chat",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
+      undefined,
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
+      undefined,
+    );
+    assert.ok(chatSpan);
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
+      "sample_chat",
+    );
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      undefined,
+    );
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      undefined,
+    );
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      undefined,
+    );
+  });
 });

@@ -38,9 +38,11 @@ async function completion(jokeSubject: string) {
 }
 
 traceloop.withAssociationProperties({ userId: "12345" }, async () => {
+  traceloop.toggleShouldSendTraces(false);
   const chatResponse = await chat();
   console.log(chatResponse);
 
+  traceloop.toggleShouldSendTraces(true);
   const completionResponse = await completion("Typescript");
   console.log(completionResponse);
 });

@@ -130,29 +130,7 @@ export const initInstrumentations = () => {
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
-  if (!shouldSendTraces()) {
-    openAIInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    azureOpenAIInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    llamaIndexInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    vertexaiInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    aiplatformInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    bedrockInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    cohereInstrumentation?.setConfig({
-      traceContent: false,
-    });
-  }
+  updateInstrumentationConfiguration();
 
   const traceExporter =
     options.exporter ??
@@ -276,6 +254,42 @@ export const shouldSendTraces = () => {
   return true;
 };
 
+export const toggleShouldSendTraces = (shouldSend: boolean) => {
+  if (!_configuration) {
+    console.log("Warning: Traceloop not initialized");
+    return;
+  }
+
+  _configuration.traceContent = shouldSend;
+  updateInstrumentationConfiguration();
+};
+
 export const forceFlush = async () => {
   await _spanProcessor.forceFlush();
+};
+
+const updateInstrumentationConfiguration = () => {
+  const traceContent = shouldSendTraces();
+
+  openAIInstrumentation?.setConfig({
+    traceContent,
+  });
+  azureOpenAIInstrumentation?.setConfig({
+    traceContent,
+  });
+  llamaIndexInstrumentation?.setConfig({
+    traceContent,
+  });
+  vertexaiInstrumentation?.setConfig({
+    traceContent,
+  });
+  aiplatformInstrumentation?.setConfig({
+    traceContent,
+  });
+  bedrockInstrumentation?.setConfig({
+    traceContent,
+  });
+  cohereInstrumentation?.setConfig({
+    traceContent,
+  });
 };
