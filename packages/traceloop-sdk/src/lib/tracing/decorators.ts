@@ -55,14 +55,15 @@ function withEntity<
 
         const res = fn.apply(thisArg, args);
         if (res instanceof Promise) {
-          return res.then((res) => {
+          return res.then((resolvedRes) => {
             try {
               if (shouldSendTraces()) {
                 span.setAttribute(
                   SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                  JSON.stringify(res),
+                  JSON.stringify(resolvedRes),
                 );
               }
+              return resolvedRes;
             } finally {
               span.end();
             }
