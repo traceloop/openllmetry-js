@@ -4,7 +4,7 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
-// import { withAssociationProperties } from "./association";
+import { withAssociationProperties } from "./association";
 import { shouldSendTraces } from ".";
 
 function withEntity<
@@ -24,60 +24,60 @@ function withEntity<
       ? context.active().setValue(WORKFLOW_NAME_KEY, name)
       : context.active();
 
-  // return withAssociationProperties(associationProperties, async () =>
-  return getTracer().startActiveSpan(
-    `${name}.${type}`,
-    {},
-    workflowContext,
-    async (span: Span) => {
-      if (
-        type === TraceloopSpanKindValues.WORKFLOW ||
-        type === TraceloopSpanKindValues.AGENT
-      ) {
-        span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
-      }
-      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
-      span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
-
-      if (shouldSendTraces()) {
-        if (args.length === 1 && typeof args[0] === "object") {
-          span.setAttribute(
-            SpanAttributes.TRACELOOP_ENTITY_INPUT,
-            JSON.stringify({ args: [], kwargs: args[0] }),
-          );
-        } else {
-          span.setAttribute(
-            SpanAttributes.TRACELOOP_ENTITY_INPUT,
-            JSON.stringify({ args, kwargs: {} }),
-          );
+  return withAssociationProperties(associationProperties, () =>
+    getTracer().startActiveSpan(
+      `${name}.${type}`,
+      {},
+      workflowContext,
+      (span: Span) => {
+        if (
+          type === TraceloopSpanKindValues.WORKFLOW ||
+          type === TraceloopSpanKindValues.AGENT
+        ) {
+          span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
         }
-      }
-      const res = fn.apply(thisArg, args);
-      try {
-        if (res instanceof Promise) {
-          const result = await res;
+        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
+        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
+
+        if (shouldSendTraces()) {
+          if (args.length === 1 && typeof args[0] === "object") {
+            span.setAttribute(
+              SpanAttributes.TRACELOOP_ENTITY_INPUT,
+              JSON.stringify({ args: [], kwargs: args[0] }),
+            );
+          } else {
+            span.setAttribute(
+              SpanAttributes.TRACELOOP_ENTITY_INPUT,
+              JSON.stringify({ args, kwargs: {} }),
+            );
+          }
+        }
+        const res = fn.apply(thisArg, args);
+        try {
+          if (res instanceof Promise) {
+            return res.then((result) => {
+              if (shouldSendTraces()) {
+                span.setAttribute(
+                  SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                  JSON.stringify(result),
+                );
+              }
+              span.end();
+            });
+          }
+
           if (shouldSendTraces()) {
             span.setAttribute(
               SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-              JSON.stringify(result),
+              JSON.stringify(res),
             );
           }
+          return res;
+        } finally {
           span.end();
-          return result;
         }
-
-        if (shouldSendTraces()) {
-          span.setAttribute(
-            SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-            JSON.stringify(res),
-          );
-        }
-        return res;
-      } finally {
-        span.end();
-      }
-    },
-    // ),
+      },
+    ),
   );
 }
 
