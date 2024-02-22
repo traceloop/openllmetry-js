@@ -1,5 +1,5 @@
-import { Span, context } from "@opentelemetry/api";
-import { getTracer, WORKFLOW_NAME_KEY } from "./tracing";
+import { Span } from "@opentelemetry/api";
+import { getTracer } from "./tracing";
 import {
   SpanAttributes,
   TraceloopSpanKindValues,
@@ -18,71 +18,66 @@ function withEntity<
   thisArg?: ThisParameterType<F>,
   ...args: A
 ) {
-  const workflowContext =
-    type === TraceloopSpanKindValues.WORKFLOW ||
-    type === TraceloopSpanKindValues.AGENT
-      ? context.active().setValue(WORKFLOW_NAME_KEY, name)
-      : context.active();
+  // const workflowContext =
+  //   type === TraceloopSpanKindValues.WORKFLOW ||
+  //   type === TraceloopSpanKindValues.AGENT
+  //     ? context.active().setValue(WORKFLOW_NAME_KEY, name)
+  //     : context.active();
 
   return withAssociationProperties(associationProperties, () =>
-    getTracer().startActiveSpan(
-      `${name}.${type}`,
-      {},
-      workflowContext,
-      (span: Span) => {
-        if (
-          type === TraceloopSpanKindValues.WORKFLOW ||
-          type === TraceloopSpanKindValues.AGENT
-        ) {
-          span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
-        }
-        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
-        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
+    getTracer().startActiveSpan(`${name}.${type}`, {}, (span: Span) => {
+      if (
+        type === TraceloopSpanKindValues.WORKFLOW ||
+        type === TraceloopSpanKindValues.AGENT
+      ) {
+        span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
+      }
+      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
+      span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
-        if (shouldSendTraces()) {
-          if (args.length === 1 && typeof args[0] === "object") {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args: [], kwargs: args[0] }),
-            );
-          } else {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args, kwargs: {} }),
-            );
-          }
+      if (shouldSendTraces()) {
+        if (args.length === 1 && typeof args[0] === "object") {
+          span.setAttribute(
+            SpanAttributes.TRACELOOP_ENTITY_INPUT,
+            JSON.stringify({ args: [], kwargs: args[0] }),
+          );
+        } else {
+          span.setAttribute(
+            SpanAttributes.TRACELOOP_ENTITY_INPUT,
+            JSON.stringify({ args, kwargs: {} }),
+          );
         }
-        const res = fn.apply(thisArg, args);
-        if (res instanceof Promise) {
-          return res.then((result) => {
-            try {
-              if (shouldSendTraces()) {
-                console.log("setting output");
-                span.setAttribute(
-                  SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                  JSON.stringify(result),
-                );
-              }
-              return result;
-            } finally {
-              span.end();
+      }
+      const res = fn.apply(thisArg, args);
+      if (res instanceof Promise) {
+        return res.then((result) => {
+          try {
+            if (shouldSendTraces()) {
+              console.log("setting output");
+              span.setAttribute(
+                SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                JSON.stringify(result),
+              );
             }
-          });
-        }
-
-        try {
-          if (shouldSendTraces()) {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-              JSON.stringify(res),
-            );
+            return result;
+          } finally {
+            span.end();
           }
-          return res;
-        } finally {
-          span.end();
+        });
+      }
+
+      try {
+        if (shouldSendTraces()) {
+          span.setAttribute(
+            SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+            JSON.stringify(res),
+          );
         }
-      },
-    ),
+        return res;
+      } finally {
+        span.end();
+      }
+    }),
   );
 }
 
