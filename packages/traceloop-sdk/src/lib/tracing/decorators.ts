@@ -24,8 +24,8 @@ function withEntity<
       ? context.active().setValue(WORKFLOW_NAME_KEY, name)
       : context.active();
 
-  return withAssociationProperties(associationProperties, async () =>
-    getTracer().startActiveSpan(
+  // return withAssociationProperties(associationProperties, async () =>
+    return getTracer().startActiveSpan(
       `${name}.${type}`,
       {},
       workflowContext,
@@ -78,7 +78,7 @@ function withEntity<
         }
       },
     ),
-  );
+  // );
 }
 
 export function withWorkflow<
