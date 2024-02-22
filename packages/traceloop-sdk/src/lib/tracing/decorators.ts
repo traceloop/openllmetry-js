@@ -53,20 +53,24 @@ function withEntity<
           }
         }
         const res = fn.apply(thisArg, args);
-        try {
-          if (res instanceof Promise) {
-            return res.then((result) => {
+        if (res instanceof Promise) {
+          return res.then((result) => {
+            try {
               if (shouldSendTraces()) {
+                console.log("setting output");
                 span.setAttribute(
                   SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
                   JSON.stringify(result),
                 );
               }
-              span.end();
               return result;
-            });
-          }
+            } finally {
+              span.end();
+            }
+          });
+        }
 
+        try {
           if (shouldSendTraces()) {
             span.setAttribute(
               SpanAttributes.TRACELOOP_ENTITY_OUTPUT,

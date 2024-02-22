@@ -286,15 +286,10 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       }
     }
 
-    const parentSpan = trace.getSpan(context.active());
-    return this.tracer.startSpan(
-      `openai.${type}`,
-      {
-        kind: SpanKind.CLIENT,
-        attributes,
-      },
-      parentSpan && trace.setSpan(context.active(), parentSpan),
-    );
+    return this.tracer.startSpan(`openai.${type}`, {
+      kind: SpanKind.CLIENT,
+      attributes,
+    });
   }
 
   private async *_streamingWrapPromise({
