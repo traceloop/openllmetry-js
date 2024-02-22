@@ -41,10 +41,17 @@ function withEntity<
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
           if (shouldSendTraces()) {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify(args),
-            );
+            if (args.length === 1) {
+              span.setAttribute(
+                SpanAttributes.TRACELOOP_ENTITY_INPUT,
+                JSON.stringify({ args: [], kwargs: args[0] }),
+              );
+            } else if (args.length > 1) {
+              span.setAttribute(
+                SpanAttributes.TRACELOOP_ENTITY_INPUT,
+                JSON.stringify({ args, kwargs: {} }),
+              );
+            }
           }
 
           const res = await fn.apply(thisArg, args);
