@@ -56,9 +56,9 @@ describe("Test OpenAI instrumentation", async function () {
 
   before(async () => {
     if (process.env.RECORD_MODE !== "NEW") {
-      process.env.AZURE_RESOURCE_NAME = "test-resource";
+      process.env.AZURE_RESOURCE_NAME = "traceloop-stg";
       process.env.AZURE_API_KEY = "test-key";
-      process.env.AZURE_DEPLOYMENT_ID = "test-deployment";
+      process.env.AZURE_DEPLOYMENT_ID = "openllmetry-testing";
     }
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new AzureOpenAIInstrumentation();
