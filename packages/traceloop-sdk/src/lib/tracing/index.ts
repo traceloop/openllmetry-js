@@ -12,7 +12,6 @@ import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
-import { TraceloopSampler } from "./sampler";
 import { _configuration } from "../configuration";
 import {
   AIInstrumentation,
@@ -206,7 +205,8 @@ export const startTracing = (options: InitializeOptions) => {
     spanProcessor: _spanProcessor,
     traceExporter,
     instrumentations,
-    sampler: new TraceloopSampler(),
+    // We should re-consider removing unrelevant spans here in the future
+    // sampler: new TraceloopSampler(),
   });
 
   _sdk.start();
