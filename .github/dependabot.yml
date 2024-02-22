@@ -1,0 +1,66 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/packages/ai-semantic-conventions"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "ai-semantic-conventions"
+  - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-azure"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-azure"
+  - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-bedrock"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-bedrock"
+  - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-langchain"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-langchain"
+  - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-llamaindex"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-llamaindex"
+  - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-openai"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-openai"
+  - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-pinecone"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-pinecone"
+  - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-vertexai"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-vertexai"
+  - package-ecosystem: "npm"
+    directory: "/packages/sample-app"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "sample-app"
+  - package-ecosystem: "npm"
+    directory: "/packages/traceloop-sdk"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "traceloop-sdk"

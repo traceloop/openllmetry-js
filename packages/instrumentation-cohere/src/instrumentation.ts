@@ -1,0 +1,495 @@
+/*
+ * Copyright Traceloop
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import {
+  Span,
+  Attributes,
+  SpanKind,
+  SpanStatusCode,
+  context,
+  trace,
+} from "@opentelemetry/api";
+import {
+  InstrumentationBase,
+  InstrumentationModuleDefinition,
+  InstrumentationNodeModuleDefinition,
+  safeExecuteInTheMiddle,
+} from "@opentelemetry/instrumentation";
+import { CohereInstrumentationConfig } from "./types";
+import * as cohere from "cohere-ai";
+import {
+  LLMRequestTypeValues,
+  SpanAttributes,
+} from "@traceloop/ai-semantic-conventions";
+import { Stream } from "cohere-ai/core";
+
+type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
+export class CohereInstrumentation extends InstrumentationBase<any> {
+  protected override _config!: CohereInstrumentationConfig;
+
+  constructor(config: CohereInstrumentationConfig = {}) {
+    super("@traceloop/instrumentation-cohere", "0.3.11", config);
+  }
+
+  public override setConfig(config: CohereInstrumentationConfig = {}) {
+    super.setConfig(config);
+  }
+
+  protected init(): InstrumentationModuleDefinition<any> {
+    const module = new InstrumentationNodeModuleDefinition<any>(
+      "cohere-ai",
+      [">=7.7.5"],
+      this.wrap.bind(this),
+      this.unwrap.bind(this),
+    );
+
+    return module;
+  }
+
+  public manuallyInstrument(module: typeof cohere) {
+    this._wrap(
+      module.CohereClient.prototype,
+      "generate",
+      this.wrapperMethod("completion"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "generateStream",
+      this.wrapperMethod("completion"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "chat",
+      this.wrapperMethod("chat"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "chatStream",
+      this.wrapperMethod("chat"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "rerank",
+      this.wrapperMethod("rerank"),
+    );
+
+    return module;
+  }
+
+  private wrap(module: typeof cohere) {
+    this._wrap(
+      module.CohereClient.prototype,
+      "generate",
+      this.wrapperMethod("completion"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "generateStream",
+      this.wrapperMethod("completion"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "chat",
+      this.wrapperMethod("chat"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "chatStream",
+      this.wrapperMethod("chat"),
+    );
+    this._wrap(
+      module.CohereClient.prototype,
+      "rerank",
+      this.wrapperMethod("rerank"),
+    );
+
+    return module;
+  }
+
+  private unwrap(module: typeof cohere) {
+    // this._unwrap(module.CohereClient.prototype, "generate");
+    this._unwrap(module.CohereClient.prototype, "generateStream");
+    this._unwrap(module.CohereClient.prototype, "chat");
+    this._unwrap(module.CohereClient.prototype, "chatStream");
+    this._unwrap(module.CohereClient.prototype, "rerank");
+  }
+
+  private wrapperMethod(type: LLM_COMPLETION_TYPE) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const plugin = this;
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    return (original: Function) => {
+      return function method(this: any, ...args: any) {
+        const span = plugin._startSpan({
+          params: args[0],
+          type,
+        });
+        const execContext = trace.setSpan(context.active(), span);
+        const execPromise = safeExecuteInTheMiddle(
+          () => {
+            return context.with(execContext, () => {
+              return original.apply(this, args);
+            });
+          },
+          () => {},
+        );
+        const wrappedPromise = plugin._wrapPromise(type, span, execPromise);
+        return context.bind(execContext, wrappedPromise as any);
+      };
+    };
+  }
+
+  private _wrapPromise<T>(
+    type: LLM_COMPLETION_TYPE,
+    span: Span,
+    promise: Promise<T>,
+  ): Promise<T> {
+    return promise
+      .then(async (result) => {
+        const awaitedResult = (await result) as
+          | cohere.Cohere.Generation
+          | cohere.Cohere.GenerateStreamedResponse
+          | cohere.Cohere.NonStreamedChatResponse
+          | cohere.Cohere.StreamedChatResponse
+          | cohere.Cohere.RerankResponse;
+
+        await this._endSpan({
+          type,
+          span,
+          result: awaitedResult,
+        });
+
+        return new Promise<T>((resolve) => resolve(result));
+      })
+      .catch((error: Error) => {
+        return new Promise<T>((_, reject) => {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error.message,
+          });
+          span.recordException(error);
+          span.end();
+
+          reject(error);
+        });
+      });
+  }
+
+  private _startSpan({
+    params,
+    type,
+  }: {
+    params:
+      | cohere.Cohere.GenerateRequest
+      | cohere.Cohere.GenerateStreamRequest
+      | cohere.Cohere.ChatRequest
+      | cohere.Cohere.ChatStreamRequest
+      | cohere.Cohere.RerankRequest;
+    type: LLM_COMPLETION_TYPE;
+  }): Span {
+    const attributes: Attributes = {
+      [SpanAttributes.LLM_VENDOR]: "Cohere",
+      [SpanAttributes.LLM_REQUEST_TYPE]: this._getLlmRequestTypeByMethod(type),
+    };
+
+    const model = params.model ?? "command";
+    attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
+    attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
+
+    if (!("query" in params)) {
+      attributes[SpanAttributes.LLM_TOP_P] = params.p;
+      attributes[SpanAttributes.LLM_TOP_K] = params.k;
+      attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
+      attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
+        params.frequencyPenalty;
+      attributes[SpanAttributes.LLM_PRESENCE_PENALTY] = params.presencePenalty;
+      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.maxTokens;
+    } else {
+      attributes["topN"] = params["topN"];
+      attributes["maxChunksPerDoc"] = params["maxChunksPerDoc"];
+    }
+
+    if (this._shouldSendPrompts()) {
+      if (type === "completion" && "prompt" in params) {
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.prompt;
+      } else if (type === "chat" && "message" in params) {
+        params.chatHistory?.forEach((msg, index) => {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.user`] =
+            msg.message;
+        });
+
+        attributes[
+          `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.role`
+        ] = "user";
+        attributes[
+          `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.user`
+        ] = params.message;
+      } else if (type === "rerank" && "query" in params) {
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.query;
+        params.documents.forEach((doc, index) => {
+          attributes[`documents.${index}.index`] =
+            typeof doc === "string" ? doc : doc.text;
+        });
+      }
+    }
+
+    return this.tracer.startSpan(`cohere.${type}`, {
+      kind: SpanKind.CLIENT,
+      attributes,
+    });
+  }
+
+  private async _endSpan({
+    type,
+    span,
+    result,
+  }: {
+    type: LLM_COMPLETION_TYPE;
+    span: Span;
+    result:
+      | cohere.Cohere.Generation
+      | cohere.Cohere.GenerateStreamedResponse
+      | cohere.Cohere.NonStreamedChatResponse
+      | cohere.Cohere.StreamedChatResponse
+      | cohere.Cohere.RerankResponse;
+  }) {
+    if (type === "completion") {
+      if (result instanceof Stream) {
+        for await (const message of result) {
+          if (message.eventType === "stream-end") {
+            this._setResponseSpanForGenerate(span, message.response);
+          }
+        }
+      } else if ("generations" in result) {
+        this._setResponseSpanForGenerate(span, result);
+      }
+    } else if (type === "chat") {
+      if (result instanceof Stream) {
+        for await (const message of result) {
+          if (message.eventType === "stream-end") {
+            this._setResponseSpanForChat(span, message.response);
+          }
+        }
+      } else if ("text" in result) {
+        this._setResponseSpanForChat(
+          span,
+          result as cohere.Cohere.NonStreamedChatResponse,
+        );
+      }
+    } else if (type === "rerank") {
+      if ("results" in result) {
+        this._setResponseSpanForRerank(span, result);
+      }
+    }
+
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+  }
+
+  private _setResponseSpanForRerank(
+    span: Span,
+    result: cohere.Cohere.RerankResponse,
+  ) {
+    if ("meta" in result) {
+      if (result.meta?.billedUnits?.searchUnits !== undefined) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          result.meta?.billedUnits?.searchUnits,
+        );
+      }
+
+      if (this._shouldSendPrompts()) {
+        result.results.forEach((each, idx) => {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
+            each.relevanceScore,
+          );
+
+          if (each.document && each.document?.text) {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`,
+              each.document.text,
+            );
+          }
+        });
+      } else {
+        result.results.forEach((each, idx) => {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`,
+            each.index,
+          );
+
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
+            each.relevanceScore,
+          );
+        });
+      }
+    }
+  }
+
+  private _setResponseSpanForChat(
+    span: Span,
+    result: cohere.Cohere.NonStreamedChatResponse,
+  ) {
+    if ("token_count" in result && typeof result.token_count === "object") {
+      if (
+        result.token_count &&
+        "prompt_tokens" in result.token_count &&
+        typeof result.token_count.prompt_tokens === "number"
+      ) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          result.token_count?.prompt_tokens,
+        );
+      }
+
+      if (
+        result.token_count &&
+        "response_tokens" in result.token_count &&
+        typeof result.token_count.response_tokens === "number"
+      ) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          result.token_count?.response_tokens,
+        );
+      }
+
+      if (
+        result.token_count &&
+        "total_tokens" in result.token_count &&
+        typeof result.token_count.total_tokens === "number"
+      ) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          result.token_count?.total_tokens,
+        );
+      }
+    }
+
+    if (this._shouldSendPrompts()) {
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+        "assistant",
+      );
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+        result.text,
+      );
+
+      if (result.searchQueries?.[0].text)
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.searchQuery`,
+          result.searchQueries?.[0].text,
+        );
+
+      if (result.searchResults?.length) {
+        result.searchResults.forEach((searchResult, index) => {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.text`,
+            searchResult.searchQuery.text,
+          );
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.connector`,
+            searchResult.connector.id,
+          );
+        });
+      }
+    }
+
+    if ("finishReason" in result && typeof result.finishReason === "string")
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+        result.finishReason,
+      );
+  }
+
+  private _setResponseSpanForGenerate(
+    span: Span,
+    result: cohere.Cohere.Generation,
+  ) {
+    if ("meta" in result) {
+      if (typeof result.meta?.billedUnits?.inputTokens === "number") {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          result.meta?.billedUnits?.inputTokens,
+        );
+      }
+
+      if (typeof result.meta?.billedUnits?.outputTokens === "number") {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          result.meta?.billedUnits?.outputTokens,
+        );
+      }
+
+      if (
+        typeof result.meta?.billedUnits?.inputTokens === "number" &&
+        typeof result.meta?.billedUnits?.outputTokens === "number"
+      ) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          result.meta?.billedUnits?.inputTokens +
+            result.meta?.billedUnits?.outputTokens,
+        );
+      }
+    }
+
+    if (this._shouldSendPrompts()) {
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+        "assistant",
+      );
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+        result.generations[0].text,
+      );
+    }
+
+    if (
+      "finish_reason" in result.generations[0] &&
+      typeof result.generations[0].finish_reason === "string"
+    )
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+        result.generations[0].finish_reason,
+      );
+
+    if (
+      "finishReason" in result.generations[0] &&
+      typeof result.generations[0].finishReason === "string"
+    )
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+        result.generations[0].finishReason,
+      );
+  }
+
+  private _getLlmRequestTypeByMethod(type: string) {
+    if (type === "chat") return LLMRequestTypeValues.CHAT;
+    else if (type === "completion") return LLMRequestTypeValues.COMPLETION;
+    else if (type === "rerank") return LLMRequestTypeValues.RERANK;
+    else return LLMRequestTypeValues.UNKNOWN;
+  }
+
+  private _shouldSendPrompts() {
+    return this._config.traceContent !== undefined
+      ? this._config.traceContent
+      : true;
+  }
+}

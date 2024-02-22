@@ -48,7 +48,7 @@ export interface InitializeOptions {
 
   /**
    * Explicitly specify modules to instrument. Optional.
-   * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
+xwxw   * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
    */
   instrumentModules?: {
     openAI?: any;
@@ -58,6 +58,7 @@ export interface InitializeOptions {
     google_aiplatform?: any;
     bedrock?: any;
     azureOpenAI?: any;
+    cohere?: any;
   };
 
   /**

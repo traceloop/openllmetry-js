@@ -21,6 +21,9 @@
 </h4>
 
 <h4 align="center">
+   <a href="https://www.npmjs.com/package/@traceloop/node-server-sdk">
+    <img src="https://badge.fury.io/js/@traceloop%2Fnode-server-sdk.svg">
+  </a>
    <a href="https://github.com/traceloop/openllmetry-js/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-Apache 2.0-blue.svg" alt="OpenLLMetry JS is released under the Apache-2.0 License">
   </a>
@@ -100,7 +103,7 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 - ✅ OpenAI
 - ✅ Azure OpenAI
 - ⏳ Anthropic
-- ⏳ Cohere
+- ✅ Cohere
 - ⏳ Replicate
 - ⏳ HuggingFace
 - ✅ Vertex AI (GCP)
