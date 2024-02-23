@@ -30,6 +30,7 @@ import {
 import { BedrockInstrumentationConfig } from "./types";
 import * as bedrock from "@aws-sdk/client-bedrock-runtime";
 import {
+  CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   LLMRequestTypeValues,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
@@ -451,6 +452,14 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   }
 
   private _shouldSendPrompts() {
+    const contextShouldSendPrompts = context
+      .active()
+      .getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT);
+
+    if (contextShouldSendPrompts !== undefined) {
+      return contextShouldSendPrompts;
+    }
+
     return this._config.traceContent !== undefined
       ? this._config.traceContent
       : true;

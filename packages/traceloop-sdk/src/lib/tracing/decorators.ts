@@ -1,34 +1,54 @@
 import { Span, context } from "@opentelemetry/api";
 import { getTracer, WORKFLOW_NAME_KEY } from "./tracing";
 import {
+  CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
 import { withAssociationProperties } from "./association";
 import { shouldSendTraces } from ".";
 
+export type DecoratorConfig = {
+  name: string;
+  associationProperties?: { [name: string]: string };
+  traceContent?: boolean;
+  inputParameters?: unknown[];
+};
+
 function withEntity<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
 >(
   type: TraceloopSpanKindValues,
-  name: string,
-  associationProperties: { [name: string]: string },
+  {
+    name,
+    associationProperties,
+    traceContent: overrideTraceContent,
+    inputParameters,
+  }: DecoratorConfig,
   fn: F,
   thisArg?: ThisParameterType<F>,
   ...args: A
 ) {
-  const workflowContext =
+  let entityContext = context.active();
+  if (
     type === TraceloopSpanKindValues.WORKFLOW ||
     type === TraceloopSpanKindValues.AGENT
-      ? context.active().setValue(WORKFLOW_NAME_KEY, name)
-      : context.active();
+  ) {
+    entityContext = entityContext.setValue(WORKFLOW_NAME_KEY, name);
+  }
+  if (overrideTraceContent != undefined) {
+    entityContext = entityContext.setValue(
+      CONTEXT_KEY_ALLOW_TRACE_CONTENT,
+      overrideTraceContent,
+    );
+  }
 
-  return withAssociationProperties(associationProperties, () =>
+  return withAssociationProperties(associationProperties ?? {}, () =>
     getTracer().startActiveSpan(
       `${name}.${type}`,
       {},
-      workflowContext,
+      entityContext,
       async (span: Span) => {
         if (
           type === TraceloopSpanKindValues.WORKFLOW ||
@@ -40,15 +60,16 @@ function withEntity<
         span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
         if (shouldSendTraces()) {
-          if (args.length === 1 && typeof args[0] === "object") {
+          const input = inputParameters ?? args;
+          if (input.length === 1 && typeof input[0] === "object") {
             span.setAttribute(
               SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args: [], kwargs: args[0] }),
+              JSON.stringify({ args: [], kwargs: input[0] }),
             );
           } else {
             span.setAttribute(
               SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args, kwargs: {} }),
+              JSON.stringify({ args: input, kwargs: {} }),
             );
           }
         }
@@ -88,16 +109,10 @@ function withEntity<
 export function withWorkflow<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(
-  name: string,
-  associationProperties: { [name: string]: string },
-  fn: F,
-  ...args: A
-) {
+>(config: DecoratorConfig, fn: F, ...args: A) {
   return withEntity(
     TraceloopSpanKindValues.WORKFLOW,
-    name,
-    associationProperties,
+    config,
     fn,
     undefined,
     ...args,
@@ -107,11 +122,14 @@ export function withWorkflow<
 export function withTask<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(name: string, fn: F, ...args: A) {
+>(config: DecoratorConfig, fn: F, ...args: A) {
+  console.log(
+    "Warning: this way of calling `withTask` is deprecated. " +
+      "Check out https://www.traceloop.com/docs/openllmetry/tracing/annotations#workflows-and-tasks",
+  );
   return withEntity(
     TraceloopSpanKindValues.TASK,
-    name,
-    {},
+    config,
     fn,
     undefined,
     ...args,
@@ -121,16 +139,10 @@ export function withTask<
 export function withAgent<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(
-  name: string,
-  associationProperties: { [name: string]: string },
-  fn: F,
-  ...args: A
-) {
+>(config: DecoratorConfig, fn: F, ...args: A) {
   return withEntity(
     TraceloopSpanKindValues.AGENT,
-    name,
-    associationProperties,
+    config,
     fn,
     undefined,
     ...args,
@@ -140,32 +152,33 @@ export function withAgent<
 export function withTool<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(name: string, fn: F, ...args: A) {
+>(config: DecoratorConfig, fn: F, ...args: A) {
   return withEntity(
     TraceloopSpanKindValues.TOOL,
-    name,
-    {},
+    config,
     fn,
     undefined,
     ...args,
   );
 }
 
-function entity(type: TraceloopSpanKindValues, name?: string) {
+function entity(
+  type: TraceloopSpanKindValues,
+  config: Partial<DecoratorConfig>,
+) {
   return function (
     target: any,
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
     const originalMethod: () => any = descriptor.value;
-    const entityName = name ?? originalMethod.name;
+    const entityName = config.name ?? originalMethod.name;
 
     if (originalMethod.constructor.name === "AsyncFunction") {
       descriptor.value = async function (...args: any[]) {
         return await withEntity(
           type,
-          entityName,
-          {},
+          { ...config, name: entityName },
           originalMethod,
           target,
           ...args,
@@ -175,8 +188,7 @@ function entity(type: TraceloopSpanKindValues, name?: string) {
       descriptor.value = function (...args: any[]) {
         return withEntity(
           type,
-          entityName,
-          {},
+          { ...config, name: entityName },
           originalMethod,
           target,
           ...args,
@@ -186,18 +198,18 @@ function entity(type: TraceloopSpanKindValues, name?: string) {
   };
 }
 
-export function workflow(name?: string) {
-  return entity(TraceloopSpanKindValues.WORKFLOW, name);
+export function workflow(config?: Partial<DecoratorConfig>) {
+  return entity(TraceloopSpanKindValues.WORKFLOW, config ?? {});
 }
 
-export function task(name?: string) {
-  return entity(TraceloopSpanKindValues.TASK, name);
+export function task(config?: Partial<DecoratorConfig>) {
+  return entity(TraceloopSpanKindValues.TASK, config ?? {});
 }
 
-export function agent(name?: string) {
-  return entity(TraceloopSpanKindValues.AGENT, name);
+export function agent(config?: Partial<DecoratorConfig>) {
+  return entity(TraceloopSpanKindValues.AGENT, config ?? {});
 }
 
-export function tool(name?: string) {
-  return entity(TraceloopSpanKindValues.TOOL, name);
+export function tool(config?: Partial<DecoratorConfig>) {
+  return entity(TraceloopSpanKindValues.TOOL, config ?? {});
 }

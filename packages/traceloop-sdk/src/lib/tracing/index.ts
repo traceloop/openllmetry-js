@@ -15,6 +15,7 @@ import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
 import {
   AIInstrumentation,
+  CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 
@@ -270,6 +271,10 @@ export const shouldSendTraces = () => {
     _configuration.traceContent === false ||
     (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"
   ) {
+    return false;
+  }
+
+  if (context.active().getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT) === false) {
     return false;
   }
 
