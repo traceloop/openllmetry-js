@@ -14,42 +14,44 @@ const vertexAI = new VertexAI({
 });
 
 async function createNonStreamingContent() {
-  return await traceloop.withWorkflow("sample_completion", {}, async () => {
-    // Instantiate the model
-    const generativeModel = vertexAI.preview.getGenerativeModel({
-      model: "gemini-pro-vision",
-      generation_config: {
-        max_output_tokens: 256,
-      },
-    });
-
-    const request = {
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: "What are the 4 cardinal directions?" }],
+  return await traceloop.withWorkflow(
+    { name: "sample_completion" },
+    async () => {
+      // Instantiate the model
+      const generativeModel = vertexAI.preview.getGenerativeModel({
+        model: "gemini-pro-vision",
+        generation_config: {
+          max_output_tokens: 256,
         },
-      ],
-    };
+      });
 
-    // Create the response stream
-    const responseStream = await generativeModel.generateContent(request);
+      const request = {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: "What are the 4 cardinal directions?" }],
+          },
+        ],
+      };
 
-    // Wait for the response stream to complete
-    const aggregatedResponse = await responseStream.response;
+      // Create the response stream
+      const responseStream = await generativeModel.generateContent(request);
 
-    // Select the text from the response
-    const fullTextResponse =
-      aggregatedResponse.candidates[0].content.parts[0].text;
+      // Wait for the response stream to complete
+      const aggregatedResponse = await responseStream.response;
 
-    return fullTextResponse;
-  });
+      // Select the text from the response
+      const fullTextResponse =
+        aggregatedResponse.candidates[0].content.parts[0].text;
+
+      return fullTextResponse;
+    },
+  );
 }
 
 async function createStreamingContent() {
   return await traceloop.withWorkflow(
-    "sample_stream_completion",
-    {},
+    { name: "sample_stream_completion" },
     async () => {
       // Instantiate the model
       const generativeModel = vertexAI.preview.getGenerativeModel({

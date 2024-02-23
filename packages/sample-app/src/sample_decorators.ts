@@ -9,7 +9,7 @@ traceloop.initialize({
 const openai = new OpenAI();
 
 class SampleOpenAI {
-  @traceloop.workflow("sample_chat")
+  @traceloop.workflow({ name: "sample_chat" })
   async chat() {
     const chatCompletion = await openai.chat.completions.create({
       messages: [
@@ -21,7 +21,7 @@ class SampleOpenAI {
     return chatCompletion.choices[0].message.content;
   }
 
-  @traceloop.workflow("sample_completion")
+  @traceloop.workflow({ name: "sample_completion" })
   async completion(jokeSubject: string) {
     const completion = await openai.completions.create({
       prompt: `Tell me a joke about ${jokeSubject}`,

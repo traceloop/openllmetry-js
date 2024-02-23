@@ -9,7 +9,7 @@ traceloop.initialize({
 const openai = new OpenAI();
 
 async function chat() {
-  return await traceloop.withWorkflow("sample_chat", {}, async () => {
+  return await traceloop.withWorkflow({ name: "sample_chat" }, async () => {
     const chatCompletion = await openai.chat.completions.create({
       messages: [
         { role: "user", content: "Tell me a joke about OpenTelemetry" },
@@ -23,8 +23,7 @@ async function chat() {
 
 async function completion(jokeSubject: string) {
   return await traceloop.withWorkflow(
-    "sample_completion",
-    {},
+    { name: "sample_completion" },
     async () => {
       const completion = await openai.completions.create({
         prompt: [`Tell me a joke about ${jokeSubject}`],
@@ -38,11 +37,9 @@ async function completion(jokeSubject: string) {
 }
 
 traceloop.withAssociationProperties({ userId: "12345" }, async () => {
-  traceloop.toggleShouldSendTraces(false);
   const chatResponse = await chat();
   console.log(chatResponse);
 
-  traceloop.toggleShouldSendTraces(true);
   const completionResponse = await completion("Typescript");
   console.log(completionResponse);
 });

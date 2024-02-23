@@ -20,7 +20,7 @@ traceloop.initialize({
 });
 
 class SampleLangchain {
-  @traceloop.workflow("sample_retrieval_qa_example")
+  @traceloop.workflow({ name: "sample_retrieval_qa_example" })
   async retrievalQAChainExample() {
     // Initialize the LLM to use to answer the question.
     const model = new ChatOpenAI({});
@@ -51,7 +51,7 @@ class SampleLangchain {
     return answer;
   }
 
-  @traceloop.workflow("sample_tools_example")
+  @traceloop.workflow({ name: "sample_tools_example" })
   async toolsExample() {
     const llm = new ChatOpenAI({});
     const tools = [new Calculator(), new SerpAPI()];
@@ -70,7 +70,7 @@ class SampleLangchain {
     return result;
   }
 
-  @traceloop.workflow("sample_qa_stuff_chain")
+  @traceloop.workflow({ name: "sample_qa_stuff_chain" })
   async qaStuffChainExample() {
     const slowerModel = new OpenAI({
       modelName: "gpt-3.5-turbo-instruct",
