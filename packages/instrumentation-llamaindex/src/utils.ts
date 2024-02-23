@@ -5,9 +5,18 @@ import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 import {
   TraceloopSpanKindValues,
   SpanAttributes,
+  CONTEXT_KEY_ALLOW_TRACE_CONTENT,
 } from "@traceloop/ai-semantic-conventions";
 
 export const shouldSendPrompts = (config: LlamaIndexInstrumentationConfig) => {
+  const contextShouldSendPrompts = context
+    .active()
+    .getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT);
+
+  if (contextShouldSendPrompts !== undefined) {
+    return contextShouldSendPrompts;
+  }
+
   return config.traceContent !== undefined ? config.traceContent : true;
 };
 

@@ -12,7 +12,7 @@ const cohere = new CohereClient({
 });
 
 const sampleGenerate = async () => {
-  return await traceloop.withWorkflow("sample_generate", {}, async () => {
+  return await traceloop.withWorkflow({ name: "sample_generate" }, async () => {
     const response = await cohere.generate({
       model: "command-light",
       prompt: "What happened to Pluto?",
@@ -26,8 +26,7 @@ const sampleGenerate = async () => {
 
 const sampleGenerateStream = async () => {
   return await traceloop.withWorkflow(
-    "sample_generate_stream",
-    {},
+    { name: "sample_generate_stream" },
     async () => {
       const streamedResponse = await cohere.generateStream({
         prompt: "What happened to Pluto?",
@@ -49,7 +48,7 @@ const sampleGenerateStream = async () => {
 };
 
 const sampleChat = async () => {
-  return await traceloop.withWorkflow("sample_chat", {}, async () => {
+  return await traceloop.withWorkflow({ name: "sample_chat" }, async () => {
     const chatResponse = await cohere.chat({
       chatHistory: [
         { role: "USER", message: "Who discovered gravity?" },
@@ -69,33 +68,36 @@ const sampleChat = async () => {
 };
 
 const sampleChatStream = async () => {
-  return await traceloop.withWorkflow("sample_chat_stream", {}, async () => {
-    const chatStream = await cohere.chatStream({
-      chatHistory: [
-        { role: "USER", message: "Who discovered gravity?" },
-        {
-          role: "CHATBOT",
-          message:
-            "The man who is widely credited with discovering gravity is Sir Isaac Newton",
-        },
-      ],
-      message: "What year was he born?",
-      // perform web search before answering the question. You can also use your own custom connector.
-      connectors: [{ id: "web-search" }],
-    });
+  return await traceloop.withWorkflow(
+    { name: "sample_chat_stream" },
+    async () => {
+      const chatStream = await cohere.chatStream({
+        chatHistory: [
+          { role: "USER", message: "Who discovered gravity?" },
+          {
+            role: "CHATBOT",
+            message:
+              "The man who is widely credited with discovering gravity is Sir Isaac Newton",
+          },
+        ],
+        message: "What year was he born?",
+        // perform web search before answering the question. You can also use your own custom connector.
+        connectors: [{ id: "web-search" }],
+      });
 
-    let lastResponse;
-    for await (const message of chatStream) {
-      if (message.eventType === "stream-end") {
-        lastResponse = message.response;
+      let lastResponse;
+      for await (const message of chatStream) {
+        if (message.eventType === "stream-end") {
+          lastResponse = message.response;
+        }
       }
-    }
-    return lastResponse;
-  });
+      return lastResponse;
+    },
+  );
 };
 
 const sampleRerank = async () => {
-  return await traceloop.withWorkflow("sample_rerank", {}, async () => {
+  return await traceloop.withWorkflow({ name: "sample_rerank" }, async () => {
     const rerank = await cohere.rerank({
       documents: [
         {

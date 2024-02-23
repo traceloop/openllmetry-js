@@ -15,6 +15,7 @@ import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
 import {
   AIInstrumentation,
+  CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 
@@ -130,7 +131,29 @@ export const initInstrumentations = () => {
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
-  updateInstrumentationConfiguration();
+  if (!shouldSendTraces()) {
+    openAIInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    azureOpenAIInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    llamaIndexInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    vertexaiInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    aiplatformInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    bedrockInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    cohereInstrumentation?.setConfig({
+      traceContent: false,
+    });
+  }
 
   const traceExporter =
     options.exporter ??
@@ -251,45 +274,13 @@ export const shouldSendTraces = () => {
     return false;
   }
 
-  return true;
-};
-
-export const toggleShouldSendTraces = (shouldSend: boolean) => {
-  if (!_configuration) {
-    console.log("Warning: Traceloop not initialized");
-    return;
+  if (context.active().getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT) === false) {
+    return false;
   }
 
-  _configuration.traceContent = shouldSend;
-  updateInstrumentationConfiguration();
+  return true;
 };
 
 export const forceFlush = async () => {
   await _spanProcessor.forceFlush();
-};
-
-const updateInstrumentationConfiguration = () => {
-  const traceContent = shouldSendTraces();
-
-  openAIInstrumentation?.setConfig({
-    traceContent,
-  });
-  azureOpenAIInstrumentation?.setConfig({
-    traceContent,
-  });
-  llamaIndexInstrumentation?.setConfig({
-    traceContent,
-  });
-  vertexaiInstrumentation?.setConfig({
-    traceContent,
-  });
-  aiplatformInstrumentation?.setConfig({
-    traceContent,
-  });
-  bedrockInstrumentation?.setConfig({
-    traceContent,
-  });
-  cohereInstrumentation?.setConfig({
-    traceContent,
-  });
 };

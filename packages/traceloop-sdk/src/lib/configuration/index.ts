@@ -57,7 +57,7 @@ export const initialize = (options: InitializeOptions) => {
 
   validateConfiguration(options);
 
-  _configuration = options;
+  _configuration = Object.freeze(options);
 
   if (!options.suppressLogs) {
     console.log(

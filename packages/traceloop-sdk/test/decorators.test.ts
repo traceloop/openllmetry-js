@@ -75,8 +75,7 @@ describe("Test SDK Decorators", () => {
   it("should create spans for workflows using withWorkflow syntax", async () => {
     const jokeSubject = "OpenTelemetry";
     const result = await traceloop.withWorkflow(
-      "sample_chat",
-      {},
+      { name: "sample_chat" },
       async () => {
         const chatCompletion = await openai.chat.completions.create({
           messages: [
@@ -135,7 +134,7 @@ describe("Test SDK Decorators", () => {
 
   it("should create spans for workflows using decoration syntax", async () => {
     class TestOpenAI {
-      @traceloop.workflow("sample_chat")
+      @traceloop.workflow({ name: "sample_chat" })
       async chat(subject: string) {
         const chatCompletion = await openai.chat.completions.create({
           messages: [
@@ -195,12 +194,9 @@ describe("Test SDK Decorators", () => {
   });
 
   it("should not log prompts if traceContent is disabled", async () => {
-    traceloop.toggleShouldSendTraces(false);
-
     const jokeSubject = "OpenTelemetry";
     const result = await traceloop.withWorkflow(
-      "sample_chat",
-      {},
+      { name: "sample_chat", traceContent: false },
       async () => {
         const chatCompletion = await openai.chat.completions.create({
           messages: [

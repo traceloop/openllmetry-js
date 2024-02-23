@@ -29,7 +29,7 @@ class SamplePinecone {
     });
   }
 
-  @traceloop.workflow("sample_upsert")
+  @traceloop.workflow({ name: "sample_upsert" })
   async index_upsert() {
     const index = pc.index("quickstart");
 
@@ -53,7 +53,7 @@ class SamplePinecone {
     ]);
   }
 
-  @traceloop.workflow("sample_query")
+  @traceloop.workflow({ name: "sample_query" })
   async index_query() {
     const index = pc.index("quickstart");
     const queryResponse = await index.namespace("ns1").query({
@@ -65,7 +65,7 @@ class SamplePinecone {
     return queryResponse;
   }
 
-  @traceloop.workflow("sample_delete")
+  @traceloop.workflow({ name: "sample_delete" })
   async index_delete() {
     const index = pc.index("quickstart");
     await index.deleteOne("vec1");

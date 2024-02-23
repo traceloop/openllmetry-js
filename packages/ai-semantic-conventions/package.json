@@ -33,6 +33,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "dependencies": {
+    "@opentelemetry/api": "^1.7.0"
+  },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/ai-semantic-conventions",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
 }
