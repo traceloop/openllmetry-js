@@ -34,30 +34,32 @@ const input = {
 };
 
 async function generateTextContent() {
-  return await traceloop.withWorkflow("sample_completion", {}, async () => {
-    // Create an InvokeModelCommand with the input parameters
-    const command = new InvokeModelCommand(input);
+  return await traceloop.withWorkflow(
+    { name: "sample_completion" },
+    async () => {
+      // Create an InvokeModelCommand with the input parameters
+      const command = new InvokeModelCommand(input);
 
-    // Send the command to invoke the model and await the response
-    client.send(command).then((response) => {
-      // Save the raw response
-      const rawRes = response.body;
+      // Send the command to invoke the model and await the response
+      client.send(command).then((response) => {
+        // Save the raw response
+        const rawRes = response.body;
 
-      // Convert it to a JSON String
-      const jsonString = new TextDecoder().decode(rawRes);
+        // Convert it to a JSON String
+        const jsonString = new TextDecoder().decode(rawRes);
 
-      // Parse the JSON string
-      const parsedResponse = JSON.parse(jsonString);
+        // Parse the JSON string
+        const parsedResponse = JSON.parse(jsonString);
 
-      console.log(">>> non-stream", parsedResponse);
-    });
-  });
+        console.log(">>> non-stream", parsedResponse);
+      });
+    },
+  );
 }
 
 async function generateTextContentWithStreaming() {
   return await traceloop.withWorkflow(
-    "sample_stream_completion",
-    {},
+    { name: "sample_stream_completion" },
     async () => {
       // Create an InvokeModelWithResponseStreamCommand with the input parameters
       const command = new InvokeModelWithResponseStreamCommand(input);

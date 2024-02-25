@@ -28,7 +28,10 @@ import {
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
 import { AIPlatformInstrumentationConfig } from "./types";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  CONTEXT_KEY_ALLOW_TRACE_CONTENT,
+  SpanAttributes,
+} from "@traceloop/ai-semantic-conventions";
 import * as aiplatform from "@google-cloud/aiplatform";
 import { CallOptions, Callback } from "google-gax";
 
@@ -337,6 +340,14 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
   }
 
   private _shouldSendPrompts() {
+    const contextShouldSendPrompts = context
+      .active()
+      .getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT);
+
+    if (contextShouldSendPrompts !== undefined) {
+      return contextShouldSendPrompts;
+    }
+
     return this._config.traceContent !== undefined
       ? this._config.traceContent
       : true;

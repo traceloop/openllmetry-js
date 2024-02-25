@@ -19,7 +19,7 @@ const embedModel = new OpenAIEmbedding();
 const vectorStore = new SimpleVectorStore();
 
 class SampleLlamaIndex {
-  @traceloop.workflow("sample_query")
+  @traceloop.workflow({ name: "sample_query" })
   async query() {
     const documents = await new SimpleDirectoryReader().loadData({
       directoryPath: "packages/sample-app/data/paul_graham",

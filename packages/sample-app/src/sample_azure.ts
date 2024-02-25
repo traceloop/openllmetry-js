@@ -12,7 +12,7 @@ const client = new OpenAIClient(
 );
 
 async function chat() {
-  return await traceloop.withWorkflow("sample_chat", {}, async () => {
+  return await traceloop.withWorkflow({ name: "sample_chat" }, async () => {
     const chatCompletion = await client.getChatCompletions(
       process.env.AZURE_DEPLOYMENT_ID!,
       [{ role: "user", content: "Tell me a joke about OpenTelemetry" }],

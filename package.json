@@ -23,7 +23,7 @@
     "eslint-plugin-prettier": "^5.0.1",
     "hnswlib-node": "^2.1.0",
     "husky": "^8.0.3",
-    "lerna": "^7.4.1",
+    "lerna": "^8.1.2",
     "nx": "^17.2.8",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
