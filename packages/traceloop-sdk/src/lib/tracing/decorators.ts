@@ -60,17 +60,21 @@ function withEntity<
         span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
         if (shouldSendTraces()) {
-          const input = inputParameters ?? args;
-          if (input.length === 1 && typeof input[0] === "object") {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args: [], kwargs: input[0] }),
-            );
-          } else {
-            span.setAttribute(
-              SpanAttributes.TRACELOOP_ENTITY_INPUT,
-              JSON.stringify({ args: input, kwargs: {} }),
-            );
+          try {
+            const input = inputParameters ?? args;
+            if (input.length === 1 && typeof input[0] === "object") {
+              span.setAttribute(
+                SpanAttributes.TRACELOOP_ENTITY_INPUT,
+                JSON.stringify({ args: [], kwargs: input[0] }),
+              );
+            } else {
+              span.setAttribute(
+                SpanAttributes.TRACELOOP_ENTITY_INPUT,
+                JSON.stringify({ args: input, kwargs: {} }),
+              );
+            }
+          } catch {
+            /* empty */
           }
         }
 
@@ -123,10 +127,6 @@ export function withTask<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
 >(config: DecoratorConfig, fn: F, ...args: A) {
-  console.log(
-    "Warning: this way of calling `withTask` is deprecated. " +
-      "Check out https://www.traceloop.com/docs/openllmetry/tracing/annotations#workflows-and-tasks",
-  );
   return withEntity(
     TraceloopSpanKindValues.TASK,
     config,
