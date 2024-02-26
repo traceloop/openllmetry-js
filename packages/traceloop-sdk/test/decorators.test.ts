@@ -135,20 +135,32 @@ describe("Test SDK Decorators", () => {
   it("should create spans for workflows using decoration syntax", async () => {
     class TestOpenAI {
       @traceloop.workflow({ name: "sample_chat" })
-      async chat(subject: string) {
-        const chatCompletion = await openai.chat.completions.create({
-          messages: [
-            { role: "user", content: `Tell me a joke about ${subject}` },
-          ],
-          model: "gpt-3.5-turbo",
-        });
+      async chat(things: Map<string, string>) {
+        const generations: Map<string, string> = new Map();
+        for await (const [key, value] of things) {
+          const chatCompletion = await openai.chat.completions.create({
+            messages: [
+              { role: "user", content: `Tell me a ${key} about ${value}` },
+            ],
+            model: "gpt-3.5-turbo",
+          });
 
-        return chatCompletion.choices[0].message.content;
+          if (chatCompletion.choices[0].message.content) {
+            generations.set(key, chatCompletion.choices[0].message.content);
+          }
+        }
+
+        return generations;
       }
     }
 
     const testOpenAI = new TestOpenAI();
-    const result = await testOpenAI.chat("OpenTelemetry");
+    const result = await testOpenAI.chat(
+      new Map([
+        ["joke", "OpenTelemetry"],
+        ["fact", "JavaScript"],
+      ]),
+    );
 
     const spans = memoryExporter.getFinishedSpans();
     const workflowSpan = spans.find(
@@ -172,11 +184,22 @@ describe("Test SDK Decorators", () => {
     );
     assert.strictEqual(
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
-      JSON.stringify({ args: ["OpenTelemetry"], kwargs: {} }),
+      JSON.stringify({
+        args: [
+          [
+            ["joke", "OpenTelemetry"],
+            ["fact", "JavaScript"],
+          ],
+        ],
+        kwargs: {},
+      }),
     );
     assert.strictEqual(
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
-      JSON.stringify(result),
+      JSON.stringify([
+        ["joke", result.get("joke")],
+        ["fact", result.get("fact")],
+      ]),
     );
     assert.ok(chatSpan);
     assert.strictEqual(
