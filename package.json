@@ -14,7 +14,7 @@
     "@nx/eslint-plugin": "^17.2.8",
     "@nx/js": "^17.2.8",
     "@nx/linter": "^17.2.8",
-    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^6.18.1",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.51.0",
