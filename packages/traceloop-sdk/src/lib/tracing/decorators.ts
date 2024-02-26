@@ -62,7 +62,11 @@ function withEntity<
         if (shouldSendTraces()) {
           try {
             const input = inputParameters ?? args;
-            if (input.length === 1 && typeof input[0] === "object") {
+            if (
+              input.length === 1 &&
+              typeof input[0] === "object" &&
+              !(input[0] instanceof Map)
+            ) {
               span.setAttribute(
                 SpanAttributes.TRACELOOP_ENTITY_INPUT,
                 JSON.stringify({ args: [], kwargs: input[0] }),
@@ -70,7 +74,12 @@ function withEntity<
             } else {
               span.setAttribute(
                 SpanAttributes.TRACELOOP_ENTITY_INPUT,
-                JSON.stringify({ args: input, kwargs: {} }),
+                JSON.stringify({
+                  args: input.map((arg) =>
+                    arg instanceof Map ? Array.from(arg.entries()) : arg,
+                  ),
+                  kwargs: {},
+                }),
               );
             }
           } catch {
@@ -83,10 +92,17 @@ function withEntity<
           return res.then((resolvedRes) => {
             try {
               if (shouldSendTraces()) {
-                span.setAttribute(
-                  SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                  JSON.stringify(resolvedRes),
-                );
+                if (resolvedRes instanceof Map) {
+                  span.setAttribute(
+                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                    JSON.stringify(Array.from(resolvedRes.entries())),
+                  );
+                } else {
+                  span.setAttribute(
+                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                    JSON.stringify(resolvedRes),
+                  );
+                }
               }
               return resolvedRes;
             } finally {
