@@ -286,14 +286,18 @@ export const shouldSendTraces = () => {
     return false;
   }
 
+  const contextShouldSendPrompts = context
+    .active()
+    .getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT);
+
+  if (contextShouldSendPrompts !== undefined) {
+    return contextShouldSendPrompts;
+  }
+
   if (
     _configuration.traceContent === false ||
     (process.env.TRACELOOP_TRACE_CONTENT || "true").toLowerCase() === "false"
   ) {
-    return false;
-  }
-
-  if (context.active().getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT) === false) {
     return false;
   }
 
