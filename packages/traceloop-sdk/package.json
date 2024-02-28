@@ -33,7 +33,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.44.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.48.0",
     "@opentelemetry/sdk-node": "^0.44.0",
     "@traceloop/ai-semantic-conventions": "^0.5.0",
     "@traceloop/instrumentation-azure": "^0.5.0",
