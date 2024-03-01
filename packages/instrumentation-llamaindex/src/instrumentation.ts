@@ -44,6 +44,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     if (module.openLLMetryPatched) {
       return;
     }
+
+    this.patch(module);
   }
 
   protected init(): InstrumentationModuleDefinition<any> {
