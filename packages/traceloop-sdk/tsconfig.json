@@ -3,8 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   },
   "include": ["src/**/*.ts", "test/**/*.ts"],
-  "references": [],
+  "references": []
 }

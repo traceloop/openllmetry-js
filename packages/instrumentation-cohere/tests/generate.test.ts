@@ -56,7 +56,10 @@ describe("Test Generate with Cohere Instrumentation", () => {
     cohere = await import("cohere-ai");
 
     cohereClient = new cohere.CohereClient({
-      token: process.env.RECORD_MODE === "NEW" ? "test" : "",
+      token:
+        process.env.RECORD_MODE === "NEW"
+          ? "test"
+          : process.env.COHERE_API_KEY!,
     });
   });
 

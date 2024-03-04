@@ -125,6 +125,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           () => {},
         );
 
