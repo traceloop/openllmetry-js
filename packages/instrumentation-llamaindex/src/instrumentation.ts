@@ -51,7 +51,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   protected init(): InstrumentationModuleDefinition<any> {
     const module = new InstrumentationNodeModuleDefinition<any>(
       "llamaindex",
-      [">=0.0.40"],
+      [">=0.1.0"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
@@ -104,11 +104,6 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     for (const key in moduleExports) {
       const cls = (moduleExports as any)[key];
       if (this.isLLM(cls.prototype)) {
-        this._wrap(
-          cls.prototype,
-          "complete",
-          customLLMInstrumentation.completionWrapper({ className: cls.name }),
-        );
         this._wrap(
           cls.prototype,
           "chat",

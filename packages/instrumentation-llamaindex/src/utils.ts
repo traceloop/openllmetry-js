@@ -1,4 +1,5 @@
 import * as lodash from "lodash";
+import * as llamaindex from "llamaindex";
 import { trace, context, Tracer, SpanStatusCode } from "@opentelemetry/api";
 import { LlamaIndexInstrumentationConfig } from "./types";
 import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
@@ -21,12 +22,19 @@ export const shouldSendPrompts = (config: LlamaIndexInstrumentationConfig) => {
 };
 
 export async function* generatorWrapper(
-  streamingResult: AsyncGenerator<string, void, unknown>,
+  streamingResult:
+    | AsyncIterable<llamaindex.ChatResponseChunk>
+    | AsyncIterable<llamaindex.CompletionResponse>,
   fn: (message: string) => void,
 ) {
   let message = "";
   for await (const messageChunk of streamingResult) {
-    message += messageChunk;
+    if (messageChunk as llamaindex.ChatResponseChunk) {
+      message += (messageChunk as llamaindex.ChatResponseChunk).delta;
+    }
+    if (messageChunk as llamaindex.CompletionResponse) {
+      message += (messageChunk as llamaindex.CompletionResponse).text;
+    }
     yield messageChunk;
   }
   fn(message);

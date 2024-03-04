@@ -4,6 +4,7 @@ import type * as llamaindex from "llamaindex";
 import {
   Tracer,
   Span,
+  SpanKind,
   SpanStatusCode,
   trace,
   context,
@@ -16,6 +17,11 @@ import { LlamaIndexInstrumentationConfig } from "./types";
 import { shouldSendPrompts, generatorWrapper } from "./utils";
 
 type LLM = llamaindex.LLM;
+
+type ResponseType = llamaindex.ChatResponse | llamaindex.CompletionResponse;
+type AsyncResponseType =
+  | AsyncIterable<llamaindex.ChatResponseChunk>
+  | AsyncIterable<llamaindex.CompletionResponse>;
 
 export class CustomLLMInstrumentation {
   private config: LlamaIndexInstrumentationConfig;
@@ -35,11 +41,15 @@ export class CustomLLMInstrumentation {
         this: LLM,
         ...args: Parameters<LLM["complete"]>
       ): ReturnType<LLM["complete"]> {
-        const prompt = args[0];
-        const streaming = args[2];
+        const params = args[0];
+        const prompt = params?.prompt;
+        const streaming = params?.stream;
+
+        console.log("HEYY", trace.getActiveSpan()?.spanContext().spanId);
 
         const span = plugin.tracer.startSpan(
           `${lodash.snakeCase(className)}.completion`,
+          { kind: SpanKind.CLIENT },
         );
 
         span.setAttribute(SpanAttributes.LLM_VENDOR, className);
@@ -72,12 +82,15 @@ export class CustomLLMInstrumentation {
         const wrappedPromise = execPromise
           .then((result: any) => {
             return new Promise((resolve) => {
-              result = plugin.handleResponse(
-                result,
-                span,
-                this.metadata,
-                streaming,
-              );
+              if (streaming) {
+                result = plugin.handleStreamingResponse(
+                  result,
+                  span,
+                  this.metadata,
+                );
+              } else {
+                result = plugin.handleResponse(result, span, this.metadata);
+              }
               resolve(result);
             });
           })
@@ -102,11 +115,13 @@ export class CustomLLMInstrumentation {
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: LLM["chat"]) => {
       return function method(this: LLM, ...args: Parameters<LLM["chat"]>) {
-        const messages = args[0];
-        const streaming = args[2];
+        const params = args[0];
+        const messages = params?.messages;
+        const streaming = params?.stream;
 
         const span = plugin.tracer.startSpan(
           `${lodash.snakeCase(className)}.chat`,
+          { kind: SpanKind.CLIENT },
         );
 
         span.setAttribute(SpanAttributes.LLM_VENDOR, className);
@@ -142,12 +157,15 @@ export class CustomLLMInstrumentation {
         const wrappedPromise = execPromise
           .then((result: any) => {
             return new Promise((resolve) => {
-              result = plugin.handleResponse(
-                result,
-                span,
-                this.metadata,
-                streaming,
-              );
+              if (streaming) {
+                result = plugin.handleStreamingResponse(
+                  result,
+                  span,
+                  this.metadata,
+                );
+              } else {
+                result = plugin.handleResponse(result, span, this.metadata);
+              }
               resolve(result);
             });
           })
@@ -166,12 +184,11 @@ export class CustomLLMInstrumentation {
     };
   }
 
-  handleResponse(
-    result: any,
+  handleResponse<T extends ResponseType>(
+    result: T,
     span: Span,
     metadata: llamaindex.LLMMetadata,
-    streaming: boolean | undefined,
-  ) {
+  ): T {
     span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, metadata.model);
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
@@ -179,32 +196,37 @@ export class CustomLLMInstrumentation {
       return result;
     }
 
-    // Handle streming response of type `AsyncGenerator<string, void, unknown>`
-    if (streaming) {
-      result = generatorWrapper(result, (message) => {
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-          message,
-        );
-        span.setStatus({ code: SpanStatusCode.OK });
-        span.end();
-      });
+    if ((result as llamaindex.ChatResponse).message) {
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+        (result as llamaindex.ChatResponse).message.role,
+      );
+      span.setAttribute(
+        `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+        (result as llamaindex.ChatResponse).message.content,
+      );
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+    }
+    return result;
+  }
 
+  handleStreamingResponse<T extends AsyncResponseType>(
+    result: T,
+    span: Span,
+    metadata: llamaindex.LLMMetadata,
+  ): T {
+    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, metadata.model);
+    if (!shouldSendPrompts(this.config)) {
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
       return result;
     }
 
-    // Handle response of type `ChatMessage`
-    span.setAttribute(
-      `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-      result.message.role,
-    );
-    span.setAttribute(
-      `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-      result.message.content,
-    );
-    span.setStatus({ code: SpanStatusCode.OK });
-    span.end();
-
-    return result;
+    return generatorWrapper(result, (message) => {
+      span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.0.content`, message);
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+    }) as any;
   }
 }

@@ -81,12 +81,10 @@ describe("Test LlamaIndex instrumentation", async function () {
     const model = "gpt-3.5-turbo";
     const prompt = "Tell me a joke about OpenTelemetry";
     const openai = new llamaindex.OpenAI({ model, temperature: 0 });
-    const res = await openai.complete(prompt);
+    const res = await openai.complete({ prompt });
 
     assert.ok(res);
-    assert.ok(res.message);
-    assert.ok(res.message.role);
-    assert.ok(res.message.content);
+    assert.ok(res.text);
 
     const spans = memoryExporter.getFinishedSpans();
 
@@ -117,14 +115,17 @@ describe("Test LlamaIndex instrumentation", async function () {
       completionAttributes["llm.completions.0.role"],
       "assistant",
     );
-    assert.ok(completionAttributes["llm.completions.0.content"]);
+    assert.strictEqual(
+      completionAttributes["llm.completions.0.content"],
+      res.text,
+    );
   });
 
   it("should set attributes in span for LLM instrumentation in case of streaming response", async () => {
     const model = "gpt-3.5-turbo";
     const prompt = "Tell me a joke about OpenTelemetry";
     const openai = new llamaindex.OpenAI({ model, temperature: 0 });
-    const res = await openai.complete(prompt, undefined, true);
+    const res = await openai.complete({ prompt, stream: true });
 
     assert.ok(res);
     let message = "";
@@ -139,7 +140,7 @@ describe("Test LlamaIndex instrumentation", async function () {
     const chatAttributes = spans[0].attributes;
     const completionAttributes = spans[1].attributes;
 
-    assert.strictEqual(chatAttributes["llm.vendor"], "OpenAI2");
+    assert.strictEqual(chatAttributes["llm.vendor"], "OpenAI");
     assert.strictEqual(chatAttributes["llm.request.type"], "chat");
     assert.strictEqual(chatAttributes["llm.request.model"], model);
     assert.strictEqual(chatAttributes["llm.top_p"], 1);
@@ -180,7 +181,9 @@ describe("Test LlamaIndex instrumentation", async function () {
 
     const queryEngine = index.asQueryEngine();
 
-    const result = await queryEngine.query("Where was albert einstein born?");
+    const result = await queryEngine.query({
+      query: "Where was albert einstein born?",
+    });
 
     assert.ok(result.response);
 

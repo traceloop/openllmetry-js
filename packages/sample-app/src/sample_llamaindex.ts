@@ -19,10 +19,9 @@ const embedModel = new OpenAIEmbedding();
 const vectorStore = new SimpleVectorStore();
 
 class SampleLlamaIndex {
-  @traceloop.workflow({ name: "sample_query" })
   async query() {
     const documents = await new SimpleDirectoryReader().loadData({
-      directoryPath: "packages/sample-app/data/paul_graham",
+      directoryPath: "data/paul_graham",
     });
 
     const serviceContext = serviceContextFromDefaults({ embedModel });
@@ -35,16 +34,19 @@ class SampleLlamaIndex {
 
     const queryEngine = index.asQueryEngine();
 
-    const res = await queryEngine.query("What did the author do growing up?");
+    const res = await queryEngine.query({
+      query: "What did the author do growing up?",
+    });
     return res;
   }
 }
 
-traceloop.withAssociationProperties(
-  { user_id: "12345", chat_id: "789" },
-  async () => {
-    const sampleLlamaIndex = new SampleLlamaIndex();
-    const result = await sampleLlamaIndex.query();
-    console.log(result.response);
-  },
-);
+// traceloop.withAssociationProperties(
+// { user_id: "12345", chat_id: "789" },
+const x = async () => {
+  const sampleLlamaIndex = new SampleLlamaIndex();
+  const result = await sampleLlamaIndex.query();
+  console.log(result.response);
+};
+// );
+x();
