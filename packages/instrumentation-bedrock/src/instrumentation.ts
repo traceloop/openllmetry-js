@@ -95,6 +95,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           () => {},
         );
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
@@ -360,7 +361,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   private _setResponseAttributes(
     vendor: string,
     response: Record<string, any>,
-    isStream: boolean = false,
+    isStream = false,
   ) {
     switch (vendor) {
       case "ai21": {
