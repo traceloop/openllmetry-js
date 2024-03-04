@@ -115,6 +115,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
                   return original.apply(this, args);
                 });
               },
+              // eslint-disable-next-line @typescript-eslint/no-empty-function
               () => {},
             ),
           );
@@ -132,6 +133,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
           () => {},
         );
 
