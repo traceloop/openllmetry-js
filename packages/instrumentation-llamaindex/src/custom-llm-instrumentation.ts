@@ -32,83 +32,6 @@ export class CustomLLMInstrumentation {
     this.tracer = tracer;
   }
 
-  completionWrapper({ className }: { className: string }) {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    return (original: LLM["complete"]) => {
-      return function method(
-        this: LLM,
-        ...args: Parameters<LLM["complete"]>
-      ): ReturnType<LLM["complete"]> {
-        const params = args[0];
-        const prompt = params?.prompt;
-        const streaming = params?.stream;
-
-        console.log("HEYY", trace.getActiveSpan()?.spanContext().spanId);
-
-        const span = plugin.tracer.startSpan(
-          `${lodash.snakeCase(className)}.completion`,
-          { kind: SpanKind.CLIENT },
-        );
-
-        span.setAttribute(SpanAttributes.LLM_VENDOR, className);
-        span.setAttribute(
-          SpanAttributes.LLM_REQUEST_MODEL,
-          this.metadata.model,
-        );
-        span.setAttribute(
-          SpanAttributes.LLM_REQUEST_TYPE,
-          SpanAttributes.LLM_COMPLETIONS,
-        );
-        span.setAttribute(SpanAttributes.LLM_TOP_P, this.metadata.topP);
-        if (shouldSendPrompts(plugin.config)) {
-          span.setAttribute(
-            `${SpanAttributes.LLM_PROMPTS}.0.content`,
-            prompt as string,
-          );
-        }
-
-        const execContext = trace.setSpan(context.active(), span);
-        const execPromise = safeExecuteInTheMiddle(
-          () => {
-            return context.with(execContext, () => {
-              return original.apply(this, args);
-            });
-          },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
-        );
-        const wrappedPromise = execPromise
-          .then((result: any) => {
-            return new Promise((resolve) => {
-              if (streaming) {
-                result = plugin.handleStreamingResponse(
-                  result,
-                  span,
-                  this.metadata,
-                );
-              } else {
-                result = plugin.handleResponse(result, span, this.metadata);
-              }
-              resolve(result);
-            });
-          })
-          .catch((error: Error) => {
-            return new Promise((_, reject) => {
-              span.setStatus({
-                code: SpanStatusCode.ERROR,
-                message: error.message,
-              });
-              span.end();
-              reject(error);
-            });
-          });
-        return context.bind(execContext, wrappedPromise as any);
-      };
-    };
-  }
-
   chatWrapper({ className }: { className: string }) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
@@ -120,7 +43,7 @@ export class CustomLLMInstrumentation {
         const streaming = params?.stream;
 
         const span = plugin.tracer.startSpan(
-          `${lodash.snakeCase(className)}.chat`,
+          `llamaindex.${lodash.snakeCase(className)}.chat`,
           { kind: SpanKind.CLIENT },
         );
 
@@ -190,6 +113,7 @@ export class CustomLLMInstrumentation {
     metadata: llamaindex.LLMMetadata,
   ): T {
     span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, metadata.model);
+
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();

@@ -29,10 +29,10 @@ export async function* generatorWrapper(
 ) {
   let message = "";
   for await (const messageChunk of streamingResult) {
-    if (messageChunk as llamaindex.ChatResponseChunk) {
+    if ((messageChunk as llamaindex.ChatResponseChunk).delta) {
       message += (messageChunk as llamaindex.ChatResponseChunk).delta;
     }
-    if (messageChunk as llamaindex.CompletionResponse) {
+    if ((messageChunk as llamaindex.CompletionResponse).text) {
       message += (messageChunk as llamaindex.CompletionResponse).text;
     }
     yield messageChunk;
@@ -40,15 +40,23 @@ export async function* generatorWrapper(
   fn(message);
 }
 
-export function genericWrapper(methodName: string, tracer: Tracer) {
+export function genericWrapper(
+  className: string,
+  methodName: string,
+  kind: TraceloopSpanKindValues,
+  tracer: Tracer,
+) {
   // eslint-disable-next-line @typescript-eslint/ban-types
   return (original: Function) => {
     return function method(this: any, ...args: unknown[]) {
-      const span = tracer.startSpan(`${lodash.snakeCase(methodName)}.task`);
-      span.setAttribute(
-        SpanAttributes.TRACELOOP_SPAN_KIND,
-        TraceloopSpanKindValues.TASK,
-      );
+      const name = `${lodash.snakeCase(className)}.${lodash.snakeCase(methodName)}`;
+      const span = tracer.startSpan(`${name}`);
+      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, kind);
+
+      if (kind === TraceloopSpanKindValues.WORKFLOW) {
+        span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
+      }
+
       const execContext = trace.setSpan(context.active(), span);
       const execPromise = safeExecuteInTheMiddle(
         () => {

@@ -26,6 +26,7 @@ import { CustomLLMInstrumentation } from "./custom-llm-instrumentation";
 import { genericWrapper } from "./utils";
 
 import { BaseEmbedding, BaseSynthesizer, LLM, BaseRetriever } from "llamaindex";
+import { TraceloopSpanKindValues } from "@traceloop/ai-semantic-conventions";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   protected override _config!: LlamaIndexInstrumentationConfig;
@@ -98,7 +99,12 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       moduleExports.RetrieverQueryEngine.prototype,
       "query",
-      genericWrapper("query", this.tracer),
+      genericWrapper(
+        moduleExports.RetrieverQueryEngine.name,
+        "query",
+        TraceloopSpanKindValues.WORKFLOW,
+        this.tracer,
+      ),
     );
 
     for (const key in moduleExports) {
@@ -113,19 +119,34 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
         this._wrap(
           cls.prototype,
           "getQueryEmbedding",
-          genericWrapper("getQueryEmbedding", this.tracer),
+          genericWrapper(
+            cls.name,
+            "getQueryEmbedding",
+            TraceloopSpanKindValues.TASK,
+            this.tracer,
+          ),
         );
       } else if (this.isSynthesizer(cls.prototype)) {
         this._wrap(
           cls.prototype,
           "synthesize",
-          genericWrapper("synthesize", this.tracer),
+          genericWrapper(
+            cls.name,
+            "synthesize",
+            TraceloopSpanKindValues.TASK,
+            this.tracer,
+          ),
         );
       } else if (this.isRetriever(cls.prototype)) {
         this._wrap(
           cls.prototype,
           "retrieve",
-          genericWrapper("retrieve", this.tracer),
+          genericWrapper(
+            cls.name,
+            "retrieve",
+            TraceloopSpanKindValues.TASK,
+            this.tracer,
+          ),
         );
       }
     }
