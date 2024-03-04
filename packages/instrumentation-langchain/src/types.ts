@@ -1,3 +1,3 @@
 import { InstrumentationConfig } from "@opentelemetry/instrumentation";
 
-export type LangChainInstrumentationConfig = InstrumentationConfig
+export type LangChainInstrumentationConfig = InstrumentationConfig;
