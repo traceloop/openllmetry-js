@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-cohere",
-  "version": "0.5.0",
+  "version": "0.5.4",
   "description": "Cohere Instrumentation",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -39,7 +39,7 @@
     "@opentelemetry/core": "^1.22.0",
     "@opentelemetry/instrumentation": "^0.44.0",
     "@opentelemetry/semantic-conventions": "^1.22.0",
-    "@traceloop/ai-semantic-conventions": "^0.5.0"
+    "@traceloop/ai-semantic-conventions": "^0.5.4"
   },
   "devDependencies": {
     "@pollyjs/adapter-node-http": "^6.0.6",
