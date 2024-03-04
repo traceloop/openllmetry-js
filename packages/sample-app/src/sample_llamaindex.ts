@@ -41,12 +41,11 @@ class SampleLlamaIndex {
   }
 }
 
-// traceloop.withAssociationProperties(
-// { user_id: "12345", chat_id: "789" },
-const x = async () => {
-  const sampleLlamaIndex = new SampleLlamaIndex();
-  const result = await sampleLlamaIndex.query();
-  console.log(result.response);
-};
-// );
-x();
+traceloop.withAssociationProperties(
+  { user_id: "12345", chat_id: "789" },
+  async () => {
+    const sampleLlamaIndex = new SampleLlamaIndex();
+    const result = await sampleLlamaIndex.query();
+    console.log(result.response);
+  },
+);
