@@ -24,7 +24,6 @@ let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: AIInstrumentation | undefined;
 let azureOpenAIInstrumentation: AIInstrumentation | undefined;
 let llamaIndexInstrumentation: AIInstrumentation | undefined;
-let pineconeInstrumentation: AIInstrumentation | undefined;
 let vertexaiInstrumentation: AIInstrumentation | undefined;
 let aiplatformInstrumentation: AIInstrumentation | undefined;
 let bedrockInstrumentation: AIInstrumentation | undefined;
@@ -32,53 +31,129 @@ let cohereInstrumentation: AIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
-const hasModule = (module: string) => {
-  try {
-    require.resolve(`${module}`);
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
-
 export const initInstrumentations = () => {
-  if (hasModule("openai")) {
+  try {
     const {
       OpenAIInstrumentation,
     } = require("@traceloop/instrumentation-openai");
     const instrumentation = new OpenAIInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     openAIInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
   }
-
-  if (hasModule("@azure/openai")) {
+  try {
     const {
       AzureOpenAIInstrumentation,
     } = require("@traceloop/instrumentation-azure");
     const instrumentation = new AzureOpenAIInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     azureOpenAIInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
   }
-
-  if (hasModule("llamaindex")) {
+  try {
     const {
       LlamaIndexInstrumentation,
     } = require("@traceloop/instrumentation-llamaindex");
     const instrumentation = new LlamaIndexInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     llamaIndexInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
   }
-
-  if (hasModule("@pinecone-database/pinecone")) {
+  try {
     const {
       PineconeInstrumentation,
     } = require("@traceloop/instrumentation-pinecone");
     const instrumentation = new PineconeInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
-    pineconeInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
+  }
+  const {
+    VertexAIInstrumentation,
+  } = require("@traceloop/instrumentation-vertexai");
+  const instrumentation = new VertexAIInstrumentation();
+  instrumentations.push(instrumentation);
+  vertexaiInstrumentation = instrumentation;
+
+  try {
+    const {
+      AIPlatformInstrumentation,
+    } = require("@traceloop/instrumentation-vertexai");
+    const instrumentation = new AIPlatformInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    aiplatformInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
   }
 
-  if (hasModule("@google-cloud/vertexai")) {
+  try {
+    const {
+      LangChainInstrumentation,
+    } = require("@traceloop/instrumentation-langchain");
+    const instrumentation = new LangChainInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+  } catch (e) {
+    /* empty */
+  }
+
+  try {
+    const {
+      BedrockInstrumentation,
+    } = require("@traceloop/instrumentation-bedrock");
+    const instrumentation = new BedrockInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    bedrockInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
+  }
+
+  try {
+    const {
+      CohereInstrumentation,
+    } = require("@traceloop/instrumentation-cohere");
+    const instrumentation = new CohereInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    cohereInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
+  }
+};
+
+export const manuallyInitInstrumentations = (
+  instrumentModules: InitializeOptions["instrumentModules"],
+) => {
+  if (instrumentModules?.openAI) {
+    const {
+      OpenAIInstrumentation,
+    } = require("@traceloop/instrumentation-openai");
+    const instrumentation = new OpenAIInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    openAIInstrumentation = instrumentation;
+    instrumentation.manuallyInstrument(instrumentModules.openAI);
+  }
+
+  if (instrumentModules?.llamaIndex) {
+    const {
+      LlamaIndexInstrumentation,
+    } = require("@traceloop/instrumentation-llamaindex");
+    const instrumentation = new LlamaIndexInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    llamaIndexInstrumentation = instrumentation;
+    instrumentation.manuallyInstrument(instrumentModules.llamaIndex);
+  }
+
+  if (instrumentModules?.pinecone) {
+    const {
+      PineconeInstrumentation,
+    } = require("@traceloop/instrumentation-pinecone");
+    const instrumentation = new PineconeInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+  }
+
+  if (instrumentModules?.google_vertexai) {
     const {
       VertexAIInstrumentation,
     } = require("@traceloop/instrumentation-vertexai");
@@ -87,7 +162,7 @@ export const initInstrumentations = () => {
     vertexaiInstrumentation = instrumentation;
   }
 
-  if (hasModule("@google-cloud/aiplatform")) {
+  if (instrumentModules?.google_aiplatform) {
     const {
       AIPlatformInstrumentation,
     } = require("@traceloop/instrumentation-vertexai");
@@ -96,15 +171,7 @@ export const initInstrumentations = () => {
     aiplatformInstrumentation = instrumentation;
   }
 
-  if (hasModule("langchain")) {
-    const {
-      LangChainInstrumentation,
-    } = require("@traceloop/instrumentation-langchain");
-    const instrumentation = new LangChainInstrumentation();
-    instrumentations.push(instrumentation as Instrumentation);
-  }
-
-  if (hasModule("@aws-sdk/client-bedrock-runtime")) {
+  if (instrumentModules?.bedrock) {
     const {
       BedrockInstrumentation,
     } = require("@traceloop/instrumentation-bedrock");
@@ -113,7 +180,16 @@ export const initInstrumentations = () => {
     bedrockInstrumentation = instrumentation;
   }
 
-  if (hasModule("cohere-ai")) {
+  if (instrumentModules?.azureOpenAI) {
+    const {
+      AzureOpenAIInstrumentation,
+    } = require("@traceloop/instrumentation-azure");
+    const instrumentation = new AzureOpenAIInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    azureOpenAIInstrumentation = instrumentation;
+  }
+
+  if (instrumentModules?.cohere) {
     const {
       CohereInstrumentation,
     } = require("@traceloop/instrumentation-cohere");
@@ -131,6 +207,11 @@ export const initInstrumentations = () => {
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
+  if (Object.keys(options.instrumentModules || {}).length > 0) {
+    manuallyInitInstrumentations(options.instrumentModules);
+  } else {
+    initInstrumentations();
+  }
   if (!shouldSendTraces()) {
     openAIInstrumentation?.setConfig({
       traceContent: false,
@@ -211,54 +292,6 @@ export const startTracing = (options: InitializeOptions) => {
   });
 
   _sdk.start();
-
-  if (options.instrumentModules?.openAI) {
-    (openAIInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.openAI,
-    );
-  }
-
-  if (options.instrumentModules?.llamaIndex) {
-    (llamaIndexInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.llamaIndex,
-    );
-  }
-
-  if (options.instrumentModules?.pinecone) {
-    (pineconeInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.pinecone,
-    );
-  }
-
-  if (options.instrumentModules?.google_vertexai) {
-    (vertexaiInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.google_vertexai,
-    );
-  }
-
-  if (options.instrumentModules?.google_aiplatform) {
-    (aiplatformInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.google_aiplatform,
-    );
-  }
-
-  if (options.instrumentModules?.bedrock) {
-    (bedrockInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.bedrock,
-    );
-  }
-
-  if (options.instrumentModules?.azureOpenAI) {
-    (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.azureOpenAI,
-    );
-  }
-
-  if (options.instrumentModules?.cohere) {
-    (cohereInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.cohere,
-    );
-  }
 };
 
 export const shouldSendTraces = () => {
