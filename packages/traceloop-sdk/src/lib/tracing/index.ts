@@ -34,7 +34,7 @@ const instrumentations: Instrumentation[] = [];
 
 const hasModule = (module: string) => {
   try {
-    require.resolve(module);
+    require.resolve(`${module}`);
     return true;
   } catch (e) {
     return false;
