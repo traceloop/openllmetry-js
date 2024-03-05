@@ -19,7 +19,7 @@
     "sourceMap": true,
     "strict": true,
     "strictNullChecks": true,
-    "target": "es2017",
+    "target": "es2016",
     "useUnknownInCatchVariables": false,
     "resolveJsonModule": true
   },
