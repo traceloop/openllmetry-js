@@ -3,6 +3,7 @@
   "version": "0.5.8",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/src/index.js",
+  "module": "dist/src/index.mjs",
   "types": "dist/src/index.d.ts",
   "repository": "traceloop/openllmetry-js",
   "scripts": {
