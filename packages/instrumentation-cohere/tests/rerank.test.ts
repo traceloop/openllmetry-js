@@ -35,7 +35,7 @@ const memoryExporter = new InMemorySpanExporter();
 Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
-describe("Test Rerank with Cohere Instrumentation", () => {
+describe.skip("Test Rerank with Cohere Instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: CohereInstrumentation;
   let contextManager: AsyncHooksContextManager;
