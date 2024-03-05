@@ -20,7 +20,7 @@ export class TraceloopError extends Error {
   /**
    * The underlying cause of the error.
    */
-  cause?: Error;
+  underlyingCause?: Error;
 
   constructor(message: string, severity: Severity = SEVERITY.Error) {
     super(message);
@@ -40,7 +40,7 @@ export class NotInitializedError extends TraceloopError {
 export class InitializationError extends TraceloopError {
   constructor(message?: string, cause?: Error) {
     super(message ?? "Failed to initialize Traceloop SDK", SEVERITY.Critical);
-    this.cause = cause;
+    this.underlyingCause = cause;
   }
 }
 
