@@ -57,7 +57,15 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  public manuallyInstrument(module: typeof bedrock) {
+  public manuallyInstrument(
+    module: typeof bedrock & { openLLMetryPatched?: boolean },
+  ) {
+    if (module.openLLMetryPatched) {
+      return;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.BedrockRuntimeClient.prototype,
       "send",
@@ -65,7 +73,13 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  private wrap(module: typeof bedrock) {
+  private wrap(module: typeof bedrock & { openLLMetryPatched?: boolean }) {
+    if (module.openLLMetryPatched) {
+      return module;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.BedrockRuntimeClient.prototype,
       "send",

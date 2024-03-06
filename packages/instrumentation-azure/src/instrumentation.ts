@@ -87,6 +87,8 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
       return moduleExports;
     }
 
+    moduleExports.openLLMetryPatched = true;
+
     this._wrap(
       moduleExports.OpenAIClient.prototype,
       "getChatCompletions",

@@ -59,37 +59,19 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  public manuallyInstrument(module: typeof cohere) {
-    this._wrap(
-      module.CohereClient.prototype,
-      "generate",
-      this.wrapperMethod("completion"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "generateStream",
-      this.wrapperMethod("completion"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "chat",
-      this.wrapperMethod("chat"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "chatStream",
-      this.wrapperMethod("chat"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "rerank",
-      this.wrapperMethod("rerank"),
-    );
-
-    return module;
+  public manuallyInstrument(
+    module: typeof cohere & { openLLMetryPatched?: boolean },
+  ) {
+    this.wrap(module);
   }
 
-  private wrap(module: typeof cohere) {
+  private wrap(module: typeof cohere & { openLLMetryPatched?: boolean }) {
+    if (module.openLLMetryPatched) {
+      return module;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.CohereClient.prototype,
       "generate",

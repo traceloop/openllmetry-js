@@ -105,6 +105,8 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       return moduleExports;
     }
 
+    moduleExports.openLLMetryPatched = true;
+
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._wrap(
@@ -118,7 +120,6 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         this.patchOpenAI("completion", "v3"),
       );
     } else {
-      moduleExports.openLLMetryPatched = true;
       this._wrap(
         moduleExports.OpenAI.Chat.Completions.prototype,
         "create",
