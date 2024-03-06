@@ -171,10 +171,33 @@ describe("Test LlamaIndex instrumentation", async function () {
     // TODO: Need to figure out why this doesn't get logged
     // assert.ok(spanNames.includes("get_query_embedding.task"));
 
-    assert.ok(spanNames.includes("retriever_query_engine.query"));
+    const retrieverQueryEngineSpan = spans.find(
+      (span) => span.name === "retriever_query_engine.query",
+    );
+
     assert.ok(spanNames.includes("retriever_query_engine.retrieve"));
     assert.ok(spanNames.includes("llamaindex.open_ai.chat"));
     assert.ok(spanNames.includes("response_synthesizer.synthesize"));
     assert.ok(spanNames.includes("vector_index_retriever.retrieve"));
+
+    assert.ok(retrieverQueryEngineSpan);
+    assert.ok(retrieverQueryEngineSpan.attributes["traceloop.entity.input"]);
+    assert.ok(retrieverQueryEngineSpan.attributes["traceloop.entity.output"]);
+    assert.strictEqual(
+      JSON.parse(
+        retrieverQueryEngineSpan.attributes[
+          "traceloop.entity.input"
+        ].toString(),
+      ).kwargs.query,
+      "Where was albert einstein born?",
+    );
+    assert.strictEqual(
+      JSON.parse(
+        retrieverQueryEngineSpan.attributes[
+          "traceloop.entity.output"
+        ].toString(),
+      ).response,
+      result.response,
+    );
   }).timeout(60000);
 });
