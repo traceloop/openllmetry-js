@@ -12,11 +12,13 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { context } from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
   InstrumentationNodeModuleDefinition,
 } from "@opentelemetry/instrumentation";
+import { CONTEXT_KEY_ALLOW_TRACE_CONTENT } from "@traceloop/ai-semantic-conventions";
 import { LangChainInstrumentationConfig } from "./types";
 import { taskWrapper, workflowWrapper } from "./utils";
 import type * as ChainsModule from "langchain/chains";
@@ -24,6 +26,8 @@ import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
 
 export class LangChainInstrumentation extends InstrumentationBase<any> {
+  protected override _config!: LangChainInstrumentationConfig;
+
   constructor(config: LangChainInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-langchain", "0.3.0", config);
   }
@@ -82,12 +86,16 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       moduleExports.RetrievalQAChain.prototype,
       "_call",
-      workflowWrapper(this.tracer, "retrieval_qa.workflow"),
+      workflowWrapper(
+        this.tracer,
+        this._shouldSendPrompts(),
+        "retrieval_qa.workflow",
+      ),
     );
     this._wrap(
       moduleExports.BaseChain.prototype,
       "call",
-      taskWrapper(this.tracer),
+      taskWrapper(this.tracer, this._shouldSendPrompts()),
     );
     return moduleExports;
   }
@@ -104,7 +112,11 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       moduleExports.AgentExecutor.prototype,
       "_call",
-      workflowWrapper(this.tracer, "langchain.agent"),
+      workflowWrapper(
+        this.tracer,
+        this._shouldSendPrompts(),
+        "langchain.agent",
+      ),
     );
     return moduleExports;
   }
@@ -118,7 +130,11 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
 
     moduleExports.openLLMetryPatched = true;
 
-    this._wrap(moduleExports.Tool.prototype, "call", taskWrapper(this.tracer));
+    this._wrap(
+      moduleExports.Tool.prototype,
+      "call",
+      taskWrapper(this.tracer, this._shouldSendPrompts()),
+    );
     return moduleExports;
   }
 
@@ -148,5 +164,19 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
 
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
+  }
+
+  private _shouldSendPrompts() {
+    const contextShouldSendPrompts = context
+      .active()
+      .getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT);
+
+    if (contextShouldSendPrompts !== undefined) {
+      return !!contextShouldSendPrompts;
+    }
+
+    return this._config.traceContent !== undefined
+      ? this._config.traceContent
+      : true;
   }
 }
