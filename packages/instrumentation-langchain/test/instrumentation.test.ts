@@ -141,6 +141,17 @@ describe("Test Langchain instrumentation", async function () {
     assert.ok(result);
     assert.ok(agentSpan);
     assert.strictEqual(agentSpan.attributes["traceloop.span.kind"], "workflow");
+    assert.ok(agentSpan.attributes["traceloop.entity.input"]);
+    assert.ok(agentSpan.attributes["traceloop.entity.output"]);
+    assert.strictEqual(
+      JSON.parse(agentSpan.attributes["traceloop.entity.input"].toString())
+        .args[0].input,
+      "Solve `5 * (10 + 2)`",
+    );
+    assert.deepEqual(
+      JSON.parse(agentSpan.attributes["traceloop.entity.output"].toString()),
+      result,
+    );
   }).timeout(60000);
 
   it("should set attributes in span for chain instrumentation", async () => {
@@ -207,6 +218,20 @@ describe("Test Langchain instrumentation", async function () {
       retrievalQAChainSpan.attributes["traceloop.span.kind"],
       "task",
     );
+    assert.ok(retrievalQAChainSpan.attributes["traceloop.entity.input"]);
+    assert.ok(retrievalQAChainSpan.attributes["traceloop.entity.output"]);
+    assert.strictEqual(
+      JSON.parse(
+        retrievalQAChainSpan.attributes["traceloop.entity.input"].toString(),
+      ).kwargs.query,
+      "What did the author do growing up?",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        retrievalQAChainSpan.attributes["traceloop.entity.output"].toString(),
+      ),
+      answer,
+    );
   }).timeout(300000);
 
   it("should set attributes in span for retrieval qa instrumentation", async () => {
@@ -253,6 +278,20 @@ describe("Test Langchain instrumentation", async function () {
       retrievalQASpan.attributes["traceloop.span.kind"],
       "workflow",
     );
+    assert.ok(retrievalQASpan.attributes["traceloop.entity.input"]);
+    assert.ok(retrievalQASpan.attributes["traceloop.entity.output"]);
+    assert.strictEqual(
+      JSON.parse(
+        retrievalQASpan.attributes["traceloop.entity.input"].toString(),
+      ).args[0].query,
+      "What did the president say about Justice Breyer?",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        retrievalQASpan.attributes["traceloop.entity.output"].toString(),
+      ),
+      answer,
+    );
   }).timeout(300000);
 
   it("should set correct attributes in span for LCEL", async () => {
@@ -285,5 +324,18 @@ describe("Test Langchain instrumentation", async function () {
     assert.ok(result);
     assert.ok(wikipediaSpan);
     assert.strictEqual(wikipediaSpan.attributes["traceloop.span.kind"], "task");
+    assert.ok(wikipediaSpan.attributes["traceloop.entity.input"]);
+    assert.ok(wikipediaSpan.attributes["traceloop.entity.output"]);
+    assert.strictEqual(
+      JSON.parse(wikipediaSpan.attributes["traceloop.entity.input"].toString())
+        .args[0],
+      "Current prime minister of Malaysia",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        wikipediaSpan.attributes["traceloop.entity.output"].toString(),
+      ),
+      result,
+    );
   }).timeout(300000);
 });
