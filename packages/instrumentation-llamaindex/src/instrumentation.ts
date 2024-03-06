@@ -23,7 +23,7 @@ import {
 
 import { LlamaIndexInstrumentationConfig } from "./types";
 import { CustomLLMInstrumentation } from "./custom-llm-instrumentation";
-import { genericWrapper } from "./utils";
+import { genericWrapper, shouldSendPrompts } from "./utils";
 
 import { BaseEmbedding, BaseSynthesizer, LLM, BaseRetriever } from "llamaindex";
 import { TraceloopSpanKindValues } from "@traceloop/ai-semantic-conventions";
@@ -102,6 +102,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
         "query",
         TraceloopSpanKindValues.WORKFLOW,
         this.tracer,
+        shouldSendPrompts(this._config),
       ),
     );
 
@@ -113,6 +114,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
         "chat",
         TraceloopSpanKindValues.WORKFLOW,
         this.tracer,
+        shouldSendPrompts(this._config),
       ),
     );
 
@@ -133,6 +135,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
             "getQueryEmbedding",
             TraceloopSpanKindValues.TASK,
             this.tracer,
+            shouldSendPrompts(this._config),
           ),
         );
       } else if (this.isSynthesizer(cls.prototype)) {
@@ -144,6 +147,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
             "synthesize",
             TraceloopSpanKindValues.TASK,
             this.tracer,
+            shouldSendPrompts(this._config),
           ),
         );
       } else if (this.isRetriever(cls.prototype)) {
@@ -155,6 +159,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
             "retrieve",
             TraceloopSpanKindValues.TASK,
             this.tracer,
+            shouldSendPrompts(this._config),
           ),
         );
       }
