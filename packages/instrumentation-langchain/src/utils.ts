@@ -7,6 +7,7 @@ import {
 
 export function genericWrapper(
   tracer: Tracer,
+  shouldSendPrompts: boolean,
   spanKind: TraceloopSpanKindValues,
   spanName?: string,
 ) {
@@ -17,6 +18,34 @@ export function genericWrapper(
         spanName || `langchain.${spanKind}.${this.constructor.name}`,
       );
       span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, spanKind);
+
+      if (shouldSendPrompts) {
+        try {
+          if (
+            args.length === 1 &&
+            typeof args[0] === "object" &&
+            !(args[0] instanceof Map)
+          ) {
+            span.setAttribute(
+              SpanAttributes.TRACELOOP_ENTITY_INPUT,
+              JSON.stringify({ args: [], kwargs: args[0] }),
+            );
+          } else {
+            span.setAttribute(
+              SpanAttributes.TRACELOOP_ENTITY_INPUT,
+              JSON.stringify({
+                args: args.map((arg) =>
+                  arg instanceof Map ? Array.from(arg.entries()) : arg,
+                ),
+                kwargs: {},
+              }),
+            );
+          }
+        } catch {
+          /* empty */
+        }
+      }
+
       const execContext = trace.setSpan(context.active(), span);
       const execPromise = safeExecuteInTheMiddle(
         () => {
@@ -31,8 +60,25 @@ export function genericWrapper(
         .then((result: any) => {
           return new Promise((resolve) => {
             span.setStatus({ code: SpanStatusCode.OK });
-            span.end();
-            resolve(result);
+
+            try {
+              if (shouldSendPrompts) {
+                if (result instanceof Map) {
+                  span.setAttribute(
+                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                    JSON.stringify(Array.from(result.entries())),
+                  );
+                } else {
+                  span.setAttribute(
+                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                    JSON.stringify(result),
+                  );
+                }
+              }
+            } finally {
+              span.end();
+              resolve(result);
+            }
           });
         })
         .catch((error: Error) => {
@@ -50,10 +96,28 @@ export function genericWrapper(
   };
 }
 
-export function taskWrapper(tracer: Tracer, spanName?: string) {
-  return genericWrapper(tracer, TraceloopSpanKindValues.TASK, spanName);
+export function taskWrapper(
+  tracer: Tracer,
+  shouldSendPrompts: boolean,
+  spanName?: string,
+) {
+  return genericWrapper(
+    tracer,
+    shouldSendPrompts,
+    TraceloopSpanKindValues.TASK,
+    spanName,
+  );
 }
 
-export function workflowWrapper(tracer: Tracer, spanName: string) {
-  return genericWrapper(tracer, TraceloopSpanKindValues.WORKFLOW, spanName);
+export function workflowWrapper(
+  tracer: Tracer,
+  shouldSendPrompts: boolean,
+  spanName: string,
+) {
+  return genericWrapper(
+    tracer,
+    shouldSendPrompts,
+    TraceloopSpanKindValues.WORKFLOW,
+    spanName,
+  );
 }
