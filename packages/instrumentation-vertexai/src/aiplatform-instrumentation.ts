@@ -89,7 +89,11 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof aiplatform): void {
+  private unwrap(
+    module: typeof aiplatform & { openLLMetryPatched?: boolean },
+  ): void {
+    module.openLLMetryPatched = false;
+
     this._unwrap(module.PredictionServiceClient.prototype, "predict");
   }
 

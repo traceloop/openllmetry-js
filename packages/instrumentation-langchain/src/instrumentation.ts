@@ -125,6 +125,8 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private unpatchChainModule(
     moduleExports: any & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.RetrievalQAChain.prototype, "_call");
     this._unwrap(moduleExports.BaseChain.prototype, "call");
     return moduleExports;
@@ -133,6 +135,8 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private unpatchAgentModule(
     moduleExports: any & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
   }
@@ -140,6 +144,8 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private unpatchToolsModule(
     moduleExports: any & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
   }

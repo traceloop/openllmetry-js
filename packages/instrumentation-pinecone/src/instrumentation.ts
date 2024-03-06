@@ -87,7 +87,11 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof pinecone): void {
+  private unpatch(
+    moduleExports: typeof pinecone & { openLLMetryPatched?: boolean },
+  ): void {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.Index.prototype, "query");
     this._unwrap(moduleExports.Index.prototype, "upsert");
     this._unwrap(moduleExports.Index.prototype, "deleteAll");

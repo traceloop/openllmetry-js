@@ -89,7 +89,9 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof bedrock) {
+  private unwrap(module: typeof bedrock & { openLLMetryPatched?: boolean }) {
+    module.openLLMetryPatched = false;
+
     this._unwrap(module.BedrockRuntimeClient.prototype, "send");
   }
 

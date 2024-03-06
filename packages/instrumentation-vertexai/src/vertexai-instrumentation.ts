@@ -104,7 +104,11 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof vertexAI): void {
+  private unwrap(
+    module: typeof vertexAI & { openLLMetryPatched?: boolean },
+  ): void {
+    module.openLLMetryPatched = false;
+
     this._unwrap(module.VertexAI_Preview.prototype, "getGenerativeModel");
     this._unwrap(module.GenerativeModel.prototype, "generateContentStream");
   }

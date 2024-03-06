@@ -2,12 +2,10 @@
   "compilerOptions": {
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "composite": true,
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "incremental": true,
     "inlineSources": true,
     "module": "commonjs",
     "newLine": "LF",
@@ -21,7 +19,7 @@
     "sourceMap": true,
     "strict": true,
     "strictNullChecks": true,
-    "target": "es2017",
+    "target": "es2016",
     "useUnknownInCatchVariables": false,
     "resolveJsonModule": true
   },

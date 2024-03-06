@@ -102,7 +102,11 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof azure): void {
+  private unpatch(
+    moduleExports: typeof azure & { openLLMetryPatched?: boolean },
+  ): void {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.OpenAIClient.prototype, "getChatCompletions");
     this._unwrap(moduleExports.OpenAIClient.prototype, "getCompletions");
   }

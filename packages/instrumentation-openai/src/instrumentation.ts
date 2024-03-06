@@ -134,7 +134,11 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof openai): void {
+  private unpatch(
+    moduleExports: typeof openai & { openLLMetryPatched?: boolean },
+  ): void {
+    moduleExports.openLLMetryPatched = false;
+
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._unwrap(

@@ -101,8 +101,9 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof cohere) {
-    // this._unwrap(module.CohereClient.prototype, "generate");
+  private unwrap(module: typeof cohere & { openLLMetryPatched?: boolean }) {
+    module.openLLMetryPatched = false;
+
     this._unwrap(module.CohereClient.prototype, "generateStream");
     this._unwrap(module.CohereClient.prototype, "chat");
     this._unwrap(module.CohereClient.prototype, "chatStream");

@@ -166,6 +166,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   private unpatch(
     moduleExports: typeof llamaindex & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.RetrieverQueryEngine.prototype, "query");
 
     for (const key in moduleExports) {
