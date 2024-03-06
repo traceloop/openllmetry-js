@@ -52,6 +52,11 @@ xwxw   * This is a workaround specific to Next.js, see https://www.traceloop.com
    */
   instrumentModules?: {
     openAI?: any;
+    langchain?: {
+      chainsModule?: any;
+      agentsModule?: any;
+      toolsModule?: any;
+    };
     llamaIndex?: any;
     pinecone?: any;
     google_vertexai?: any;

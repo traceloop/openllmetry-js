@@ -57,7 +57,15 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     return aiPlatformModule;
   }
 
-  public manuallyInstrument(module: typeof aiplatform) {
+  public manuallyInstrument(
+    module: typeof aiplatform & { openLLMetryPatched?: boolean },
+  ) {
+    if (module.openLLMetryPatched) {
+      return;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.PredictionServiceClient.prototype,
       "predict",
@@ -65,7 +73,13 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  private wrap(module: typeof aiplatform) {
+  private wrap(module: typeof aiplatform & { openLLMetryPatched?: boolean }) {
+    if (module.openLLMetryPatched) {
+      return module;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.PredictionServiceClient.prototype,
       "predict",
@@ -75,7 +89,11 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof aiplatform): void {
+  private unwrap(
+    module: typeof aiplatform & { openLLMetryPatched?: boolean },
+  ): void {
+    module.openLLMetryPatched = false;
+
     this._unwrap(module.PredictionServiceClient.prototype, "predict");
   }
 

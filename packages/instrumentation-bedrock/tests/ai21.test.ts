@@ -65,6 +65,10 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
     );
   });
 
+  after(() => {
+    instrumentation.disable();
+  });
+
   beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);

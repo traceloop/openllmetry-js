@@ -42,10 +42,6 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   public manuallyInstrument(
     module: typeof llamaindex & { openLLMetryPatched?: boolean },
   ) {
-    if (module.openLLMetryPatched) {
-      return;
-    }
-
     this.patch(module);
   }
 
@@ -90,6 +86,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     if (moduleExports.openLLMetryPatched) {
       return moduleExports;
     }
+
+    moduleExports.openLLMetryPatched = true;
 
     const customLLMInstrumentation = new CustomLLMInstrumentation(
       this._config,
@@ -168,6 +166,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   private unpatch(
     moduleExports: typeof llamaindex & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.RetrieverQueryEngine.prototype, "query");
 
     for (const key in moduleExports) {

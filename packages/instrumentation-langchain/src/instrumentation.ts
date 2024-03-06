@@ -28,9 +28,23 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     super("@traceloop/instrumentation-langchain", "0.3.0", config);
   }
 
-  public manuallyInstrument(module: any & { openLLMetryPatched?: boolean }) {
-    if (module.openLLMetryPatched) {
-      return;
+  public manuallyInstrument({
+    chainsModule,
+    agentsModule,
+    toolsModule,
+  }: {
+    chainsModule?: any & { openLLMetryPatched?: boolean };
+    agentsModule?: any & { openLLMetryPatched?: boolean };
+    toolsModule?: any & { openLLMetryPatched?: boolean };
+  }) {
+    if (chainsModule) {
+      this.patchChainModule(chainsModule);
+    }
+    if (agentsModule) {
+      this.patchAgentModule(agentsModule);
+    }
+    if (toolsModule) {
+      this.patchToolsModule(toolsModule);
     }
   }
 
@@ -59,6 +73,12 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private patchChainModule(
     moduleExports: typeof ChainsModule & { openLLMetryPatched?: boolean },
   ) {
+    if (moduleExports.openLLMetryPatched) {
+      return moduleExports;
+    }
+
+    moduleExports.openLLMetryPatched = true;
+
     this._wrap(
       moduleExports.RetrievalQAChain.prototype,
       "_call",
@@ -75,6 +95,12 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private patchAgentModule(
     moduleExports: typeof AgentsModule & { openLLMetryPatched?: boolean },
   ) {
+    if (moduleExports.openLLMetryPatched) {
+      return moduleExports;
+    }
+
+    moduleExports.openLLMetryPatched = true;
+
     this._wrap(
       moduleExports.AgentExecutor.prototype,
       "_call",
@@ -86,6 +112,12 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private patchToolsModule(
     moduleExports: typeof ToolsModule & { openLLMetryPatched?: boolean },
   ) {
+    if (moduleExports.openLLMetryPatched) {
+      return moduleExports;
+    }
+
+    moduleExports.openLLMetryPatched = true;
+
     this._wrap(moduleExports.Tool.prototype, "call", taskWrapper(this.tracer));
     return moduleExports;
   }
@@ -93,6 +125,8 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private unpatchChainModule(
     moduleExports: any & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.RetrievalQAChain.prototype, "_call");
     this._unwrap(moduleExports.BaseChain.prototype, "call");
     return moduleExports;
@@ -101,6 +135,8 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private unpatchAgentModule(
     moduleExports: any & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
   }
@@ -108,6 +144,8 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
   private unpatchToolsModule(
     moduleExports: any & { openLLMetryPatched?: boolean },
   ) {
+    moduleExports.openLLMetryPatched = false;
+
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
   }
