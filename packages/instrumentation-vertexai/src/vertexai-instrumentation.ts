@@ -62,7 +62,15 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     this.modelConfig = { ...newValue };
   }
 
-  public manuallyInstrument(module: typeof vertexAI) {
+  public manuallyInstrument(
+    module: typeof vertexAI & { openLLMetryPatched?: boolean },
+  ) {
+    if (module.openLLMetryPatched) {
+      return;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.VertexAI_Preview.prototype,
       "getGenerativeModel",
@@ -75,7 +83,13 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  private wrap(module: typeof vertexAI) {
+  private wrap(module: typeof vertexAI & { openLLMetryPatched?: boolean }) {
+    if (module.openLLMetryPatched) {
+      return module;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.VertexAI_Preview.prototype,
       "getGenerativeModel",
@@ -90,7 +104,11 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof vertexAI): void {
+  private unwrap(
+    module: typeof vertexAI & { openLLMetryPatched?: boolean },
+  ): void {
+    module.openLLMetryPatched = false;
+
     this._unwrap(module.VertexAI_Preview.prototype, "getGenerativeModel");
     this._unwrap(module.GenerativeModel.prototype, "generateContentStream");
   }

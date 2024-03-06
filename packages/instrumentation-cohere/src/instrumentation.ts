@@ -59,7 +59,19 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  public manuallyInstrument(module: typeof cohere) {
+  public manuallyInstrument(
+    module: typeof cohere & { openLLMetryPatched?: boolean },
+  ) {
+    this.wrap(module);
+  }
+
+  private wrap(module: typeof cohere & { openLLMetryPatched?: boolean }) {
+    if (module.openLLMetryPatched) {
+      return module;
+    }
+
+    module.openLLMetryPatched = true;
+
     this._wrap(
       module.CohereClient.prototype,
       "generate",
@@ -89,38 +101,9 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private wrap(module: typeof cohere) {
-    this._wrap(
-      module.CohereClient.prototype,
-      "generate",
-      this.wrapperMethod("completion"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "generateStream",
-      this.wrapperMethod("completion"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "chat",
-      this.wrapperMethod("chat"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "chatStream",
-      this.wrapperMethod("chat"),
-    );
-    this._wrap(
-      module.CohereClient.prototype,
-      "rerank",
-      this.wrapperMethod("rerank"),
-    );
+  private unwrap(module: typeof cohere & { openLLMetryPatched?: boolean }) {
+    module.openLLMetryPatched = false;
 
-    return module;
-  }
-
-  private unwrap(module: typeof cohere) {
-    // this._unwrap(module.CohereClient.prototype, "generate");
     this._unwrap(module.CohereClient.prototype, "generateStream");
     this._unwrap(module.CohereClient.prototype, "chat");
     this._unwrap(module.CohereClient.prototype, "chatStream");

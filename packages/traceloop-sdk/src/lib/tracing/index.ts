@@ -145,6 +145,15 @@ export const manuallyInitInstrumentations = (
     instrumentation.manuallyInstrument(instrumentModules.llamaIndex);
   }
 
+  if (instrumentModules?.langchain) {
+    const {
+      LangChainInstrumentation,
+    } = require("@traceloop/instrumentation-langchain");
+    const instrumentation = new LangChainInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    instrumentation.manuallyInstrument(instrumentModules.langchain);
+  }
+
   if (instrumentModules?.pinecone) {
     const {
       PineconeInstrumentation,

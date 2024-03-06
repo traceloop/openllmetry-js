@@ -65,6 +65,10 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
     );
   });
 
+  after(() => {
+    instrumentation.disable();
+  });
+
   beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
