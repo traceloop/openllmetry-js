@@ -91,7 +91,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
 
     const customLLMInstrumentation = new CustomLLMInstrumentation(
       this._config,
-      this.tracer,
+      () => this.tracer, // this is on purpose. Tracer may change
     );
 
     this._wrap(
@@ -101,7 +101,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
         moduleExports.RetrieverQueryEngine.name,
         "query",
         TraceloopSpanKindValues.WORKFLOW,
-        this.tracer,
+        () => this.tracer,
         shouldSendPrompts(this._config),
       ),
     );
@@ -113,7 +113,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
         moduleExports.ContextChatEngine.name,
         "chat",
         TraceloopSpanKindValues.WORKFLOW,
-        this.tracer,
+        () => this.tracer,
         shouldSendPrompts(this._config),
       ),
     );
@@ -134,7 +134,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
             cls.name,
             "getQueryEmbedding",
             TraceloopSpanKindValues.TASK,
-            this.tracer,
+            () => this.tracer,
             shouldSendPrompts(this._config),
           ),
         );
@@ -146,7 +146,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
             cls.name,
             "synthesize",
             TraceloopSpanKindValues.TASK,
-            this.tracer,
+            () => this.tracer,
             shouldSendPrompts(this._config),
           ),
         );
@@ -158,7 +158,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
             cls.name,
             "retrieve",
             TraceloopSpanKindValues.TASK,
-            this.tracer,
+            () => this.tracer,
             shouldSendPrompts(this._config),
           ),
         );

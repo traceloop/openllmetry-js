@@ -25,9 +25,9 @@ type AsyncResponseType =
 
 export class CustomLLMInstrumentation {
   private config: LlamaIndexInstrumentationConfig;
-  private tracer: Tracer;
+  private tracer: () => Tracer;
 
-  constructor(config: LlamaIndexInstrumentationConfig, tracer: Tracer) {
+  constructor(config: LlamaIndexInstrumentationConfig, tracer: () => Tracer) {
     this.config = config;
     this.tracer = tracer;
   }
@@ -42,10 +42,11 @@ export class CustomLLMInstrumentation {
         const messages = params?.messages;
         const streaming = params?.stream;
 
-        const span = plugin.tracer.startSpan(
-          `llamaindex.${lodash.snakeCase(className)}.chat`,
-          { kind: SpanKind.CLIENT },
-        );
+        const span = plugin
+          .tracer()
+          .startSpan(`llamaindex.${lodash.snakeCase(className)}.chat`, {
+            kind: SpanKind.CLIENT,
+          });
 
         span.setAttribute(SpanAttributes.LLM_VENDOR, className);
         span.setAttribute(

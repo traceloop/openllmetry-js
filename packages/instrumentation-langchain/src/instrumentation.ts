@@ -85,7 +85,7 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
       moduleExports.RetrievalQAChain.prototype,
       "_call",
       workflowWrapper(
-        this.tracer,
+        () => this.tracer,
         this._shouldSendPrompts(),
         "retrieval_qa.workflow",
       ),
@@ -93,7 +93,7 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       moduleExports.BaseChain.prototype,
       "call",
-      taskWrapper(this.tracer, this._shouldSendPrompts()),
+      taskWrapper(() => this.tracer, this._shouldSendPrompts()),
     );
     return moduleExports;
   }
@@ -109,7 +109,7 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
       moduleExports.AgentExecutor.prototype,
       "_call",
       workflowWrapper(
-        this.tracer,
+        () => this.tracer,
         this._shouldSendPrompts(),
         "langchain.agent",
       ),
@@ -127,7 +127,7 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       moduleExports.Tool.prototype,
       "call",
-      taskWrapper(this.tracer, this._shouldSendPrompts()),
+      taskWrapper(() => this.tracer, this._shouldSendPrompts()),
     );
     return moduleExports;
   }
