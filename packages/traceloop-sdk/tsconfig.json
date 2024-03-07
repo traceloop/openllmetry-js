@@ -3,10 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "experimentalDecorators": true,
-    "module": "esnext",
-    "moduleResolution": "bundler"
+    "experimentalDecorators": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "references": []
 }
