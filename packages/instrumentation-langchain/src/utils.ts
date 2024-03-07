@@ -6,7 +6,7 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 
 export function genericWrapper(
-  tracer: Tracer,
+  tracer: () => Tracer,
   shouldSendPrompts: boolean,
   spanKind: TraceloopSpanKindValues,
   spanName?: string,
@@ -14,7 +14,7 @@ export function genericWrapper(
   // eslint-disable-next-line @typescript-eslint/ban-types
   return (original: Function) => {
     return function method(this: any, ...args: unknown[]) {
-      const span = tracer.startSpan(
+      const span = tracer().startSpan(
         spanName || `langchain.${spanKind}.${this.constructor.name}`,
       );
       span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, spanKind);
@@ -97,7 +97,7 @@ export function genericWrapper(
 }
 
 export function taskWrapper(
-  tracer: Tracer,
+  tracer: () => Tracer,
   shouldSendPrompts: boolean,
   spanName?: string,
 ) {
@@ -110,7 +110,7 @@ export function taskWrapper(
 }
 
 export function workflowWrapper(
-  tracer: Tracer,
+  tracer: () => Tracer,
   shouldSendPrompts: boolean,
   spanName: string,
 ) {

@@ -44,14 +44,14 @@ export function genericWrapper(
   className: string,
   methodName: string,
   kind: TraceloopSpanKindValues,
-  tracer: Tracer,
+  tracer: () => Tracer,
   shouldSendPrompts: boolean,
 ) {
   // eslint-disable-next-line @typescript-eslint/ban-types
   return (original: Function) => {
     return function method(this: any, ...args: unknown[]) {
       const name = `${lodash.snakeCase(className)}.${lodash.snakeCase(methodName)}`;
-      const span = tracer.startSpan(`${name}`);
+      const span = tracer().startSpan(`${name}`, {}, context.active());
       span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, kind);
 
       if (kind === TraceloopSpanKindValues.WORKFLOW) {
