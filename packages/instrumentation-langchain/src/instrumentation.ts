@@ -81,8 +81,6 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
       return moduleExports;
     }
 
-    moduleExports.openLLMetryPatched = true;
-
     this._wrap(
       moduleExports.RetrievalQAChain.prototype,
       "_call",
@@ -107,8 +105,6 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
       return moduleExports;
     }
 
-    moduleExports.openLLMetryPatched = true;
-
     this._wrap(
       moduleExports.AgentExecutor.prototype,
       "_call",
@@ -127,8 +123,6 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     if (moduleExports.openLLMetryPatched) {
       return moduleExports;
     }
-
-    moduleExports.openLLMetryPatched = true;
 
     this._wrap(
       moduleExports.Tool.prototype,
