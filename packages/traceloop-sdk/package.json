@@ -3,10 +3,11 @@
   "version": "0.5.16",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/src/index.js",
+  "module": "dist/src/index.mjs",
   "types": "dist/src/index.d.ts",
   "repository": "traceloop/openllmetry-js",
   "scripts": {
-    "build": "tsc --build tsconfig.json",
+    "build": "rollup -c",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "ts-mocha -p tsconfig.test.json 'test/**/*.test.ts'"

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "target": "es2017"
   },
   "include": ["src/**/*.ts"],
   "references": []
