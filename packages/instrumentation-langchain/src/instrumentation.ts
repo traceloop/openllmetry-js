@@ -37,9 +37,9 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     agentsModule,
     toolsModule,
   }: {
-    chainsModule?: any & { openLLMetryPatched?: boolean };
-    agentsModule?: any & { openLLMetryPatched?: boolean };
-    toolsModule?: any & { openLLMetryPatched?: boolean };
+    chainsModule?: any;
+    agentsModule?: any;
+    toolsModule?: any;
   }) {
     if (chainsModule) {
       this.patchChainModule(chainsModule);
@@ -74,13 +74,7 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return [chainModule, agentModule, toolsModule];
   }
 
-  private patchChainModule(
-    moduleExports: typeof ChainsModule & { openLLMetryPatched?: boolean },
-  ) {
-    if (moduleExports.openLLMetryPatched) {
-      return moduleExports;
-    }
-
+  private patchChainModule(moduleExports: typeof ChainsModule) {
     this._wrap(
       moduleExports.RetrievalQAChain.prototype,
       "_call",
@@ -98,13 +92,7 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private patchAgentModule(
-    moduleExports: typeof AgentsModule & { openLLMetryPatched?: boolean },
-  ) {
-    if (moduleExports.openLLMetryPatched) {
-      return moduleExports;
-    }
-
+  private patchAgentModule(moduleExports: typeof AgentsModule) {
     this._wrap(
       moduleExports.AgentExecutor.prototype,
       "_call",
@@ -117,13 +105,7 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private patchToolsModule(
-    moduleExports: typeof ToolsModule & { openLLMetryPatched?: boolean },
-  ) {
-    if (moduleExports.openLLMetryPatched) {
-      return moduleExports;
-    }
-
+  private patchToolsModule(moduleExports: typeof ToolsModule) {
     this._wrap(
       moduleExports.Tool.prototype,
       "call",
@@ -132,30 +114,18 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatchChainModule(
-    moduleExports: any & { openLLMetryPatched?: boolean },
-  ) {
-    moduleExports.openLLMetryPatched = false;
-
+  private unpatchChainModule(moduleExports: any) {
     this._unwrap(moduleExports.RetrievalQAChain.prototype, "_call");
     this._unwrap(moduleExports.BaseChain.prototype, "call");
     return moduleExports;
   }
 
-  private unpatchAgentModule(
-    moduleExports: any & { openLLMetryPatched?: boolean },
-  ) {
-    moduleExports.openLLMetryPatched = false;
-
+  private unpatchAgentModule(moduleExports: any) {
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
   }
 
-  private unpatchToolsModule(
-    moduleExports: any & { openLLMetryPatched?: boolean },
-  ) {
-    moduleExports.openLLMetryPatched = false;
-
+  private unpatchToolsModule(moduleExports: any) {
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
   }

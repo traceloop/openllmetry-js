@@ -59,19 +59,11 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  public manuallyInstrument(
-    module: typeof cohere & { openLLMetryPatched?: boolean },
-  ) {
+  public manuallyInstrument(module: typeof cohere) {
     this.wrap(module);
   }
 
-  private wrap(module: typeof cohere & { openLLMetryPatched?: boolean }) {
-    if (module.openLLMetryPatched) {
-      return module;
-    }
-
-    module.openLLMetryPatched = true;
-
+  private wrap(module: typeof cohere) {
     this._wrap(
       module.CohereClient.prototype,
       "generate",
@@ -101,9 +93,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof cohere & { openLLMetryPatched?: boolean }) {
-    module.openLLMetryPatched = false;
-
+  private unwrap(module: typeof cohere) {
     this._unwrap(module.CohereClient.prototype, "generateStream");
     this._unwrap(module.CohereClient.prototype, "chat");
     this._unwrap(module.CohereClient.prototype, "chatStream");

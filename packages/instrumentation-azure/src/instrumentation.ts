@@ -50,13 +50,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  public manuallyInstrument(
-    module: typeof azure & { openLLMetryPatched?: boolean },
-  ) {
-    if (module.openLLMetryPatched) {
-      return;
-    }
-
+  public manuallyInstrument(module: typeof azure) {
     this._wrap(
       module.OpenAIClient.prototype,
       "getChatCompletions",
@@ -80,15 +74,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(
-    moduleExports: typeof azure & { openLLMetryPatched?: boolean },
-  ) {
-    if (moduleExports.openLLMetryPatched) {
-      return moduleExports;
-    }
-
-    moduleExports.openLLMetryPatched = true;
-
+  private patch(moduleExports: typeof azure) {
     this._wrap(
       moduleExports.OpenAIClient.prototype,
       "getChatCompletions",
@@ -102,11 +88,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(
-    moduleExports: typeof azure & { openLLMetryPatched?: boolean },
-  ): void {
-    moduleExports.openLLMetryPatched = false;
-
+  private unpatch(moduleExports: typeof azure): void {
     this._unwrap(moduleExports.OpenAIClient.prototype, "getChatCompletions");
     this._unwrap(moduleExports.OpenAIClient.prototype, "getCompletions");
   }

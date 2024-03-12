@@ -55,13 +55,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  public manuallyInstrument(
-    module: typeof openai.OpenAI & { openLLMetryPatched?: boolean },
-  ) {
-    if (module.openLLMetryPatched) {
-      return;
-    }
-
+  public manuallyInstrument(module: typeof openai.OpenAI) {
     // Old version of OpenAI API (v3.1.0)
     if ((module as any).OpenAIApi) {
       this._wrap(
@@ -98,15 +92,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(
-    moduleExports: typeof openai & { openLLMetryPatched?: boolean },
-  ) {
-    if (moduleExports.openLLMetryPatched) {
-      return moduleExports;
-    }
-
-    moduleExports.openLLMetryPatched = true;
-
+  private patch(moduleExports: typeof openai) {
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._wrap(
@@ -134,11 +120,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(
-    moduleExports: typeof openai & { openLLMetryPatched?: boolean },
-  ): void {
-    moduleExports.openLLMetryPatched = false;
-
+  private unpatch(moduleExports: typeof openai): void {
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._unwrap(
