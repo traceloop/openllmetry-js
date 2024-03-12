@@ -47,6 +47,7 @@
     "@traceloop/instrumentation-pinecone": "^0.5.19",
     "@traceloop/instrumentation-vertexai": "^0.5.19",
     "@types/nunjucks": "^3.2.5",
+    "cross-fetch": "^4.0.0",
     "fetch-retry": "^5.0.6",
     "nunjucks": "^3.2.4",
     "posthog-node": "^3.6.3",
