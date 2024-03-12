@@ -33,9 +33,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     super("@traceloop/instrumentation-pinecone", "0.3.0", config);
   }
 
-  public manuallyInstrument(
-    module: typeof pinecone & { openLLMetryPatched?: boolean },
-  ) {
+  public manuallyInstrument(module: typeof pinecone) {
     this.patch(module);
   }
 
@@ -49,15 +47,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(
-    moduleExports: typeof pinecone & { openLLMetryPatched?: boolean },
-  ) {
-    if (moduleExports.openLLMetryPatched) {
-      return moduleExports;
-    }
-
-    moduleExports.openLLMetryPatched = true;
-
+  private patch(moduleExports: typeof pinecone) {
     this._wrap(
       moduleExports.Index.prototype,
       "query",
@@ -87,11 +77,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(
-    moduleExports: typeof pinecone & { openLLMetryPatched?: boolean },
-  ): void {
-    moduleExports.openLLMetryPatched = false;
-
+  private unpatch(moduleExports: typeof pinecone): void {
     this._unwrap(moduleExports.Index.prototype, "query");
     this._unwrap(moduleExports.Index.prototype, "upsert");
     this._unwrap(moduleExports.Index.prototype, "deleteAll");
