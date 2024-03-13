@@ -34,9 +34,7 @@ class SampleLlamaIndex {
 
     const queryEngine = index.asQueryEngine();
 
-    const res = await queryEngine.query({
-      query: "What did the author do growing up?",
-    });
+    const res = await queryEngine.query("What did the author do growing up?");
     return res;
   }
 }
