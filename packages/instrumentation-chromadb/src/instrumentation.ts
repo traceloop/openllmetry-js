@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Span, SpanStatusCode, context, trace } from "@opentelemetry/api";
+import {
+  Span,
+  SpanKind,
+  Attributes,
+  SpanStatusCode,
+  context,
+  trace,
+} from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
@@ -22,6 +29,10 @@ import {
 } from "@opentelemetry/instrumentation";
 import { ChromaDBInstrumentationConfig } from "./types";
 import * as chromadb from "chromadb";
+import {
+  SpanAttributes,
+  EventAttributes,
+} from "@traceloop/ai-semantic-conventions";
 
 export class ChromaDBInstrumentation extends InstrumentationBase<any> {
   protected override _config!: ChromaDBInstrumentationConfig;
@@ -81,7 +92,10 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: any) {
-        const span = this.tracer.startSpan(`chroma.${original.name}`);
+        const span = plugin._startSpan({
+          params: args[0],
+          methodName: original.name,
+        });
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           () => {
@@ -91,16 +105,36 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
           },
           () => {},
         );
-        const wrappedPromise = plugin._wrapPromise(span, execPromise);
+        const wrappedPromise = plugin._wrapPromise(
+          original.name,
+          span,
+          execPromise,
+        );
         return context.bind(execContext, wrappedPromise as any);
       };
     };
   }
 
-  private _wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
+  private _wrapPromise<T>(
+    methodName: string,
+    span: Span,
+    promise: Promise<T>,
+  ): Promise<T> {
     return promise
       .then(async (result) => {
-        return new Promise<T>((resolve) => resolve(result));
+        const awaitedResult = (await result) as
+          | chromadb.GetResponse
+          | chromadb.QueryResponse;
+
+        this._endSpan({
+          methodName,
+          span,
+          result: awaitedResult,
+        });
+
+        return new Promise<T>((resolve) => {
+          resolve(result);
+        });
       })
       .catch((error: Error) => {
         return new Promise<T>((_, reject) => {
@@ -109,10 +143,60 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
             message: error.message,
           });
           span.recordException(error);
-          span.end();
-
           reject(error);
         });
+      })
+      .finally(() => {
+        span.end();
       });
+  }
+
+  private _startSpan({
+    params,
+    methodName,
+  }: {
+    params: chromadb.GetParams | chromadb.PeekParams;
+    methodName: string;
+  }): Span {
+    const attributes: Attributes = {
+      [SpanAttributes.VECTOR_DB_VENDOR]: "ChromaDB",
+    };
+    const span = this.tracer.startSpan(`chromadb.${methodName}`, {
+      kind: SpanKind.CLIENT,
+      attributes,
+    });
+
+    // Instrumenting only for query and peak
+    if (methodName === "query" || methodName === "peak") {
+      const query_request_event = span.addEvent("chromadb.query.request");
+      query_request_event.setAttribute(
+        EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
+        JSON.stringify(params),
+      );
+    }
+
+    return span;
+  }
+
+  private _endSpan({
+    methodName,
+    span,
+    result,
+  }: {
+    methodName: string;
+    span: Span;
+    result: chromadb.GetResponse | chromadb.QueryResponse;
+  }): void {
+    // Instrumenting only for query and peak
+    if (methodName === "query" || methodName === "peak") {
+      const query_result_event = span.addEvent("chromadb.query.result");
+      query_result_event.setAttribute(
+        EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES,
+        JSON.stringify(result),
+      );
+    }
+
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
   }
 }

@@ -44,3 +44,5 @@ Thumbs.db
 
 # env
 .env*
+/packages/sample-app/chromadb
+chroma.log
