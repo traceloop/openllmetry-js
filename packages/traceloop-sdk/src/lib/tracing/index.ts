@@ -122,6 +122,17 @@ export const initInstrumentations = () => {
   } catch (e) {
     /* empty */
   }
+
+  try {
+    const {
+      ChromadbInstrumentation,
+    } = require("@traceloop/instrumentation-chromadb");
+    const instrumentation = new ChromadbInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    chromadbInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
+  }
 };
 
 export const manuallyInitInstrumentations = (
