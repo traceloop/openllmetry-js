@@ -103,7 +103,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          () => {},
+          () => null,
         );
         const wrappedPromise = plugin._wrapPromise(
           original.name,
@@ -167,7 +167,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     });
 
     // Instrumenting only for query and peak
-    if (methodName === "query" || methodName === "peek") {
+    if (methodName === "query" || methodName === "pek") {
       const query_request_event = span.addEvent("chromadb.query.request");
       query_request_event.setAttribute(
         EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
