@@ -32,12 +32,13 @@ import type {
   BaseRetriever,
 } from "llamaindex";
 import { TraceloopSpanKindValues } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   protected override _config!: LlamaIndexInstrumentationConfig;
 
   constructor(config: LlamaIndexInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-llamaindex", "0.3.0", config);
+    super("@traceloop/instrumentation-llamaindex", version, config);
   }
 
   public override setConfig(config: LlamaIndexInstrumentationConfig = {}) {

@@ -34,12 +34,13 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 import type * as aiplatform from "@google-cloud/aiplatform";
 import type { CallOptions, Callback } from "google-gax";
+import { version } from "../package.json";
 
 export class AIPlatformInstrumentation extends InstrumentationBase<any> {
   protected override _config!: AIPlatformInstrumentationConfig;
 
   constructor(config: AIPlatformInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-vertexai", "0.3.0", config);
+    super("@traceloop/instrumentation-vertexai", version, config);
   }
 
   public override setConfig(config: AIPlatformInstrumentationConfig = {}) {

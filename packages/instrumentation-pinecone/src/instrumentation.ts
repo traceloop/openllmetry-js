@@ -27,10 +27,11 @@ import {
   SpanAttributes,
   EventAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 export class PineconeInstrumentation extends InstrumentationBase<any> {
   constructor(config: InstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-pinecone", "0.3.0", config);
+    super("@traceloop/instrumentation-pinecone", version, config);
   }
 
   public manuallyInstrument(module: typeof pinecone) {

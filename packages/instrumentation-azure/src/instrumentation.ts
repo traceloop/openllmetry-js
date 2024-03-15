@@ -38,12 +38,13 @@ import type {
   ChatRequestMessage,
   Completions,
 } from "@azure/openai";
+import { version } from "../package.json";
 
 export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: AzureOpenAIInstrumentationConfig;
 
   constructor(config: AzureOpenAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-azure", "0.3.0", config);
+    super("@traceloop/instrumentation-azure", version, config);
   }
 
   public override setConfig(config: AzureOpenAIInstrumentationConfig = {}) {

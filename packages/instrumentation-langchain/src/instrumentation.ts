@@ -24,12 +24,13 @@ import { taskWrapper, workflowWrapper } from "./utils";
 import type * as ChainsModule from "langchain/chains";
 import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
+import { version } from "../package.json";
 
 export class LangChainInstrumentation extends InstrumentationBase<any> {
   protected override _config!: LangChainInstrumentationConfig;
 
   constructor(config: LangChainInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-langchain", "0.3.0", config);
+    super("@traceloop/instrumentation-langchain", version, config);
   }
 
   public manuallyInstrument({

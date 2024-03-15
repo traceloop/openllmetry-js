@@ -1,5 +1,6 @@
 import { _configuration } from "../configuration";
 import { diag } from "@opentelemetry/api";
+import { version } from "../../../package.json";
 
 export async function reportScore(
   associationProperty: { [name: string]: string },
@@ -27,7 +28,7 @@ export async function reportScore(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${_configuration.apiKey}`,
-      "X-Traceloop-SDK-Version": "0.0.30",
+      "X-Traceloop-SDK-Version": version,
     },
     body: JSON.stringify({
       score,
