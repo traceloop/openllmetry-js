@@ -40,6 +40,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof llamaindex) {
+    this._diag.debug("Manually instrumenting llamaindex");
+
     this.patch(module);
   }
 
@@ -78,7 +80,9 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     return retriever && (retriever as BaseRetriever).retrieve !== undefined;
   }
 
-  private patch(moduleExports: typeof llamaindex) {
+  private patch(moduleExports: typeof llamaindex, moduleVersion?: string) {
+    this._diag.debug(`Patching llamaindex@${moduleVersion}`);
+
     const customLLMInstrumentation = new CustomLLMInstrumentation(
       this._config,
       () => this.tracer, // this is on purpose. Tracer may change
@@ -158,7 +162,9 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof llamaindex) {
+  private unpatch(moduleExports: typeof llamaindex, moduleVersion?: string) {
+    this._diag.debug(`Unpatching llamaindex@${moduleVersion}`);
+
     this._unwrap(moduleExports.RetrieverQueryEngine.prototype, "query");
 
     for (const key in moduleExports) {

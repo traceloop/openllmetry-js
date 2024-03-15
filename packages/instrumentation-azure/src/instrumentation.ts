@@ -51,6 +51,8 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof azure) {
+    this._diag.debug(`Patching @azure/openai manually`);
+
     this._wrap(
       module.OpenAIClient.prototype,
       "getChatCompletions",
@@ -74,7 +76,9 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(moduleExports: typeof azure) {
+  private patch(moduleExports: typeof azure, moduleVersion?: string) {
+    this._diag.debug(`Patching @azure/openai@${moduleVersion}`);
+
     this._wrap(
       moduleExports.OpenAIClient.prototype,
       "getChatCompletions",
@@ -88,7 +92,9 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof azure): void {
+  private unpatch(moduleExports: typeof azure, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching @azure/openai@${moduleVersion}`);
+
     this._unwrap(moduleExports.OpenAIClient.prototype, "getChatCompletions");
     this._unwrap(moduleExports.OpenAIClient.prototype, "getCompletions");
   }
@@ -127,8 +133,9 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            plugin._diag.error("Error in Azure OpenAI instrumentation", e);
+          },
         );
 
         const wrappedPromise = plugin._wrapPromise(
@@ -162,6 +169,8 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
           extraAttributes?: Record<string, any>;
         };
       }): Span {
+    this._diag.debug(`Generating a span for Azure OpenAI ${type}`);
+
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "Azure OpenAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
