@@ -32,8 +32,8 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import * as aiplatform from "@google-cloud/aiplatform";
-import { CallOptions, Callback } from "google-gax";
+import type * as aiplatform from "@google-cloud/aiplatform";
+import type { CallOptions, Callback } from "google-gax";
 
 export class AIPlatformInstrumentation extends InstrumentationBase<any> {
   protected override _config!: AIPlatformInstrumentationConfig;

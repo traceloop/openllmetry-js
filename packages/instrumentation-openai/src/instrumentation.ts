@@ -33,7 +33,7 @@ import {
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import { OpenAIInstrumentationConfig } from "./types";
-import {
+import type {
   ChatCompletion,
   ChatCompletionChunk,
   ChatCompletionCreateParamsNonStreaming,
@@ -42,7 +42,7 @@ import {
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
 } from "openai/resources";
-import { Stream } from "openai/streaming";
+import type { Stream } from "openai/streaming";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: OpenAIInstrumentationConfig;

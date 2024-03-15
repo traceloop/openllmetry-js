@@ -33,7 +33,7 @@ import {
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import { AzureOpenAIInstrumentationConfig } from "./types";
-import {
+import type {
   ChatCompletions,
   ChatRequestMessage,
   Completions,

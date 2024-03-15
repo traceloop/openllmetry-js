@@ -28,7 +28,7 @@ import {
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
 import { BedrockInstrumentationConfig } from "./types";
-import * as bedrock from "@aws-sdk/client-bedrock-runtime";
+import type * as bedrock from "@aws-sdk/client-bedrock-runtime";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   LLMRequestTypeValues,
