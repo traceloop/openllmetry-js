@@ -95,7 +95,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: any, moduleVersion?: string) {
+  private unwrap(module: typeof cohere, moduleVersion?: string) {
     this._diag.debug(`Unpatching @cohere-ai@${moduleVersion}`);
 
     this._unwrap(module.CohereClient.prototype, "generateStream");

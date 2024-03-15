@@ -7,7 +7,7 @@ import {
 import { Span, context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
-import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { SEMRESATTRS_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { ASSOCATION_PROPERTIES_KEY, WORKFLOW_NAME_KEY } from "./tracing";
@@ -289,9 +289,10 @@ export const startTracing = (options: InitializeOptions) => {
 
   _sdk = new NodeSDK({
     resource: new Resource({
-      [SemanticResourceAttributes.SERVICE_NAME]: options.appName,
+      [SEMRESATTRS_SERVICE_NAME]:
+        options.appName || process.env.npm_package_name,
     }),
-    spanProcessor: _spanProcessor,
+    spanProcessors: [_spanProcessor],
     traceExporter,
     instrumentations,
     // We should re-consider removing unrelevant spans here in the future
