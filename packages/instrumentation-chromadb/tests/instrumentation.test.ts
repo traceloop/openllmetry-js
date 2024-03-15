@@ -33,7 +33,7 @@ const memoryExporter = new InMemorySpanExporter();
 Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
-describe.skip("Test Pinecone instrumentation", function () {
+describe.skip("Test ChromaDB instrumentation", function () {
   const provider = new BasicTracerProvider();
   let instrumentation: ChromaDBInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -45,10 +45,6 @@ describe.skip("Test Pinecone instrumentation", function () {
   });
 
   before(async () => {
-    if (process.env.RECORD_MODE !== "NEW") {
-      process.env.PINECONE_API_KEY = "test";
-    }
-
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new ChromaDBInstrumentation();
     instrumentation.setTracerProvider(provider);

@@ -329,60 +329,6 @@ export const startTracing = (options: InitializeOptions) => {
   });
 
   _sdk.start();
-
-  if (options.instrumentModules?.openAI) {
-    (openAIInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.openAI,
-    );
-  }
-
-  if (options.instrumentModules?.llamaIndex) {
-    (llamaIndexInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.llamaIndex,
-    );
-  }
-
-  if (options.instrumentModules?.pinecone) {
-    (pineconeInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.pinecone,
-    );
-  }
-
-  if (options.instrumentModules?.google_vertexai) {
-    (vertexaiInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.google_vertexai,
-    );
-  }
-
-  if (options.instrumentModules?.google_aiplatform) {
-    (aiplatformInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.google_aiplatform,
-    );
-  }
-
-  if (options.instrumentModules?.bedrock) {
-    (bedrockInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.bedrock,
-    );
-  }
-
-  if (options.instrumentModules?.azureOpenAI) {
-    (azureOpenAIInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.azureOpenAI,
-    );
-  }
-
-  if (options.instrumentModules?.cohere) {
-    (cohereInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.cohere,
-    );
-  }
-
-  if (options.instrumentModules?.chromadb) {
-    (chromadbInstrumentation as AIInstrumentation).manuallyInstrument(
-      options.instrumentModules.chromadb,
-    );
-  }
 };
 
 export const shouldSendTraces = () => {

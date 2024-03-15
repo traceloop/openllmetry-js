@@ -167,7 +167,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     });
 
     // Instrumenting only for query and peak
-    if (methodName === "query" || methodName === "pek") {
+    if (methodName === "query" || methodName === "peek") {
       const query_request_event = span.addEvent("chromadb.query.request");
       query_request_event.setAttribute(
         EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
