@@ -1,11 +1,12 @@
 import { _configuration } from "../configuration";
+import { diag } from "@opentelemetry/api";
 
 export async function reportScore(
   associationProperty: { [name: string]: string },
   score: number,
 ) {
   if (!_configuration) {
-    console.log("Warning: Traceloop not initialized");
+    diag.warn("Traceloop not initialized");
     return;
   }
 
@@ -34,5 +35,8 @@ export async function reportScore(
       entity_id: entityId,
     }),
   });
-  console.log(res);
+
+  if (!res.ok) {
+    diag.error("Failed to report score", { status: res.status });
+  }
 }

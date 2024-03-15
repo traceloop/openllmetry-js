@@ -42,12 +42,15 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     toolsModule?: any;
   }) {
     if (chainsModule) {
+      this._diag.debug("Manually instrumenting langchain chains");
       this.patchChainModule(chainsModule);
     }
     if (agentsModule) {
+      this._diag.debug("Manually instrumenting langchain agents");
       this.patchAgentModule(agentsModule);
     }
     if (toolsModule) {
+      this._diag.debug("Manually instrumenting langchain tools");
       this.patchToolsModule(toolsModule);
     }
   }
@@ -74,7 +77,12 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return [chainModule, agentModule, toolsModule];
   }
 
-  private patchChainModule(moduleExports: typeof ChainsModule) {
+  private patchChainModule(
+    moduleExports: typeof ChainsModule,
+    moduleVersion?: string,
+  ) {
+    this._diag.debug(`Patching langchain/chains.cjs@${moduleVersion}`);
+
     this._wrap(
       moduleExports.RetrievalQAChain.prototype,
       "_call",
@@ -92,7 +100,12 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private patchAgentModule(moduleExports: typeof AgentsModule) {
+  private patchAgentModule(
+    moduleExports: typeof AgentsModule,
+    moduleVersion?: string,
+  ) {
+    this._diag.debug(`Patching langchain/agents.cjs@${moduleVersion}`);
+
     this._wrap(
       moduleExports.AgentExecutor.prototype,
       "_call",
@@ -105,7 +118,12 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private patchToolsModule(moduleExports: typeof ToolsModule) {
+  private patchToolsModule(
+    moduleExports: typeof ToolsModule,
+    moduleVersion?: string,
+  ) {
+    this._diag.debug(`Patching langchain/tools.cjs@${moduleVersion}`);
+
     this._wrap(
       moduleExports.Tool.prototype,
       "call",
@@ -114,19 +132,31 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatchChainModule(moduleExports: any) {
+  private unpatchChainModule(
+    moduleExports: typeof ChainsModule,
+    moduleVersion?: string,
+  ) {
+    this._diag.debug(`Unpatching langchain/chains.cjs@${moduleVersion}`);
+
     this._unwrap(moduleExports.RetrievalQAChain.prototype, "_call");
     this._unwrap(moduleExports.BaseChain.prototype, "call");
     return moduleExports;
   }
 
-  private unpatchAgentModule(moduleExports: any) {
+  private unpatchAgentModule(
+    moduleExports: typeof AgentsModule,
+    moduleVersion?: string,
+  ) {
+    this._diag.debug(`Unpatching langchain/agents.cjs@${moduleVersion}`);
+
     this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
     return moduleExports;
   }
 
-  private unpatchToolsModule(moduleExports: any) {
-    this._unwrap(moduleExports.AgentExecutor.prototype, "_call");
+  private unpatchToolsModule(moduleExports: typeof ToolsModule) {
+    this._diag.debug(`Unpatching langchain/tools.cjs`);
+
+    this._unwrap(moduleExports.Tool.prototype, "call");
     return moduleExports;
   }
 

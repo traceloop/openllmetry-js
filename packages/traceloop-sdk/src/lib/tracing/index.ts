@@ -4,7 +4,7 @@ import {
   SimpleSpanProcessor,
   BatchSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
-import { Span, context } from "@opentelemetry/api";
+import { Span, context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
@@ -305,7 +305,7 @@ export const startTracing = (options: InitializeOptions) => {
 
 export const shouldSendTraces = () => {
   if (!_configuration) {
-    console.log("Warning: Traceloop not initialized");
+    diag.warn("Traceloop not initialized");
     return false;
   }
 

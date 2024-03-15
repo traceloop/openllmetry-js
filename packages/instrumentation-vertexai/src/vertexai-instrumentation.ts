@@ -63,39 +63,45 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof vertexAI) {
+    this._diag.debug("Manually instrumenting @google-cloud/vertexai");
+
     this._wrap(
       module.VertexAI_Preview.prototype,
       "getGenerativeModel",
-      this.wrapperMethodForGemini(),
+      this.wrapperMethod(),
     );
     this._wrap(
       module.GenerativeModel.prototype,
       "generateContentStream",
-      this.wrapperMethodForGemini(),
+      this.wrapperMethod(),
     );
   }
 
-  private wrap(module: typeof vertexAI) {
+  private wrap(module: typeof vertexAI, moduleVersion?: string) {
+    this._diag.debug(`Patching @google-cloud/vertexai@${moduleVersion}`);
+
     this._wrap(
       module.VertexAI_Preview.prototype,
       "getGenerativeModel",
-      this.wrapperMethodForGemini(),
+      this.wrapperMethod(),
     );
     this._wrap(
       module.GenerativeModel.prototype,
       "generateContentStream",
-      this.wrapperMethodForGemini(),
+      this.wrapperMethod(),
     );
 
     return module;
   }
 
-  private unwrap(module: typeof vertexAI): void {
+  private unwrap(module: typeof vertexAI, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching @google-cloud/vertexai@${moduleVersion}`);
+
     this._unwrap(module.VertexAI_Preview.prototype, "getGenerativeModel");
     this._unwrap(module.GenerativeModel.prototype, "generateContentStream");
   }
 
-  private wrapperMethodForGemini() {
+  private wrapperMethod() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -115,8 +121,11 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
                   return original.apply(this, args);
                 });
               },
-              // eslint-disable-next-line @typescript-eslint/no-empty-function
-              () => {},
+              (e) => {
+                if (e) {
+                  plugin._diag.error("Error in VertexAI Instrumentation", e);
+                }
+              },
             ),
           );
         }

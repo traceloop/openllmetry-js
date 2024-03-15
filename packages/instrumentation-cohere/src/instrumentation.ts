@@ -60,10 +60,13 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof cohere) {
+    this._diag.debug(`Manually patching cohere-ai`);
     this.wrap(module);
   }
 
-  private wrap(module: typeof cohere) {
+  private wrap(module: typeof cohere, moduleVersion?: string) {
+    this._diag.debug(`Patching cohere-ai@${moduleVersion}`);
+
     this._wrap(
       module.CohereClient.prototype,
       "generate",
@@ -93,7 +96,9 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof cohere) {
+  private unwrap(module: typeof cohere, moduleVersion?: string) {
+    this._diag.debug(`Unpatching @cohere-ai@${moduleVersion}`);
+
     this._unwrap(module.CohereClient.prototype, "generateStream");
     this._unwrap(module.CohereClient.prototype, "chat");
     this._unwrap(module.CohereClient.prototype, "chatStream");
@@ -117,8 +122,11 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error("Error in cohere instrumentation", e);
+            }
+          },
         );
         const wrappedPromise = plugin._wrapPromise(type, span, execPromise);
         return context.bind(execContext, wrappedPromise as any);

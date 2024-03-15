@@ -56,6 +56,8 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof openai.OpenAI) {
+    this._diag.debug(`Manually instrumenting openai`);
+
     // Old version of OpenAI API (v3.1.0)
     if ((module as any).OpenAIApi) {
       this._wrap(
@@ -92,7 +94,9 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(moduleExports: typeof openai) {
+  private patch(moduleExports: typeof openai, moduleVersion?: string) {
+    this._diag.debug(`Patching openai@${moduleVersion}`);
+
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._wrap(
@@ -120,7 +124,9 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof openai): void {
+  private unpatch(moduleExports: typeof openai, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching openai@${moduleVersion}`);
+
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._unwrap(
@@ -171,8 +177,11 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error("OpenAI instrumentation: error", e);
+            }
+          },
         );
 
         if (

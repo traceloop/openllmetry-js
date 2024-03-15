@@ -58,6 +58,8 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof bedrock) {
+    this._diag.debug(`Patching @aws-sdk/client-bedrock-runtime manually`);
+
     this._wrap(
       module.BedrockRuntimeClient.prototype,
       "send",
@@ -65,7 +67,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  private wrap(module: typeof bedrock) {
+  private wrap(module: typeof bedrock, moduleVersion?: string) {
+    this._diag.debug(
+      `Patching @aws-sdk/client-bedrock-runtime@${moduleVersion}`,
+    );
+
     this._wrap(
       module.BedrockRuntimeClient.prototype,
       "send",
@@ -75,7 +81,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof bedrock) {
+  private unwrap(module: typeof bedrock, moduleVersion?: string) {
+    this._diag.debug(
+      `Unpatching @aws-sdk/client-bedrock-runtime@${moduleVersion}`,
+    );
+
     this._unwrap(module.BedrockRuntimeClient.prototype, "send");
   }
 
@@ -95,8 +105,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error(`Error in bedrock instrumentation`, e);
+            }
+          },
         );
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
         return context.bind(execContext, wrappedPromise);

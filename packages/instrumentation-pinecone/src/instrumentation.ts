@@ -47,7 +47,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(moduleExports: typeof pinecone) {
+  private patch(moduleExports: typeof pinecone, moduleVersion?: string) {
+    this._diag.debug(`Patching @pinecone-database/pinecone@${moduleVersion}`);
+
     this._wrap(
       moduleExports.Index.prototype,
       "query",
@@ -77,7 +79,12 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof pinecone): void {
+  private unpatch(
+    moduleExports: typeof pinecone,
+    moduleVersion?: string,
+  ): void {
+    this._diag.debug(`Unpatching @pinecone-database/pinecone@${moduleVersion}`);
+
     this._unwrap(moduleExports.Index.prototype, "query");
     this._unwrap(moduleExports.Index.prototype, "upsert");
     this._unwrap(moduleExports.Index.prototype, "deleteAll");
@@ -86,6 +93,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
   }
 
   private genericWrapper(methodName: string, tracer: Tracer) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const plugin = this;
+
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
@@ -98,8 +108,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            plugin._diag.error(`Error in Pinecone instrumentation`, e);
+          },
         );
         const wrappedPromise = execPromise
           .then((result: any) => {
@@ -125,6 +136,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
   }
 
   private queryWrapper(tracer: Tracer) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const plugin = this;
+
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
@@ -164,8 +178,11 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error(`Error in Pinecone instrumentation`, e);
+            }
+          },
         );
         const wrappedPromise = execPromise
           .then((result: any) => {

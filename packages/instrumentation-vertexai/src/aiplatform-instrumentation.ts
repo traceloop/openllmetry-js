@@ -58,6 +58,8 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof aiplatform) {
+    this._diag.debug(`Manually instrumenting @google-cloud/aiplatform`);
+
     this._wrap(
       module.PredictionServiceClient.prototype,
       "predict",
@@ -65,7 +67,9 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  private wrap(module: typeof aiplatform) {
+  private wrap(module: typeof aiplatform, moduleVersion?: string) {
+    this._diag.debug(`Patching @google-cloud/aiplatform@${moduleVersion}`);
+
     this._wrap(
       module.PredictionServiceClient.prototype,
       "predict",
@@ -75,7 +79,9 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof aiplatform): void {
+  private unwrap(module: typeof aiplatform, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching @google-cloud/aiplatform@${moduleVersion}`);
+
     this._unwrap(module.PredictionServiceClient.prototype, "predict");
   }
 
@@ -125,8 +131,14 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error(
+                "Error in VertexAIPlatform instrumentation",
+                e,
+              );
+            }
+          },
         );
 
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
