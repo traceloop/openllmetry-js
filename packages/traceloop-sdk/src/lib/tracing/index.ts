@@ -218,7 +218,7 @@ export const manuallyInitInstrumentations = (
 export const startTracing = (options: InitializeOptions) => {
   if (Object.keys(options.instrumentModules || {}).length > 0) {
     manuallyInitInstrumentations(options.instrumentModules);
-  } 
+  }
   if (!shouldSendTraces()) {
     openAIInstrumentation?.setConfig({
       traceContent: false,
