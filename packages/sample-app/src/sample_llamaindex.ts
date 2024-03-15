@@ -36,6 +36,7 @@ class SampleLlamaIndex {
 
     const res = await queryEngine.query({
       query: "What did the author do growing up?",
+      stream: true,
     });
     return res;
   }
@@ -45,7 +46,10 @@ traceloop.withAssociationProperties(
   { user_id: "12345", chat_id: "789" },
   async () => {
     const sampleLlamaIndex = new SampleLlamaIndex();
-    const result = await sampleLlamaIndex.query();
-    console.log(result.response);
+    const res = await sampleLlamaIndex.query();
+    for await (const result of res) {
+      process.stdout.write(result.response);
+    }
+    //console.log(result.response);
   },
 );

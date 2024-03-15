@@ -3,6 +3,7 @@ import * as llamaindex from "llamaindex";
 import { trace, context, Tracer, SpanStatusCode } from "@opentelemetry/api";
 import { LlamaIndexInstrumentationConfig } from "./types";
 import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
+import { Context } from "@opentelemetry/api";
 import {
   TraceloopSpanKindValues,
   SpanAttributes,
@@ -21,14 +22,46 @@ export const shouldSendPrompts = (config: LlamaIndexInstrumentationConfig) => {
   return config.traceContent !== undefined ? config.traceContent : true;
 };
 
+// Adopted from https://github.com/open-telemetry/opentelemetry-js/issues/2951#issuecomment-1214587378
+export function bindAsyncGenerator<T = unknown, TReturn = any, TNext = unknown>(
+  ctx: Context,
+  generator: AsyncGenerator<T, TReturn, TNext>,
+): AsyncGenerator<T, TReturn, TNext> {
+  return {
+    next: context.bind(ctx, generator.next.bind(generator)),
+    return: context.bind(ctx, generator.return.bind(generator)),
+    throw: context.bind(ctx, generator.throw.bind(generator)),
+
+    [Symbol.asyncIterator]() {
+      return bindAsyncGenerator(ctx, generator[Symbol.asyncIterator]());
+    },
+  };
+}
+
 export async function* generatorWrapper(
+  streamingResult: AsyncGenerator,
+  ctx: Context,
+  fn: () => void,
+) {
+  for await (const chunk of bindAsyncGenerator(ctx, streamingResult)) {
+    yield chunk;
+  }
+  fn();
+}
+
+export async function* llmGeneratorWrapper(
   streamingResult:
     | AsyncIterable<llamaindex.ChatResponseChunk>
     | AsyncIterable<llamaindex.CompletionResponse>,
+  ctx: Context,
   fn: (message: string) => void,
 ) {
   let message = "";
-  for await (const messageChunk of streamingResult) {
+
+  for await (const messageChunk of bindAsyncGenerator(
+    ctx,
+    streamingResult as AsyncGenerator,
+  )) {
     if ((messageChunk as llamaindex.ChatResponseChunk).delta) {
       message += (messageChunk as llamaindex.ChatResponseChunk).delta;
     }
@@ -50,6 +83,9 @@ export function genericWrapper(
   // eslint-disable-next-line @typescript-eslint/ban-types
   return (original: Function) => {
     return function method(this: any, ...args: unknown[]) {
+      const params = args[0];
+      const streaming = params && (params as any).stream;
+
       const name = `${lodash.snakeCase(className)}.${lodash.snakeCase(methodName)}`;
       const span = tracer().startSpan(`${name}`, {}, context.active());
       span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, kind);
@@ -98,25 +134,33 @@ export function genericWrapper(
       const wrappedPromise = execPromise
         .then((result: any) => {
           return new Promise((resolve) => {
-            span.setStatus({ code: SpanStatusCode.OK });
-
-            try {
-              if (shouldSendPrompts) {
-                if (result instanceof Map) {
-                  span.setAttribute(
-                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                    JSON.stringify(Array.from(result.entries())),
-                  );
-                } else {
-                  span.setAttribute(
-                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                    JSON.stringify(result),
-                  );
-                }
-              }
-            } finally {
-              span.end();
+            if (streaming) {
+              result = generatorWrapper(result, execContext, () => {
+                span.setStatus({ code: SpanStatusCode.OK });
+                span.end();
+              });
               resolve(result);
+            } else {
+              span.setStatus({ code: SpanStatusCode.OK });
+
+              try {
+                if (shouldSendPrompts) {
+                  if (result instanceof Map) {
+                    span.setAttribute(
+                      SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                      JSON.stringify(Array.from(result.entries())),
+                    );
+                  } else {
+                    span.setAttribute(
+                      SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                      JSON.stringify(result),
+                    );
+                  }
+                }
+              } finally {
+                span.end();
+                resolve(result);
+              }
             }
           });
         })

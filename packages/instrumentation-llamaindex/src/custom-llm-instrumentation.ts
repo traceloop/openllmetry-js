@@ -4,6 +4,7 @@ import type * as llamaindex from "llamaindex";
 import {
   Tracer,
   Span,
+  Context,
   SpanKind,
   SpanStatusCode,
   trace,
@@ -14,7 +15,7 @@ import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 import { LlamaIndexInstrumentationConfig } from "./types";
-import { shouldSendPrompts, generatorWrapper } from "./utils";
+import { shouldSendPrompts, llmGeneratorWrapper } from "./utils";
 
 type LLM = llamaindex.LLM;
 
@@ -85,6 +86,7 @@ export class CustomLLMInstrumentation {
                 result = plugin.handleStreamingResponse(
                   result,
                   span,
+                  execContext,
                   this.metadata,
                 );
               } else {
@@ -139,6 +141,7 @@ export class CustomLLMInstrumentation {
   handleStreamingResponse<T extends AsyncResponseType>(
     result: T,
     span: Span,
+    execContext: Context,
     metadata: llamaindex.LLMMetadata,
   ): T {
     span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, metadata.model);
@@ -148,7 +151,7 @@ export class CustomLLMInstrumentation {
       return result;
     }
 
-    return generatorWrapper(result, (message) => {
+    return llmGeneratorWrapper(result, execContext, (message) => {
       span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.0.content`, message);
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();

@@ -200,4 +200,58 @@ describe("Test LlamaIndex instrumentation", async function () {
       result.response,
     );
   }).timeout(60000);
+
+  it("should build proper trace on streaming query engine", async () => {
+    const directoryReader = new llamaindex.SimpleDirectoryReader();
+    const documents = await directoryReader.loadData({ directoryPath: "test" });
+    const embedModel = new llamaindex.OpenAIEmbedding();
+    const vectorStore = new llamaindex.SimpleVectorStore();
+
+    const serviceContext = llamaindex.serviceContextFromDefaults({
+      embedModel,
+    });
+    const storageContext = await llamaindex.storageContextFromDefaults({
+      vectorStore,
+    });
+
+    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents, {
+      storageContext,
+      serviceContext,
+    });
+
+    const queryEngine = index.asQueryEngine();
+
+    const result = await queryEngine.query({
+      query: "Where was albert einstein born?",
+      stream: true,
+    });
+
+    for await (const res of result) {
+      assert.ok(res);
+    }
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    // TODO: Need to figure out why this doesn't get logged
+    // assert.ok(spanNames.includes("get_query_embedding.task"));
+
+    const retrieverQueryEngineSpan = spans.find(
+      (span) => span.name === "retriever_query_engine.query",
+    );
+    const synthesizeSpan = spans.find(
+      (span) => span.name === "response_synthesizer.synthesize",
+    );
+    const openAIChatSpan = spans.find(
+      (span) => span.name === "llamaindex.open_ai.chat",
+    );
+
+    assert.strictEqual(
+      synthesizeSpan?.parentSpanId,
+      retrieverQueryEngineSpan?.spanContext().spanId,
+    );
+    assert.strictEqual(
+      openAIChatSpan?.parentSpanId,
+      synthesizeSpan?.spanContext().spanId,
+    );
+  }).timeout(60000);
 });
