@@ -28,13 +28,9 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git remote set-url origin https://github-actions[bot]:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       - name: Create Version
         run: npx lerna version --no-private --conventional-commits --yes
-        env:
-          GH_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Set Current Version
         run: |
           CURRENT_VERSION=$(node -p 'require("./lerna.json").version')
@@ -42,11 +38,14 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: "body.md"
+          body_path: "CHANGELOG.md"
           tag_name: ${{ env.CURRENT_VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+      - name: "NPM Identity"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
       - name: Publish
         run: npx lerna publish --no-private from-git --yes
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
