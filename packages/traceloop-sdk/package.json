@@ -2,9 +2,9 @@
   "name": "@traceloop/node-server-sdk",
   "version": "0.5.23",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
-  "main": "dist/src/index.js",
-  "module": "dist/src/index.mjs",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "repository": "traceloop/openllmetry-js",
   "scripts": {
     "build": "rollup -c",
@@ -23,10 +23,10 @@
     "node": ">=14"
   },
   "files": [
-    "dist/src/**/*.js",
-    "dist/src/**/*.mjs",
-    "dist/src/**/*.js.map",
-    "dist/src/**/*.d.ts",
+    "dist/**/*.js",
+    "dist/**/*.mjs",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
     "doc",
     "LICENSE",
     "README.md"
@@ -60,15 +60,11 @@
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
-    "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-typescript": "^11.1.6",
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.9.0",
     "@types/uuid": "^9.0.7",
     "esbuild": "^0.20.1",
     "openai": "^4.12.4",
-    "rollup": "^4.12.0",
-    "rollup-plugin-dts": "^6.1.0",
     "ts-mocha": "^10.0.0"
   }
 }

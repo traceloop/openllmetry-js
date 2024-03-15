@@ -37,7 +37,7 @@ import {
 import { version } from "../package.json";
 
 export class BedrockInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: BedrockInstrumentationConfig;
+  protected declare _config: BedrockInstrumentationConfig;
 
   constructor(config: BedrockInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-bedrock", version, config);

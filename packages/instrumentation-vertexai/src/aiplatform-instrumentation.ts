@@ -37,7 +37,7 @@ import type { CallOptions, Callback } from "google-gax";
 import { version } from "../package.json";
 
 export class AIPlatformInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: AIPlatformInstrumentationConfig;
+  protected declare _config: AIPlatformInstrumentationConfig;
 
   constructor(config: AIPlatformInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-vertexai", version, config);
