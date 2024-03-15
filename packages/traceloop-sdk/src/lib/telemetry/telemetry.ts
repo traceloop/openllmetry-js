@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 import { PostHog } from "posthog-node";
+import { version } from "../../../package.json";
 
 export class Telemetry {
   private static instance: Telemetry;
@@ -59,7 +60,7 @@ export class Telemetry {
   private getContext() {
     return {
       sdk: "typescript",
-      sdk_version: "0.0.23",
+      sdk_version: version,
     };
   }
 

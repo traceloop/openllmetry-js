@@ -34,13 +34,14 @@ import {
   LLMRequestTypeValues,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
 export class CohereInstrumentation extends InstrumentationBase<any> {
   protected override _config!: CohereInstrumentationConfig;
 
   constructor(config: CohereInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-cohere", "0.3.11", config);
+    super("@traceloop/instrumentation-cohere", version, config);
   }
 
   public override setConfig(config: CohereInstrumentationConfig = {}) {

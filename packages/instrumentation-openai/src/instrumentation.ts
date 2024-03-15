@@ -43,12 +43,13 @@ import type {
   CompletionCreateParamsStreaming,
 } from "openai/resources";
 import type { Stream } from "openai/streaming";
+import { version } from "../package.json";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: OpenAIInstrumentationConfig;
 
   constructor(config: OpenAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-openai", "0.3.0", config);
+    super("@traceloop/instrumentation-openai", version, config);
   }
 
   public override setConfig(config: OpenAIInstrumentationConfig = {}) {

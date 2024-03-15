@@ -34,12 +34,13 @@ import {
   LLMRequestTypeValues,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 export class BedrockInstrumentation extends InstrumentationBase<any> {
   protected override _config!: BedrockInstrumentationConfig;
 
   constructor(config: BedrockInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-bedrock", "0.3.0", config);
+    super("@traceloop/instrumentation-bedrock", version, config);
   }
 
   public override setConfig(config: BedrockInstrumentationConfig = {}) {

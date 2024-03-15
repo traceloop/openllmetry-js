@@ -1,5 +1,6 @@
 const dts = require("rollup-plugin-dts");
 const typescript = require("@rollup/plugin-typescript");
+const json = require("@rollup/plugin-json");
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const name = require("./package.json").main.replace(/\.js$/, "");
@@ -12,7 +13,7 @@ const bundle = (config) => ({
 
 exports.default = [
   bundle({
-    plugins: [typescript.default()],
+    plugins: [typescript.default(), json.default()],
     output: [
       {
         file: `${name}.js`,

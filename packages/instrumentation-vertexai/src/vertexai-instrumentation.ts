@@ -33,12 +33,13 @@ import {
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import type * as vertexAI from "@google-cloud/vertexai";
+import { version } from "../package.json";
 
 export class VertexAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: VertexAIInstrumentationConfig;
 
   constructor(config: VertexAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-vertexai", "0.3.0", config);
+    super("@traceloop/instrumentation-vertexai", version, config);
   }
 
   public override setConfig(config: VertexAIInstrumentationConfig = {}) {
