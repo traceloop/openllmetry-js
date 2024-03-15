@@ -47,5 +47,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+      - name: Build for Release
+        run: npx nx run-many --target=build --parallel=3
       - name: Publish
         run: npx lerna publish --no-private from-git --yes
