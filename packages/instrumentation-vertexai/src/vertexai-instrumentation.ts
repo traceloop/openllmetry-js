@@ -122,7 +122,9 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
                 });
               },
               (e) => {
-                plugin._diag.error("Error in VertexAI Instrumentation", e);
+                if (e) {
+                  plugin._diag.error("Error in VertexAI Instrumentation", e);
+                }
               },
             ),
           );
@@ -156,8 +158,6 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   }: {
     params: vertexAI.GenerateContentRequest;
   }): Span {
-    this._diag.debug(`Starting span for VertexAI completion`);
-
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "VertexAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",

@@ -99,8 +99,6 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
-        plugin._diag.debug(`Starting span for Pinecone ${methodName}`);
-
         const span = tracer.startSpan(`pinecone.${methodName}`);
         span.setAttribute(SpanAttributes.VECTOR_DB_VENDOR, "Pinecone");
         const execContext = trace.setSpan(context.active(), span);
@@ -144,8 +142,6 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
-        plugin._diag.debug(`Starting span for Pinecone query`);
-
         const span = tracer.startSpan(`pinecone.query`);
         const execContext = trace.setSpan(context.active(), span);
         const options = args[0] as pinecone.QueryOptions;
@@ -183,7 +179,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
             });
           },
           (e) => {
-            plugin._diag.error(`Error in Pinecone instrumentation`, e);
+            if (e) {
+              plugin._diag.error(`Error in Pinecone instrumentation`, e);
+            }
           },
         );
         const wrappedPromise = execPromise

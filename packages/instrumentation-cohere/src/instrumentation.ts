@@ -123,7 +123,9 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
             });
           },
           (e) => {
-            plugin._diag.error("Error in cohere instrumentation", e);
+            if (e) {
+              plugin._diag.error("Error in cohere instrumentation", e);
+            }
           },
         );
         const wrappedPromise = plugin._wrapPromise(type, span, execPromise);
@@ -180,8 +182,6 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
       | cohere.Cohere.RerankRequest;
     type: LLM_COMPLETION_TYPE;
   }): Span {
-    this._diag.debug(`Starting span for cohere.${type}`);
-
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "Cohere",
       [SpanAttributes.LLM_REQUEST_TYPE]: this._getLlmRequestTypeByMethod(type),

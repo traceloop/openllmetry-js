@@ -106,7 +106,9 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
             });
           },
           (e) => {
-            plugin._diag.error(`Error in bedrock instrumentation`, e);
+            if (e) {
+              plugin._diag.error(`Error in bedrock instrumentation`, e);
+            }
           },
         );
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
@@ -145,8 +147,6 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   }: {
     params: Parameters<bedrock.BedrockRuntimeClient["send"]>[0];
   }): Span {
-    this._diag.debug(`Starting span for bedrock.send()`);
-
     const [vendor, model] = params.input.modelId
       ? params.input.modelId.split(".")
       : ["", ""];

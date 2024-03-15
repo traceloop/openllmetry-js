@@ -134,7 +134,9 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
             });
           },
           (e) => {
-            plugin._diag.error("Error in Azure OpenAI instrumentation", e);
+            if (e) {
+              plugin._diag.error("Error in Azure OpenAI instrumentation", e);
+            }
           },
         );
 
@@ -169,8 +171,6 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
           extraAttributes?: Record<string, any>;
         };
       }): Span {
-    this._diag.debug(`Generating a span for Azure OpenAI ${type}`);
-
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "Azure OpenAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,

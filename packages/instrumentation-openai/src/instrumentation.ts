@@ -178,7 +178,9 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             });
           },
           (e) => {
-            plugin._diag.error("OpenAI instrumentation: error", e);
+            if (e) {
+              plugin._diag.error("OpenAI instrumentation: error", e);
+            }
           },
         );
 
@@ -227,8 +229,6 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           extraAttributes?: Record<string, any>;
         };
       }): Span {
-    this._diag.debug(`Starting span for openai.${type}`);
-
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "OpenAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,

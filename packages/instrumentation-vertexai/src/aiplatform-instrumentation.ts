@@ -132,7 +132,12 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
             });
           },
           (e) => {
-            plugin._diag.error("Error in VertexAIPlatform instrumentation", e);
+            if (e) {
+              plugin._diag.error(
+                "Error in VertexAIPlatform instrumentation",
+                e,
+              );
+            }
           },
         );
 
@@ -150,8 +155,6 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
       | aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest
       | undefined;
   }): Span {
-    this._diag.debug(`Starting span for VertexAIPlatform predict`);
-
     const attributes: Attributes = {
       [SpanAttributes.LLM_VENDOR]: "VertexAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
