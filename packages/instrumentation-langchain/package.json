@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@langchain/community": "^0.0.34",
-    "@langchain/openai": "^0.0.15",
+    "@langchain/openai": "^0.0.20",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
