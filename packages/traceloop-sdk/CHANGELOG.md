@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.25](https://github.com/traceloop/openllmetry-js/compare/v0.5.24...v0.5.25) (2024-03-15)
+
+### Bug Fixes
+
+- **sdk:** do not initialize logger if not instructed ([#156](https://github.com/traceloop/openllmetry-js/issues/156)) ([cab900c](https://github.com/traceloop/openllmetry-js/commit/cab900c5c1233bb11cdf3f4b41c39005769b9ea0))
+
 ## [0.5.24](https://github.com/traceloop/openllmetry-js/compare/v0.5.23...v0.5.24) (2024-03-15)
 
 ### Bug Fixes
