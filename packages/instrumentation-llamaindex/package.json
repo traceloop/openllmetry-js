@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-llamaindex",
-  "version": "0.5.22",
+  "version": "0.5.23",
   "description": "Llamaindex Instrumentation",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

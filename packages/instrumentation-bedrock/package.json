@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-bedrock",
-  "version": "0.5.21",
+  "version": "0.5.23",
   "description": "Amazon Bedrock Instrumentation",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
