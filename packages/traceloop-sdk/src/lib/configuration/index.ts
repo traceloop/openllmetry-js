@@ -60,12 +60,13 @@ export const initialize = (options: InitializeOptions) => {
 
   _configuration = Object.freeze(options);
 
-  diag.setLogger(
-    new DiagConsoleLogger(),
-    logLevelToOtelLogLevel(options.logLevel),
-  );
-
-  diag.info(
+  if (options.logLevel) {
+    diag.setLogger(
+      new DiagConsoleLogger(),
+      logLevelToOtelLogLevel(options.logLevel),
+    );
+  }
+  console.log(
     `Traceloop exporting traces to ${
       _configuration.exporter ? "a custom exporter" : _configuration.baseUrl
     }`,
@@ -76,7 +77,7 @@ export const initialize = (options: InitializeOptions) => {
 };
 
 const logLevelToOtelLogLevel = (
-  logLevel?: "debug" | "info" | "warn" | "error",
+  logLevel: "debug" | "info" | "warn" | "error",
 ) => {
   switch (logLevel) {
     case "debug":
@@ -87,7 +88,5 @@ const logLevelToOtelLogLevel = (
       return DiagLogLevel.WARN;
     case "error":
       return DiagLogLevel.ERROR;
-    default:
-      return DiagLogLevel.INFO;
   }
 };
