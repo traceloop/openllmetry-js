@@ -29,10 +29,10 @@ export interface InitializeOptions {
   disableBatch?: boolean;
 
   /**
-   * Suppress all log messages of Traceloop SDK. Optional.
-   * Defaults to false.
+   * Defines default log level for SDK and all instrumentations. Optional.
+   * Defaults to info.
    */
-  suppressLogs?: boolean;
+  logLevel?: "debug" | "info" | "warn" | "error";
 
   /**
    * Whether to log prompts, completions and embeddings on traces. Optional.
