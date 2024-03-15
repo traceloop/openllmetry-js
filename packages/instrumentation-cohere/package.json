@@ -2,11 +2,12 @@
   "name": "@traceloop/instrumentation-cohere",
   "version": "0.5.23",
   "description": "Cohere Instrumentation",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "repository": "traceloop/openllmetry-js",
   "scripts": {
-    "build": "tsc --build tsconfig.json",
+    "build": "rollup -c",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "ts-mocha -p tsconfig.json 'tests/**/*.test.ts' --timeout 20000"
@@ -24,9 +25,9 @@
     "node": ">=14"
   },
   "files": [
-    "dist/src/**/*.js",
-    "dist/src/**/*.js.map",
-    "dist/src/**/*.d.ts",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
     "doc",
     "LICENSE",
     "README.md",

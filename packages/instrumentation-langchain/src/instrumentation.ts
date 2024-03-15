@@ -27,7 +27,7 @@ import type * as ToolsModule from "langchain/tools";
 import { version } from "../package.json";
 
 export class LangChainInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: LangChainInstrumentationConfig;
+  protected declare _config: LangChainInstrumentationConfig;
 
   constructor(config: LangChainInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-langchain", version, config);

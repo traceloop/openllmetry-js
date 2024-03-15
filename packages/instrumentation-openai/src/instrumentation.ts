@@ -46,7 +46,7 @@ import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: OpenAIInstrumentationConfig;
+  protected declare _config: OpenAIInstrumentationConfig;
 
   constructor(config: OpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-openai", version, config);

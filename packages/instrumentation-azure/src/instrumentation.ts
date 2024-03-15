@@ -41,7 +41,7 @@ import type {
 import { version } from "../package.json";
 
 export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: AzureOpenAIInstrumentationConfig;
+  protected declare _config: AzureOpenAIInstrumentationConfig;
 
   constructor(config: AzureOpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-azure", version, config);
