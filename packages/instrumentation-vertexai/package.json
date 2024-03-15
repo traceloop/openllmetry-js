@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-vertexai",
-  "version": "0.5.23",
+  "version": "0.5.24",
   "description": "Google's VertexAI Instrumentation",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
