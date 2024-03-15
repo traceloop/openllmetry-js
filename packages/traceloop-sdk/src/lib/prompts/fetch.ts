@@ -1,5 +1,5 @@
 import { InitializeOptions } from "../interfaces";
-import fetch from "node-fetch";
+import fetch from "cross-fetch";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const fetchRetry = require("fetch-retry")(fetch);
 
