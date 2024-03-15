@@ -25,7 +25,12 @@ import { LlamaIndexInstrumentationConfig } from "./types";
 import { CustomLLMInstrumentation } from "./custom-llm-instrumentation";
 import { genericWrapper, shouldSendPrompts } from "./utils";
 
-import { BaseEmbedding, BaseSynthesizer, LLM, BaseRetriever } from "llamaindex";
+import type {
+  BaseEmbedding,
+  BaseSynthesizer,
+  LLM,
+  BaseRetriever,
+} from "llamaindex";
 import { TraceloopSpanKindValues } from "@traceloop/ai-semantic-conventions";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
@@ -64,10 +69,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   }
 
   private isEmbedding(embedding: any): embedding is BaseEmbedding {
-    return (
-      embedding instanceof BaseEmbedding &&
-      embedding.getQueryEmbedding !== undefined
-    );
+    return !!(embedding as BaseEmbedding)?.getQueryEmbedding;
   }
 
   private isSynthesizer(synthesizer: any): synthesizer is BaseSynthesizer {

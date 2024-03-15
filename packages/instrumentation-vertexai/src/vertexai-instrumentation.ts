@@ -32,7 +32,7 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import * as vertexAI from "@google-cloud/vertexai";
+import type * as vertexAI from "@google-cloud/vertexai";
 
 export class VertexAIInstrumentation extends InstrumentationBase<any> {
   protected override _config!: VertexAIInstrumentationConfig;
