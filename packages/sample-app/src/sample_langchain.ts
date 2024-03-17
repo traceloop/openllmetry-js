@@ -26,7 +26,7 @@ class SampleLangchain {
     const model = new ChatOpenAI({});
 
     const text = fs.readFileSync(
-      "packages/sample-app/data/paul_graham/paul_graham_essay.txt",
+      "./data/paul_graham/paul_graham_essay.txt",
       "utf8",
     );
     const textSplitter = new RecursiveCharacterTextSplitter({
@@ -82,7 +82,7 @@ class SampleLangchain {
     {context}`;
     const prompt = PromptTemplate.fromTemplate(SYSTEM_TEMPLATE);
     const text = fs.readFileSync(
-      "packages/sample-app/data/paul_graham/paul_graham_essay.txt",
+      "./data/paul_graham/paul_graham_essay.txt",
       "utf8",
     );
     const textSplitter = new RecursiveCharacterTextSplitter({
