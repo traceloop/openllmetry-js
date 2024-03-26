@@ -252,7 +252,6 @@ describe("Test OpenAI instrumentation", async function () {
       stream: true,
     });
 
-
     let result = "";
     for await (const chunk of stream) {
       result += chunk.choices[0]?.delta?.content || "";
