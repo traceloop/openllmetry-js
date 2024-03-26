@@ -222,4 +222,23 @@ describe("Test OpenAI instrumentation", async function () {
       "Tell me a joke about OpenTelemetry",
     );
   });
+
+  it("should emit logprobs span event", async () => {
+    const result = await openai.chat.completions.create({
+      messages: [
+        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+      ],
+      model: "gpt-3.5-turbo",
+      logprobs: true
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const event = completionSpan?.events.find((x) => x.name == 'logprobs')
+
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.ok(event)
+    assert.ok(event.attributes?.['logprobs'])
+  });
 });
