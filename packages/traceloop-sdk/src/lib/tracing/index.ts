@@ -160,6 +160,7 @@ export const manuallyInitInstrumentations = (
     } = require("@traceloop/instrumentation-pinecone");
     const instrumentation = new PineconeInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
+    instrumentation.manuallyInstrument(instrumentModules.pinecone);
   }
 
   if (instrumentModules?.google_vertexai) {
@@ -169,6 +170,7 @@ export const manuallyInitInstrumentations = (
     const instrumentation = new VertexAIInstrumentation();
     instrumentations.push(instrumentation);
     vertexaiInstrumentation = instrumentation;
+    instrumentation.manuallyInstrument(instrumentModules.google_vertexai);
   }
 
   if (instrumentModules?.google_aiplatform) {
@@ -178,6 +180,7 @@ export const manuallyInitInstrumentations = (
     const instrumentation = new AIPlatformInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     aiplatformInstrumentation = instrumentation;
+    instrumentation.manuallyInstrument(instrumentModules.google_aiplatform);
   }
 
   if (instrumentModules?.bedrock) {
@@ -187,6 +190,7 @@ export const manuallyInitInstrumentations = (
     const instrumentation = new BedrockInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     bedrockInstrumentation = instrumentation;
+    instrumentation.manuallyInstrument(instrumentModules.bedrock);
   }
 
   if (instrumentModules?.azureOpenAI) {
@@ -196,6 +200,7 @@ export const manuallyInitInstrumentations = (
     const instrumentation = new AzureOpenAIInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     azureOpenAIInstrumentation = instrumentation;
+    instrumentation.manuallyInstrument(instrumentModules.azureOpenAI);
   }
 
   if (instrumentModules?.cohere) {
@@ -205,6 +210,7 @@ export const manuallyInitInstrumentations = (
     const instrumentation = new CohereInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     cohereInstrumentation = instrumentation;
+    instrumentation.manuallyInstrument(instrumentModules.cohere);
   }
 };
 
