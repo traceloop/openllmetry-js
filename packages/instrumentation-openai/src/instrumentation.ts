@@ -565,16 +565,15 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       | ChatCompletionChunk.Choice.Logprobs;
     const completionLogprobs = logprobs as CompletionChoice.Logprobs;
     if (chatLogprobs.content) {
-      result = chatLogprobs.content?.map((logprob) => {
+      result = chatLogprobs.content.map((logprob) => {
         return {
           token: logprob.token,
           logprob: logprob.logprob,
         };
       });
     } else if (
-      completionLogprobs &&
-      completionLogprobs.tokens &&
-      completionLogprobs.token_logprobs
+      completionLogprobs?.tokens &&
+      completionLogprobs?.token_logprobs
     ) {
       completionLogprobs.tokens.forEach((token, index) => {
         const logprob = completionLogprobs.token_logprobs?.at(index);
