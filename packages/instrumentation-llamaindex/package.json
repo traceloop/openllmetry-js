@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-llamaindex",
-  "version": "0.5.24",
+  "version": "0.5.27",
   "description": "Llamaindex Instrumentation",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -39,7 +39,7 @@
     "@opentelemetry/core": "^1.22.0",
     "@opentelemetry/instrumentation": "^0.49.0",
     "@opentelemetry/semantic-conventions": "^1.22.0",
-    "@traceloop/ai-semantic-conventions": "^0.5.19",
+    "@traceloop/ai-semantic-conventions": "^0.5.27",
     "lodash": "^4.17.21"
   },
   "devDependencies": {

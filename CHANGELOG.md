@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.27](https://github.com/traceloop/openllmetry-js/compare/v0.5.26...v0.5.27) (2024-03-26)
+
+### Bug Fixes
+
+- **sdk:** manually report VectorDB spans ([#174](https://github.com/traceloop/openllmetry-js/issues/174)) ([add4900](https://github.com/traceloop/openllmetry-js/commit/add4900c934c4e30672800d1140801a408de43c0))
+
+## [0.5.26](https://github.com/traceloop/openllmetry-js/compare/v0.5.25...v0.5.26) (2024-03-26)
+
+### Bug Fixes
+
+- **sdk:** manual instrumentation in all modules ([#171](https://github.com/traceloop/openllmetry-js/issues/171)) ([e5784a4](https://github.com/traceloop/openllmetry-js/commit/e5784a4bb834930420f77cf350de9a5d93e6bc71))
+
 ## [0.5.25](https://github.com/traceloop/openllmetry-js/compare/v0.5.24...v0.5.25) (2024-03-15)
 
 ### Bug Fixes
