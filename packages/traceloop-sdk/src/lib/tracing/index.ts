@@ -26,8 +26,10 @@ let azureOpenAIInstrumentation: AIInstrumentation | undefined;
 let llamaIndexInstrumentation: AIInstrumentation | undefined;
 let vertexaiInstrumentation: AIInstrumentation | undefined;
 let aiplatformInstrumentation: AIInstrumentation | undefined;
+let pineconeInstrumentation: AIInstrumentation | undefined;
 let bedrockInstrumentation: AIInstrumentation | undefined;
 let cohereInstrumentation: AIInstrumentation | undefined;
+let chromadbInstrumentation: AIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -117,6 +119,17 @@ export const initInstrumentations = () => {
     const instrumentation = new CohereInstrumentation();
     instrumentations.push(instrumentation as Instrumentation);
     cohereInstrumentation = instrumentation;
+  } catch (e) {
+    /* empty */
+  }
+
+  try {
+    const {
+      ChromadbInstrumentation,
+    } = require("@traceloop/instrumentation-chromadb");
+    const instrumentation = new ChromadbInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    chromadbInstrumentation = instrumentation;
   } catch (e) {
     /* empty */
   }
@@ -212,6 +225,15 @@ export const manuallyInitInstrumentations = (
     cohereInstrumentation = instrumentation;
     instrumentation.manuallyInstrument(instrumentModules.cohere);
   }
+
+  if (instrumentModules?.chromadb) {
+    const {
+      ChromaDBInstrumentation,
+    } = require("@traceloop/instrumentation-chromadb");
+    const instrumentation = new ChromaDBInstrumentation();
+    instrumentations.push(instrumentation as Instrumentation);
+    chromadbInstrumentation = instrumentation;
+  }
 };
 
 /**
@@ -241,10 +263,16 @@ export const startTracing = (options: InitializeOptions) => {
     aiplatformInstrumentation?.setConfig({
       traceContent: false,
     });
+    pineconeInstrumentation?.setConfig({
+      traceContent: false,
+    });
     bedrockInstrumentation?.setConfig({
       traceContent: false,
     });
     cohereInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    chromadbInstrumentation?.setConfig({
       traceContent: false,
     });
   }
