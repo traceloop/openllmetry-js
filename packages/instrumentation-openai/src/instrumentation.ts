@@ -560,32 +560,31 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       return;
     }
 
-    if ("content" in logprobs) {
-      if (logprobs.content) {
-        result = logprobs.content?.map((logprob) => {
-          return {
-            token: logprob.token,
-            logprob: logprob.logprob,
-          };
-        });
-      }
-    } else if ("token_logprobs" in logprobs) {
-      const completionLogprobs = logprobs as CompletionChoice.Logprobs;
-      if (
-        completionLogprobs &&
-        completionLogprobs.tokens &&
-        completionLogprobs.token_logprobs
-      ) {
-        completionLogprobs.tokens.forEach((token, index) => {
-          const logprob = completionLogprobs.token_logprobs?.at(index);
-          if (logprob) {
-            result.push({
-              token,
-              logprob,
-            });
-          }
-        });
-      }
+    const chatLogprobs = logprobs as
+      | ChatCompletion.Choice.Logprobs
+      | ChatCompletionChunk.Choice.Logprobs;
+    const completionLogprobs = logprobs as CompletionChoice.Logprobs;
+    if (chatLogprobs.content) {
+      result = chatLogprobs.content?.map((logprob) => {
+        return {
+          token: logprob.token,
+          logprob: logprob.logprob,
+        };
+      });
+    } else if (
+      completionLogprobs &&
+      completionLogprobs.tokens &&
+      completionLogprobs.token_logprobs
+    ) {
+      completionLogprobs.tokens.forEach((token, index) => {
+        const logprob = completionLogprobs.token_logprobs?.at(index);
+        if (logprob) {
+          result.push({
+            token,
+            logprob,
+          });
+        }
+      });
     }
 
     span.addEvent("logprobs", { logprobs: JSON.stringify(result) });
