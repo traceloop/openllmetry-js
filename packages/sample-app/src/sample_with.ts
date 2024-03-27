@@ -15,6 +15,7 @@ async function chat() {
         { role: "user", content: "Tell me a joke about OpenTelemetry" },
       ],
       model: "gpt-3.5-turbo",
+      logprobs: true,
     });
 
     return chatCompletion.choices[0].message.content;

@@ -222,4 +222,48 @@ describe("Test OpenAI instrumentation", async function () {
       "Tell me a joke about OpenTelemetry",
     );
   });
+
+  it("should emit logprobs span event for chat completion", async () => {
+    const result = await openai.chat.completions.create({
+      messages: [
+        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+      ],
+      model: "gpt-3.5-turbo",
+      logprobs: true,
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const event = completionSpan?.events.find((x) => x.name == "logprobs");
+
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.ok(event);
+    assert.ok(event.attributes?.["logprobs"]);
+  });
+
+  it("should emit logprobs span event for stream chat completion", async () => {
+    const stream = await openai.chat.completions.create({
+      messages: [
+        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+      ],
+      model: "gpt-3.5-turbo",
+      logprobs: true,
+      stream: true,
+    });
+
+    let result = "";
+    for await (const chunk of stream) {
+      result += chunk.choices[0]?.delta?.content || "";
+    }
+
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const event = completionSpan?.events.find((x) => x.name == "logprobs");
+
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.ok(event);
+    assert.ok(event.attributes?.["logprobs"]);
+  });
 });

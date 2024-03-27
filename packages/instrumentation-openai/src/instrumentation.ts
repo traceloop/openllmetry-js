@@ -39,6 +39,7 @@ import type {
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
   Completion,
+  CompletionChoice,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
 } from "openai/resources";
@@ -351,6 +352,10 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
 
+      if (result.choices[0].logprobs?.content) {
+        this._addLogProbsEvent(span, result.choices[0].logprobs);
+      }
+
       this._endSpan({ span, type, result });
     } else {
       const result: Completion = {
@@ -385,6 +390,10 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
 
+      if (result.choices[0].logprobs) {
+        this._addLogProbsEvent(span, result.choices[0].logprobs);
+      }
+
       this._endSpan({ span, type, result });
     }
   }
@@ -400,12 +409,20 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         return new Promise<T>((resolve) => {
           if (version === "v3") {
             if (type === "chat") {
+              this._addLogProbsEvent(
+                span,
+                ((result as any).data as ChatCompletion).choices[0].logprobs,
+              );
               this._endSpan({
                 type,
                 span,
                 result: (result as any).data as ChatCompletion,
               });
             } else {
+              this._addLogProbsEvent(
+                span,
+                ((result as any).data as Completion).choices[0].logprobs,
+              );
               this._endSpan({
                 type,
                 span,
@@ -414,8 +431,16 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             }
           } else {
             if (type === "chat") {
+              this._addLogProbsEvent(
+                span,
+                (result as ChatCompletion).choices[0].logprobs,
+              );
               this._endSpan({ type, span, result: result as ChatCompletion });
             } else {
+              this._addLogProbsEvent(
+                span,
+                (result as Completion).choices[0].logprobs,
+              );
               this._endSpan({ type, span, result: result as Completion });
             }
           }
@@ -519,5 +544,48 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return this._config.traceContent !== undefined
       ? this._config.traceContent
       : true;
+  }
+
+  private _addLogProbsEvent(
+    span: Span,
+    logprobs:
+      | ChatCompletion.Choice.Logprobs
+      | ChatCompletionChunk.Choice.Logprobs
+      | CompletionChoice.Logprobs
+      | null,
+  ) {
+    let result: { token: string; logprob: number }[] = [];
+
+    if (!logprobs) {
+      return;
+    }
+
+    const chatLogprobs = logprobs as
+      | ChatCompletion.Choice.Logprobs
+      | ChatCompletionChunk.Choice.Logprobs;
+    const completionLogprobs = logprobs as CompletionChoice.Logprobs;
+    if (chatLogprobs.content) {
+      result = chatLogprobs.content.map((logprob) => {
+        return {
+          token: logprob.token,
+          logprob: logprob.logprob,
+        };
+      });
+    } else if (
+      completionLogprobs?.tokens &&
+      completionLogprobs?.token_logprobs
+    ) {
+      completionLogprobs.tokens.forEach((token, index) => {
+        const logprob = completionLogprobs.token_logprobs?.at(index);
+        if (logprob) {
+          result.push({
+            token,
+            logprob,
+          });
+        }
+      });
+    }
+
+    span.addEvent("logprobs", { logprobs: JSON.stringify(result) });
   }
 }
