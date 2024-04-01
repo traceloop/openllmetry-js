@@ -134,6 +134,8 @@ describe("Test SDK Decorators", () => {
 
   it("should create spans for workflows using decoration syntax", async () => {
     class TestOpenAI {
+      constructor(private model = "gpt-3.5-turbo") {}
+
       @traceloop.workflow({ name: "sample_chat" })
       async chat(things: Map<string, string>) {
         const generations: Map<string, string> = new Map();
@@ -142,7 +144,7 @@ describe("Test SDK Decorators", () => {
             messages: [
               { role: "user", content: `Tell me a ${key} about ${value}` },
             ],
-            model: "gpt-3.5-turbo",
+            model: this.model,
           });
 
           if (chatCompletion.choices[0].message.content) {

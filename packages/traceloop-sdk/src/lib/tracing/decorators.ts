@@ -187,30 +187,18 @@ function entity(
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
-    const originalMethod: () => any = descriptor.value;
+    const originalMethod = descriptor.value;
     const entityName = config.name ?? originalMethod.name;
 
-    if (originalMethod.constructor.name === "AsyncFunction") {
-      descriptor.value = async function (...args: any[]) {
-        return await withEntity(
-          type,
-          { ...config, name: entityName },
-          originalMethod,
-          target,
-          ...args,
-        );
-      };
-    } else {
-      descriptor.value = function (...args: any[]) {
-        return withEntity(
-          type,
-          { ...config, name: entityName },
-          originalMethod,
-          target,
-          ...args,
-        );
-      };
-    }
+    descriptor.value = function (...args: any[]) {
+      return withEntity(
+        type,
+        { ...config, name: entityName },
+        originalMethod,
+        this,
+        ...args,
+      );
+    };
   };
 }
 
