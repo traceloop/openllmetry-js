@@ -180,17 +180,24 @@ export function withTool<
 
 function entity(
   type: TraceloopSpanKindValues,
-  config: Partial<DecoratorConfig>,
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
 ) {
   return function (
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
     const originalMethod = descriptor.value;
-    const entityName = config.name ?? originalMethod.name;
 
-    descriptor.value = function (...args: any[]) {
+    descriptor.value = function (...args: unknown[]) {
+      if (typeof config === "function") {
+        config = config(this, ...args);
+      }
+
+      const entityName = config.name ?? originalMethod.name;
+
       return withEntity(
         type,
         { ...config, name: entityName },
@@ -202,18 +209,34 @@ function entity(
   };
 }
 
-export function workflow(config?: Partial<DecoratorConfig>) {
+export function workflow(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.WORKFLOW, config ?? {});
 }
 
-export function task(config?: Partial<DecoratorConfig>) {
+export function task(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.TASK, config ?? {});
 }
 
-export function agent(config?: Partial<DecoratorConfig>) {
+export function agent(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.AGENT, config ?? {});
 }
 
-export function tool(config?: Partial<DecoratorConfig>) {
+export function tool(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.TOOL, config ?? {});
 }

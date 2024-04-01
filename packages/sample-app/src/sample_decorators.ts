@@ -23,7 +23,9 @@ class SampleOpenAI {
     return chatCompletion.choices[0].message.content;
   }
 
-  @traceloop.workflow({ name: "sample_completion" })
+  @traceloop.workflow((thisArg) => ({
+    name: `sample_${(thisArg as SampleOpenAI).model}`,
+  }))
   async completion(jokeSubject: string) {
     const completion = await openai.completions.create({
       prompt: `Tell me a joke about ${jokeSubject}`,
