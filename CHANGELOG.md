@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.28](https://github.com/traceloop/openllmetry-js/compare/v0.5.27...v0.5.28) (2024-04-02)
+
+### Bug Fixes
+
+- **openai-instrumentation:** logprobs reporting using span event ([#172](https://github.com/traceloop/openllmetry-js/issues/172)) ([923df7f](https://github.com/traceloop/openllmetry-js/commit/923df7fdb855bcfb16d9571199129d3eaa527eb8))
+- **sdk:** allow passing a function to the decorator ([#181](https://github.com/traceloop/openllmetry-js/issues/181)) ([2178f1c](https://github.com/traceloop/openllmetry-js/commit/2178f1c5161218ffc7938bfe17fc1ced8190357c))
+- **sdk:** decorator bug with passing `this` parameter ([#180](https://github.com/traceloop/openllmetry-js/issues/180)) ([956bad4](https://github.com/traceloop/openllmetry-js/commit/956bad4d357752b2a6b640fdc5ba76c22bbacaca))
+
 ## [0.5.27](https://github.com/traceloop/openllmetry-js/compare/v0.5.26...v0.5.27) (2024-03-26)
 
 ### Bug Fixes
