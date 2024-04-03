@@ -6,4 +6,10 @@ export interface OpenAIInstrumentationConfig extends InstrumentationConfig {
    * @default true
    */
   traceContent?: boolean;
+
+  /**
+   * Whether to enrich token information if missing from the trace.
+   * @default false
+   */
+  enrichTokens?: boolean;
 }

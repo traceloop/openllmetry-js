@@ -54,6 +54,10 @@ export const initialize = (options: InitializeOptions) => {
       options.traceloopSyncDevPollingInterval =
         Number(process.env.TRACELOOP_SYNC_DEV_POLLING_INTERVAL) || 5;
     }
+
+    if (options.shouldEnrichMetrics === undefined) {
+      options.shouldEnrichMetrics = true;
+    }
   }
 
   validateConfiguration(options);

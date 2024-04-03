@@ -76,7 +76,9 @@ export const manuallyInitInstrumentations = (
   instrumentModules: InitializeOptions["instrumentModules"],
 ) => {
   if (instrumentModules?.openAI) {
-    openAIInstrumentation = new OpenAIInstrumentation();
+    openAIInstrumentation = new OpenAIInstrumentation({
+      enrichTokens: _configuration?.shouldEnrichMetrics,
+    });
     instrumentations.push(openAIInstrumentation);
     openAIInstrumentation.manuallyInstrument(instrumentModules.openAI);
   }
@@ -149,6 +151,7 @@ export const startTracing = (options: InitializeOptions) => {
   if (!shouldSendTraces()) {
     openAIInstrumentation?.setConfig({
       traceContent: false,
+      enrichTokens: _configuration?.shouldEnrichMetrics,
     });
     azureOpenAIInstrumentation?.setConfig({
       traceContent: false,
