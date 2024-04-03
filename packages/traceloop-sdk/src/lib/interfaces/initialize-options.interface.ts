@@ -1,5 +1,17 @@
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
 
+import type * as openai from "openai";
+import type * as azure from "@azure/openai";
+import type * as cohere from "cohere-ai";
+import type * as bedrock from "@aws-sdk/client-bedrock-runtime";
+import type * as aiplatform from "@google-cloud/aiplatform";
+import type * as vertexAI from "@google-cloud/vertexai";
+import type * as pinecone from "@pinecone-database/pinecone";
+import type * as ChainsModule from "langchain/chains";
+import type * as AgentsModule from "langchain/agents";
+import type * as ToolsModule from "langchain/tools";
+import type * as llamaindex from "llamaindex";
+
 /**
  * Options for initializing the Traceloop SDK.
  */
@@ -48,22 +60,22 @@ export interface InitializeOptions {
 
   /**
    * Explicitly specify modules to instrument. Optional.
-xwxw   * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
+   * This is a workaround specific to Next.js, see https://www.traceloop.com/docs/openllmetry/getting-started-nextjs
    */
   instrumentModules?: {
-    openAI?: any;
+    openAI?: typeof openai.OpenAI;
+    azureOpenAI?: typeof azure;
+    cohere?: typeof cohere;
+    bedrock?: typeof bedrock;
+    google_vertexai?: typeof vertexAI;
+    google_aiplatform?: typeof aiplatform;
+    pinecone?: typeof pinecone;
     langchain?: {
-      chainsModule?: any;
-      agentsModule?: any;
-      toolsModule?: any;
+      chainsModule?: typeof ChainsModule;
+      agentsModule?: typeof AgentsModule;
+      toolsModule?: typeof ToolsModule;
     };
-    llamaIndex?: any;
-    pinecone?: any;
-    google_vertexai?: any;
-    google_aiplatform?: any;
-    bedrock?: any;
-    azureOpenAI?: any;
-    cohere?: any;
+    llamaIndex?: typeof llamaindex;
   };
 
   /**

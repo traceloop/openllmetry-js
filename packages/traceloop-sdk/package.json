@@ -64,7 +64,15 @@
     "@types/node": "^20.9.0",
     "@types/uuid": "^9.0.7",
     "esbuild": "^0.20.1",
-    "openai": "^4.12.4",
-    "ts-mocha": "^10.0.0"
+    "ts-mocha": "^10.0.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.499.0",
+    "@azure/openai": "^1.0.0-beta.11",
+    "@google-cloud/aiplatform": "^3.10.0",
+    "@google-cloud/vertexai": "^0.2.1",
+    "@pinecone-database/pinecone": "^2.0.1",
+    "cohere-ai": "^7.7.5",
+    "langchain": "^0.1.7",
+    "llamaindex": "^0.1.16",
+    "openai": "^4.12.4"
   }
 }
