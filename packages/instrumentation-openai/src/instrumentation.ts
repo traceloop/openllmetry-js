@@ -45,6 +45,7 @@ import type {
 } from "openai/resources";
 import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
+import { encoding_for_model, TiktokenModel, Tiktoken } from "tiktoken";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected declare _config: OpenAIInstrumentationConfig;
@@ -198,6 +199,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             plugin._streamingWrapPromise({
               span,
               type,
+              params: args[0] as any,
               promise: execPromise,
             }),
           );
@@ -296,15 +298,18 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   private async *_streamingWrapPromise({
     span,
     type,
+    params,
     promise,
   }:
     | {
         span: Span;
         type: "chat";
+        params: ChatCompletionCreateParamsStreaming;
         promise: Promise<Stream<ChatCompletionChunk>>;
       }
     | {
         span: Span;
+        params: CompletionCreateParamsStreaming;
         type: "completion";
         promise: Promise<Stream<Completion>>;
       }) {
@@ -356,6 +361,29 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         this._addLogProbsEvent(span, result.choices[0].logprobs);
       }
 
+      if (this._config.enrichTokens) {
+        let promptTokens = 0;
+        for (const message of params.messages) {
+          promptTokens +=
+            this.tokenCountFromString(
+              message.content as string,
+              result.model,
+            ) ?? 0;
+        }
+
+        const completionTokens = this.tokenCountFromString(
+          result.choices[0].message.content ?? "",
+          result.model,
+        );
+        if (completionTokens) {
+          result.usage = {
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: promptTokens + completionTokens,
+          };
+        }
+      }
+
       this._endSpan({ span, type, result });
     } else {
       const result: Completion = {
@@ -392,6 +420,23 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
 
       if (result.choices[0].logprobs) {
         this._addLogProbsEvent(span, result.choices[0].logprobs);
+      }
+
+      if (this._config.enrichTokens) {
+        const promptTokens =
+          this.tokenCountFromString(params.prompt as string, result.model) ?? 0;
+
+        const completionTokens = this.tokenCountFromString(
+          result.choices[0].text ?? "",
+          result.model,
+        );
+        if (completionTokens) {
+          result.usage = {
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: promptTokens + completionTokens,
+          };
+        }
       }
 
       this._endSpan({ span, type, result });
@@ -587,5 +632,24 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     }
 
     span.addEvent("logprobs", { logprobs: JSON.stringify(result) });
+  }
+
+  private _encodingCache = new Map<string, Tiktoken>();
+
+  private tokenCountFromString(text: string, model: string) {
+    if (!this._encodingCache.has(model)) {
+      try {
+        const encoding = encoding_for_model(model as TiktokenModel);
+        this._encodingCache.set(model, encoding);
+      } catch (e) {
+        this._diag.warn(
+          `Failed to get tiktoken encoding for model_name: ${model}, error: ${e}`,
+        );
+        return;
+      }
+    }
+
+    const encoding = this._encodingCache.get(model);
+    return encoding!.encode(text).length;
   }
 }

@@ -129,7 +129,9 @@ export const manuallyInitInstrumentations = (
     const {
       OpenAIInstrumentation,
     } = require("@traceloop/instrumentation-openai");
-    const instrumentation = new OpenAIInstrumentation();
+    const instrumentation = new OpenAIInstrumentation({
+      shouldEnrichMetrics: _configuration?.shouldEnrichMetrics,
+    });
     instrumentations.push(instrumentation as Instrumentation);
     openAIInstrumentation = instrumentation;
     instrumentation.manuallyInstrument(instrumentModules.openAI);

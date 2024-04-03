@@ -35,6 +35,12 @@ export interface InitializeOptions {
   logLevel?: "debug" | "info" | "warn" | "error";
 
   /**
+   * Whether to enrich metrics with additional data like OpenAI token usage for streaming requests. Optional.
+   * Defaults to true.
+   */
+  shouldEnrichMetrics?: boolean;
+
+  /**
    * Whether to log prompts, completions and embeddings on traces. Optional.
    * Defaults to true.
    */

@@ -58,7 +58,7 @@ describe("Test OpenAI instrumentation", async function () {
       process.env.OPENAI_API_KEY = "test";
     }
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-    instrumentation = new OpenAIInstrumentation();
+    instrumentation = new OpenAIInstrumentation({ enrichTokens: true });
     instrumentation.setTracerProvider(provider);
 
     const openAIModule: typeof OpenAIModule = await import("openai");
@@ -103,6 +103,18 @@ describe("Test OpenAI instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+    assert.equal(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      "15",
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
+    );
   });
 
   it("should set attributes in span for streaming chat", async () => {
@@ -136,6 +148,18 @@ describe("Test OpenAI instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
       result,
     );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+    assert.equal(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      "8",
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
+    );
   });
 
   it("should set attributes in span for streaming chat with new API", async () => {
@@ -168,6 +192,26 @@ describe("Test OpenAI instrumentation", async function () {
     assert.strictEqual(
       completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
       result,
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+    );
+    assert.ok(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ],
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+    assert.equal(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      "8",
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
     );
   });
 
