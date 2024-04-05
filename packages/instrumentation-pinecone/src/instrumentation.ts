@@ -18,11 +18,11 @@ import type * as pinecone from "@pinecone-database/pinecone";
 import { context, trace, Tracer, SpanStatusCode } from "@opentelemetry/api";
 import {
   InstrumentationBase,
-  InstrumentationConfig,
   InstrumentationModuleDefinition,
   InstrumentationNodeModuleDefinition,
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
+import { PineconeInstrumentationConfig } from "./types";
 import {
   SpanAttributes,
   EventAttributes,
@@ -30,8 +30,14 @@ import {
 import { version } from "../package.json";
 
 export class PineconeInstrumentation extends InstrumentationBase<any> {
-  constructor(config: InstrumentationConfig = {}) {
+  protected override _config!: PineconeInstrumentationConfig;
+
+  constructor(config: PineconeInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-pinecone", version, config);
+  }
+
+  public override setConfig(config: PineconeInstrumentationConfig = {}) {
+    super.setConfig(config);
   }
 
   public manuallyInstrument(module: typeof pinecone) {
