@@ -43,7 +43,7 @@
     "@traceloop/ai-semantic-conventions": "^0.6.0"
   },
   "devDependencies": {
-    "@langchain/community": "^0.0.34",
+    "@langchain/community": "^0.0.44",
     "@langchain/openai": "^0.0.15",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
