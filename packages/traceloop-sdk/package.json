@@ -47,6 +47,7 @@
     "@traceloop/instrumentation-openai": "^0.6.0",
     "@traceloop/instrumentation-pinecone": "^0.6.0",
     "@traceloop/instrumentation-vertexai": "^0.6.0",
+    "@traceloop/instrumentation-chromadb": "^0.6.0",
     "@types/nunjucks": "^3.2.5",
     "cross-fetch": "^4.0.0",
     "fetch-retry": "^5.0.6",

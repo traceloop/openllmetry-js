@@ -29,7 +29,7 @@ import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
-import { ChromadbInstrumentation } from "@traceloop/instrumentation-chromadb";
+import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -43,7 +43,7 @@ let bedrockInstrumentation: BedrockInstrumentation | undefined;
 let langchainInstrumentation: LangChainInstrumentation | undefined;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation | undefined;
 let pineconeInstrumentation: PineconeInstrumentation | undefined;
-let chromadbInstrumentation: ChromadbInstrumentation | undefined;
+let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -78,7 +78,7 @@ export const initInstrumentations = () => {
   llamaIndexInstrumentation = new LlamaIndexInstrumentation();
   instrumentations.push(llamaIndexInstrumentation);
 
-  chromadbInstrumentation = new ChromadbInstrumentation();
+  chromadbInstrumentation = new ChromaDBInstrumentation();
   instrumentations.push(chromadbInstrumentation);
 };
 
@@ -153,7 +153,7 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.chromadb) {
-    chromadbInstrumentation = new ChromadbInstrumentation();
+    chromadbInstrumentation = new ChromaDBInstrumentation();
     instrumentations.push(chromadbInstrumentation);
     chromadbInstrumentation.manuallyInstrument(instrumentModules.chromadb);
   }

@@ -38,7 +38,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
   protected override _config!: ChromaDBInstrumentationConfig;
 
   constructor(config: ChromaDBInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-chromadb", "0.3.11", config);
+    super("@traceloop/instrumentation-chromadb", "0.6.0", config);
   }
 
   public override setConfig(config: ChromaDBInstrumentationConfig = {}) {
