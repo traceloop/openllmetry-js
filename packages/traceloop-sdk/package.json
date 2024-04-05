@@ -38,6 +38,7 @@
     "@opentelemetry/exporter-trace-otlp-proto": "^0.49.1",
     "@opentelemetry/sdk-node": "^0.49.1",
     "@traceloop/ai-semantic-conventions": "^0.5.29",
+    "@traceloop/instrumentation-anthropic": "^0.5.29",
     "@traceloop/instrumentation-azure": "^0.5.29",
     "@traceloop/instrumentation-bedrock": "^0.5.29",
     "@traceloop/instrumentation-cohere": "^0.5.29",
@@ -57,6 +58,7 @@
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.20.1",
     "@aws-sdk/client-bedrock-runtime": "^3.499.0",
     "@azure/openai": "^1.0.0-beta.11",
     "@google-cloud/aiplatform": "^3.10.0",
