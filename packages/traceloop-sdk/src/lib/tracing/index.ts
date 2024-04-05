@@ -29,11 +29,10 @@ import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
-import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
+import { ChromadbInstrumentation } from "@traceloop/instrumentation-chromadb";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
-
 let openAIInstrumentation: OpenAIInstrumentation | undefined;
 let anthropicInstrumentation: AnthropicInstrumentation | undefined;
 let azureOpenAIInstrumentation: AzureOpenAIInstrumentation | undefined;
@@ -44,7 +43,7 @@ let bedrockInstrumentation: BedrockInstrumentation | undefined;
 let langchainInstrumentation: LangChainInstrumentation | undefined;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation | undefined;
 let pineconeInstrumentation: PineconeInstrumentation | undefined;
-let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
+let chromadbInstrumentation: ChromadbInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -79,7 +78,7 @@ export const initInstrumentations = () => {
   llamaIndexInstrumentation = new LlamaIndexInstrumentation();
   instrumentations.push(llamaIndexInstrumentation);
 
-  chromadbInstrumentation = new ChromaDBInstrumentation();
+  chromadbInstrumentation = new ChromadbInstrumentation();
   instrumentations.push(chromadbInstrumentation);
 };
 
@@ -154,12 +153,9 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.chromadb) {
-    const {
-      ChromaDBInstrumentation,
-    } = require("@traceloop/instrumentation-chromadb");
-    const instrumentation = new ChromaDBInstrumentation();
-    instrumentations.push(instrumentation as Instrumentation);
-    chromadbInstrumentation = instrumentation;
+    chromadbInstrumentation = new ChromadbInstrumentation();
+    instrumentations.push(chromadbInstrumentation);
+    chromadbInstrumentation.manuallyInstrument(instrumentModules.chromadb);
   }
 };
 
@@ -189,9 +185,6 @@ export const startTracing = (options: InitializeOptions) => {
       traceContent: false,
     });
     aiplatformInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    pineconeInstrumentation?.setConfig({
       traceContent: false,
     });
     bedrockInstrumentation?.setConfig({
