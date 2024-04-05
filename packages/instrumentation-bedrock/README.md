@@ -1,4 +1,4 @@
-# OpenTelemetry VertexAI instrumentation for Node.js
+# OpenTelemetry Bedrock instrumentation for Node.js
 
 [![NPM Published Version][npm-img]][npm-url]
 [![Apache License][license-image]][license-image]

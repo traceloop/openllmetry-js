@@ -1,11 +1,13 @@
 import { _configuration } from "../configuration";
+import { diag } from "@opentelemetry/api";
+import { version } from "../../../package.json";
 
 export async function reportScore(
   associationProperty: { [name: string]: string },
   score: number,
 ) {
   if (!_configuration) {
-    console.log("Warning: Traceloop not initialized");
+    diag.warn("Traceloop not initialized");
     return;
   }
 
@@ -26,7 +28,7 @@ export async function reportScore(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${_configuration.apiKey}`,
-      "X-Traceloop-SDK-Version": "0.0.30",
+      "X-Traceloop-SDK-Version": version,
     },
     body: JSON.stringify({
       score,
@@ -34,5 +36,8 @@ export async function reportScore(
       entity_id: entityId,
     }),
   });
-  console.log(res);
+
+  if (!res.ok) {
+    diag.error("Failed to report score", { status: res.status });
+  }
 }

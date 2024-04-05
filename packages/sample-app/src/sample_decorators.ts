@@ -9,19 +9,23 @@ traceloop.initialize({
 const openai = new OpenAI();
 
 class SampleOpenAI {
+  constructor(private model = "gpt-3.5-turbo") {}
+
   @traceloop.workflow({ name: "sample_chat" })
   async chat() {
     const chatCompletion = await openai.chat.completions.create({
       messages: [
         { role: "user", content: "Tell me a joke about OpenTelemetry" },
       ],
-      model: "gpt-3.5-turbo",
+      model: this.model,
     });
 
     return chatCompletion.choices[0].message.content;
   }
 
-  @traceloop.workflow({ name: "sample_completion" })
+  @traceloop.workflow((thisArg) => ({
+    name: `sample_${(thisArg as SampleOpenAI).model}`,
+  }))
   async completion(jokeSubject: string) {
     const completion = await openai.completions.create({
       prompt: `Tell me a joke about ${jokeSubject}`,

@@ -1,0 +1,54 @@
+{
+  "name": "@traceloop/instrumentation-anthropic",
+  "version": "0.6.0",
+  "description": "Anthropic Instrumentaion",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "repository": "traceloop/openllmetry-js",
+  "scripts": {
+    "build": "rollup -c",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts'"
+  },
+  "keywords": [
+    "opentelemetry",
+    "nodejs",
+    "tracing",
+    "openai",
+    "anthropic"
+  ],
+  "author": "Traceloop",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "doc",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@opentelemetry/core": "^1.22.0",
+    "@opentelemetry/instrumentation": "^0.49.0",
+    "@opentelemetry/semantic-conventions": "^1.22.0",
+    "@traceloop/ai-semantic-conventions": "^0.6.0"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.20.1",
+    "@pollyjs/adapter-node-http": "^6.0.6",
+    "@pollyjs/core": "^6.0.6",
+    "@pollyjs/persister-fs": "^6.0.6",
+    "@types/mocha": "^10.0.6",
+    "ts-mocha": "^10.0.0"
+  },
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-anthropic"
+}

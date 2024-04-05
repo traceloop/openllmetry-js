@@ -17,11 +17,6 @@ import { createContextKey } from "@opentelemetry/api";
 
 export * from "./SemanticAttributes";
 
-export interface AIInstrumentation {
-  setConfig: (config: { traceContent: boolean }) => void;
-  manuallyInstrument: (module: any) => void;
-}
-
 export const CONTEXT_KEY_ALLOW_TRACE_CONTENT = createContextKey(
   "allow_trace_content",
 );

@@ -33,8 +33,8 @@ export const SpanAttributes = {
   LLM_CHAT_STOP_SEQUENCES: "llm.chat.stop_sequences",
 
   // Vector DB
-  VECTOR_DB_VENDOR: "vector_db.vendor",
-  VECTOR_DB_QUERY_TOP_K: "vector_db.query.top_k",
+  VECTOR_DB_VENDOR: "db.system",
+  VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
 
   // LLM Workflows
   TRACELOOP_SPAN_KIND: "traceloop.span.kind",
@@ -45,31 +45,47 @@ export const SpanAttributes = {
   TRACELOOP_ENTITY_OUTPUT: "traceloop.entity.output",
 };
 
+export const Events = {
+  DB_QUERY_EMBEDDINGS: "db.query.embeddings",
+  DB_QUERY_RESULT: "db.query.result",
+};
+
 export const EventAttributes = {
-  // Vector DB Query Request
-  VECTOR_DB_QUERY_TOP_K: "vector_db.query.top_k",
-  VECTOR_DB_QUERY_INCLUDE_VALUES: "vector_db.query.include_values",
-  VECTOR_DB_QUERY_INCLUDE_METADATA: "vector_db.query.include_metadata",
-  VECTOR_DB_QUERY_ID: "vector_db.query.id",
-  VECTOR_DB_QUERY_EMBEDDINGS_VECTOR: "vector_db.query.embeddings.vector",
-  VECTOR_DB_QUERY_METADATA_FILTER: "vector_db.query.metadata_filter",
+  // Query Embeddings
+  DB_QUERY_EMBEDDINGS_VECTOR: "db.query.embeddings.vector",
 
-  // Vector DB Query Response
-  VECTOR_DB_QUERY_RESULT_NAMESPACE: "vector_db.query.result.namespace",
+  // Query Result (canonical format)
+  DB_QUERY_RESULT_ID: "db.query.result.id",
+  DB_QUERY_RESULT_SCORE: "db.query.result.score",
+  DB_QUERY_RESULT_DISTANCE: "db.query.result.distance",
+  DB_QUERY_RESULT_METADATA: "db.query.result.metadata",
+  DB_QUERY_RESULT_VECTOR: "db.query.result.vector",
+  DB_QUERY_RESULT_DOCUMENT: "db.query.result.document",
+
+  // DEPRECATED: Vector DB Query Request
+  VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
+  VECTOR_DB_QUERY_INCLUDE_VALUES: "db.vector.query.include_values",
+  VECTOR_DB_QUERY_INCLUDE_METADATA: "db.vector.query.include_metadata",
+  VECTOR_DB_QUERY_ID: "db.vector.query.id",
+  VECTOR_DB_QUERY_EMBEDDINGS_VECTOR: "db.vector.query.embeddings.vector",
+  VECTOR_DB_QUERY_METADATA_FILTER: "db.vector.query.metadata_filter",
+
+  // DEPRECATED: Vector DB Query Response
+  VECTOR_DB_QUERY_RESULT_NAMESPACE: "db.vector.query.result.namespace",
   VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED:
-    "vector_db.query.result.read_units",
+    "db.vector.query.result.read_units",
   VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH:
-    "vector_db.query.result.matches_length",
+    "db.vector.query.result.matches_length",
 
-  // Vector DB Query Response of each result
-  VECTOR_DB_QUERY_RESULT_SCORE: "vector_db.query.result.{i}.score",
-  VECTOR_DB_QUERY_RESULT_ID: "vector_db.query.result.{i}.id",
-  VECTOR_DB_QUERY_RESULT_VALUES: "vector_db.query.result.{i}.values",
+  // DEPRECATED: Vector DB Query Response of each result
+  VECTOR_DB_QUERY_RESULT_SCORE: "db.vector.query.result.{i}.score",
+  VECTOR_DB_QUERY_RESULT_ID: "db.vector.query.result.{i}.id",
+  VECTOR_DB_QUERY_RESULT_VALUES: "db.vector.query.result.{i}.values",
   VECTOR_DB_QUERY_RESULT_SPARSE_INDICES:
-    "vector_db.query.result.{i}.sparse.indices",
+    "db.vector.query.result.{i}.sparse.indices",
   VECTOR_DB_QUERY_RESULT_SPARSE_VALUES:
-    "vector_db.query.result.{i}.sparse.values",
-  VECTOR_DB_QUERY_RESULT_METADATA: "vector_db.query.result.{i}.metadata",
+    "db.vector.query.result.{i}.sparse.values",
+  VECTOR_DB_QUERY_RESULT_METADATA: "db.vector.query.result.{i}.metadata",
 };
 
 export enum LLMRequestTypeValues {

@@ -25,14 +25,20 @@ import { LlamaIndexInstrumentationConfig } from "./types";
 import { CustomLLMInstrumentation } from "./custom-llm-instrumentation";
 import { genericWrapper, shouldSendPrompts } from "./utils";
 
-import { BaseEmbedding, BaseSynthesizer, LLM, BaseRetriever } from "llamaindex";
+import type {
+  BaseEmbedding,
+  BaseSynthesizer,
+  LLM,
+  BaseRetriever,
+} from "llamaindex";
 import { TraceloopSpanKindValues } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: LlamaIndexInstrumentationConfig;
+  protected declare _config: LlamaIndexInstrumentationConfig;
 
   constructor(config: LlamaIndexInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-llamaindex", "0.3.0", config);
+    super("@traceloop/instrumentation-llamaindex", version, config);
   }
 
   public override setConfig(config: LlamaIndexInstrumentationConfig = {}) {
@@ -40,6 +46,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof llamaindex) {
+    this._diag.debug("Manually instrumenting llamaindex");
+
     this.patch(module);
   }
 
@@ -62,10 +70,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
   }
 
   private isEmbedding(embedding: any): embedding is BaseEmbedding {
-    return (
-      embedding instanceof BaseEmbedding &&
-      embedding.getQueryEmbedding !== undefined
-    );
+    return !!(embedding as BaseEmbedding)?.getQueryEmbedding;
   }
 
   private isSynthesizer(synthesizer: any): synthesizer is BaseSynthesizer {
@@ -78,7 +83,9 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     return retriever && (retriever as BaseRetriever).retrieve !== undefined;
   }
 
-  private patch(moduleExports: typeof llamaindex) {
+  private patch(moduleExports: typeof llamaindex, moduleVersion?: string) {
+    this._diag.debug(`Patching llamaindex@${moduleVersion}`);
+
     const customLLMInstrumentation = new CustomLLMInstrumentation(
       this._config,
       () => this.tracer, // this is on purpose. Tracer may change
@@ -158,7 +165,9 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof llamaindex) {
+  private unpatch(moduleExports: typeof llamaindex, moduleVersion?: string) {
+    this._diag.debug(`Unpatching llamaindex@${moduleVersion}`);
+
     this._unwrap(moduleExports.RetrieverQueryEngine.prototype, "query");
 
     for (const key in moduleExports) {

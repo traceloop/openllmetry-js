@@ -216,6 +216,95 @@ describe("Test SDK Decorators", () => {
     );
   });
 
+  it("should create spans for workflows using decoration syntax, method variant", async () => {
+    class TestOpenAI {
+      constructor(private model = "gpt-3.5-turbo") {}
+
+      @traceloop.workflow((thisArg, things) => ({
+        name: `${(thisArg as TestOpenAI).model}_${(things as Map<string, string>).get("joke")}`,
+      }))
+      async chat(things: Map<string, string>) {
+        const generations: Map<string, string> = new Map();
+        for await (const [key, value] of things) {
+          const chatCompletion = await openai.chat.completions.create({
+            messages: [
+              { role: "user", content: `Tell me a ${key} about ${value}` },
+            ],
+            model: this.model,
+          });
+
+          if (chatCompletion.choices[0].message.content) {
+            generations.set(key, chatCompletion.choices[0].message.content);
+          }
+        }
+
+        return generations;
+      }
+    }
+
+    const testOpenAI = new TestOpenAI();
+    const result = await testOpenAI.chat(
+      new Map([
+        ["joke", "OpenTelemetry"],
+        ["fact", "JavaScript"],
+      ]),
+    );
+
+    const spans = memoryExporter.getFinishedSpans();
+    const workflowName = "gpt-3.5-turbo_OpenTelemetry";
+    const workflowSpan = spans.find(
+      (span) => span.name === `${workflowName}.workflow`,
+    );
+    const chatSpan = spans.find((span) => span.name === "openai.chat");
+
+    assert.ok(result);
+    assert.ok(workflowSpan);
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
+      workflowName,
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_SPAN_KIND}`],
+      "workflow",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      workflowName,
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
+      JSON.stringify({
+        args: [
+          [
+            ["joke", "OpenTelemetry"],
+            ["fact", "JavaScript"],
+          ],
+        ],
+        kwargs: {},
+      }),
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
+      JSON.stringify([
+        ["joke", result.get("joke")],
+        ["fact", result.get("fact")],
+      ]),
+    );
+    assert.ok(chatSpan);
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
+      workflowName,
+    );
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "Tell me a joke about OpenTelemetry",
+    );
+  });
+
   it("should not log prompts if traceContent is disabled", async () => {
     const jokeSubject = "OpenTelemetry";
     const result = await traceloop.withWorkflow(

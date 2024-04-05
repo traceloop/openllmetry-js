@@ -2,6 +2,7 @@ import { InitializeOptions } from "../interfaces";
 import { validateConfiguration } from "./validation";
 import { startTracing } from "../tracing";
 import { initializeRegistry } from "../prompts/registry";
+import { diag, DiagConsoleLogger, DiagLogLevel } from "@opentelemetry/api";
 
 export let _configuration: InitializeOptions | undefined;
 
@@ -53,20 +54,43 @@ export const initialize = (options: InitializeOptions) => {
       options.traceloopSyncDevPollingInterval =
         Number(process.env.TRACELOOP_SYNC_DEV_POLLING_INTERVAL) || 5;
     }
+
+    if (options.shouldEnrichMetrics === undefined) {
+      options.shouldEnrichMetrics = true;
+    }
   }
 
   validateConfiguration(options);
 
   _configuration = Object.freeze(options);
 
-  if (!options.suppressLogs) {
-    console.log(
-      `Traceloop exporting traces to ${
-        _configuration.exporter ? "a custom exporter" : _configuration.baseUrl
-      }`,
+  if (options.logLevel) {
+    diag.setLogger(
+      new DiagConsoleLogger(),
+      logLevelToOtelLogLevel(options.logLevel),
     );
   }
+  console.log(
+    `Traceloop exporting traces to ${
+      _configuration.exporter ? "a custom exporter" : _configuration.baseUrl
+    }`,
+  );
 
   startTracing(_configuration);
   initializeRegistry(_configuration);
+};
+
+const logLevelToOtelLogLevel = (
+  logLevel: "debug" | "info" | "warn" | "error",
+) => {
+  switch (logLevel) {
+    case "debug":
+      return DiagLogLevel.DEBUG;
+    case "info":
+      return DiagLogLevel.INFO;
+    case "warn":
+      return DiagLogLevel.WARN;
+    case "error":
+      return DiagLogLevel.ERROR;
+  }
 };

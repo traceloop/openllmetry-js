@@ -32,14 +32,15 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import * as aiplatform from "@google-cloud/aiplatform";
-import { CallOptions, Callback } from "google-gax";
+import type * as aiplatform from "@google-cloud/aiplatform";
+import type { CallOptions, Callback } from "google-gax";
+import { version } from "../package.json";
 
 export class AIPlatformInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: AIPlatformInstrumentationConfig;
+  protected declare _config: AIPlatformInstrumentationConfig;
 
   constructor(config: AIPlatformInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-vertexai", "0.3.0", config);
+    super("@traceloop/instrumentation-vertexai", version, config);
   }
 
   public override setConfig(config: AIPlatformInstrumentationConfig = {}) {
@@ -58,6 +59,8 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof aiplatform) {
+    this._diag.debug(`Manually instrumenting @google-cloud/aiplatform`);
+
     this._wrap(
       module.PredictionServiceClient.prototype,
       "predict",
@@ -65,7 +68,9 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  private wrap(module: typeof aiplatform) {
+  private wrap(module: typeof aiplatform, moduleVersion?: string) {
+    this._diag.debug(`Patching @google-cloud/aiplatform@${moduleVersion}`);
+
     this._wrap(
       module.PredictionServiceClient.prototype,
       "predict",
@@ -75,7 +80,9 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof aiplatform): void {
+  private unwrap(module: typeof aiplatform, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching @google-cloud/aiplatform@${moduleVersion}`);
+
     this._unwrap(module.PredictionServiceClient.prototype, "predict");
   }
 
@@ -125,8 +132,14 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error(
+                "Error in VertexAIPlatform instrumentation",
+                e,
+              );
+            }
+          },
         );
 
         const wrappedPromise = plugin._wrapPromise(span, execPromise);

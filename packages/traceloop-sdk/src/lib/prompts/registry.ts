@@ -1,6 +1,7 @@
 import { InitializeOptions, Prompt } from "../interfaces";
 import { InitializationError, PromptNotFoundError } from "../errors";
 import { fetchPrompts } from "./fetch";
+import { diag } from "@opentelemetry/api";
 
 const _prompts: Record<string, Prompt> = {};
 let _initialized = false;
@@ -33,7 +34,6 @@ const populateRegistry = (prompts: unknown[]) => {
 export const initializeRegistry = (options: InitializeOptions) => {
   const {
     baseUrl,
-    suppressLogs,
     traceloopSyncEnabled,
     traceloopSyncPollingInterval,
     traceloopSyncDevPollingInterval,
@@ -56,9 +56,7 @@ export const initializeRegistry = (options: InitializeOptions) => {
           const { prompts } = await fetchPrompts(options);
           populateRegistry(prompts);
         } catch (err) {
-          if (!suppressLogs) {
-            console.error("Failed to fetch prompt data", err);
-          }
+          diag.error("Failed to fetch prompt data", err);
         }
       }, pollingInterval! * 1000).unref();
 

@@ -28,18 +28,19 @@ import {
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
 import { BedrockInstrumentationConfig } from "./types";
-import * as bedrock from "@aws-sdk/client-bedrock-runtime";
+import type * as bedrock from "@aws-sdk/client-bedrock-runtime";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   LLMRequestTypeValues,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 export class BedrockInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: BedrockInstrumentationConfig;
+  protected declare _config: BedrockInstrumentationConfig;
 
   constructor(config: BedrockInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-bedrock", "0.3.0", config);
+    super("@traceloop/instrumentation-bedrock", version, config);
   }
 
   public override setConfig(config: BedrockInstrumentationConfig = {}) {
@@ -58,6 +59,8 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof bedrock) {
+    this._diag.debug(`Patching @aws-sdk/client-bedrock-runtime manually`);
+
     this._wrap(
       module.BedrockRuntimeClient.prototype,
       "send",
@@ -65,7 +68,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  private wrap(module: typeof bedrock) {
+  private wrap(module: typeof bedrock, moduleVersion?: string) {
+    this._diag.debug(
+      `Patching @aws-sdk/client-bedrock-runtime@${moduleVersion}`,
+    );
+
     this._wrap(
       module.BedrockRuntimeClient.prototype,
       "send",
@@ -75,7 +82,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private unwrap(module: typeof bedrock) {
+  private unwrap(module: typeof bedrock, moduleVersion?: string) {
+    this._diag.debug(
+      `Unpatching @aws-sdk/client-bedrock-runtime@${moduleVersion}`,
+    );
+
     this._unwrap(module.BedrockRuntimeClient.prototype, "send");
   }
 
@@ -95,8 +106,11 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error(`Error in bedrock instrumentation`, e);
+            }
+          },
         );
         const wrappedPromise = plugin._wrapPromise(span, execPromise);
         return context.bind(execContext, wrappedPromise);

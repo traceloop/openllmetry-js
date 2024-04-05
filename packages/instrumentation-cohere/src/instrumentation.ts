@@ -28,20 +28,20 @@ import {
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
 import { CohereInstrumentationConfig } from "./types";
-import * as cohere from "cohere-ai";
+import type * as cohere from "cohere-ai";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   LLMRequestTypeValues,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import { Stream } from "cohere-ai/core";
+import { version } from "../package.json";
 
 type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
 export class CohereInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: CohereInstrumentationConfig;
+  protected declare _config: CohereInstrumentationConfig;
 
   constructor(config: CohereInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-cohere", "0.3.11", config);
+    super("@traceloop/instrumentation-cohere", version, config);
   }
 
   public override setConfig(config: CohereInstrumentationConfig = {}) {
@@ -60,47 +60,52 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof cohere) {
+    this._diag.debug(`Manually patching cohere-ai`);
     this.wrap(module);
   }
 
-  private wrap(module: typeof cohere) {
+  private wrap(module: typeof cohere, moduleVersion?: string) {
+    this._diag.debug(`Patching cohere-ai@${moduleVersion}`);
+
     this._wrap(
       module.CohereClient.prototype,
       "generate",
-      this.wrapperMethod("completion"),
+      this.wrapperMethod("completion", false),
     );
     this._wrap(
       module.CohereClient.prototype,
       "generateStream",
-      this.wrapperMethod("completion"),
+      this.wrapperMethod("completion", true),
     );
     this._wrap(
       module.CohereClient.prototype,
       "chat",
-      this.wrapperMethod("chat"),
+      this.wrapperMethod("chat", false),
     );
     this._wrap(
       module.CohereClient.prototype,
       "chatStream",
-      this.wrapperMethod("chat"),
+      this.wrapperMethod("chat", true),
     );
     this._wrap(
       module.CohereClient.prototype,
       "rerank",
-      this.wrapperMethod("rerank"),
+      this.wrapperMethod("rerank", false),
     );
 
     return module;
   }
 
-  private unwrap(module: typeof cohere) {
+  private unwrap(module: typeof cohere, moduleVersion?: string) {
+    this._diag.debug(`Unpatching @cohere-ai@${moduleVersion}`);
+
     this._unwrap(module.CohereClient.prototype, "generateStream");
     this._unwrap(module.CohereClient.prototype, "chat");
     this._unwrap(module.CohereClient.prototype, "chatStream");
     this._unwrap(module.CohereClient.prototype, "rerank");
   }
 
-  private wrapperMethod(type: LLM_COMPLETION_TYPE) {
+  private wrapperMethod(type: LLM_COMPLETION_TYPE, streaming: boolean) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -117,10 +122,18 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error("Error in cohere instrumentation", e);
+            }
+          },
         );
-        const wrappedPromise = plugin._wrapPromise(type, span, execPromise);
+        const wrappedPromise = plugin._wrapPromise(
+          type,
+          streaming,
+          span,
+          execPromise,
+        );
         return context.bind(execContext, wrappedPromise as any);
       };
     };
@@ -128,23 +141,51 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
 
   private _wrapPromise<T>(
     type: LLM_COMPLETION_TYPE,
+    streaming: boolean,
     span: Span,
     promise: Promise<T>,
   ): Promise<T> {
     return promise
       .then(async (result) => {
-        const awaitedResult = (await result) as
-          | cohere.Cohere.Generation
-          | cohere.Cohere.GenerateStreamedResponse
-          | cohere.Cohere.NonStreamedChatResponse
-          | cohere.Cohere.StreamedChatResponse
-          | cohere.Cohere.RerankResponse;
-
-        await this._endSpan({
-          type,
-          span,
-          result: awaitedResult,
-        });
+        const awaitedResult = await result;
+        if (type === "completion" && streaming) {
+          await this._endSpan({
+            type,
+            span,
+            streaming,
+            result:
+              (await awaitedResult) as AsyncIterable<cohere.Cohere.GenerateStreamedResponse>,
+          });
+        } else if (type === "completion" && !streaming) {
+          await this._endSpan({
+            type,
+            span,
+            streaming,
+            result: awaitedResult as cohere.Cohere.Generation,
+          });
+        } else if (type === "chat" && streaming) {
+          await this._endSpan({
+            type,
+            span,
+            streaming,
+            result:
+              (await awaitedResult) as AsyncIterable<cohere.Cohere.StreamedChatResponse>,
+          });
+        } else if (type === "chat" && !streaming) {
+          await this._endSpan({
+            type,
+            span,
+            streaming,
+            result: awaitedResult as cohere.Cohere.NonStreamedChatResponse,
+          });
+        } else if (type === "rerank" && !streaming) {
+          await this._endSpan({
+            type,
+            span,
+            streaming,
+            result: awaitedResult as cohere.Cohere.RerankResponse,
+          });
+        }
 
         return new Promise<T>((resolve) => resolve(result));
       })
@@ -232,19 +273,41 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
   private async _endSpan({
     type,
     span,
+    streaming,
     result,
-  }: {
-    type: LLM_COMPLETION_TYPE;
-    span: Span;
-    result:
-      | cohere.Cohere.Generation
-      | cohere.Cohere.GenerateStreamedResponse
-      | cohere.Cohere.NonStreamedChatResponse
-      | cohere.Cohere.StreamedChatResponse
-      | cohere.Cohere.RerankResponse;
-  }) {
+  }:
+    | {
+        type: "completion";
+        span: Span;
+        streaming: false;
+        result: cohere.Cohere.Generation;
+      }
+    | {
+        type: "completion";
+        span: Span;
+        streaming: true;
+        result: AsyncIterable<cohere.Cohere.GenerateStreamedResponse>;
+      }
+    | {
+        type: "chat";
+        span: Span;
+        streaming: false;
+        result: cohere.Cohere.NonStreamedChatResponse;
+      }
+    | {
+        type: "chat";
+        span: Span;
+        streaming: true;
+        result: AsyncIterable<cohere.Cohere.StreamedChatResponse>;
+      }
+    | {
+        type: "rerank";
+        span: Span;
+        streaming: false;
+        result: cohere.Cohere.RerankResponse;
+      }) {
     if (type === "completion") {
-      if (result instanceof Stream) {
+      if (streaming) {
         for await (const message of result) {
           if (message.eventType === "stream-end") {
             this._setResponseSpanForGenerate(span, message.response);
@@ -254,7 +317,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
         this._setResponseSpanForGenerate(span, result);
       }
     } else if (type === "chat") {
-      if (result instanceof Stream) {
+      if (streaming) {
         for await (const message of result) {
           if (message.eventType === "stream-end") {
             this._setResponseSpanForChat(span, message.response);
@@ -396,9 +459,9 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
 
   private _setResponseSpanForGenerate(
     span: Span,
-    result: cohere.Cohere.Generation,
+    result: cohere.Cohere.Generation | cohere.Cohere.GenerateStreamEndResponse,
   ) {
-    if ("meta" in result) {
+    if (result && "meta" in result) {
       if (typeof result.meta?.billedUnits?.inputTokens === "number") {
         span.setAttribute(
           SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
@@ -425,7 +488,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
       }
     }
 
-    if (this._shouldSendPrompts()) {
+    if (this._shouldSendPrompts() && result.generations) {
       span.setAttribute(
         `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
         "assistant",
@@ -437,6 +500,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     }
 
     if (
+      result.generations &&
       "finish_reason" in result.generations[0] &&
       typeof result.generations[0].finish_reason === "string"
     )
@@ -446,6 +510,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
       );
 
     if (
+      result.generations &&
       "finishReason" in result.generations[0] &&
       typeof result.generations[0].finishReason === "string"
     )

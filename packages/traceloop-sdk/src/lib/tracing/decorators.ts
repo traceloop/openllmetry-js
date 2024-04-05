@@ -180,52 +180,63 @@ export function withTool<
 
 function entity(
   type: TraceloopSpanKindValues,
-  config: Partial<DecoratorConfig>,
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
 ) {
   return function (
-    target: any,
+    target: unknown,
     propertyKey: string,
     descriptor: PropertyDescriptor,
   ) {
-    const originalMethod: () => any = descriptor.value;
-    const entityName = config.name ?? originalMethod.name;
+    const originalMethod = descriptor.value;
 
-    if (originalMethod.constructor.name === "AsyncFunction") {
-      descriptor.value = async function (...args: any[]) {
-        return await withEntity(
-          type,
-          { ...config, name: entityName },
-          originalMethod,
-          target,
-          ...args,
-        );
-      };
-    } else {
-      descriptor.value = function (...args: any[]) {
-        return withEntity(
-          type,
-          { ...config, name: entityName },
-          originalMethod,
-          target,
-          ...args,
-        );
-      };
-    }
+    descriptor.value = function (...args: unknown[]) {
+      if (typeof config === "function") {
+        config = config(this, ...args);
+      }
+
+      const entityName = config.name ?? originalMethod.name;
+
+      return withEntity(
+        type,
+        { ...config, name: entityName },
+        originalMethod,
+        this,
+        ...args,
+      );
+    };
   };
 }
 
-export function workflow(config?: Partial<DecoratorConfig>) {
+export function workflow(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.WORKFLOW, config ?? {});
 }
 
-export function task(config?: Partial<DecoratorConfig>) {
+export function task(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.TASK, config ?? {});
 }
 
-export function agent(config?: Partial<DecoratorConfig>) {
+export function agent(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.AGENT, config ?? {});
 }
 
-export function tool(config?: Partial<DecoratorConfig>) {
+export function tool(
+  config:
+    | Partial<DecoratorConfig>
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
+) {
   return entity(TraceloopSpanKindValues.TOOL, config ?? {});
 }

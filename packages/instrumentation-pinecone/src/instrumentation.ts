@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as pinecone from "@pinecone-database/pinecone";
+import type * as pinecone from "@pinecone-database/pinecone";
 
 import { context, trace, Tracer, SpanStatusCode } from "@opentelemetry/api";
 import {
@@ -27,10 +27,11 @@ import {
   SpanAttributes,
   EventAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 export class PineconeInstrumentation extends InstrumentationBase<any> {
   constructor(config: InstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-pinecone", "0.3.0", config);
+    super("@traceloop/instrumentation-pinecone", version, config);
   }
 
   public manuallyInstrument(module: typeof pinecone) {
@@ -47,7 +48,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(moduleExports: typeof pinecone) {
+  private patch(moduleExports: typeof pinecone, moduleVersion?: string) {
+    this._diag.debug(`Patching @pinecone-database/pinecone@${moduleVersion}`);
+
     this._wrap(
       moduleExports.Index.prototype,
       "query",
@@ -77,7 +80,12 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof pinecone): void {
+  private unpatch(
+    moduleExports: typeof pinecone,
+    moduleVersion?: string,
+  ): void {
+    this._diag.debug(`Unpatching @pinecone-database/pinecone@${moduleVersion}`);
+
     this._unwrap(moduleExports.Index.prototype, "query");
     this._unwrap(moduleExports.Index.prototype, "upsert");
     this._unwrap(moduleExports.Index.prototype, "deleteAll");
@@ -86,6 +94,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
   }
 
   private genericWrapper(methodName: string, tracer: Tracer) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const plugin = this;
+
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
@@ -98,8 +109,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            plugin._diag.error(`Error in Pinecone instrumentation`, e);
+          },
         );
         const wrappedPromise = execPromise
           .then((result: any) => {
@@ -125,6 +137,9 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
   }
 
   private queryWrapper(tracer: Tracer) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const plugin = this;
+
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
@@ -164,8 +179,11 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error(`Error in Pinecone instrumentation`, e);
+            }
+          },
         );
         const wrappedPromise = execPromise
           .then((result: any) => {

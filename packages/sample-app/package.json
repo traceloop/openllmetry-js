@@ -4,6 +4,7 @@
   "description": "Sample app for using Traceloop SDK",
   "scripts": {
     "build": "tsc --build tsconfig.json",
+    "run:anthropic": "npm run build && node dist/src/sample_anthropic.js",
     "run:cohere": "npm run build && node dist/src/sample_cohere.js",
     "run:chromadb": "npm run build && node dist/src/sample_chromadb.js",
     "run:bedrock:ai21": "npm run build && node dist/src/bedrock/ai21.js",
@@ -31,6 +32,7 @@
     "node": ">=14"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.20.1",
     "@aws-sdk/client-bedrock-runtime": "^3.499.0",
     "@azure/openai": "^1.0.0-beta.11",
     "@google-cloud/aiplatform": "^3.10.0",

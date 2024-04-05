@@ -33,22 +33,25 @@ import {
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import { OpenAIInstrumentationConfig } from "./types";
-import {
+import type {
   ChatCompletion,
   ChatCompletionChunk,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
   Completion,
+  CompletionChoice,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
 } from "openai/resources";
-import { Stream } from "openai/streaming";
+import type { Stream } from "openai/streaming";
+import { version } from "../package.json";
+import { encoding_for_model, TiktokenModel, Tiktoken } from "tiktoken";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: OpenAIInstrumentationConfig;
+  protected declare _config: OpenAIInstrumentationConfig;
 
   constructor(config: OpenAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-openai", "0.3.0", config);
+    super("@traceloop/instrumentation-openai", version, config);
   }
 
   public override setConfig(config: OpenAIInstrumentationConfig = {}) {
@@ -56,6 +59,8 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof openai.OpenAI) {
+    this._diag.debug(`Manually instrumenting openai`);
+
     // Old version of OpenAI API (v3.1.0)
     if ((module as any).OpenAIApi) {
       this._wrap(
@@ -92,7 +97,9 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return module;
   }
 
-  private patch(moduleExports: typeof openai) {
+  private patch(moduleExports: typeof openai, moduleVersion?: string) {
+    this._diag.debug(`Patching openai@${moduleVersion}`);
+
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._wrap(
@@ -120,7 +127,9 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return moduleExports;
   }
 
-  private unpatch(moduleExports: typeof openai): void {
+  private unpatch(moduleExports: typeof openai, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching openai@${moduleVersion}`);
+
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
       this._unwrap(
@@ -171,8 +180,11 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          // eslint-disable-next-line @typescript-eslint/no-empty-function
-          () => {},
+          (e) => {
+            if (e) {
+              plugin._diag.error("OpenAI instrumentation: error", e);
+            }
+          },
         );
 
         if (
@@ -187,6 +199,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             plugin._streamingWrapPromise({
               span,
               type,
+              params: args[0] as any,
               promise: execPromise,
             }),
           );
@@ -285,15 +298,18 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   private async *_streamingWrapPromise({
     span,
     type,
+    params,
     promise,
   }:
     | {
         span: Span;
         type: "chat";
+        params: ChatCompletionCreateParamsStreaming;
         promise: Promise<Stream<ChatCompletionChunk>>;
       }
     | {
         span: Span;
+        params: CompletionCreateParamsStreaming;
         type: "completion";
         promise: Promise<Stream<Completion>>;
       }) {
@@ -341,6 +357,33 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
 
+      if (result.choices[0].logprobs?.content) {
+        this._addLogProbsEvent(span, result.choices[0].logprobs);
+      }
+
+      if (this._config.enrichTokens) {
+        let promptTokens = 0;
+        for (const message of params.messages) {
+          promptTokens +=
+            this.tokenCountFromString(
+              message.content as string,
+              result.model,
+            ) ?? 0;
+        }
+
+        const completionTokens = this.tokenCountFromString(
+          result.choices[0].message.content ?? "",
+          result.model,
+        );
+        if (completionTokens) {
+          result.usage = {
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: promptTokens + completionTokens,
+          };
+        }
+      }
+
       this._endSpan({ span, type, result });
     } else {
       const result: Completion = {
@@ -375,6 +418,27 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
 
+      if (result.choices[0].logprobs) {
+        this._addLogProbsEvent(span, result.choices[0].logprobs);
+      }
+
+      if (this._config.enrichTokens) {
+        const promptTokens =
+          this.tokenCountFromString(params.prompt as string, result.model) ?? 0;
+
+        const completionTokens = this.tokenCountFromString(
+          result.choices[0].text ?? "",
+          result.model,
+        );
+        if (completionTokens) {
+          result.usage = {
+            prompt_tokens: promptTokens,
+            completion_tokens: completionTokens,
+            total_tokens: promptTokens + completionTokens,
+          };
+        }
+      }
+
       this._endSpan({ span, type, result });
     }
   }
@@ -390,12 +454,20 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         return new Promise<T>((resolve) => {
           if (version === "v3") {
             if (type === "chat") {
+              this._addLogProbsEvent(
+                span,
+                ((result as any).data as ChatCompletion).choices[0].logprobs,
+              );
               this._endSpan({
                 type,
                 span,
                 result: (result as any).data as ChatCompletion,
               });
             } else {
+              this._addLogProbsEvent(
+                span,
+                ((result as any).data as Completion).choices[0].logprobs,
+              );
               this._endSpan({
                 type,
                 span,
@@ -404,8 +476,16 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             }
           } else {
             if (type === "chat") {
+              this._addLogProbsEvent(
+                span,
+                (result as ChatCompletion).choices[0].logprobs,
+              );
               this._endSpan({ type, span, result: result as ChatCompletion });
             } else {
+              this._addLogProbsEvent(
+                span,
+                (result as Completion).choices[0].logprobs,
+              );
               this._endSpan({ type, span, result: result as Completion });
             }
           }
@@ -509,5 +589,67 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     return this._config.traceContent !== undefined
       ? this._config.traceContent
       : true;
+  }
+
+  private _addLogProbsEvent(
+    span: Span,
+    logprobs:
+      | ChatCompletion.Choice.Logprobs
+      | ChatCompletionChunk.Choice.Logprobs
+      | CompletionChoice.Logprobs
+      | null,
+  ) {
+    let result: { token: string; logprob: number }[] = [];
+
+    if (!logprobs) {
+      return;
+    }
+
+    const chatLogprobs = logprobs as
+      | ChatCompletion.Choice.Logprobs
+      | ChatCompletionChunk.Choice.Logprobs;
+    const completionLogprobs = logprobs as CompletionChoice.Logprobs;
+    if (chatLogprobs.content) {
+      result = chatLogprobs.content.map((logprob) => {
+        return {
+          token: logprob.token,
+          logprob: logprob.logprob,
+        };
+      });
+    } else if (
+      completionLogprobs?.tokens &&
+      completionLogprobs?.token_logprobs
+    ) {
+      completionLogprobs.tokens.forEach((token, index) => {
+        const logprob = completionLogprobs.token_logprobs?.at(index);
+        if (logprob) {
+          result.push({
+            token,
+            logprob,
+          });
+        }
+      });
+    }
+
+    span.addEvent("logprobs", { logprobs: JSON.stringify(result) });
+  }
+
+  private _encodingCache = new Map<string, Tiktoken>();
+
+  private tokenCountFromString(text: string, model: string) {
+    if (!this._encodingCache.has(model)) {
+      try {
+        const encoding = encoding_for_model(model as TiktokenModel);
+        this._encodingCache.set(model, encoding);
+      } catch (e) {
+        this._diag.warn(
+          `Failed to get tiktoken encoding for model_name: ${model}, error: ${e}`,
+        );
+        return;
+      }
+    }
+
+    const encoding = this._encodingCache.get(model);
+    return encoding!.encode(text).length;
   }
 }
