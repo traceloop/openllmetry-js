@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as anthropic from "@anthropic-ai/sdk";
 import {
   context,
   trace,
@@ -33,15 +32,20 @@ import {
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import { AnthropicInstrumentationConfig } from "./types";
+import { version } from "../package.json";
+import type * as anthropic from "@anthropic-ai/sdk";
 import type {
   CompletionCreateParamsNonStreaming,
+  CompletionCreateParamsStreaming,
   Completion,
 } from "@anthropic-ai/sdk/resources/completions";
 import type {
   MessageCreateParamsNonStreaming,
+  MessageCreateParamsStreaming,
   Message,
+  MessageStreamEvent,
 } from "@anthropic-ai/sdk/resources/messages";
-import { version } from "../package.json";
+import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 export class AnthropicInstrumentation extends InstrumentationBase<any> {
   protected declare _config: AnthropicInstrumentationConfig;
@@ -143,6 +147,24 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
           },
         );
 
+        if (
+          (
+            args[0] as
+              | MessageCreateParamsStreaming
+              | CompletionCreateParamsStreaming
+          ).stream &&
+          type === "completion" // For some reason, this causes an exception with chat, so disabled for now
+        ) {
+          return context.bind(
+            execContext,
+            plugin._streamingWrapPromise({
+              span,
+              type,
+              promise: execPromise,
+            }),
+          );
+        }
+
         const wrappedPromise = plugin._wrapPromise(type, span, execPromise);
 
         return context.bind(execContext, wrappedPromise as any);
@@ -215,6 +237,82 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
       kind: SpanKind.CLIENT,
       attributes,
     });
+  }
+
+  private async *_streamingWrapPromise({
+    span,
+    type,
+    promise,
+  }:
+    | {
+        span: Span;
+        type: "chat";
+        promise: Promise<Stream<MessageStreamEvent>>;
+      }
+    | {
+        span: Span;
+        type: "completion";
+        promise: Promise<Stream<Completion>>;
+      }) {
+    if (type === "chat") {
+      const result: Message = {
+        id: "0",
+        type: "message",
+        model: "",
+        role: "assistant",
+        stop_reason: null,
+        stop_sequence: null,
+        usage: { input_tokens: 0, output_tokens: 0 },
+        content: [],
+      };
+      for await (const chunk of await promise) {
+        yield chunk;
+
+        switch (chunk.type) {
+          case "content_block_start":
+            if (result.content.length <= chunk.index) {
+              result.content.push(chunk.content_block);
+            }
+            break;
+
+          case "content_block_delta":
+            if (chunk.index < result.content.length) {
+              result.content[chunk.index] = {
+                type: "text",
+                text: result.content[chunk.index].text + chunk.delta.text,
+              };
+            }
+        }
+      }
+
+      this._endSpan({ span, type, result });
+    } else {
+      const result: Completion = {
+        id: "0",
+        type: "completion",
+        model: "",
+        completion: "",
+        stop_reason: null,
+      };
+      for await (const chunk of await promise) {
+        yield chunk;
+
+        result.id = chunk.id;
+        result.model = chunk.model;
+
+        if (chunk.stop_reason) {
+          result.stop_reason = chunk.stop_reason;
+        }
+        if (chunk.model) {
+          result.model = chunk.model;
+        }
+        if (chunk.completion) {
+          result.completion += chunk.completion;
+        }
+      }
+
+      this._endSpan({ span, type, result });
+    }
   }
 
   private _wrapPromise<T>(
