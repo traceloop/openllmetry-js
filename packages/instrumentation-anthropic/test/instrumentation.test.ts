@@ -151,6 +151,10 @@ describe("Test Anthropic instrumentation", async function () {
       "claude-3-opus-20240229",
     );
     assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MAX_TOKENS}`],
+      1024,
+    );
+    assert.strictEqual(
       chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
       "user",
     );

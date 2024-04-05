@@ -17,6 +17,7 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import { AnthropicInstrumentation } from "@traceloop/instrumentation-anthropic";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { AzureOpenAIInstrumentation } from "@traceloop/instrumentation-azure";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
@@ -32,6 +33,7 @@ import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation | undefined;
+let anthropicInstrumentation: AnthropicInstrumentation | undefined;
 let azureOpenAIInstrumentation: AzureOpenAIInstrumentation | undefined;
 let cohereInstrumentation: CohereInstrumentation | undefined;
 let vertexaiInstrumentation: VertexAIInstrumentation | undefined;
@@ -46,6 +48,9 @@ const instrumentations: Instrumentation[] = [];
 export const initInstrumentations = () => {
   openAIInstrumentation = new OpenAIInstrumentation();
   instrumentations.push(openAIInstrumentation);
+
+  anthropicInstrumentation = new AnthropicInstrumentation();
+  instrumentations.push(anthropicInstrumentation);
 
   azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
   instrumentations.push(azureOpenAIInstrumentation);
@@ -81,6 +86,12 @@ export const manuallyInitInstrumentations = (
     });
     instrumentations.push(openAIInstrumentation);
     openAIInstrumentation.manuallyInstrument(instrumentModules.openAI);
+  }
+
+  if (instrumentModules?.anthropic) {
+    anthropicInstrumentation = new AnthropicInstrumentation();
+    instrumentations.push(anthropicInstrumentation);
+    anthropicInstrumentation.manuallyInstrument(instrumentModules.anthropic);
   }
 
   if (instrumentModules?.azureOpenAI) {

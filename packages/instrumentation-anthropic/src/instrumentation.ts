@@ -179,6 +179,8 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
     if (type === "completion") {
       attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
         params.max_tokens_to_sample;
+    } else {
+      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
     }
 
     if (
