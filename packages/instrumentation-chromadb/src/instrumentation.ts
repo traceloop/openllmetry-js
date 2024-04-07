@@ -57,7 +57,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof chromadb) {
-    return module;
+    this.wrap(module);
   }
 
   private wrap(module: typeof chromadb) {
@@ -167,7 +167,10 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     });
 
     // Instrumenting only for query and peak
-    if (methodName === "query" || methodName === "peek") {
+    if (
+      this._config.traceContent &&
+      (methodName === "query" || methodName === "peek")
+    ) {
       const query_request_event = span.addEvent("chromadb.query.request");
       query_request_event.setAttribute(
         EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
