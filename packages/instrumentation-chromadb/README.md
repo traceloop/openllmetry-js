@@ -1,9 +1,9 @@
-# OpenTelemetry VertexAI instrumentation for Node.js
+# OpenTelemetry ChromaDB instrumentation for Node.js
 
 [![NPM Published Version][npm-img]][npm-url]
 [![Apache License][license-image]][license-image]
 
-This module provides automatic instrumentation for [`Cohere-JS`](https://www.npmjs.com/package/cohere-js) module, which may be loaded using the [`@opentelemetry/sdk-trace-node`](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-node) package and is included in the [`@traceloop/node-server-sdk`](https://www.npmjs.com/package/@traceloop/node-server-sdk) bundle.
+This module provides automatic instrumentation for [`ChromaDB`](https://www.npmjs.com/package/chromadb) module, which may be loaded using the [`@opentelemetry/sdk-trace-node`](https://github.com/open-telemetry/opentelemetry-js/tree/main/packages/opentelemetry-sdk-trace-node) package and is included in the [`@traceloop/node-server-sdk`](https://www.npmjs.com/package/@traceloop/node-server-sdk) bundle.
 
 If total installation size is not constrained, it is recommended to use the [`@traceloop/node-server-sdk`](https://www.npmjs.com/package/@traceloop/node-server-sdk) bundle for the most seamless instrumentation experience.
 
@@ -12,12 +12,12 @@ Compatible with OpenTelemetry JS API and SDK `1.0+`.
 ## Installation
 
 ```bash
-npm install --save @traceloop/instrumentation-bedrock
+npm install --save @traceloop/instrumentation-chromadb
 ```
 
 ## Supported Versions
 
-- `>=1.0.26`
+- `>=1.8.1`
 
 ## Usage
 
@@ -25,14 +25,14 @@ To load a specific plugin, specify it in the registerInstrumentations's configur
 
 ```js
 const { NodeTracerProvider } = require("@opentelemetry/sdk-trace-node");
-const { CohereInstrumentation } = require("@traceloop/instrumentation-bedrock");
+const { ChromaDBInstrumentation } = require("@traceloop/instrumentation-chromadb");
 const { registerInstrumentations } = require("@opentelemetry/instrumentation");
 
 const provider = new NodeTracerProvider();
 provider.register();
 
 registerInstrumentations({
-  instrumentations: [new CohereInstrumentation()],
+  instrumentations: [new ChromaDBInstrumentation()],
 });
 ```
 
