@@ -317,7 +317,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
           id: result.ids[index],
           distances: result.distances?.[index] ?? [],
           metadatas: result.metadatas?.[index] ?? [],
-          documents: result.documents?.[index] ?? [],
+          documents: result.documents[index] ?? [],
           embeddings: result.embeddings?.[index] ?? [],
         });
       }
