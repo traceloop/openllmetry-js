@@ -50,7 +50,11 @@ const scifactCorpusCollection = client.getOrCreateCollection({
 //   return await traceloop.withWorkflow({ name: "sample_query" }, async () => {
 //     const results = await collection.query({
 //       nResults: 2,
-//       queryTexts: ["doc1000101"],
+//       queryEmbeddings: [
+//         [1.1, 2.3, 3.2],
+//         [5.1, 4.3, 2.2],
+//       ],
+//       where: { style: "style2" },
 //     });
 
 //     console.log(results);
@@ -108,9 +112,11 @@ const scifactCorpusCollection = client.getOrCreateCollection({
 //   });
 // };
 
-// const sampleDelete = async (params: DeleteCollectionParams) => {
+// const sampleDelete = async (collection: Collection) => {
 //   return await traceloop.withWorkflow({ name: "sample_delete" }, async () => {
-//     const result = await client.deleteCollection(params);
+//     const result = await collection.delete({
+//       ids: "id1",
+//     });
 //     console.log(result);
 //   });
 // };
@@ -118,17 +124,19 @@ const scifactCorpusCollection = client.getOrCreateCollection({
 // traceloop.withAssociationProperties({}, async () => {
 //   const collection = await client.getOrCreateCollection({
 //     name: "my_collection",
-//     embeddingFunction: embedder,
+//     embeddingFunction,
 //   });
-//   // sampleGet(collection);
-//   // sampleAdd(collection);
-//   // sampleUpdate(collection);
-//   // sampleUpsert(collection);
-//   // sampleQuery(collection);
+//   sampleGet(collection);
+//   sampleAdd(collection);
+//   sampleUpdate(collection);
+//   sampleUpsert(collection);
+//   sampleQuery(collection);
 //   samplePeek(collection);
-//   // sampleModify(collection);
-//   // sampleDelete({ name: collection.name });
+//   sampleModify(collection);
+//   sampleDelete({ name: collection.name });
 // });
+
+// Real world example
 
 const claimData = fs
   .readFileSync("data/scifact/scifact_claims.jsonl")

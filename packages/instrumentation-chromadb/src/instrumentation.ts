@@ -28,17 +28,19 @@ import {
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
 import { ChromaDBInstrumentationConfig } from "./types";
-import * as chromadb from "chromadb";
+import type * as chromadb from "chromadb";
 import {
+  Events,
   SpanAttributes,
   EventAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import { version } from "../package.json";
 
 export class ChromaDBInstrumentation extends InstrumentationBase<any> {
-  protected override _config!: ChromaDBInstrumentationConfig;
+  protected declare _config: ChromaDBInstrumentationConfig;
 
   constructor(config: ChromaDBInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-chromadb", "0.6.0", config);
+    super("@traceloop/instrumentation-chromadb", version, config);
   }
 
   public override setConfig(config: ChromaDBInstrumentationConfig = {}) {
@@ -57,6 +59,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof chromadb) {
+    this._diag.debug(`Manually patching chromadb-ai`);
     this.wrap(module);
   }
 
@@ -122,9 +125,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
   ): Promise<T> {
     return promise
       .then(async (result) => {
-        const awaitedResult = (await result) as
-          | chromadb.GetResponse
-          | chromadb.QueryResponse;
+        const awaitedResult = (await result) as chromadb.QueryResponse;
 
         this._endSpan({
           methodName,
@@ -155,7 +156,13 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     params,
     methodName,
   }: {
-    params: chromadb.GetParams | chromadb.PeekParams;
+    params:
+      | chromadb.AddParams
+      | chromadb.DeleteParams
+      | chromadb.GetParams
+      | chromadb.ModifyCollectionParams
+      | chromadb.PeekParams
+      | chromadb.QueryParams;
     methodName: string;
   }): Span {
     const attributes: Attributes = {
@@ -166,20 +173,132 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
       attributes,
     });
 
-    // Instrumenting only for query and peak
-    if (
-      this._config.traceContent &&
-      (methodName === "query" || methodName === "peek")
-    ) {
-      const query_request_event = span.addEvent("chromadb.query.request");
-      query_request_event.setAttribute(
-        EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
-        JSON.stringify(params),
-      );
+    if (this._config.traceContent) {
+      const request_event = span.addEvent("db.chroma.request");
+      if (
+        methodName === "add" ||
+        methodName === "update" ||
+        methodName === "upsert"
+      ) {
+        this._setAddOrUpdateOrUpsertAttributes(
+          request_event,
+          params as chromadb.AddParams,
+          methodName,
+        );
+      } else if (methodName === "delete") {
+        this._setDeleteAttributes(
+          request_event,
+          params as chromadb.DeleteParams,
+        );
+      } else if (methodName === "get") {
+        this._setGetAttributes(request_event, params as chromadb.GetParams);
+      } else if (methodName === "modify") {
+        this._setModifyAttributes(
+          request_event,
+          params as chromadb.ModifyCollectionParams,
+        );
+      } else if (methodName === "peek") {
+        this._setPeekAttributes(request_event, params as chromadb.PeekParams);
+      } else if (methodName === "query") {
+        this._setQueryAttributes(request_event, params as chromadb.GetParams);
+      }
     }
 
     return span;
   }
+
+  // Request attributes
+
+  private _setAddOrUpdateOrUpsertAttributes(
+    span: Span,
+    params: chromadb.AddParams,
+    method: "add" | "update" | "upsert",
+  ) {
+    span.setAttribute(
+      `db.chroma.${method}.ids_count`,
+      JSON.stringify(params.ids.length),
+    );
+    span.setAttribute(
+      `db.chroma.${method}.embeddings_count`,
+      JSON.stringify(params.embeddings?.length),
+    );
+    span.setAttribute(
+      `db.chroma.${method}.metadatas_count`,
+      JSON.stringify(params.metadatas?.length),
+    );
+    span.setAttribute(
+      `db.chroma.${method}.documents_count`,
+      JSON.stringify(params.documents?.length),
+    );
+  }
+
+  private _setDeleteAttributes(span: Span, params: chromadb.DeleteParams) {
+    span.setAttribute(
+      "db.chroma.delete.ids_count",
+      JSON.stringify(params.ids?.length),
+    );
+    span.setAttribute("db.chroma.delete.where", JSON.stringify(params.where));
+    span.setAttribute(
+      "db.chroma.delete.where_document",
+      JSON.stringify(params.whereDocument),
+    );
+  }
+
+  private _setGetAttributes(span: Span, params: chromadb.GetParams) {
+    span.setAttribute(
+      "db.chroma.get.ids_count",
+      JSON.stringify(params.ids?.length),
+    );
+    span.setAttribute("db.chroma.get.where", JSON.stringify(params.where));
+    span.setAttribute("db.chroma.get.limit", JSON.stringify(params.limit));
+    span.setAttribute("db.chroma.get.offset", JSON.stringify(params.offset));
+    span.setAttribute(
+      "db.chroma.get.where_document",
+      JSON.stringify(params.whereDocument),
+    );
+    span.setAttribute("db.chroma.get.include", JSON.stringify(params.include));
+  }
+
+  private _setModifyAttributes(
+    span: Span,
+    params: chromadb.ModifyCollectionParams,
+  ) {
+    span.setAttribute("db.chroma.modify.name", JSON.stringify(params.name));
+    span.setAttribute(
+      "db.chroma.modify.metadata",
+      JSON.stringify(params.metadata),
+    );
+  }
+
+  private _setPeekAttributes(span: Span, params: chromadb.PeekParams) {
+    span.setAttribute("db.chroma.peek.limit", JSON.stringify(params.limit));
+  }
+
+  private _setQueryAttributes(span: Span, params: chromadb.QueryParams) {
+    span.setAttribute(
+      "db.chroma.query.query_embeddings_count",
+      JSON.stringify(params.queryEmbeddings?.length),
+    );
+    span.setAttribute(
+      "db.chroma.query.query_texts_count",
+      JSON.stringify(params.queryTexts?.length),
+    );
+    span.setAttribute(
+      "db.chroma.query.n_results",
+      JSON.stringify(params.nResults),
+    );
+    span.setAttribute("db.chroma.query.where", JSON.stringify(params.where));
+    span.setAttribute(
+      "db.chroma.query.where_document",
+      JSON.stringify(params.whereDocument),
+    );
+    span.setAttribute(
+      "db.chroma.query.include",
+      JSON.stringify(params.include),
+    );
+  }
+
+  // Response attributes
 
   private _endSpan({
     methodName,
@@ -188,15 +307,44 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
   }: {
     methodName: string;
     span: Span;
-    result: chromadb.GetResponse | chromadb.QueryResponse;
+    result: chromadb.QueryResponse;
   }): void {
-    // Instrumenting only for query and peak
-    if (methodName === "query" || methodName === "peek") {
-      const query_result_event = span.addEvent("chromadb.query.result");
-      query_result_event.setAttribute(
-        EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES,
-        JSON.stringify(result),
-      );
+    if (methodName === "query") {
+      const arrLength = result.ids.length;
+      const attributes = [];
+      for (let index = 0; index <= arrLength; index++) {
+        attributes.push({
+          id: result.ids[index],
+          distances: result.distances?.[index] ?? [],
+          metadatas: result.metadatas?.[index] ?? [],
+          documents: result.documents?.[index] ?? [],
+          embeddings: result.embeddings?.[index] ?? [],
+        });
+      }
+      const query_result_event = span.addEvent(Events.DB_QUERY_RESULT);
+
+      attributes.forEach((each) => {
+        query_result_event.setAttribute(
+          EventAttributes.DB_QUERY_RESULT_ID,
+          JSON.stringify(each.id),
+        );
+        query_result_event.setAttribute(
+          EventAttributes.DB_QUERY_RESULT_METADATA,
+          JSON.stringify(each.metadatas),
+        );
+        query_result_event.setAttribute(
+          EventAttributes.DB_QUERY_RESULT_DOCUMENT,
+          JSON.stringify(each.documents),
+        );
+        query_result_event.setAttribute(
+          EventAttributes.DB_QUERY_RESULT_DISTANCE,
+          JSON.stringify(each.distances),
+        );
+        query_result_event.setAttribute(
+          EventAttributes.DB_QUERY_EMBEDDINGS_VECTOR,
+          JSON.stringify(each.embeddings),
+        );
+      });
     }
 
     span.setStatus({ code: SpanStatusCode.OK });
