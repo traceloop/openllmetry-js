@@ -321,9 +321,9 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
           embeddings: result.embeddings?.[index] ?? [],
         });
       }
-      const query_result_event = span.addEvent(Events.DB_QUERY_RESULT);
 
       attributes.forEach((each) => {
+        const query_result_event = span.addEvent(Events.DB_QUERY_RESULT);
         query_result_event.setAttribute(
           EventAttributes.DB_QUERY_RESULT_ID,
           JSON.stringify(each.id),
