@@ -57,7 +57,9 @@ export const initInstrumentations = () => {
   anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
   instrumentations.push(anthropicInstrumentation);
 
-  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
+  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(azureOpenAIInstrumentation);
 
   cohereInstrumentation = new CohereInstrumentation();
@@ -105,7 +107,7 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.azureOpenAI) {
-    const instrumentation = new AzureOpenAIInstrumentation();
+    const instrumentation = new AzureOpenAIInstrumentation({ exceptionLogger });
     instrumentations.push(instrumentation as Instrumentation);
     azureOpenAIInstrumentation = instrumentation;
     instrumentation.manuallyInstrument(instrumentModules.azureOpenAI);

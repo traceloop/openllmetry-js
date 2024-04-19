@@ -177,43 +177,49 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = deployment;
+    try {
+      attributes[SpanAttributes.LLM_REQUEST_MODEL] = deployment;
 
-    if (
-      params.extraAttributes !== undefined &&
-      typeof params.extraAttributes === "object"
-    ) {
-      Object.keys(params.extraAttributes).forEach((key: string) => {
-        attributes[key] = params.extraAttributes![key];
-      });
-    }
-
-    if (this._shouldSendPrompts()) {
-      if (type === "chat") {
-        params.forEach((message, index) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-            message.role;
-          if (typeof message.content === "string") {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              (message.content as string) || "";
-          } else {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              JSON.stringify(message.content);
-          }
+      if (
+        params.extraAttributes !== undefined &&
+        typeof params.extraAttributes === "object"
+      ) {
+        Object.keys(params.extraAttributes).forEach((key: string) => {
+          attributes[key] = params.extraAttributes![key];
         });
-      } else {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-        if (typeof params === "string") {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params;
-        } else {
-          params.forEach((prompt, index) => {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = "user";
+      }
 
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              prompt;
+      if (this._shouldSendPrompts()) {
+        if (type === "chat") {
+          params.forEach((message, index) => {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+              message.role;
+            if (typeof message.content === "string") {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                (message.content as string) || "";
+            } else {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                JSON.stringify(message.content);
+            }
           });
+        } else {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          if (typeof params === "string") {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params;
+          } else {
+            params.forEach((prompt, index) => {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+                "user";
+
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                prompt;
+            });
+          }
         }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return this.tracer.startSpan(`openai.${type}`, {
@@ -277,69 +283,74 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
         type: "completion";
         result: Completions;
       }) {
-    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, deployment);
-    if (result.usage) {
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-        result.usage?.totalTokens,
-      );
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-        result.usage?.completionTokens,
-      );
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-        result.usage?.promptTokens,
-      );
-    }
+    try {
+      span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, deployment);
+      if (result.usage) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          result.usage?.totalTokens,
+        );
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          result.usage?.completionTokens,
+        );
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          result.usage?.promptTokens,
+        );
+      }
 
-    if (this._shouldSendPrompts()) {
-      if (type === "chat") {
-        result.choices.forEach((choice, index) => {
-          choice.finishReason &&
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-              choice.finishReason,
-            );
-          choice.message &&
+      if (this._shouldSendPrompts()) {
+        if (type === "chat") {
+          result.choices.forEach((choice, index) => {
+            choice.finishReason &&
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+                choice.finishReason,
+              );
+            choice.message &&
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+                choice.message.role,
+              );
+            choice.message?.content &&
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                choice.message.content,
+              );
+
+            if (choice.message?.functionCall) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+                choice.message.functionCall.name,
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+                choice.message.functionCall.arguments,
+              );
+            }
+          });
+        } else {
+          result.choices.forEach((choice, index) => {
+            choice.finishReason &&
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+                choice.finishReason,
+              );
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-              choice.message.role,
+              "assistant",
             );
-          choice.message?.content &&
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-              choice.message.content,
+              choice.text,
             );
-
-          if (choice.message?.functionCall) {
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-              choice.message.functionCall.name,
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-              choice.message.functionCall.arguments,
-            );
-          }
-        });
-      } else {
-        result.choices.forEach((choice, index) => {
-          choice.finishReason &&
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-              choice.finishReason,
-            );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-            "assistant",
-          );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-            choice.text,
-          );
-        });
+          });
+        }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     span.end();
