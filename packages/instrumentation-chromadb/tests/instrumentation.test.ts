@@ -26,7 +26,7 @@ import {
 import * as chromadb from "chromadb";
 import * as assert from "assert";
 
-import { exec, ChildProcess } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -40,7 +40,7 @@ describe("Test ChromaDB instrumentation", function () {
 
   this.beforeAll(async () => {
     // Run ChromaDB instance on different terminal instance
-    chromaRun = exec("/bin/sh");
+    chromaRun = spawn("/bin/sh");
     chromaRun.stdin?.write("chroma run --path .\n");
 
     chromaDbClient = new chromadb.ChromaClient();
@@ -92,9 +92,11 @@ describe("Test ChromaDB instrumentation", function () {
     context.disable();
   });
 
-  this.afterAll(() => {
+  after(() => {
     // Terminate the Chroma client process after tests
-    chromaRun.kill();
+    if (chromaRun.pid) {
+      process.exit(0);
+    }
   });
 
   it("should set span attributes for Query", async () => {
