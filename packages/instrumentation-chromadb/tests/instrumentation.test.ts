@@ -17,7 +17,7 @@
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { ChromaDBInstrumentation } from "../src/instrumentation";
-import { Events } from "@traceloop/ai-semantic-conventions";
+import { EventAttributes, Events } from "@traceloop/ai-semantic-conventions";
 import {
   BasicTracerProvider,
   InMemorySpanExporter,
@@ -26,7 +26,7 @@ import {
 import * as chromadb from "chromadb";
 import * as assert from "assert";
 
-import { spawn, ChildProcess } from "child_process";
+import { exec, ChildProcess } from "child_process";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -40,7 +40,7 @@ describe("Test ChromaDB instrumentation", function () {
 
   this.beforeAll(async () => {
     // Run ChromaDB instance on different terminal instance
-    chromaRun = spawn("/bin/sh");
+    chromaRun = exec("/bin/sh");
     chromaRun.stdin?.write("chroma run --path .\n");
 
     chromaDbClient = new chromadb.ChromaClient();
@@ -109,7 +109,22 @@ describe("Test ChromaDB instrumentation", function () {
       ],
       where: { style: "style2" },
     };
-    await collection.query(input);
+    const result = await collection.query(input);
+
+    const output: any = [];
+    for (let index = 0; index < result.ids.length; index++) {
+      output.push({
+        [EventAttributes.DB_QUERY_RESULT_ID]: result.ids?.[index] ?? [],
+        [EventAttributes.DB_QUERY_RESULT_DISTANCE]:
+          result.distances?.[index] ?? [],
+        [EventAttributes.DB_QUERY_RESULT_METADATA]:
+          result.metadatas?.[index] ?? [],
+        [EventAttributes.DB_QUERY_RESULT_DOCUMENT]:
+          result.documents?.[index] ?? [],
+        [EventAttributes.DB_QUERY_RESULT_VECTOR]:
+          result.embeddings?.[index] ?? [],
+      });
+    }
 
     const spans = memoryExporter.getFinishedSpans();
     const attributes = spans[1].attributes;
@@ -141,11 +156,41 @@ describe("Test ChromaDB instrumentation", function () {
     );
 
     const events = spans[1].events;
-    assert.strictEqual(events[0].name, "db.chroma.request");
+    const outputAttributes = events.map((event) => event.attributes);
 
     // Assert output event attributes names
-    assert.strictEqual(events[1].name, Events.DB_QUERY_RESULT);
-    assert.strictEqual(events[2].name, Events.DB_QUERY_RESULT);
+    outputAttributes.forEach((each, index) => {
+      assert.equal(
+        each?.[EventAttributes.DB_QUERY_RESULT_ID],
+        JSON.stringify(output[index]?.[EventAttributes.DB_QUERY_RESULT_ID]),
+      );
+
+      assert.equal(
+        each?.[EventAttributes.DB_QUERY_RESULT_DOCUMENT],
+        JSON.stringify(
+          output[index]?.[EventAttributes.DB_QUERY_RESULT_DOCUMENT],
+        ),
+      );
+
+      assert.equal(
+        each?.[EventAttributes.DB_QUERY_RESULT_METADATA],
+        JSON.stringify(
+          output[index]?.[EventAttributes.DB_QUERY_RESULT_METADATA],
+        ),
+      );
+
+      assert.equal(
+        each?.[EventAttributes.DB_QUERY_RESULT_DISTANCE],
+        JSON.stringify(
+          output[index]?.[EventAttributes.DB_QUERY_RESULT_DISTANCE],
+        ),
+      );
+
+      assert.equal(
+        each?.[EventAttributes.DB_QUERY_RESULT_VECTOR],
+        JSON.stringify(output[index]?.[EventAttributes.DB_QUERY_RESULT_VECTOR]),
+      );
+    });
   });
 
   it("should set span attributes for Add", async () => {
