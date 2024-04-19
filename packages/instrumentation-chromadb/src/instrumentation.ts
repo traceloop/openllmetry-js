@@ -298,8 +298,6 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  // Response attributes
-
   private _endSpan({
     methodName,
     span,
@@ -322,28 +320,22 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
         });
       }
 
-      attributes.forEach((each) => {
-        const query_result_event = span.addEvent(Events.DB_QUERY_RESULT);
-        query_result_event.setAttribute(
-          EventAttributes.DB_QUERY_RESULT_ID,
-          JSON.stringify(each.id),
-        );
-        query_result_event.setAttribute(
-          EventAttributes.DB_QUERY_RESULT_METADATA,
-          JSON.stringify(each.metadatas),
-        );
-        query_result_event.setAttribute(
-          EventAttributes.DB_QUERY_RESULT_DOCUMENT,
-          JSON.stringify(each.documents),
-        );
-        query_result_event.setAttribute(
-          EventAttributes.DB_QUERY_RESULT_DISTANCE,
-          JSON.stringify(each.distances),
-        );
-        query_result_event.setAttribute(
-          EventAttributes.DB_QUERY_EMBEDDINGS_VECTOR,
-          JSON.stringify(each.embeddings),
-        );
+      attributes.map((each) => {
+        span.addEvent(Events.DB_QUERY_RESULT).setAttributes({
+          [EventAttributes.DB_QUERY_RESULT_ID]: JSON.stringify(each.id),
+          [EventAttributes.DB_QUERY_RESULT_METADATA]: JSON.stringify(
+            each.metadatas,
+          ),
+          [EventAttributes.DB_QUERY_RESULT_DOCUMENT]: JSON.stringify(
+            each.documents,
+          ),
+          [EventAttributes.DB_QUERY_RESULT_DISTANCE]: JSON.stringify(
+            each.distances,
+          ),
+          [EventAttributes.DB_QUERY_EMBEDDINGS_VECTOR]: JSON.stringify(
+            each.embeddings,
+          ),
+        });
       });
     }
 
