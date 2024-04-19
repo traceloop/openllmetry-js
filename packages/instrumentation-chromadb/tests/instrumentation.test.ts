@@ -26,15 +26,9 @@ import {
 import * as chromadb from "chromadb";
 import * as assert from "assert";
 
-import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
-import FetchAdapter from "@pollyjs/adapter-fetch";
-import FSPersister from "@pollyjs/persister-fs";
 import { exec, ChildProcess } from "child_process";
 
 const memoryExporter = new InMemorySpanExporter();
-
-Polly.register(FetchAdapter);
-Polly.register(FSPersister);
 
 describe("Test ChromaDB instrumentation", function () {
   const provider = new BasicTracerProvider();
@@ -44,18 +38,7 @@ describe("Test ChromaDB instrumentation", function () {
   let collection: chromadb.Collection;
   let chromaRun: ChildProcess;
 
-  setupPolly({
-    adapters: ["fetch"],
-    persister: "fs",
-    recordIfMissing: process.env.RECORD_MODE === "NEW",
-  });
-
-  before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-    instrumentation = new ChromaDBInstrumentation({ traceContent: true });
-    instrumentation.setTracerProvider(provider);
-    instrumentation.manuallyInstrument(chromadb);
-
+  this.beforeAll(async () => {
     // Run ChromaDB instance on different terminal instance
     chromaRun = exec("/bin/sh");
     chromaRun.stdin?.write("chroma run --path .\n");
@@ -68,14 +51,14 @@ describe("Test ChromaDB instrumentation", function () {
     });
   });
 
-  beforeEach(async function () {
-    const { server } = this.polly as Polly;
-    server.any().on("beforePersist", (_req, recording) => {
-      recording.request.headers = recording.request.headers.filter(
-        ({ name }: { name: string }) => name !== "api-key",
-      );
-    });
+  before(async () => {
+    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    instrumentation = new ChromaDBInstrumentation({ traceContent: true });
+    instrumentation.setTracerProvider(provider);
+    instrumentation.manuallyInstrument(chromadb);
+  });
 
+  beforeEach(async function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
     memoryExporter.reset();
@@ -109,11 +92,9 @@ describe("Test ChromaDB instrumentation", function () {
     context.disable();
   });
 
-  after(async () => {
+  this.afterAll(() => {
     // Terminate the Chroma client process after tests
-    if (chromaRun) {
-      chromaRun.kill();
-    }
+    chromaRun.kill();
   });
 
   it("should set span attributes for Query", async () => {
@@ -201,14 +182,19 @@ describe("Test ChromaDB instrumentation", function () {
     collection.delete({ ids: ["uri7", "uri8"] });
   });
 
-  it.skip("should set span attributes for Get", async () => {
+  it("should set span attributes for Get", async () => {
     const input: chromadb.GetParams = {
       ids: ["uri9", "uri10"],
     };
     await collection.get(input);
 
     const spans = memoryExporter.getFinishedSpans();
-    const attributes = spans[1].attributes;
+    const attributes = spans.reduce((span, current) => {
+      Object.keys(current.attributes).forEach((key) => {
+        span[key] = current.attributes[key];
+      });
+      return span;
+    }, {});
 
     // Assert input attributes
     assert.strictEqual(
@@ -363,7 +349,7 @@ describe("Test ChromaDB instrumentation", function () {
     collection.delete({ ids: ["uri7", "uri8"] });
   });
 
-  it.skip("should set span attributes for Modify", async () => {
+  it("should set span attributes for Modify", async () => {
     const input: chromadb.ModifyCollectionParams = {
       name: "my_collection",
       metadata: { style: "style" },
@@ -371,7 +357,12 @@ describe("Test ChromaDB instrumentation", function () {
     await collection.modify(input);
 
     const spans = memoryExporter.getFinishedSpans();
-    const attributes = spans[1].attributes;
+    const attributes = spans.reduce((span, current) => {
+      Object.keys(current.attributes).forEach((key) => {
+        span[key] = current.attributes[key];
+      });
+      return span;
+    }, {});
 
     // Assert updated input attributes
     assert.strictEqual(
