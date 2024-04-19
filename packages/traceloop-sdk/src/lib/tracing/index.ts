@@ -71,7 +71,7 @@ export const initInstrumentations = () => {
   aiplatformInstrumentation = new AIPlatformInstrumentation();
   instrumentations.push(aiplatformInstrumentation);
 
-  bedrockInstrumentation = new BedrockInstrumentation();
+  bedrockInstrumentation = new BedrockInstrumentation({ exceptionLogger });
   instrumentations.push(bedrockInstrumentation);
 
   pineconeInstrumentation = new PineconeInstrumentation();
@@ -136,7 +136,7 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.bedrock) {
-    bedrockInstrumentation = new BedrockInstrumentation();
+    bedrockInstrumentation = new BedrockInstrumentation({ exceptionLogger });
     instrumentations.push(bedrockInstrumentation);
     bedrockInstrumentation.manuallyInstrument(instrumentModules.bedrock);
   }
