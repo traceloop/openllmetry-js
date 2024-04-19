@@ -59,7 +59,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
   }
 
   public manuallyInstrument(module: typeof chromadb) {
-    this._diag.debug(`Manually patching chromadb-ai`);
+    this._diag.debug(`Manually patching chromadb`);
     this.wrap(module);
   }
 
