@@ -95,6 +95,7 @@ describe("Test ChromaDB instrumentation", function () {
   after(() => {
     // Terminate the Chroma client process after tests
     if (chromaRun.pid) {
+      // DEBT: chromaRun.kill() is not killing spawned process
       process.exit(0);
     }
   });
