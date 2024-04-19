@@ -29,7 +29,7 @@ import * as assert from "assert";
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
-import { exec, spawn, ChildProcess } from "child_process";
+import { exec, ChildProcess } from "child_process";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -57,9 +57,16 @@ describe("Test ChromaDB instrumentation", function () {
     instrumentation.manuallyInstrument(chromadb);
 
     // Run ChromaDB instance on different terminal instance
-    chromaRun = spawn("/bin/sh");
+    chromaRun = exec("/bin/sh");
+    // chromaRun.stdin?.write("chmod 777 ./chroma.sqlite3\n");
     chromaRun.stdin?.write("chroma run --path .\n");
+
     chromaDbClient = new chromadb.ChromaClient();
+
+    // Wait for ChromaDB to spin up
+    await new Promise((resolve) => {
+      setTimeout(resolve, 2000);
+    });
   });
 
   beforeEach(async function () {
