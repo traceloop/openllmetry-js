@@ -174,33 +174,29 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     });
 
     if (this._config.traceContent) {
-      const request_event = span.addEvent("db.chroma.request");
       if (
         methodName === "add" ||
         methodName === "update" ||
         methodName === "upsert"
       ) {
         this._setAddOrUpdateOrUpsertAttributes(
-          request_event,
+          span,
           params as chromadb.AddParams,
           methodName,
         );
       } else if (methodName === "delete") {
-        this._setDeleteAttributes(
-          request_event,
-          params as chromadb.DeleteParams,
-        );
+        this._setDeleteAttributes(span, params as chromadb.DeleteParams);
       } else if (methodName === "get") {
-        this._setGetAttributes(request_event, params as chromadb.GetParams);
+        this._setGetAttributes(span, params as chromadb.GetParams);
       } else if (methodName === "modify") {
         this._setModifyAttributes(
-          request_event,
+          span,
           params as chromadb.ModifyCollectionParams,
         );
       } else if (methodName === "peek") {
-        this._setPeekAttributes(request_event, params as chromadb.PeekParams);
+        this._setPeekAttributes(span, params as chromadb.PeekParams);
       } else if (methodName === "query") {
-        this._setQueryAttributes(request_event, params as chromadb.GetParams);
+        this._setQueryAttributes(span, params as chromadb.GetParams);
       }
     }
 
@@ -321,7 +317,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
       }
 
       attributes.map((each) => {
-        span.addEvent(Events.DB_QUERY_RESULT).setAttributes({
+        span.addEvent(Events.DB_QUERY_RESULT, {
           [EventAttributes.DB_QUERY_RESULT_ID]: JSON.stringify(each.id),
           [EventAttributes.DB_QUERY_RESULT_METADATA]: JSON.stringify(
             each.metadatas,
@@ -332,7 +328,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
           [EventAttributes.DB_QUERY_RESULT_DISTANCE]: JSON.stringify(
             each.distances,
           ),
-          [EventAttributes.DB_QUERY_EMBEDDINGS_VECTOR]: JSON.stringify(
+          [EventAttributes.DB_QUERY_RESULT_VECTOR]: JSON.stringify(
             each.embeddings,
           ),
         });
