@@ -220,48 +220,55 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: this._getLlmRequestTypeByMethod(type),
     };
 
-    const model = params.model ?? "command";
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
+    try {
+      const model = params.model ?? "command";
+      attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
+      attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
 
-    if (!("query" in params)) {
-      attributes[SpanAttributes.LLM_TOP_P] = params.p;
-      attributes[SpanAttributes.LLM_TOP_K] = params.k;
-      attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
-      attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
-        params.frequencyPenalty;
-      attributes[SpanAttributes.LLM_PRESENCE_PENALTY] = params.presencePenalty;
-      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.maxTokens;
-    } else {
-      attributes["topN"] = params["topN"];
-      attributes["maxChunksPerDoc"] = params["maxChunksPerDoc"];
-    }
-
-    if (this._shouldSendPrompts()) {
-      if (type === "completion" && "prompt" in params) {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.prompt;
-      } else if (type === "chat" && "message" in params) {
-        params.chatHistory?.forEach((msg, index) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.user`] =
-            msg.message;
-        });
-
-        attributes[
-          `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.role`
-        ] = "user";
-        attributes[
-          `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.user`
-        ] = params.message;
-      } else if (type === "rerank" && "query" in params) {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.query;
-        params.documents.forEach((doc, index) => {
-          attributes[`documents.${index}.index`] =
-            typeof doc === "string" ? doc : doc.text;
-        });
+      if (!("query" in params)) {
+        attributes[SpanAttributes.LLM_TOP_P] = params.p;
+        attributes[SpanAttributes.LLM_TOP_K] = params.k;
+        attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
+        attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
+          params.frequencyPenalty;
+        attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =
+          params.presencePenalty;
+        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.maxTokens;
+      } else {
+        attributes["topN"] = params["topN"];
+        attributes["maxChunksPerDoc"] = params["maxChunksPerDoc"];
       }
+
+      if (this._shouldSendPrompts()) {
+        if (type === "completion" && "prompt" in params) {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.prompt;
+        } else if (type === "chat" && "message" in params) {
+          params.chatHistory?.forEach((msg, index) => {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+              msg.role;
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.user`] =
+              msg.message;
+          });
+
+          attributes[
+            `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.role`
+          ] = "user";
+          attributes[
+            `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.user`
+          ] = params.message;
+        } else if (type === "rerank" && "query" in params) {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.query;
+          params.documents.forEach((doc, index) => {
+            attributes[`documents.${index}.index`] =
+              typeof doc === "string" ? doc : doc.text;
+          });
+        }
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return this.tracer.startSpan(`cohere.${type}`, {
@@ -343,41 +350,46 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     span: Span,
     result: cohere.Cohere.RerankResponse,
   ) {
-    if ("meta" in result) {
-      if (result.meta?.billedUnits?.searchUnits !== undefined) {
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-          result.meta?.billedUnits?.searchUnits,
-        );
-      }
-
-      if (this._shouldSendPrompts()) {
-        result.results.forEach((each, idx) => {
+    try {
+      if ("meta" in result) {
+        if (result.meta?.billedUnits?.searchUnits !== undefined) {
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
-            each.relevanceScore,
+            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+            result.meta?.billedUnits?.searchUnits,
           );
+        }
 
-          if (each.document && each.document?.text) {
+        if (this._shouldSendPrompts()) {
+          result.results.forEach((each, idx) => {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
+              each.relevanceScore,
+            );
+
+            if (each.document && each.document?.text) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`,
+                each.document.text,
+              );
+            }
+          });
+        } else {
+          result.results.forEach((each, idx) => {
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`,
-              each.document.text,
+              each.index,
             );
-          }
-        });
-      } else {
-        result.results.forEach((each, idx) => {
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`,
-            each.index,
-          );
 
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
-            each.relevanceScore,
-          );
-        });
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
+              each.relevanceScore,
+            );
+          });
+        }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
   }
 
@@ -385,139 +397,153 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     span: Span,
     result: cohere.Cohere.NonStreamedChatResponse,
   ) {
-    if ("token_count" in result && typeof result.token_count === "object") {
-      if (
-        result.token_count &&
-        "prompt_tokens" in result.token_count &&
-        typeof result.token_count.prompt_tokens === "number"
-      ) {
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-          result.token_count?.prompt_tokens,
-        );
-      }
-
-      if (
-        result.token_count &&
-        "response_tokens" in result.token_count &&
-        typeof result.token_count.response_tokens === "number"
-      ) {
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-          result.token_count?.response_tokens,
-        );
-      }
-
-      if (
-        result.token_count &&
-        "total_tokens" in result.token_count &&
-        typeof result.token_count.total_tokens === "number"
-      ) {
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-          result.token_count?.total_tokens,
-        );
-      }
-    }
-
-    if (this._shouldSendPrompts()) {
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-        "assistant",
-      );
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-        result.text,
-      );
-
-      if (result.searchQueries?.[0].text)
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.searchQuery`,
-          result.searchQueries?.[0].text,
-        );
-
-      if (result.searchResults?.length) {
-        result.searchResults.forEach((searchResult, index) => {
+    try {
+      if ("token_count" in result && typeof result.token_count === "object") {
+        if (
+          result.token_count &&
+          "prompt_tokens" in result.token_count &&
+          typeof result.token_count.prompt_tokens === "number"
+        ) {
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.text`,
-            searchResult.searchQuery.text,
+            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+            result.token_count?.prompt_tokens,
           );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.connector`,
-            searchResult.connector.id,
-          );
-        });
-      }
-    }
+        }
 
-    if ("finishReason" in result && typeof result.finishReason === "string")
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-        result.finishReason,
-      );
+        if (
+          result.token_count &&
+          "response_tokens" in result.token_count &&
+          typeof result.token_count.response_tokens === "number"
+        ) {
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+            result.token_count?.response_tokens,
+          );
+        }
+
+        if (
+          result.token_count &&
+          "total_tokens" in result.token_count &&
+          typeof result.token_count.total_tokens === "number"
+        ) {
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+            result.token_count?.total_tokens,
+          );
+        }
+      }
+
+      if (this._shouldSendPrompts()) {
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+          "assistant",
+        );
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+          result.text,
+        );
+
+        if (result.searchQueries?.[0].text) {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.searchQuery`,
+            result.searchQueries?.[0].text,
+          );
+        }
+
+        if (result.searchResults?.length) {
+          result.searchResults.forEach((searchResult, index) => {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.text`,
+              searchResult.searchQuery.text,
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.connector`,
+              searchResult.connector.id,
+            );
+          });
+        }
+      }
+
+      if ("finishReason" in result && typeof result.finishReason === "string") {
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          result.finishReason,
+        );
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
+    }
   }
 
   private _setResponseSpanForGenerate(
     span: Span,
     result: cohere.Cohere.Generation | cohere.Cohere.GenerateStreamEndResponse,
   ) {
-    if (result && "meta" in result) {
-      if (typeof result.meta?.billedUnits?.inputTokens === "number") {
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-          result.meta?.billedUnits?.inputTokens,
-        );
+    try {
+      if (result && "meta" in result) {
+        if (typeof result.meta?.billedUnits?.inputTokens === "number") {
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+            result.meta?.billedUnits?.inputTokens,
+          );
+        }
+
+        if (typeof result.meta?.billedUnits?.outputTokens === "number") {
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+            result.meta?.billedUnits?.outputTokens,
+          );
+        }
+
+        if (
+          typeof result.meta?.billedUnits?.inputTokens === "number" &&
+          typeof result.meta?.billedUnits?.outputTokens === "number"
+        ) {
+          span.setAttribute(
+            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+            result.meta?.billedUnits?.inputTokens +
+              result.meta?.billedUnits?.outputTokens,
+          );
+        }
       }
 
-      if (typeof result.meta?.billedUnits?.outputTokens === "number") {
+      if (this._shouldSendPrompts() && result.generations) {
         span.setAttribute(
-          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-          result.meta?.billedUnits?.outputTokens,
+          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+          "assistant",
+        );
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+          result.generations[0].text,
         );
       }
 
       if (
-        typeof result.meta?.billedUnits?.inputTokens === "number" &&
-        typeof result.meta?.billedUnits?.outputTokens === "number"
+        result.generations &&
+        "finish_reason" in result.generations[0] &&
+        typeof result.generations[0].finish_reason === "string"
       ) {
         span.setAttribute(
-          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-          result.meta?.billedUnits?.inputTokens +
-            result.meta?.billedUnits?.outputTokens,
+          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          result.generations[0].finish_reason,
         );
       }
+
+      if (
+        result.generations &&
+        "finishReason" in result.generations[0] &&
+        typeof result.generations[0].finishReason === "string"
+      ) {
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          result.generations[0].finishReason,
+        );
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
-
-    if (this._shouldSendPrompts() && result.generations) {
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-        "assistant",
-      );
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-        result.generations[0].text,
-      );
-    }
-
-    if (
-      result.generations &&
-      "finish_reason" in result.generations[0] &&
-      typeof result.generations[0].finish_reason === "string"
-    )
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-        result.generations[0].finish_reason,
-      );
-
-    if (
-      result.generations &&
-      "finishReason" in result.generations[0] &&
-      typeof result.generations[0].finishReason === "string"
-    )
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-        result.generations[0].finishReason,
-      );
   }
 
   private _getLlmRequestTypeByMethod(type: string) {

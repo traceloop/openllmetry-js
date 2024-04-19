@@ -62,7 +62,7 @@ export const initInstrumentations = () => {
   });
   instrumentations.push(azureOpenAIInstrumentation);
 
-  cohereInstrumentation = new CohereInstrumentation();
+  cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
   instrumentations.push(cohereInstrumentation);
 
   vertexaiInstrumentation = new VertexAIInstrumentation();
@@ -89,6 +89,9 @@ export const manuallyInitInstrumentations = (
 ) => {
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
 
+  // Clear the instrumentations array that was initialized by default
+  instrumentations.length = 0;
+
   if (instrumentModules?.openAI) {
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens: _configuration?.shouldEnrichMetrics,
@@ -114,7 +117,7 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.cohere) {
-    cohereInstrumentation = new CohereInstrumentation();
+    cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
     instrumentations.push(cohereInstrumentation);
     cohereInstrumentation.manuallyInstrument(instrumentModules.cohere);
   }
