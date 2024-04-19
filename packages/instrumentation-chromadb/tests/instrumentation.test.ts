@@ -58,14 +58,13 @@ describe("Test ChromaDB instrumentation", function () {
 
     // Run ChromaDB instance on different terminal instance
     chromaRun = exec("/bin/sh");
-    // chromaRun.stdin?.write("chmod 777 ./chroma.sqlite3\n");
     chromaRun.stdin?.write("chroma run --path .\n");
 
     chromaDbClient = new chromadb.ChromaClient();
 
     // Wait for ChromaDB to spin up
     await new Promise((resolve) => {
-      setTimeout(resolve, 5000);
+      setTimeout(resolve, 3000);
     });
   });
 
