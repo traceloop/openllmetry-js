@@ -312,12 +312,12 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     if (methodName === "query") {
       const arrLength = result.ids.length;
       const attributes = [];
-      for (let index = 0; index <= arrLength; index++) {
+      for (let index = 0; index < arrLength; index++) {
         attributes.push({
-          id: result.ids[index],
+          id: result.ids?.[index] ?? [],
           distances: result.distances?.[index] ?? [],
           metadatas: result.metadatas?.[index] ?? [],
-          documents: result.documents[index] ?? [],
+          documents: result.documents?.[index] ?? [],
           embeddings: result.embeddings?.[index] ?? [],
         });
       }
