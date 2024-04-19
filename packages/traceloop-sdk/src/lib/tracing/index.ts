@@ -46,7 +46,10 @@ let pineconeInstrumentation: PineconeInstrumentation | undefined;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
-  openAIInstrumentation = new OpenAIInstrumentation();
+  openAIInstrumentation = new OpenAIInstrumentation({
+    enrichTokens: _configuration?.shouldEnrichMetrics,
+    exceptionLogger: (e: Error) => Telemetry.getInstance().logException(e),
+  });
   instrumentations.push(openAIInstrumentation);
 
   anthropicInstrumentation = new AnthropicInstrumentation();
@@ -83,6 +86,7 @@ export const manuallyInitInstrumentations = (
   if (instrumentModules?.openAI) {
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens: _configuration?.shouldEnrichMetrics,
+      exceptionLogger: (e: Error) => Telemetry.getInstance().logException(e),
     });
     instrumentations.push(openAIInstrumentation);
     openAIInstrumentation.manuallyInstrument(instrumentModules.openAI);
@@ -162,7 +166,6 @@ export const startTracing = (options: InitializeOptions) => {
   if (!shouldSendTraces()) {
     openAIInstrumentation?.setConfig({
       traceContent: false,
-      enrichTokens: _configuration?.shouldEnrichMetrics,
     });
     azureOpenAIInstrumentation?.setConfig({
       traceContent: false,
