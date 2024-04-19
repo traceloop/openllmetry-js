@@ -65,7 +65,7 @@ describe("Test ChromaDB instrumentation", function () {
 
     // Wait for ChromaDB to spin up
     await new Promise((resolve) => {
-      setTimeout(resolve, 2000);
+      setTimeout(resolve, 5000);
     });
   });
 
