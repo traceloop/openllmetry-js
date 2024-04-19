@@ -46,13 +46,15 @@ let pineconeInstrumentation: PineconeInstrumentation | undefined;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
+  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+
   openAIInstrumentation = new OpenAIInstrumentation({
     enrichTokens: _configuration?.shouldEnrichMetrics,
-    exceptionLogger: (e: Error) => Telemetry.getInstance().logException(e),
+    exceptionLogger,
   });
   instrumentations.push(openAIInstrumentation);
 
-  anthropicInstrumentation = new AnthropicInstrumentation();
+  anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
   instrumentations.push(anthropicInstrumentation);
 
   azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
@@ -83,17 +85,21 @@ export const initInstrumentations = () => {
 export const manuallyInitInstrumentations = (
   instrumentModules: InitializeOptions["instrumentModules"],
 ) => {
+  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+
   if (instrumentModules?.openAI) {
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens: _configuration?.shouldEnrichMetrics,
-      exceptionLogger: (e: Error) => Telemetry.getInstance().logException(e),
+      exceptionLogger,
     });
     instrumentations.push(openAIInstrumentation);
     openAIInstrumentation.manuallyInstrument(instrumentModules.openAI);
   }
 
   if (instrumentModules?.anthropic) {
-    anthropicInstrumentation = new AnthropicInstrumentation();
+    anthropicInstrumentation = new AnthropicInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(anthropicInstrumentation);
     anthropicInstrumentation.manuallyInstrument(instrumentModules.anthropic);
   }
