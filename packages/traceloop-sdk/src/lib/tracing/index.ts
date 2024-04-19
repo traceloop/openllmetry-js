@@ -77,7 +77,7 @@ export const initInstrumentations = () => {
   pineconeInstrumentation = new PineconeInstrumentation();
   instrumentations.push(pineconeInstrumentation);
 
-  langchainInstrumentation = new LangChainInstrumentation();
+  langchainInstrumentation = new LangChainInstrumentation({ exceptionLogger });
   instrumentations.push(langchainInstrumentation);
 
   llamaIndexInstrumentation = new LlamaIndexInstrumentation();
@@ -151,7 +151,9 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.langchain) {
-    langchainInstrumentation = new LangChainInstrumentation();
+    langchainInstrumentation = new LangChainInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(langchainInstrumentation);
     langchainInstrumentation.manuallyInstrument(instrumentModules.langchain);
   }
