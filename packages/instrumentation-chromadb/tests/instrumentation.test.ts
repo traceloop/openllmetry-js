@@ -29,6 +29,7 @@ import * as assert from "assert";
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
+import { exec, spawn, ChildProcess } from "child_process";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -41,6 +42,7 @@ describe("Test ChromaDB instrumentation", function () {
   let contextManager: AsyncHooksContextManager;
   let chromaDbClient: chromadb.ChromaClient;
   let collection: chromadb.Collection;
+  let chromaRun: ChildProcess;
 
   setupPolly({
     adapters: ["fetch"],
@@ -54,7 +56,9 @@ describe("Test ChromaDB instrumentation", function () {
     instrumentation.setTracerProvider(provider);
     instrumentation.manuallyInstrument(chromadb);
 
-    // ChromaDB initialization and collection creation
+    // Run ChromaDB instance on different terminal instance
+    chromaRun = spawn("/bin/sh");
+    chromaRun.stdin?.write("chroma run --path .\n");
     chromaDbClient = new chromadb.ChromaClient();
   });
 
@@ -97,6 +101,13 @@ describe("Test ChromaDB instrumentation", function () {
     await chromaDbClient.deleteCollection({ name: "my_collection" });
     memoryExporter.reset();
     context.disable();
+  });
+
+  after(async () => {
+    // Terminate the Chroma client process after tests
+    if (chromaRun) {
+      chromaRun.kill();
+    }
   });
 
   it("should set span attributes for Query", async () => {
@@ -146,6 +157,7 @@ describe("Test ChromaDB instrumentation", function () {
     assert.strictEqual(events[1].name, Events.DB_QUERY_RESULT);
     assert.strictEqual(events[2].name, Events.DB_QUERY_RESULT);
   });
+
   it("should set span attributes for Add", async () => {
     const input: chromadb.AddParams = {
       ids: ["uri7", "uri8"],
