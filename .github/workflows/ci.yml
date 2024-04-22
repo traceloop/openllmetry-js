@@ -42,6 +42,8 @@ jobs:
           cache: "npm"
           node-version-file: ".nvmrc"
 
+      - run: pip3 install chromadb
+
       - uses: nrwl/nx-set-shas@v3
       - run: npm ci
       - name: Build

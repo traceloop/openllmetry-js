@@ -48,6 +48,7 @@
     "@traceloop/instrumentation-openai": "^0.6.1",
     "@traceloop/instrumentation-pinecone": "^0.6.1",
     "@traceloop/instrumentation-vertexai": "^0.6.1",
+    "@traceloop/instrumentation-chromadb": "*",
     "@types/nunjucks": "^3.2.5",
     "cross-fetch": "^4.0.0",
     "fetch-retry": "^5.0.6",
@@ -76,6 +77,7 @@
     "langchain": "^0.1.7",
     "llamaindex": "^0.1.16",
     "openai": "^4.12.4",
-    "ts-mocha": "^10.0.0"
+    "ts-mocha": "^10.0.0",
+    "chromadb": "^1.8.1"
   }
 }

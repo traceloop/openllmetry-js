@@ -45,3 +45,5 @@ Thumbs.db
 
 # env
 .env*
+chroma.sqlite3
+chroma.log

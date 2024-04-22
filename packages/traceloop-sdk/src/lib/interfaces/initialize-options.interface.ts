@@ -12,6 +12,7 @@ import type * as ChainsModule from "langchain/chains";
 import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
 import type * as llamaindex from "llamaindex";
+import type * as chromadb from "chromadb";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -84,6 +85,7 @@ export interface InitializeOptions {
       toolsModule?: typeof ToolsModule;
     };
     llamaIndex?: typeof llamaindex;
+    chromadb?: typeof chromadb;
   };
 
   /**

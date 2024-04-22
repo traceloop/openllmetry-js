@@ -1,0 +1,52 @@
+{
+  "name": "@traceloop/instrumentation-chromadb",
+  "version": "0.6.0",
+  "description": "ChromaDB Instrumentation",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "repository": "traceloop/openllmetry-js",
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "test": "ts-mocha -p tsconfig.json 'tests/**/*.test.ts' --timeout 20000"
+  },
+  "keywords": [
+    "opentelemetry",
+    "nodejs",
+    "tracing",
+    "attributes",
+    "semantic conventions"
+  ],
+  "author": "Swaroop<maddisaiswaroop@gmail.com>",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "dist/src/**/*.js",
+    "dist/src/**/*.js.map",
+    "dist/src/**/*.d.ts",
+    "doc",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@opentelemetry/core": "^1.8.0",
+    "@opentelemetry/instrumentation": "^0.44.0",
+    "@opentelemetry/semantic-conventions": "^1.22.0",
+    "@traceloop/ai-semantic-conventions": "^0.6.0"
+  },
+  "devDependencies": {
+    "@pollyjs/adapter-node-http": "^6.0.6",
+    "@pollyjs/core": "^6.0.6",
+    "@pollyjs/persister-fs": "^6.0.6",
+    "chromadb": "^1.8.1"
+  },
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-chromadb",
+  "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
+}
