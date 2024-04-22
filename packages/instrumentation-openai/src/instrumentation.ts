@@ -280,6 +280,32 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
                 JSON.stringify(message.content);
             }
           });
+          params.functions?.forEach((func, index) => {
+            attributes[
+              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
+            ] = func.name;
+            attributes[
+              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`
+            ] = func.description;
+            attributes[
+              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.arguments`
+            ] = JSON.stringify(func.parameters);
+          });
+          params.tools?.forEach((tool, index) => {
+            if (!tool.function) {
+              return;
+            }
+
+            attributes[
+              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
+            ] = tool.function.name;
+            attributes[
+              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`
+            ] = tool.function.description;
+            attributes[
+              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.arguments`
+            ] = JSON.stringify(tool.function.parameters);
+          });
         } else {
           attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
           if (typeof params.prompt === "string") {
@@ -361,6 +387,27 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             name: chunk.choices[0].delta.function_call.name,
             arguments: chunk.choices[0].delta.function_call.arguments,
           };
+        }
+        if (chunk.choices[0]?.delta.tool_calls) {
+          // I needed to re-build the object so that Typescript will understand that arguments are not null.
+          result.choices[0].message.tool_calls = [];
+          for (const toolCall of chunk.choices[0].delta.tool_calls) {
+            if (
+              toolCall.id &&
+              toolCall.type &&
+              toolCall.function?.name &&
+              toolCall.function?.arguments
+            ) {
+              result.choices[0].message.tool_calls.push({
+                id: toolCall.id,
+                type: toolCall.type,
+                function: {
+                  name: toolCall.function.name,
+                  arguments: toolCall.function.arguments,
+                },
+              });
+            }
+          }
         }
       }
 
@@ -572,6 +619,16 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
                 choice.message.function_call.arguments,
+              );
+            }
+            if (choice.message.tool_calls) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+                choice.message.tool_calls[0].function.name,
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+                choice.message.tool_calls[0].function.arguments,
               );
             }
           });
