@@ -31,7 +31,7 @@ export const SpanAttributes = {
   LLM_PROMPTS: "llm.prompts",
   LLM_COMPLETIONS: "llm.completions",
   LLM_CHAT_STOP_SEQUENCES: "llm.chat.stop_sequences",
-
+  LLM_REQUEST_FUNCTIONS: "llm.request.functions",
   // Vector DB
   VECTOR_DB_VENDOR: "db.system",
   VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
