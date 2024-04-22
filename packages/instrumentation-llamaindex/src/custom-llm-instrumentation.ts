@@ -9,6 +9,7 @@ import {
   SpanStatusCode,
   trace,
   context,
+  DiagLogger,
 } from "@opentelemetry/api";
 import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 
@@ -25,13 +26,11 @@ type AsyncResponseType =
   | AsyncIterable<llamaindex.CompletionResponse>;
 
 export class CustomLLMInstrumentation {
-  private config: LlamaIndexInstrumentationConfig;
-  private tracer: () => Tracer;
-
-  constructor(config: LlamaIndexInstrumentationConfig, tracer: () => Tracer) {
-    this.config = config;
-    this.tracer = tracer;
-  }
+  constructor(
+    private config: LlamaIndexInstrumentationConfig,
+    private diag: DiagLogger,
+    private tracer: () => Tracer,
+  ) {}
 
   chatWrapper({ className }: { className: string }) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -49,24 +48,29 @@ export class CustomLLMInstrumentation {
             kind: SpanKind.CLIENT,
           });
 
-        span.setAttribute(SpanAttributes.LLM_VENDOR, className);
-        span.setAttribute(
-          SpanAttributes.LLM_REQUEST_MODEL,
-          this.metadata.model,
-        );
-        span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
-        span.setAttribute(SpanAttributes.LLM_TOP_P, this.metadata.topP);
-        if (shouldSendPrompts(plugin.config)) {
-          for (const messageIdx in messages) {
-            span.setAttribute(
-              `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
-              messages[messageIdx].content,
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.role`,
-              messages[messageIdx].role,
-            );
+        try {
+          span.setAttribute(SpanAttributes.LLM_VENDOR, className);
+          span.setAttribute(
+            SpanAttributes.LLM_REQUEST_MODEL,
+            this.metadata.model,
+          );
+          span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
+          span.setAttribute(SpanAttributes.LLM_TOP_P, this.metadata.topP);
+          if (shouldSendPrompts(plugin.config)) {
+            for (const messageIdx in messages) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
+                messages[messageIdx].content,
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.role`,
+                messages[messageIdx].role,
+              );
+            }
           }
+        } catch (e) {
+          plugin.diag.warn(e);
+          plugin.config.exceptionLogger?.(e);
         }
 
         const execContext = trace.setSpan(context.active(), span);
@@ -123,18 +127,25 @@ export class CustomLLMInstrumentation {
       return result;
     }
 
-    if ((result as llamaindex.ChatResponse).message) {
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-        (result as llamaindex.ChatResponse).message.role,
-      );
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-        (result as llamaindex.ChatResponse).message.content,
-      );
-      span.setStatus({ code: SpanStatusCode.OK });
-      span.end();
+    try {
+      if ((result as llamaindex.ChatResponse).message) {
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+          (result as llamaindex.ChatResponse).message.role,
+        );
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+          (result as llamaindex.ChatResponse).message.content,
+        );
+        span.setStatus({ code: SpanStatusCode.OK });
+      }
+    } catch (e) {
+      this.diag.warn(e);
+      this.config.exceptionLogger?.(e);
     }
+
+    span.end();
+
     return result;
   }
 

@@ -80,7 +80,9 @@ export const initInstrumentations = () => {
   langchainInstrumentation = new LangChainInstrumentation({ exceptionLogger });
   instrumentations.push(langchainInstrumentation);
 
-  llamaIndexInstrumentation = new LlamaIndexInstrumentation();
+  llamaIndexInstrumentation = new LlamaIndexInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(llamaIndexInstrumentation);
 };
 

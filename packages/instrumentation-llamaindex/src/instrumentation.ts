@@ -88,6 +88,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase<any> {
 
     const customLLMInstrumentation = new CustomLLMInstrumentation(
       this._config,
+      this._diag,
       () => this.tracer, // this is on purpose. Tracer may change
     );
 
