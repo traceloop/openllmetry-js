@@ -51,5 +51,5 @@ Apache 2.0 - See [LICENSE][license-url] for more information.
 [slack-url]: https://traceloop.com/slack
 [license-url]: https://github.com/traceloop/openllmetry-js/blob/main/LICENSE
 [license-image]: https://img.shields.io/badge/license-Apache_2.0-green.svg?style=flat
-[npm-url]: https://www.npmjs.com/package/@traceloop/instrumentation-openai
-[npm-img]: https://badge.fury.io/js/%40traceloop%2Finstrumentation-openai.svg
+[npm-url]: https://www.npmjs.com/package/@traceloop/instrumentation-chromadb
+[npm-img]: https://badge.fury.io/js/%40traceloop%2Finstrumentation-chromadb.svg
