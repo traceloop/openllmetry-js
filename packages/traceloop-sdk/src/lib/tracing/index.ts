@@ -78,7 +78,7 @@ export const initInstrumentations = () => {
   bedrockInstrumentation = new BedrockInstrumentation({ exceptionLogger });
   instrumentations.push(bedrockInstrumentation);
 
-  pineconeInstrumentation = new PineconeInstrumentation();
+  pineconeInstrumentation = new PineconeInstrumentation({ exceptionLogger });
   instrumentations.push(pineconeInstrumentation);
 
   langchainInstrumentation = new LangChainInstrumentation({ exceptionLogger });
@@ -155,7 +155,7 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.pinecone) {
-    const instrumentation = new PineconeInstrumentation();
+    const instrumentation = new PineconeInstrumentation({ exceptionLogger });
     instrumentations.push(instrumentation as Instrumentation);
     instrumentation.manuallyInstrument(instrumentModules.pinecone);
   }
@@ -169,7 +169,9 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.llamaIndex) {
-    llamaIndexInstrumentation = new LlamaIndexInstrumentation();
+    llamaIndexInstrumentation = new LlamaIndexInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(llamaIndexInstrumentation);
     llamaIndexInstrumentation.manuallyInstrument(instrumentModules.llamaIndex);
   }
