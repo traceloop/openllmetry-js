@@ -193,44 +193,49 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
-    attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
-    attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
-    attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
+    try {
+      attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
+      attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
+      attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
+      attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
-    if (type === "completion") {
-      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
-        params.max_tokens_to_sample;
-    } else {
-      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
-    }
-
-    if (
-      params.extraAttributes !== undefined &&
-      typeof params.extraAttributes === "object"
-    ) {
-      Object.keys(params.extraAttributes).forEach((key: string) => {
-        attributes[key] = params.extraAttributes![key];
-      });
-    }
-
-    if (this._shouldSendPrompts()) {
-      if (type === "chat") {
-        params.messages.forEach((message, index) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-            message.role;
-          if (typeof message.content === "string") {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              (message.content as string) || "";
-          } else {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              JSON.stringify(message.content);
-          }
-        });
+      if (type === "completion") {
+        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+          params.max_tokens_to_sample;
       } else {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
+        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
       }
+
+      if (
+        params.extraAttributes !== undefined &&
+        typeof params.extraAttributes === "object"
+      ) {
+        Object.keys(params.extraAttributes).forEach((key: string) => {
+          attributes[key] = params.extraAttributes![key];
+        });
+      }
+
+      if (this._shouldSendPrompts()) {
+        if (type === "chat") {
+          params.messages.forEach((message, index) => {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+              message.role;
+            if (typeof message.content === "string") {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                (message.content as string) || "";
+            } else {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                JSON.stringify(message.content);
+            }
+          });
+        } else {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
+        }
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return this.tracer.startSpan(`anthropic.${type}`, {
@@ -268,20 +273,25 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
       for await (const chunk of await promise) {
         yield chunk;
 
-        switch (chunk.type) {
-          case "content_block_start":
-            if (result.content.length <= chunk.index) {
-              result.content.push(chunk.content_block);
-            }
-            break;
+        try {
+          switch (chunk.type) {
+            case "content_block_start":
+              if (result.content.length <= chunk.index) {
+                result.content.push(chunk.content_block);
+              }
+              break;
 
-          case "content_block_delta":
-            if (chunk.index < result.content.length) {
-              result.content[chunk.index] = {
-                type: "text",
-                text: result.content[chunk.index].text + chunk.delta.text,
-              };
-            }
+            case "content_block_delta":
+              if (chunk.index < result.content.length) {
+                result.content[chunk.index] = {
+                  type: "text",
+                  text: result.content[chunk.index].text + chunk.delta.text,
+                };
+              }
+          }
+        } catch (e) {
+          this._diag.warn(e);
+          this._config.exceptionLogger?.(e);
         }
       }
 
@@ -297,17 +307,22 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
       for await (const chunk of await promise) {
         yield chunk;
 
-        result.id = chunk.id;
-        result.model = chunk.model;
-
-        if (chunk.stop_reason) {
-          result.stop_reason = chunk.stop_reason;
-        }
-        if (chunk.model) {
+        try {
+          result.id = chunk.id;
           result.model = chunk.model;
-        }
-        if (chunk.completion) {
-          result.completion += chunk.completion;
+
+          if (chunk.stop_reason) {
+            result.stop_reason = chunk.stop_reason;
+          }
+          if (chunk.model) {
+            result.model = chunk.model;
+          }
+          if (chunk.completion) {
+            result.completion += chunk.completion;
+          }
+        } catch (e) {
+          this._diag.warn(e);
+          this._config.exceptionLogger?.(e);
         }
       }
 
@@ -365,48 +380,53 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
         type: "completion";
         result: Completion;
       }) {
-    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
-    if (type === "chat" && result.usage) {
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-        result.usage?.input_tokens + result.usage?.output_tokens,
-      );
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-        result.usage?.output_tokens,
-      );
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-        result.usage?.input_tokens,
-      );
-    }
-
-    result.stop_reason &&
-      span.setAttribute(
-        `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-        result.stop_reason,
-      );
-
-    if (this._shouldSendPrompts()) {
-      if (type === "chat") {
+    try {
+      span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
+      if (type === "chat" && result.usage) {
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-          "assistant",
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          result.usage?.input_tokens + result.usage?.output_tokens,
         );
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-          JSON.stringify(result.content),
-        );
-      } else {
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-          "assistant",
+          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          result.usage?.output_tokens,
         );
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-          result.completion,
+          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          result.usage?.input_tokens,
         );
       }
+
+      result.stop_reason &&
+        span.setAttribute(
+          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          result.stop_reason,
+        );
+
+      if (this._shouldSendPrompts()) {
+        if (type === "chat") {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+            "assistant",
+          );
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            JSON.stringify(result.content),
+          );
+        } else {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+            "assistant",
+          );
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            result.completion,
+          );
+        }
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     span.end();

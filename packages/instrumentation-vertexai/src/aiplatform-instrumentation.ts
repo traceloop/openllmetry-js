@@ -161,58 +161,63 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
-    if (params !== undefined) {
-      if (params.endpoint) {
-        const model = params.endpoint.split("/").pop();
-        attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
-        attributes[SpanAttributes.LLM_RESPONSE_MODEL] = model;
-      }
-      if (params?.parameters) {
-        if (
-          params?.parameters.structValue?.fields?.maxOutputTokens.numberValue
-        ) {
-          attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
-            params?.parameters.structValue?.fields?.maxOutputTokens.numberValue;
+    try {
+      if (params !== undefined) {
+        if (params.endpoint) {
+          const model = params.endpoint.split("/").pop();
+          attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
+          attributes[SpanAttributes.LLM_RESPONSE_MODEL] = model;
         }
-        if (params?.parameters.structValue?.fields?.temperature.numberValue) {
-          attributes[SpanAttributes.LLM_TEMPERATURE] =
-            params?.parameters.structValue?.fields?.temperature.numberValue;
+        if (params?.parameters) {
+          if (
+            params?.parameters.structValue?.fields?.maxOutputTokens.numberValue
+          ) {
+            attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+              params?.parameters.structValue?.fields?.maxOutputTokens.numberValue;
+          }
+          if (params?.parameters.structValue?.fields?.temperature.numberValue) {
+            attributes[SpanAttributes.LLM_TEMPERATURE] =
+              params?.parameters.structValue?.fields?.temperature.numberValue;
+          }
+          if (params?.parameters.structValue?.fields?.topP.numberValue) {
+            attributes[SpanAttributes.LLM_TOP_P] =
+              params?.parameters.structValue?.fields?.topP.numberValue;
+          }
+          if (params?.parameters.structValue?.fields?.topK.numberValue) {
+            attributes[SpanAttributes.LLM_TOP_K] =
+              params?.parameters.structValue?.fields?.topK.numberValue;
+          }
         }
-        if (params?.parameters.structValue?.fields?.topP.numberValue) {
-          attributes[SpanAttributes.LLM_TOP_P] =
-            params?.parameters.structValue?.fields?.topP.numberValue;
-        }
-        if (params?.parameters.structValue?.fields?.topK.numberValue) {
-          attributes[SpanAttributes.LLM_TOP_K] =
-            params?.parameters.structValue?.fields?.topK.numberValue;
-        }
-      }
 
-      if (
-        this._shouldSendPrompts() &&
-        params.instances &&
-        params.instances?.length !== 0
-      ) {
         if (
-          params.instances[0].structValue?.fields &&
-          "prompt" in params.instances[0].structValue.fields &&
-          params.instances[0].structValue?.fields?.prompt.stringValue
+          this._shouldSendPrompts() &&
+          params.instances &&
+          params.instances?.length !== 0
         ) {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-            params.instances[0].structValue?.fields?.prompt.stringValue;
-        } else if (
-          params.instances[0].structValue &&
-          params.instances[0].structValue.fields?.messages.listValue
-            ?.values?.[0].structValue?.fields?.content.stringValue
-        ) {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
+          if (
+            params.instances[0].structValue?.fields &&
+            "prompt" in params.instances[0].structValue.fields &&
+            params.instances[0].structValue?.fields?.prompt.stringValue
+          ) {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+              params.instances[0].structValue?.fields?.prompt.stringValue;
+          } else if (
+            params.instances[0].structValue &&
             params.instances[0].structValue.fields?.messages.listValue
-              ?.values?.[0].structValue?.fields?.author.stringValue ?? "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-            params.instances[0].structValue.fields?.messages.listValue?.values?.[0].structValue?.fields?.content.stringValue;
+              ?.values?.[0].structValue?.fields?.content.stringValue
+          ) {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
+              params.instances[0].structValue.fields?.messages.listValue
+                ?.values?.[0].structValue?.fields?.author.stringValue ?? "user";
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+              params.instances[0].structValue.fields?.messages.listValue?.values?.[0].structValue?.fields?.content.stringValue;
+          }
         }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return this.tracer.startSpan(`vertexai.completion`, {
@@ -264,89 +269,94 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
       object | undefined,
     ];
   }) {
-    if (result[0].model)
-      span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result[0].model);
+    try {
+      if (result[0].model)
+        span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result[0].model);
 
-    if (result) {
-      if (result[0].metadata) {
-        if (
-          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
-            .structValue?.fields?.outputTokenCount.structValue?.fields
-            ?.totalTokens.numberValue === "number"
-        )
-          span.setAttribute(
-            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-            result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
-              ?.fields?.outputTokenCount.structValue?.fields?.totalTokens
-              .numberValue,
-          );
-
-        if (
-          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
-            .structValue?.fields?.inputTokenCount.structValue?.fields
-            ?.totalTokens.numberValue === "number"
-        )
-          span.setAttribute(
-            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-            result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
-              ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
-              .numberValue,
-          );
-
-        if (
-          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
-            .structValue?.fields?.inputTokenCount.structValue?.fields
-            ?.totalTokens.numberValue === "number" &&
-          typeof result[0].metadata?.structValue?.fields?.tokenMetadata
-            .structValue?.fields?.outputTokenCount.structValue?.fields
-            ?.totalTokens.numberValue === "number"
-        )
-          span.setAttribute(
-            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-            result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
-              ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
-              .numberValue +
+      if (result) {
+        if (result[0].metadata) {
+          if (
+            typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+              .structValue?.fields?.outputTokenCount.structValue?.fields
+              ?.totalTokens.numberValue === "number"
+          )
+            span.setAttribute(
+              SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
               result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
                 ?.fields?.outputTokenCount.structValue?.fields?.totalTokens
                 .numberValue,
-          );
-      }
+            );
 
-      if (this._shouldSendPrompts()) {
-        result[0].predictions?.forEach((prediction, index) => {
           if (
-            prediction.structValue?.fields &&
-            "content" in prediction.structValue.fields &&
-            !!prediction.structValue?.fields?.content.stringValue
-          ) {
+            typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+              .structValue?.fields?.inputTokenCount.structValue?.fields
+              ?.totalTokens.numberValue === "number"
+          )
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-              "assistant",
+              SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+              result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
+                ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
+                .numberValue,
             );
 
+          if (
+            typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+              .structValue?.fields?.inputTokenCount.structValue?.fields
+              ?.totalTokens.numberValue === "number" &&
+            typeof result[0].metadata?.structValue?.fields?.tokenMetadata
+              .structValue?.fields?.outputTokenCount.structValue?.fields
+              ?.totalTokens.numberValue === "number"
+          )
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-              prediction.structValue?.fields?.content.stringValue,
+              SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+              result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
+                ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
+                .numberValue +
+                result[0].metadata?.structValue?.fields?.tokenMetadata
+                  .structValue?.fields?.outputTokenCount.structValue?.fields
+                  ?.totalTokens.numberValue,
             );
-          } else if (
-            prediction.structValue?.fields &&
-            "candidates" in prediction.structValue.fields &&
-            !!prediction.structValue?.fields?.candidates.listValue?.values?.[0]
-              ?.structValue?.fields?.content.stringValue
-          ) {
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-              "assistant",
-            );
+        }
 
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-              prediction.structValue?.fields?.candidates.listValue?.values?.[0]
-                ?.structValue?.fields?.content.stringValue,
-            );
-          }
-        });
+        if (this._shouldSendPrompts()) {
+          result[0].predictions?.forEach((prediction, index) => {
+            if (
+              prediction.structValue?.fields &&
+              "content" in prediction.structValue.fields &&
+              !!prediction.structValue?.fields?.content.stringValue
+            ) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+                "assistant",
+              );
+
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                prediction.structValue?.fields?.content.stringValue,
+              );
+            } else if (
+              prediction.structValue?.fields &&
+              "candidates" in prediction.structValue.fields &&
+              !!prediction.structValue?.fields?.candidates.listValue
+                ?.values?.[0]?.structValue?.fields?.content.stringValue
+            ) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+                "assistant",
+              );
+
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                prediction.structValue?.fields?.candidates.listValue
+                  ?.values?.[0]?.structValue?.fields?.content.stringValue,
+              );
+            }
+          });
+        }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     span.setStatus({ code: SpanStatusCode.OK });

@@ -18,7 +18,6 @@ import type * as pinecone from "@pinecone-database/pinecone";
 import { context, trace, Tracer, SpanStatusCode } from "@opentelemetry/api";
 import {
   InstrumentationBase,
-  InstrumentationConfig,
   InstrumentationModuleDefinition,
   InstrumentationNodeModuleDefinition,
   safeExecuteInTheMiddle,
@@ -28,10 +27,15 @@ import {
   EventAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import { version } from "../package.json";
+import { PineconeInstrumentationConfig } from "./types";
 
 export class PineconeInstrumentation extends InstrumentationBase<any> {
-  constructor(config: InstrumentationConfig = {}) {
+  constructor(config: PineconeInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-pinecone", version, config);
+  }
+
+  public override setConfig(config: PineconeInstrumentationConfig = {}) {
+    super.setConfig(config);
   }
 
   public manuallyInstrument(module: typeof pinecone) {
@@ -145,33 +149,38 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
       return function method(this: any, ...args: unknown[]) {
         const span = tracer.startSpan(`pinecone.query`);
         const execContext = trace.setSpan(context.active(), span);
-        const options = args[0] as pinecone.QueryOptions;
-        span.setAttribute(SpanAttributes.VECTOR_DB_VENDOR, "Pinecone");
-        const query_request_event = span.addEvent("pinecone.query.request");
-        query_request_event.setAttribute(
-          EventAttributes.VECTOR_DB_QUERY_TOP_K,
-          options.topK,
-        );
-        query_request_event.setAttribute(
-          EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
-          options.includeValues || false,
-        );
-        query_request_event.setAttribute(
-          EventAttributes.VECTOR_DB_QUERY_INCLUDE_METADATA,
-          options.includeMetadata || false,
-        );
-        query_request_event.setAttribute(
-          EventAttributes.VECTOR_DB_QUERY_ID,
-          (options as pinecone.QueryByRecordId).id,
-        );
-        query_request_event.setAttribute(
-          EventAttributes.VECTOR_DB_QUERY_EMBEDDINGS_VECTOR,
-          (options as pinecone.QueryByVectorValues).vector,
-        );
-        query_request_event.setAttribute(
-          EventAttributes.VECTOR_DB_QUERY_METADATA_FILTER,
-          JSON.stringify(options.filter ? options.filter : {}),
-        );
+        try {
+          const options = args[0] as pinecone.QueryOptions;
+          span.setAttribute(SpanAttributes.VECTOR_DB_VENDOR, "Pinecone");
+          const query_request_event = span.addEvent("pinecone.query.request");
+          query_request_event.setAttribute(
+            EventAttributes.VECTOR_DB_QUERY_TOP_K,
+            options.topK,
+          );
+          query_request_event.setAttribute(
+            EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
+            options.includeValues || false,
+          );
+          query_request_event.setAttribute(
+            EventAttributes.VECTOR_DB_QUERY_INCLUDE_METADATA,
+            options.includeMetadata || false,
+          );
+          query_request_event.setAttribute(
+            EventAttributes.VECTOR_DB_QUERY_ID,
+            (options as pinecone.QueryByRecordId).id,
+          );
+          query_request_event.setAttribute(
+            EventAttributes.VECTOR_DB_QUERY_EMBEDDINGS_VECTOR,
+            (options as pinecone.QueryByVectorValues).vector,
+          );
+          query_request_event.setAttribute(
+            EventAttributes.VECTOR_DB_QUERY_METADATA_FILTER,
+            JSON.stringify(options.filter ? options.filter : {}),
+          );
+        } catch (e) {
+          this._diag.warn(e);
+          this._config.exceptionLogger?.(e);
+        }
 
         const execPromise = safeExecuteInTheMiddle(
           () => {
@@ -189,71 +198,78 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
           .then((result: any) => {
             return new Promise((resolve) => {
               span.setStatus({ code: SpanStatusCode.OK });
-              const result_obj =
-                result as pinecone.QueryResponse<pinecone.RecordMetadata>;
-              const query_result_event = span.addEvent("pinecone.query.result");
-              query_result_event.setAttribute(
-                EventAttributes.VECTOR_DB_QUERY_RESULT_NAMESPACE,
-                result_obj.namespace,
-              );
-              if (result_obj.usage?.readUnits !== undefined) {
+              try {
+                const result_obj =
+                  result as pinecone.QueryResponse<pinecone.RecordMetadata>;
+                const query_result_event = span.addEvent(
+                  "pinecone.query.result",
+                );
                 query_result_event.setAttribute(
-                  EventAttributes.VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED,
-                  result_obj.usage?.readUnits,
+                  EventAttributes.VECTOR_DB_QUERY_RESULT_NAMESPACE,
+                  result_obj.namespace,
                 );
-              }
-              query_result_event.setAttribute(
-                EventAttributes.VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH,
-                result_obj.matches.length,
-              );
-              for (let i = 0; i < result_obj.matches.length; i++) {
-                const match = result_obj.matches[i];
-                const query_result_match_event = query_result_event.addEvent(
-                  `pinecone.query.result.${i}`,
-                );
-                if (match.score !== undefined) {
-                  query_result_match_event.setAttribute(
-                    EventAttributes.VECTOR_DB_QUERY_RESULT_SCORE.replace(
-                      "{i}",
-                      i.toString(),
-                    ),
-                    match.score,
+                if (result_obj.usage?.readUnits !== undefined) {
+                  query_result_event.setAttribute(
+                    EventAttributes.VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED,
+                    result_obj.usage?.readUnits,
                   );
                 }
-                if (match.sparseValues !== undefined) {
+                query_result_event.setAttribute(
+                  EventAttributes.VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH,
+                  result_obj.matches.length,
+                );
+                for (let i = 0; i < result_obj.matches.length; i++) {
+                  const match = result_obj.matches[i];
+                  const query_result_match_event = query_result_event.addEvent(
+                    `pinecone.query.result.${i}`,
+                  );
+                  if (match.score !== undefined) {
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_SCORE.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.score,
+                    );
+                  }
+                  if (match.sparseValues !== undefined) {
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_SPARSE_INDICES.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.sparseValues?.indices,
+                    );
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_SPARSE_VALUES.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.sparseValues?.values,
+                    );
+                  }
                   query_result_match_event.setAttribute(
-                    EventAttributes.VECTOR_DB_QUERY_RESULT_SPARSE_INDICES.replace(
+                    EventAttributes.VECTOR_DB_QUERY_RESULT_ID.replace(
                       "{i}",
                       i.toString(),
                     ),
-                    match.sparseValues?.indices,
+                    match.id,
                   );
                   query_result_match_event.setAttribute(
-                    EventAttributes.VECTOR_DB_QUERY_RESULT_SPARSE_VALUES.replace(
+                    EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
                       "{i}",
                       i.toString(),
                     ),
-                    match.sparseValues?.values,
+                    match.values,
+                  );
+                  query_result_match_event.addEvent(
+                    `pinecone.query.result.${i}.metadata`,
+                    match.metadata,
                   );
                 }
-                query_result_match_event.setAttribute(
-                  EventAttributes.VECTOR_DB_QUERY_RESULT_ID.replace(
-                    "{i}",
-                    i.toString(),
-                  ),
-                  match.id,
-                );
-                query_result_match_event.setAttribute(
-                  EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
-                    "{i}",
-                    i.toString(),
-                  ),
-                  match.values,
-                );
-                query_result_match_event.addEvent(
-                  `pinecone.query.result.${i}.metadata`,
-                  match.metadata,
-                );
+              } catch (e) {
+                this._diag.warn(e);
+                this._config.exceptionLogger?.(e);
               }
               span.end();
               resolve(result);

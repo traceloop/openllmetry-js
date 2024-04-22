@@ -59,7 +59,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
 
   private modelConfig: vertexAI.ModelParams = { model: "" };
 
-  private setModal(newValue: vertexAI.ModelParams) {
+  private setModel(newValue: vertexAI.ModelParams) {
     this.modelConfig = { ...newValue };
   }
 
@@ -69,12 +69,12 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       module.VertexAI_Preview.prototype,
       "getGenerativeModel",
-      this.wrapperMethod(),
+      this.wrapperMethod("getGenerativeModel"),
     );
     this._wrap(
       module.GenerativeModel.prototype,
       "generateContentStream",
-      this.wrapperMethod(),
+      this.wrapperMethod("generateContentStream"),
     );
   }
 
@@ -84,12 +84,12 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     this._wrap(
       module.VertexAI_Preview.prototype,
       "getGenerativeModel",
-      this.wrapperMethod(),
+      this.wrapperMethod("getGenerativeModel"),
     );
     this._wrap(
       module.GenerativeModel.prototype,
       "generateContentStream",
-      this.wrapperMethod(),
+      this.wrapperMethod("generateContentStream"),
     );
 
     return module;
@@ -102,7 +102,9 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     this._unwrap(module.GenerativeModel.prototype, "generateContentStream");
   }
 
-  private wrapperMethod() {
+  private wrapperMethod(
+    wrappedMethodName: "getGenerativeModel" | "generateContentStream",
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
@@ -111,9 +113,9 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
         this: any,
         ...args: (vertexAI.GenerateContentRequest & vertexAI.ModelParams)[]
       ) {
-        // To set the model name only
-        if (args[0].model) {
-          plugin.setModal(args[0]);
+        if (wrappedMethodName === "getGenerativeModel") {
+          plugin.setModel(args[0]);
+
           return context.bind(
             context.active(),
             safeExecuteInTheMiddle(
@@ -164,35 +166,40 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = this.modelConfig.model;
+    try {
+      attributes[SpanAttributes.LLM_REQUEST_MODEL] = this.modelConfig.model;
 
-    if (
-      this.modelConfig.generation_config !== undefined &&
-      typeof this.modelConfig.generation_config === "object"
-    ) {
-      if (this.modelConfig.generation_config.max_output_tokens) {
-        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
-          this.modelConfig.generation_config.max_output_tokens;
+      if (
+        this.modelConfig.generation_config !== undefined &&
+        typeof this.modelConfig.generation_config === "object"
+      ) {
+        if (this.modelConfig.generation_config.max_output_tokens) {
+          attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+            this.modelConfig.generation_config.max_output_tokens;
+        }
+        if (this.modelConfig.generation_config.temperature) {
+          attributes[SpanAttributes.LLM_TEMPERATURE] =
+            this.modelConfig.generation_config.temperature;
+        }
+        if (this.modelConfig.generation_config.top_p) {
+          attributes[SpanAttributes.LLM_TOP_P] =
+            this.modelConfig.generation_config.top_p;
+        }
+        if (this.modelConfig.generation_config.top_k) {
+          attributes[SpanAttributes.LLM_TOP_K] =
+            this.modelConfig.generation_config.top_k;
+        }
       }
-      if (this.modelConfig.generation_config.temperature) {
-        attributes[SpanAttributes.LLM_TEMPERATURE] =
-          this.modelConfig.generation_config.temperature;
-      }
-      if (this.modelConfig.generation_config.top_p) {
-        attributes[SpanAttributes.LLM_TOP_P] =
-          this.modelConfig.generation_config.top_p;
-      }
-      if (this.modelConfig.generation_config.top_k) {
-        attributes[SpanAttributes.LLM_TOP_K] =
-          this.modelConfig.generation_config.top_k;
-      }
-    }
 
-    if (this._shouldSendPrompts() && "contents" in params) {
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
-        params.contents[0].role ?? "user";
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-        this._formatPartsData(params.contents[0].parts);
+      if (this._shouldSendPrompts() && "contents" in params) {
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
+          params.contents[0].role ?? "user";
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+          this._formatPartsData(params.contents[0].parts);
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return this.tracer.startSpan(`vertexai.completion`, {
@@ -231,51 +238,56 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     span: Span;
     result: vertexAI.StreamGenerateContentResult;
   }) {
-    span.setAttribute(
-      SpanAttributes.LLM_RESPONSE_MODEL,
-      this.modelConfig.model,
-    );
-
-    const streamResponse = await result.response;
-
-    if (streamResponse.usageMetadata?.totalTokenCount !== undefined)
+    try {
       span.setAttribute(
-        SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-        streamResponse.usageMetadata.totalTokenCount,
+        SpanAttributes.LLM_RESPONSE_MODEL,
+        this.modelConfig.model,
       );
 
-    if (streamResponse.usageMetadata?.candidates_token_count)
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-        streamResponse.usageMetadata.candidates_token_count,
-      );
+      const streamResponse = await result.response;
 
-    if (streamResponse.usageMetadata?.prompt_token_count)
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-        streamResponse.usageMetadata.prompt_token_count,
-      );
+      if (streamResponse.usageMetadata?.totalTokenCount !== undefined)
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          streamResponse.usageMetadata.totalTokenCount,
+        );
 
-    if (this._shouldSendPrompts()) {
-      streamResponse.candidates.forEach((candidate, index) => {
-        if (candidate.finishReason)
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-            candidate.finishReason,
-          );
+      if (streamResponse.usageMetadata?.candidates_token_count)
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          streamResponse.usageMetadata.candidates_token_count,
+        );
 
-        if (candidate.content) {
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-            candidate.content.role ?? "assistant",
-          );
+      if (streamResponse.usageMetadata?.prompt_token_count)
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          streamResponse.usageMetadata.prompt_token_count,
+        );
 
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-            this._formatPartsData(candidate.content.parts),
-          );
-        }
-      });
+      if (this._shouldSendPrompts()) {
+        streamResponse.candidates.forEach((candidate, index) => {
+          if (candidate.finishReason)
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+              candidate.finishReason,
+            );
+
+          if (candidate.content) {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+              candidate.content.role ?? "assistant",
+            );
+
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+              this._formatPartsData(candidate.content.parts),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     span.setStatus({ code: SpanStatusCode.OK });
