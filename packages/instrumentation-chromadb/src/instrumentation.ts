@@ -173,31 +173,36 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
       attributes,
     });
 
-    if (this._config.traceContent) {
-      if (
-        methodName === "add" ||
-        methodName === "update" ||
-        methodName === "upsert"
-      ) {
-        this._setAddOrUpdateOrUpsertAttributes(
-          span,
-          params as chromadb.AddParams,
-          methodName,
-        );
-      } else if (methodName === "delete") {
-        this._setDeleteAttributes(span, params as chromadb.DeleteParams);
-      } else if (methodName === "get") {
-        this._setGetAttributes(span, params as chromadb.GetParams);
-      } else if (methodName === "modify") {
-        this._setModifyAttributes(
-          span,
-          params as chromadb.ModifyCollectionParams,
-        );
-      } else if (methodName === "peek") {
-        this._setPeekAttributes(span, params as chromadb.PeekParams);
-      } else if (methodName === "query") {
-        this._setQueryAttributes(span, params as chromadb.GetParams);
+    try {
+      if (this._config.traceContent) {
+        if (
+          methodName === "add" ||
+          methodName === "update" ||
+          methodName === "upsert"
+        ) {
+          this._setAddOrUpdateOrUpsertAttributes(
+            span,
+            params as chromadb.AddParams,
+            methodName,
+          );
+        } else if (methodName === "delete") {
+          this._setDeleteAttributes(span, params as chromadb.DeleteParams);
+        } else if (methodName === "get") {
+          this._setGetAttributes(span, params as chromadb.GetParams);
+        } else if (methodName === "modify") {
+          this._setModifyAttributes(
+            span,
+            params as chromadb.ModifyCollectionParams,
+          );
+        } else if (methodName === "peek") {
+          this._setPeekAttributes(span, params as chromadb.PeekParams);
+        } else if (methodName === "query") {
+          this._setQueryAttributes(span, params as chromadb.GetParams);
+        }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return span;
@@ -303,36 +308,41 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     span: Span;
     result: chromadb.QueryResponse;
   }): void {
-    if (methodName === "query") {
-      const arrLength = result.ids.length;
-      const attributes = [];
-      for (let index = 0; index < arrLength; index++) {
-        attributes.push({
-          id: result.ids?.[index] ?? [],
-          distances: result.distances?.[index] ?? [],
-          metadatas: result.metadatas?.[index] ?? [],
-          documents: result.documents?.[index] ?? [],
-          embeddings: result.embeddings?.[index] ?? [],
+    try {
+      if (methodName === "query") {
+        const arrLength = result.ids.length;
+        const attributes = [];
+        for (let index = 0; index < arrLength; index++) {
+          attributes.push({
+            id: result.ids?.[index] ?? [],
+            distances: result.distances?.[index] ?? [],
+            metadatas: result.metadatas?.[index] ?? [],
+            documents: result.documents?.[index] ?? [],
+            embeddings: result.embeddings?.[index] ?? [],
+          });
+        }
+
+        attributes.map((each) => {
+          span.addEvent(Events.DB_QUERY_RESULT, {
+            [EventAttributes.DB_QUERY_RESULT_ID]: JSON.stringify(each.id),
+            [EventAttributes.DB_QUERY_RESULT_METADATA]: JSON.stringify(
+              each.metadatas,
+            ),
+            [EventAttributes.DB_QUERY_RESULT_DOCUMENT]: JSON.stringify(
+              each.documents,
+            ),
+            [EventAttributes.DB_QUERY_RESULT_DISTANCE]: JSON.stringify(
+              each.distances,
+            ),
+            [EventAttributes.DB_QUERY_RESULT_VECTOR]: JSON.stringify(
+              each.embeddings,
+            ),
+          });
         });
       }
-
-      attributes.map((each) => {
-        span.addEvent(Events.DB_QUERY_RESULT, {
-          [EventAttributes.DB_QUERY_RESULT_ID]: JSON.stringify(each.id),
-          [EventAttributes.DB_QUERY_RESULT_METADATA]: JSON.stringify(
-            each.metadatas,
-          ),
-          [EventAttributes.DB_QUERY_RESULT_DOCUMENT]: JSON.stringify(
-            each.documents,
-          ),
-          [EventAttributes.DB_QUERY_RESULT_DISTANCE]: JSON.stringify(
-            each.distances,
-          ),
-          [EventAttributes.DB_QUERY_RESULT_VECTOR]: JSON.stringify(
-            each.embeddings,
-          ),
-        });
-      });
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     span.setStatus({ code: SpanStatusCode.OK });

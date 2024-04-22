@@ -91,7 +91,7 @@ export const initInstrumentations = () => {
   });
   instrumentations.push(llamaIndexInstrumentation);
 
-  chromadbInstrumentation = new ChromaDBInstrumentation();
+  chromadbInstrumentation = new ChromaDBInstrumentation({ exceptionLogger });
   instrumentations.push(chromadbInstrumentation);
 };
 
@@ -182,7 +182,7 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.chromadb) {
-    chromadbInstrumentation = new ChromaDBInstrumentation();
+    chromadbInstrumentation = new ChromaDBInstrumentation({ exceptionLogger });
     instrumentations.push(chromadbInstrumentation);
     chromadbInstrumentation.manuallyInstrument(instrumentModules.chromadb);
   }
