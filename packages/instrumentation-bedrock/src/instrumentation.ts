@@ -148,24 +148,31 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
   }: {
     params: Parameters<bedrock.BedrockRuntimeClient["send"]>[0];
   }): Span {
-    const [vendor, model] = params.input.modelId
-      ? params.input.modelId.split(".")
-      : ["", ""];
+    let attributes: Attributes = {};
 
-    let attributes: Attributes = {
-      [SpanAttributes.LLM_VENDOR]: vendor,
-      [SpanAttributes.LLM_REQUEST_MODEL]: model,
-      [SpanAttributes.LLM_RESPONSE_MODEL]: model,
-      [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
-    };
-
-    if (typeof params.input.body === "string") {
-      const requestBody = JSON.parse(params.input.body);
+    try {
+      const [vendor, model] = params.input.modelId
+        ? params.input.modelId.split(".")
+        : ["", ""];
 
       attributes = {
-        ...attributes,
-        ...this._setRequestAttributes(vendor, requestBody),
+        [SpanAttributes.LLM_VENDOR]: vendor,
+        [SpanAttributes.LLM_REQUEST_MODEL]: model,
+        [SpanAttributes.LLM_RESPONSE_MODEL]: model,
+        [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
       };
+
+      if (typeof params.input.body === "string") {
+        const requestBody = JSON.parse(params.input.body);
+
+        attributes = {
+          ...attributes,
+          ...this._setRequestAttributes(vendor, requestBody),
+        };
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return this.tracer.startSpan(`bedrock.completion`, {
@@ -183,85 +190,92 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       | bedrock.InvokeModelCommandOutput
       | bedrock.InvokeModelWithResponseStreamCommandOutput;
   }) {
-    if ("body" in result) {
-      const attributes =
-        "attributes" in span ? (span["attributes"] as Record<string, any>) : {};
+    try {
+      if ("body" in result) {
+        const attributes =
+          "attributes" in span
+            ? (span["attributes"] as Record<string, any>)
+            : {};
 
-      if (SpanAttributes.LLM_VENDOR in attributes) {
-        if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
-          const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
+        if (SpanAttributes.LLM_VENDOR in attributes) {
+          if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
+            const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
 
-          let streamedContent = "";
-          for await (const value of rawRes) {
-            // Convert it to a JSON String
-            const jsonString = new TextDecoder().decode(value.chunk?.bytes);
-            // Parse the JSON string
-            const parsedResponse = JSON.parse(jsonString);
+            let streamedContent = "";
+            for await (const value of rawRes) {
+              // Convert it to a JSON String
+              const jsonString = new TextDecoder().decode(value.chunk?.bytes);
+              // Parse the JSON string
+              const parsedResponse = JSON.parse(jsonString);
 
-            if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
-              span.setAttribute(
-                SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-                parsedResponse["amazon-bedrock-invocationMetrics"][
-                  "inputTokenCount"
-                ],
-              );
-              span.setAttribute(
-                SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-                parsedResponse["amazon-bedrock-invocationMetrics"][
-                  "outputTokenCount"
-                ],
-              );
-
-              span.setAttribute(
-                SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-                parsedResponse["amazon-bedrock-invocationMetrics"][
-                  "inputTokenCount"
-                ] +
+              if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
+                span.setAttribute(
+                  SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+                  parsedResponse["amazon-bedrock-invocationMetrics"][
+                    "inputTokenCount"
+                  ],
+                );
+                span.setAttribute(
+                  SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
                   parsedResponse["amazon-bedrock-invocationMetrics"][
                     "outputTokenCount"
                   ],
-              );
-            }
+                );
 
-            let responseAttributes = this._setResponseAttributes(
+                span.setAttribute(
+                  SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+                  parsedResponse["amazon-bedrock-invocationMetrics"][
+                    "inputTokenCount"
+                  ] +
+                    parsedResponse["amazon-bedrock-invocationMetrics"][
+                      "outputTokenCount"
+                    ],
+                );
+              }
+
+              let responseAttributes = this._setResponseAttributes(
+                attributes[SpanAttributes.LLM_VENDOR],
+                parsedResponse,
+                true,
+              );
+
+              // ! NOTE: This make sure the content always have all streamed chunks
+              if (this._shouldSendPrompts()) {
+                // Update local value with attribute value that was set by _setResponseAttributes
+                streamedContent +=
+                  responseAttributes[
+                    `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+                  ];
+                // re-assign the new value to responseAttributes
+                responseAttributes = {
+                  ...responseAttributes,
+                  [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+                    streamedContent,
+                };
+              }
+
+              span.setAttributes(responseAttributes);
+            }
+          } else if (result.body instanceof Object.getPrototypeOf(Uint8Array)) {
+            // Convert it to a JSON String
+            const jsonString = new TextDecoder().decode(
+              result.body as Uint8Array,
+            );
+            // Parse the JSON string
+            const parsedResponse = JSON.parse(jsonString);
+
+            const responseAttributes = this._setResponseAttributes(
               attributes[SpanAttributes.LLM_VENDOR],
               parsedResponse,
-              true,
             );
-
-            // ! NOTE: This make sure the content always have all streamed chunks
-            if (this._shouldSendPrompts()) {
-              // Update local value with attribute value that was set by _setResponseAttributes
-              streamedContent +=
-                responseAttributes[
-                  `${SpanAttributes.LLM_COMPLETIONS}.0.content`
-                ];
-              // re-assign the new value to responseAttributes
-              responseAttributes = {
-                ...responseAttributes,
-                [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
-                  streamedContent,
-              };
-            }
 
             span.setAttributes(responseAttributes);
           }
-        } else if (result.body instanceof Object.getPrototypeOf(Uint8Array)) {
-          // Convert it to a JSON String
-          const jsonString = new TextDecoder().decode(
-            result.body as Uint8Array,
-          );
-          // Parse the JSON string
-          const parsedResponse = JSON.parse(jsonString);
-
-          const responseAttributes = this._setResponseAttributes(
-            attributes[SpanAttributes.LLM_VENDOR],
-            parsedResponse,
-          );
-
-          span.setAttributes(responseAttributes);
         }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     span.setStatus({ code: SpanStatusCode.OK });

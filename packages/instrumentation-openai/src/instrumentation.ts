@@ -238,55 +238,62 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
-    if (params.max_tokens) {
-      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
-    }
-    if (params.temperature) {
-      attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
-    }
-    if (params.top_p) {
-      attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
-    }
-    if (params.frequency_penalty) {
-      attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
-        params.frequency_penalty;
-    }
-    if (params.presence_penalty) {
-      attributes[SpanAttributes.LLM_PRESENCE_PENALTY] = params.presence_penalty;
-    }
+    try {
+      attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
+      if (params.max_tokens) {
+        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
+      }
+      if (params.temperature) {
+        attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
+      }
+      if (params.top_p) {
+        attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
+      }
+      if (params.frequency_penalty) {
+        attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
+          params.frequency_penalty;
+      }
+      if (params.presence_penalty) {
+        attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =
+          params.presence_penalty;
+      }
 
-    if (
-      params.extraAttributes !== undefined &&
-      typeof params.extraAttributes === "object"
-    ) {
-      Object.keys(params.extraAttributes).forEach((key: string) => {
-        attributes[key] = params.extraAttributes![key];
-      });
-    }
-
-    if (this._shouldSendPrompts()) {
-      if (type === "chat") {
-        params.messages.forEach((message, index) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-            message.role;
-          if (typeof message.content === "string") {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              (message.content as string) || "";
-          } else {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              JSON.stringify(message.content);
-          }
+      if (
+        params.extraAttributes !== undefined &&
+        typeof params.extraAttributes === "object"
+      ) {
+        Object.keys(params.extraAttributes).forEach((key: string) => {
+          attributes[key] = params.extraAttributes![key];
         });
-      } else {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-        if (typeof params.prompt === "string") {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
+      }
+
+      if (this._shouldSendPrompts()) {
+        if (type === "chat") {
+          params.messages.forEach((message, index) => {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+              message.role;
+            if (typeof message.content === "string") {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                (message.content as string) || "";
+            } else {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                JSON.stringify(message.content);
+            }
+          });
         } else {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-            JSON.stringify(params.prompt);
+          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+          if (typeof params.prompt === "string") {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+              params.prompt;
+          } else {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+              JSON.stringify(params.prompt);
+          }
         }
       }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     return this.tracer.startSpan(`openai.${type}`, {
@@ -403,40 +410,51 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       for await (const chunk of await promise) {
         yield chunk;
 
-        result.id = chunk.id;
-        result.created = chunk.created;
-        result.model = chunk.model;
+        try {
+          result.id = chunk.id;
+          result.created = chunk.created;
+          result.model = chunk.model;
 
-        if (chunk.choices[0]?.finish_reason) {
-          result.choices[0].finish_reason = chunk.choices[0].finish_reason;
-        }
-        if (chunk.choices[0]?.logprobs) {
-          result.choices[0].logprobs = chunk.choices[0].logprobs;
-        }
-        if (chunk.choices[0]?.text) {
-          result.choices[0].text += chunk.choices[0].text;
+          if (chunk.choices[0]?.finish_reason) {
+            result.choices[0].finish_reason = chunk.choices[0].finish_reason;
+          }
+          if (chunk.choices[0]?.logprobs) {
+            result.choices[0].logprobs = chunk.choices[0].logprobs;
+          }
+          if (chunk.choices[0]?.text) {
+            result.choices[0].text += chunk.choices[0].text;
+          }
+        } catch (e) {
+          this._diag.warn(e);
+          this._config.exceptionLogger?.(e);
         }
       }
 
-      if (result.choices[0].logprobs) {
-        this._addLogProbsEvent(span, result.choices[0].logprobs);
-      }
-
-      if (this._config.enrichTokens) {
-        const promptTokens =
-          this.tokenCountFromString(params.prompt as string, result.model) ?? 0;
-
-        const completionTokens = this.tokenCountFromString(
-          result.choices[0].text ?? "",
-          result.model,
-        );
-        if (completionTokens) {
-          result.usage = {
-            prompt_tokens: promptTokens,
-            completion_tokens: completionTokens,
-            total_tokens: promptTokens + completionTokens,
-          };
+      try {
+        if (result.choices[0].logprobs) {
+          this._addLogProbsEvent(span, result.choices[0].logprobs);
         }
+
+        if (this._config.enrichTokens) {
+          const promptTokens =
+            this.tokenCountFromString(params.prompt as string, result.model) ??
+            0;
+
+          const completionTokens = this.tokenCountFromString(
+            result.choices[0].text ?? "",
+            result.model,
+          );
+          if (completionTokens) {
+            result.usage = {
+              prompt_tokens: promptTokens,
+              completion_tokens: completionTokens,
+              total_tokens: promptTokens + completionTokens,
+            };
+          }
+        }
+      } catch (e) {
+        this._diag.warn(e);
+        this._config.exceptionLogger?.(e);
       }
 
       this._endSpan({ span, type, result });
@@ -513,65 +531,70 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
   }:
     | { span: Span; type: "chat"; result: ChatCompletion }
     | { span: Span; type: "completion"; result: Completion }) {
-    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
-    if (result.usage) {
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-        result.usage?.total_tokens,
-      );
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-        result.usage?.completion_tokens,
-      );
-      span.setAttribute(
-        SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-        result.usage?.prompt_tokens,
-      );
-    }
-
-    if (this._shouldSendPrompts()) {
-      if (type === "chat") {
-        result.choices.forEach((choice, index) => {
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-            choice.finish_reason,
-          );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-            choice.message.role,
-          );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-            choice.message.content ?? "",
-          );
-
-          if (choice.message.function_call) {
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-              choice.message.function_call.name,
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-              choice.message.function_call.arguments,
-            );
-          }
-        });
-      } else {
-        result.choices.forEach((choice, index) => {
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
-            choice.finish_reason,
-          );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-            "assistant",
-          );
-          span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-            choice.text,
-          );
-        });
+    try {
+      span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
+      if (result.usage) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          result.usage?.total_tokens,
+        );
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          result.usage?.completion_tokens,
+        );
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          result.usage?.prompt_tokens,
+        );
       }
+
+      if (this._shouldSendPrompts()) {
+        if (type === "chat") {
+          result.choices.forEach((choice, index) => {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+              choice.finish_reason,
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+              choice.message.role,
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+              choice.message.content ?? "",
+            );
+
+            if (choice.message.function_call) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+                choice.message.function_call.name,
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+                choice.message.function_call.arguments,
+              );
+            }
+          });
+        } else {
+          result.choices.forEach((choice, index) => {
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+              choice.finish_reason,
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+              "assistant",
+            );
+            span.setAttribute(
+              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+              choice.text,
+            );
+          });
+        }
+      }
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
 
     span.end();
@@ -599,57 +622,62 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
       | CompletionChoice.Logprobs
       | null,
   ) {
-    let result: { token: string; logprob: number }[] = [];
+    try {
+      let result: { token: string; logprob: number }[] = [];
 
-    if (!logprobs) {
-      return;
+      if (!logprobs) {
+        return;
+      }
+
+      const chatLogprobs = logprobs as
+        | ChatCompletion.Choice.Logprobs
+        | ChatCompletionChunk.Choice.Logprobs;
+      const completionLogprobs = logprobs as CompletionChoice.Logprobs;
+      if (chatLogprobs.content) {
+        result = chatLogprobs.content.map((logprob) => {
+          return {
+            token: logprob.token,
+            logprob: logprob.logprob,
+          };
+        });
+      } else if (
+        completionLogprobs?.tokens &&
+        completionLogprobs?.token_logprobs
+      ) {
+        completionLogprobs.tokens.forEach((token, index) => {
+          const logprob = completionLogprobs.token_logprobs?.at(index);
+          if (logprob) {
+            result.push({
+              token,
+              logprob,
+            });
+          }
+        });
+      }
+
+      span.addEvent("logprobs", { logprobs: JSON.stringify(result) });
+    } catch (e) {
+      this._diag.warn(e);
+      this._config.exceptionLogger?.(e);
     }
-
-    const chatLogprobs = logprobs as
-      | ChatCompletion.Choice.Logprobs
-      | ChatCompletionChunk.Choice.Logprobs;
-    const completionLogprobs = logprobs as CompletionChoice.Logprobs;
-    if (chatLogprobs.content) {
-      result = chatLogprobs.content.map((logprob) => {
-        return {
-          token: logprob.token,
-          logprob: logprob.logprob,
-        };
-      });
-    } else if (
-      completionLogprobs?.tokens &&
-      completionLogprobs?.token_logprobs
-    ) {
-      completionLogprobs.tokens.forEach((token, index) => {
-        const logprob = completionLogprobs.token_logprobs?.at(index);
-        if (logprob) {
-          result.push({
-            token,
-            logprob,
-          });
-        }
-      });
-    }
-
-    span.addEvent("logprobs", { logprobs: JSON.stringify(result) });
   }
 
   private _encodingCache = new Map<string, Tiktoken>();
 
   private tokenCountFromString(text: string, model: string) {
-    if (!this._encodingCache.has(model)) {
+    let encoding = this._encodingCache.get(model);
+
+    if (!encoding) {
       try {
-        const encoding = encoding_for_model(model as TiktokenModel);
+        encoding = encoding_for_model(model as TiktokenModel);
         this._encodingCache.set(model, encoding);
       } catch (e) {
-        this._diag.warn(
-          `Failed to get tiktoken encoding for model_name: ${model}, error: ${e}`,
-        );
-        return;
+        this._diag.warn(e);
+        this._config.exceptionLogger?.(e);
+        return 0;
       }
     }
 
-    const encoding = this._encodingCache.get(model);
-    return encoding!.encode(text).length;
+    return encoding.encode(text).length;
   }
 }

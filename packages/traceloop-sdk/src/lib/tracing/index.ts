@@ -46,69 +46,92 @@ let pineconeInstrumentation: PineconeInstrumentation | undefined;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
-  openAIInstrumentation = new OpenAIInstrumentation();
+  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+
+  openAIInstrumentation = new OpenAIInstrumentation({
+    enrichTokens: _configuration?.shouldEnrichMetrics,
+    exceptionLogger,
+  });
   instrumentations.push(openAIInstrumentation);
 
-  anthropicInstrumentation = new AnthropicInstrumentation();
+  anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
   instrumentations.push(anthropicInstrumentation);
 
-  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation();
+  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(azureOpenAIInstrumentation);
 
-  cohereInstrumentation = new CohereInstrumentation();
+  cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
   instrumentations.push(cohereInstrumentation);
 
-  vertexaiInstrumentation = new VertexAIInstrumentation();
+  vertexaiInstrumentation = new VertexAIInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(vertexaiInstrumentation);
 
-  aiplatformInstrumentation = new AIPlatformInstrumentation();
+  aiplatformInstrumentation = new AIPlatformInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(aiplatformInstrumentation);
 
-  bedrockInstrumentation = new BedrockInstrumentation();
+  bedrockInstrumentation = new BedrockInstrumentation({ exceptionLogger });
   instrumentations.push(bedrockInstrumentation);
 
-  pineconeInstrumentation = new PineconeInstrumentation();
+  pineconeInstrumentation = new PineconeInstrumentation({ exceptionLogger });
   instrumentations.push(pineconeInstrumentation);
 
-  langchainInstrumentation = new LangChainInstrumentation();
+  langchainInstrumentation = new LangChainInstrumentation({ exceptionLogger });
   instrumentations.push(langchainInstrumentation);
 
-  llamaIndexInstrumentation = new LlamaIndexInstrumentation();
+  llamaIndexInstrumentation = new LlamaIndexInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(llamaIndexInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
   instrumentModules: InitializeOptions["instrumentModules"],
 ) => {
+  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+
+  // Clear the instrumentations array that was initialized by default
+  instrumentations.length = 0;
+
   if (instrumentModules?.openAI) {
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens: _configuration?.shouldEnrichMetrics,
+      exceptionLogger,
     });
     instrumentations.push(openAIInstrumentation);
     openAIInstrumentation.manuallyInstrument(instrumentModules.openAI);
   }
 
   if (instrumentModules?.anthropic) {
-    anthropicInstrumentation = new AnthropicInstrumentation();
+    anthropicInstrumentation = new AnthropicInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(anthropicInstrumentation);
     anthropicInstrumentation.manuallyInstrument(instrumentModules.anthropic);
   }
 
   if (instrumentModules?.azureOpenAI) {
-    const instrumentation = new AzureOpenAIInstrumentation();
+    const instrumentation = new AzureOpenAIInstrumentation({ exceptionLogger });
     instrumentations.push(instrumentation as Instrumentation);
     azureOpenAIInstrumentation = instrumentation;
     instrumentation.manuallyInstrument(instrumentModules.azureOpenAI);
   }
 
   if (instrumentModules?.cohere) {
-    cohereInstrumentation = new CohereInstrumentation();
+    cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
     instrumentations.push(cohereInstrumentation);
     cohereInstrumentation.manuallyInstrument(instrumentModules.cohere);
   }
 
   if (instrumentModules?.google_vertexai) {
-    vertexaiInstrumentation = new VertexAIInstrumentation();
+    vertexaiInstrumentation = new VertexAIInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(vertexaiInstrumentation);
     vertexaiInstrumentation.manuallyInstrument(
       instrumentModules.google_vertexai,
@@ -116,7 +139,9 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.google_aiplatform) {
-    aiplatformInstrumentation = new AIPlatformInstrumentation();
+    aiplatformInstrumentation = new AIPlatformInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(aiplatformInstrumentation);
     aiplatformInstrumentation.manuallyInstrument(
       instrumentModules.google_aiplatform,
@@ -124,25 +149,29 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.bedrock) {
-    bedrockInstrumentation = new BedrockInstrumentation();
+    bedrockInstrumentation = new BedrockInstrumentation({ exceptionLogger });
     instrumentations.push(bedrockInstrumentation);
     bedrockInstrumentation.manuallyInstrument(instrumentModules.bedrock);
   }
 
   if (instrumentModules?.pinecone) {
-    const instrumentation = new PineconeInstrumentation();
+    const instrumentation = new PineconeInstrumentation({ exceptionLogger });
     instrumentations.push(instrumentation as Instrumentation);
     instrumentation.manuallyInstrument(instrumentModules.pinecone);
   }
 
   if (instrumentModules?.langchain) {
-    langchainInstrumentation = new LangChainInstrumentation();
+    langchainInstrumentation = new LangChainInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(langchainInstrumentation);
     langchainInstrumentation.manuallyInstrument(instrumentModules.langchain);
   }
 
   if (instrumentModules?.llamaIndex) {
-    llamaIndexInstrumentation = new LlamaIndexInstrumentation();
+    llamaIndexInstrumentation = new LlamaIndexInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(llamaIndexInstrumentation);
     llamaIndexInstrumentation.manuallyInstrument(instrumentModules.llamaIndex);
   }
@@ -162,7 +191,6 @@ export const startTracing = (options: InitializeOptions) => {
   if (!shouldSendTraces()) {
     openAIInstrumentation?.setConfig({
       traceContent: false,
-      enrichTokens: _configuration?.shouldEnrichMetrics,
     });
     azureOpenAIInstrumentation?.setConfig({
       traceContent: false,
