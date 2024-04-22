@@ -65,10 +65,14 @@ export const initInstrumentations = () => {
   cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
   instrumentations.push(cohereInstrumentation);
 
-  vertexaiInstrumentation = new VertexAIInstrumentation();
+  vertexaiInstrumentation = new VertexAIInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(vertexaiInstrumentation);
 
-  aiplatformInstrumentation = new AIPlatformInstrumentation();
+  aiplatformInstrumentation = new AIPlatformInstrumentation({
+    exceptionLogger,
+  });
   instrumentations.push(aiplatformInstrumentation);
 
   bedrockInstrumentation = new BedrockInstrumentation({ exceptionLogger });
@@ -125,7 +129,9 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.google_vertexai) {
-    vertexaiInstrumentation = new VertexAIInstrumentation();
+    vertexaiInstrumentation = new VertexAIInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(vertexaiInstrumentation);
     vertexaiInstrumentation.manuallyInstrument(
       instrumentModules.google_vertexai,
@@ -133,7 +139,9 @@ export const manuallyInitInstrumentations = (
   }
 
   if (instrumentModules?.google_aiplatform) {
-    aiplatformInstrumentation = new AIPlatformInstrumentation();
+    aiplatformInstrumentation = new AIPlatformInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(aiplatformInstrumentation);
     aiplatformInstrumentation.manuallyInstrument(
       instrumentModules.google_aiplatform,
