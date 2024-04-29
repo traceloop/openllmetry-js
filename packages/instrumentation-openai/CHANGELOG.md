@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/traceloop/openllmetry-js/compare/v0.7.0...v0.8.0) (2024-04-29)
+
+### Features
+
+- v1 of otel semantic conventions ([#232](https://github.com/traceloop/openllmetry-js/issues/232)) ([8f44173](https://github.com/traceloop/openllmetry-js/commit/8f441733ef7f777c273e6e5594361470b4c7957b))
+
 # [0.7.0](https://github.com/traceloop/openllmetry-js/compare/v0.6.1...v0.7.0) (2024-04-22)
 
 ### Bug Fixes
