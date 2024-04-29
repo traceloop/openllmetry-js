@@ -157,7 +157,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
       | undefined;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_VENDOR]: "VertexAI",
+      [SpanAttributes.LLM_SYSTEM]: "VertexAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
@@ -176,11 +176,11 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
               params?.parameters.structValue?.fields?.maxOutputTokens.numberValue;
           }
           if (params?.parameters.structValue?.fields?.temperature.numberValue) {
-            attributes[SpanAttributes.LLM_TEMPERATURE] =
+            attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] =
               params?.parameters.structValue?.fields?.temperature.numberValue;
           }
           if (params?.parameters.structValue?.fields?.topP.numberValue) {
-            attributes[SpanAttributes.LLM_TOP_P] =
+            attributes[SpanAttributes.LLM_REQUEST_TOP_P] =
               params?.parameters.structValue?.fields?.topP.numberValue;
           }
           if (params?.parameters.structValue?.fields?.topK.numberValue) {

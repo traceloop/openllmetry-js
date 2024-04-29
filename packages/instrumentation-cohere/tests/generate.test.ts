@@ -92,7 +92,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
@@ -111,9 +111,9 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.p);
+    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_TEMPERATURE],
+      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -169,7 +169,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
@@ -188,9 +188,9 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.p);
+    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_TEMPERATURE],
+      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(

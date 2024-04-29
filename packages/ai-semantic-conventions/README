@@ -20,7 +20,7 @@ const span = tracer
   .startSpan()
   .startSpan(spanName, spanOptions)
   .setAttributes({
-    [SemanticAttributes.LLM_VENDOR]: "openai",
+    [SemanticAttributes.LLM_SYSTEM]: "openai",
   });
 ```
 

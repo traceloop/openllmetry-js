@@ -116,16 +116,19 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], vendor);
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], vendor);
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.top_p);
+    assert.strictEqual(
+      attributes[SpanAttributes.LLM_REQUEST_TOP_P],
+      params.top_p,
+    );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_TEMPERATURE],
+      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -187,16 +190,19 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], vendor);
+        assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], vendor);
         assert.strictEqual(
           attributes[SpanAttributes.LLM_REQUEST_TYPE],
           "completion",
         );
         assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
-        assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.top_p);
+        assert.strictEqual(
+          attributes[SpanAttributes.LLM_REQUEST_TOP_P],
+          params.top_p,
+        );
         assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_TEMPERATURE],
+          attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
           params.temperature,
         );
         assert.strictEqual(

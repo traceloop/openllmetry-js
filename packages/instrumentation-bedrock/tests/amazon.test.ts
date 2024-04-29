@@ -118,18 +118,18 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], vendor);
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], vendor);
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_TOP_P],
+      attributes[SpanAttributes.LLM_REQUEST_TOP_P],
       params.textGenerationConfig.topP,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_TEMPERATURE],
+      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
       params.textGenerationConfig.temperature,
     );
     assert.strictEqual(
@@ -203,18 +203,18 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], vendor);
+        assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], vendor);
         assert.strictEqual(
           attributes[SpanAttributes.LLM_REQUEST_TYPE],
           "completion",
         );
         assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_TOP_P],
+          attributes[SpanAttributes.LLM_REQUEST_TOP_P],
           params.textGenerationConfig.topP,
         );
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_TEMPERATURE],
+          attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
           params.textGenerationConfig.temperature,
         );
         assert.strictEqual(

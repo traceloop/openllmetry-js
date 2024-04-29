@@ -15,23 +15,26 @@
  */
 
 export const SpanAttributes = {
-  LLM_VENDOR: "llm.vendor",
+  LLM_SYSTEM: "gen_ai.system",
+  LLM_REQUEST_MODEL: "gen_ai.request.model",
+  LLM_REQUEST_MAX_TOKENS: "gen_ai.request.max_tokens",
+  LLM_REQUEST_TEMPERATURE: "gen_ai.request.temperature",
+  LLM_REQUEST_TOP_P: "gen_ai.request.top_p",
+  LLM_PROMPTS: "gen_ai.prompt",
+  LLM_COMPLETIONS: "gen_ai.completion",
+  LLM_RESPONSE_MODEL: "gen_ai.response.model",
+  LLM_USAGE_PROMPT_TOKENS: "gen_ai.usage.prompt_tokens",
+  LLM_USAGE_COMPLETION_TOKENS: "gen_ai.usage.completion_tokens",
+
+  // LLM
   LLM_REQUEST_TYPE: "llm.request.type",
-  LLM_REQUEST_MODEL: "llm.request.model",
-  LLM_RESPONSE_MODEL: "llm.response.model",
-  LLM_REQUEST_MAX_TOKENS: "llm.request.max_tokens",
   LLM_USAGE_TOTAL_TOKENS: "llm.usage.total_tokens",
-  LLM_USAGE_COMPLETION_TOKENS: "llm.usage.completion_tokens",
-  LLM_USAGE_PROMPT_TOKENS: "llm.usage.prompt_tokens",
-  LLM_TEMPERATURE: "llm.temperature",
-  LLM_TOP_P: "llm.top_p",
   LLM_TOP_K: "llm.top_k",
   LLM_FREQUENCY_PENALTY: "llm.frequency_penalty",
   LLM_PRESENCE_PENALTY: "llm.presence_penalty",
-  LLM_PROMPTS: "llm.prompts",
-  LLM_COMPLETIONS: "llm.completions",
   LLM_CHAT_STOP_SEQUENCES: "llm.chat.stop_sequences",
   LLM_REQUEST_FUNCTIONS: "llm.request.functions",
+
   // Vector DB
   VECTOR_DB_VENDOR: "db.system",
   VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
