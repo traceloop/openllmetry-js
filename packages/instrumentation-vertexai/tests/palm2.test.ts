@@ -92,17 +92,17 @@ describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["llm.vendor"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
     assert.strictEqual(attributes["llm.request.type"], "completion");
-    assert.strictEqual(attributes["llm.request.model"], model);
-    assert.strictEqual(attributes["llm.top_p"], parameter.topP);
+    assert.strictEqual(attributes["gen_ai.request.model"], model);
+    assert.strictEqual(attributes["gen_ai.request.top_p"], parameter.topP);
     assert.strictEqual(attributes["llm.top_k"], parameter.topK);
-    assert.strictEqual(attributes["llm.prompts.0.content"], prompt.prompt);
-    assert.strictEqual(attributes["llm.prompts.0.role"], "user");
-    assert.strictEqual(attributes["llm.response.model"], model);
-    assert.strictEqual(attributes["llm.completions.0.role"], "assistant");
+    assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt.prompt);
+    assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
+    assert.strictEqual(attributes["gen_ai.response.model"], model);
+    assert.strictEqual(attributes["gen_ai.completion.0.role"], "assistant");
     assert.strictEqual(
-      attributes["llm.completions.0.content"],
+      attributes["gen_ai.completion.0.content"],
       fullTextResponse,
     );
   });
@@ -165,20 +165,20 @@ describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["llm.vendor"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
     assert.strictEqual(attributes["llm.request.type"], "completion");
-    assert.strictEqual(attributes["llm.request.model"], model);
-    assert.strictEqual(attributes["llm.top_p"], parameter.topP);
+    assert.strictEqual(attributes["gen_ai.request.model"], model);
+    assert.strictEqual(attributes["gen_ai.request.top_p"], parameter.topP);
     assert.strictEqual(attributes["llm.top_k"], parameter.topK);
     assert.strictEqual(
-      attributes["llm.prompts.0.content"],
+      attributes["gen_ai.prompt.0.content"],
       prompt.messages[0].content,
     );
-    assert.strictEqual(attributes["llm.prompts.0.role"], "user");
-    assert.strictEqual(attributes["llm.response.model"], model);
-    assert.strictEqual(attributes["llm.completions.0.role"], "assistant");
+    assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
+    assert.strictEqual(attributes["gen_ai.response.model"], model);
+    assert.strictEqual(attributes["gen_ai.completion.0.role"], "assistant");
     assert.strictEqual(
-      attributes["llm.completions.0.content"],
+      attributes["gen_ai.completion.0.content"],
       fullTextResponse,
     );
   });

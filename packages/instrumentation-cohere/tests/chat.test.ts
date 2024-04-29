@@ -99,7 +99,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_MODEL],
@@ -119,9 +119,9 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       params.message,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.p);
+    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_TEMPERATURE],
+      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -196,7 +196,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_MODEL],
@@ -216,9 +216,9 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       params.message,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_P], params.p);
+    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_TEMPERATURE],
+      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(

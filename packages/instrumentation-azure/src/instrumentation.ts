@@ -173,7 +173,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
         };
       }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_VENDOR]: "Azure OpenAI",
+      [SpanAttributes.LLM_SYSTEM]: "Azure OpenAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 

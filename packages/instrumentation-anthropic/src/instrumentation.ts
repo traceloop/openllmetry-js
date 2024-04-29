@@ -189,14 +189,14 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
         };
       }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_VENDOR]: "Anthropic",
+      [SpanAttributes.LLM_SYSTEM]: "Anthropic",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
     try {
       attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
-      attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
-      attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
+      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] = params.temperature;
+      attributes[SpanAttributes.LLM_REQUEST_TOP_P] = params.top_p;
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
       if (type === "completion") {

@@ -216,7 +216,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     type: LLM_COMPLETION_TYPE;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_VENDOR]: "Cohere",
+      [SpanAttributes.LLM_SYSTEM]: "Cohere",
       [SpanAttributes.LLM_REQUEST_TYPE]: this._getLlmRequestTypeByMethod(type),
     };
 
@@ -226,9 +226,9 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
       attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
 
       if (!("query" in params)) {
-        attributes[SpanAttributes.LLM_TOP_P] = params.p;
+        attributes[SpanAttributes.LLM_REQUEST_TOP_P] = params.p;
         attributes[SpanAttributes.LLM_TOP_K] = params.k;
-        attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
+        attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] = params.temperature;
         attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
           params.frequencyPenalty;
         attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =

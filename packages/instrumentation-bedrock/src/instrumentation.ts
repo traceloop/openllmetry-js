@@ -156,7 +156,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
         : ["", ""];
 
       attributes = {
-        [SpanAttributes.LLM_VENDOR]: vendor,
+        [SpanAttributes.LLM_SYSTEM]: vendor,
         [SpanAttributes.LLM_REQUEST_MODEL]: model,
         [SpanAttributes.LLM_RESPONSE_MODEL]: model,
         [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
@@ -197,7 +197,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
             ? (span["attributes"] as Record<string, any>)
             : {};
 
-        if (SpanAttributes.LLM_VENDOR in attributes) {
+        if (SpanAttributes.LLM_SYSTEM in attributes) {
           if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
             const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
 
@@ -234,7 +234,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
               }
 
               let responseAttributes = this._setResponseAttributes(
-                attributes[SpanAttributes.LLM_VENDOR],
+                attributes[SpanAttributes.LLM_SYSTEM],
                 parsedResponse,
                 true,
               );
@@ -265,7 +265,7 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
             const parsedResponse = JSON.parse(jsonString);
 
             const responseAttributes = this._setResponseAttributes(
-              attributes[SpanAttributes.LLM_VENDOR],
+              attributes[SpanAttributes.LLM_SYSTEM],
               parsedResponse,
             );
 
@@ -289,8 +289,8 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     switch (vendor) {
       case "ai21": {
         return {
-          [SpanAttributes.LLM_TOP_P]: requestBody["topP"],
-          [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+          [SpanAttributes.LLM_REQUEST_TOP_P]: requestBody["topP"],
+          [SpanAttributes.LLM_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["maxTokens"],
           [SpanAttributes.LLM_PRESENCE_PENALTY]:
             requestBody["presencePenalty"]["scale"],
@@ -309,9 +309,9 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       }
       case "amazon": {
         return {
-          [SpanAttributes.LLM_TOP_P]:
+          [SpanAttributes.LLM_REQUEST_TOP_P]:
             requestBody["textGenerationConfig"]["topP"],
-          [SpanAttributes.LLM_TEMPERATURE]:
+          [SpanAttributes.LLM_REQUEST_TEMPERATURE]:
             requestBody["textGenerationConfig"]["temperature"],
           [SpanAttributes.LLM_REQUEST_MAX_TOKENS]:
             requestBody["textGenerationConfig"]["maxTokenCount"],
@@ -328,9 +328,9 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       }
       case "anthropic": {
         return {
-          [SpanAttributes.LLM_TOP_P]: requestBody["top_p"],
+          [SpanAttributes.LLM_REQUEST_TOP_P]: requestBody["top_p"],
           [SpanAttributes.LLM_TOP_K]: requestBody["top_k"],
-          [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+          [SpanAttributes.LLM_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [SpanAttributes.LLM_REQUEST_MAX_TOKENS]:
             requestBody["max_tokens_to_sample"],
 
@@ -350,9 +350,9 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       }
       case "cohere": {
         return {
-          [SpanAttributes.LLM_TOP_P]: requestBody["p"],
+          [SpanAttributes.LLM_REQUEST_TOP_P]: requestBody["p"],
           [SpanAttributes.LLM_TOP_K]: requestBody["k"],
-          [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+          [SpanAttributes.LLM_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["max_tokens"],
 
           // Prompt & Role
@@ -367,8 +367,8 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
       }
       case "meta": {
         return {
-          [SpanAttributes.LLM_TOP_P]: requestBody["top_p"],
-          [SpanAttributes.LLM_TEMPERATURE]: requestBody["temperature"],
+          [SpanAttributes.LLM_REQUEST_TOP_P]: requestBody["top_p"],
+          [SpanAttributes.LLM_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [SpanAttributes.LLM_REQUEST_MAX_TOKENS]: requestBody["max_gen_len"],
 
           // Prompt & Role

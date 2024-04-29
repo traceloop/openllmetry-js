@@ -84,19 +84,19 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["llm.vendor"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
     assert.strictEqual(attributes["llm.request.type"], "completion");
-    assert.strictEqual(attributes["llm.request.model"], model);
+    assert.strictEqual(attributes["gen_ai.request.model"], model);
     assert.strictEqual(
-      attributes["llm.top_p"],
+      attributes["gen_ai.request.top_p"],
       generativeModel.generation_config?.top_p,
     );
-    assert.strictEqual(attributes["llm.prompts.0.content"], prompt);
-    assert.strictEqual(attributes["llm.prompts.0.role"], "user");
-    assert.strictEqual(attributes["llm.response.model"], model);
-    assert.strictEqual(attributes["llm.completions.0.role"], "model");
+    assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt);
+    assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
+    assert.strictEqual(attributes["gen_ai.response.model"], model);
+    assert.strictEqual(attributes["gen_ai.completion.0.role"], "model");
     assert.strictEqual(
-      attributes["llm.completions.0.content"],
+      attributes["gen_ai.completion.0.content"],
       fullTextResponse,
     );
   });
@@ -140,24 +140,27 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["llm.vendor"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
     assert.strictEqual(attributes["llm.request.type"], "completion");
-    assert.strictEqual(attributes["llm.request.model"], model);
+    assert.strictEqual(attributes["gen_ai.request.model"], model);
     assert.strictEqual(
-      attributes["llm.top_p"],
+      attributes["gen_ai.request.top_p"],
       generativeModel.generation_config?.top_p,
     );
     assert.strictEqual(
-      attributes["llm.request.max_tokens"],
+      attributes["gen_ai.request.max_tokens"],
       generativeModel.generation_config?.max_output_tokens,
     );
-    assert.strictEqual(attributes["llm.prompts.0.content"], prompt);
-    assert.strictEqual(attributes["llm.prompts.0.role"], "user");
-    assert.strictEqual(attributes["llm.response.model"], model);
-    assert.strictEqual(attributes["llm.completions.0.role"], "model");
+    assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt);
+    assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
+    assert.strictEqual(attributes["gen_ai.response.model"], model);
+    assert.strictEqual(attributes["gen_ai.completion.0.role"], "model");
 
     fullTextResponse.forEach((resp, index) => {
-      assert.strictEqual(attributes[`llm.completions.${index}.content`], resp);
+      assert.strictEqual(
+        attributes[`gen_ai.completion.${index}.content`],
+        resp,
+      );
     });
   });
 });

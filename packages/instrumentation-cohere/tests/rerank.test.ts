@@ -105,7 +105,7 @@ describe.skip("Test Rerank with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_VENDOR], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "rerank");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_MODEL],

@@ -93,15 +93,15 @@ describe("Test LlamaIndex instrumentation", async function () {
     assert.strictEqual(spans.length, 1);
     const chatAttributes = spans[0].attributes;
 
-    assert.strictEqual(chatAttributes["llm.vendor"], "OpenAI");
+    assert.strictEqual(chatAttributes["gen_ai.system"], "OpenAI");
     assert.strictEqual(chatAttributes["llm.request.type"], "chat");
-    assert.strictEqual(chatAttributes["llm.request.model"], model);
-    assert.strictEqual(chatAttributes["llm.top_p"], 1);
-    assert.strictEqual(chatAttributes["llm.prompts.0.content"], prompt);
-    assert.strictEqual(chatAttributes["llm.prompts.0.role"], "user");
-    assert.strictEqual(chatAttributes["llm.completions.0.role"], "assistant");
+    assert.strictEqual(chatAttributes["gen_ai.request.model"], model);
+    assert.strictEqual(chatAttributes["gen_ai.request.top_p"], 1);
+    assert.strictEqual(chatAttributes["gen_ai.prompt.0.content"], prompt);
+    assert.strictEqual(chatAttributes["gen_ai.prompt.0.role"], "user");
+    assert.strictEqual(chatAttributes["gen_ai.completion.0.role"], "assistant");
     assert.strictEqual(
-      chatAttributes["llm.completions.0.content"],
+      chatAttributes["gen_ai.completion.0.content"],
       res.message.content,
     );
   });
@@ -129,13 +129,13 @@ describe("Test LlamaIndex instrumentation", async function () {
     assert.strictEqual(spans.length, 1);
     const chatAttributes = spans[0].attributes;
 
-    assert.strictEqual(chatAttributes["llm.vendor"], "OpenAI");
+    assert.strictEqual(chatAttributes["gen_ai.system"], "OpenAI");
     assert.strictEqual(chatAttributes["llm.request.type"], "chat");
-    assert.strictEqual(chatAttributes["llm.request.model"], model);
-    assert.strictEqual(chatAttributes["llm.top_p"], 1);
-    assert.strictEqual(chatAttributes["llm.prompts.0.content"], prompt);
-    assert.strictEqual(chatAttributes["llm.prompts.0.role"], "user");
-    assert.strictEqual(chatAttributes["llm.completions.0.content"], message);
+    assert.strictEqual(chatAttributes["gen_ai.request.model"], model);
+    assert.strictEqual(chatAttributes["gen_ai.request.top_p"], 1);
+    assert.strictEqual(chatAttributes["gen_ai.prompt.0.content"], prompt);
+    assert.strictEqual(chatAttributes["gen_ai.prompt.0.role"], "user");
+    assert.strictEqual(chatAttributes["gen_ai.completion.0.content"], message);
   });
 
   it("should add span for all instrumented methods", async () => {

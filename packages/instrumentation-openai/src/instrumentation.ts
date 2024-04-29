@@ -234,7 +234,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         };
       }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_VENDOR]: "OpenAI",
+      [SpanAttributes.LLM_SYSTEM]: "OpenAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
@@ -244,10 +244,10 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
       }
       if (params.temperature) {
-        attributes[SpanAttributes.LLM_TEMPERATURE] = params.temperature;
+        attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] = params.temperature;
       }
       if (params.top_p) {
-        attributes[SpanAttributes.LLM_TOP_P] = params.top_p;
+        attributes[SpanAttributes.LLM_REQUEST_TOP_P] = params.top_p;
       }
       if (params.frequency_penalty) {
         attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =

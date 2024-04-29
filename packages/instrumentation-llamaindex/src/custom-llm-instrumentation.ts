@@ -49,13 +49,16 @@ export class CustomLLMInstrumentation {
           });
 
         try {
-          span.setAttribute(SpanAttributes.LLM_VENDOR, className);
+          span.setAttribute(SpanAttributes.LLM_SYSTEM, className);
           span.setAttribute(
             SpanAttributes.LLM_REQUEST_MODEL,
             this.metadata.model,
           );
           span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
-          span.setAttribute(SpanAttributes.LLM_TOP_P, this.metadata.topP);
+          span.setAttribute(
+            SpanAttributes.LLM_REQUEST_TOP_P,
+            this.metadata.topP,
+          );
           if (shouldSendPrompts(plugin.config)) {
             for (const messageIdx in messages) {
               span.setAttribute(
