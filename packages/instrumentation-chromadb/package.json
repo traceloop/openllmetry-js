@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-chromadb",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "ChromaDB Instrumentation",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
