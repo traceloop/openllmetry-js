@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.2](https://github.com/traceloop/openllmetry-js/compare/v0.8.1...v0.8.2) (2024-05-07)
+
+### Bug Fixes
+
+- **openai:** switched to pure js tiktoken ([#248](https://github.com/traceloop/openllmetry-js/issues/248)) ([9d8805e](https://github.com/traceloop/openllmetry-js/commit/9d8805e20e7814ddf7aefbcd31ecb8c7f928b742))
+
 ## [0.8.1](https://github.com/traceloop/openllmetry-js/compare/v0.8.0...v0.8.1) (2024-05-06)
 
 ### Bug Fixes
