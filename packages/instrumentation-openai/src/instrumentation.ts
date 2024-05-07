@@ -45,7 +45,7 @@ import type {
 } from "openai/resources";
 import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
-import { encoding_for_model, TiktokenModel, Tiktoken } from "tiktoken";
+import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 
 export class OpenAIInstrumentation extends InstrumentationBase<any> {
   protected declare _config: OpenAIInstrumentationConfig;
@@ -726,7 +726,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
 
     if (!encoding) {
       try {
-        encoding = encoding_for_model(model as TiktokenModel);
+        encoding = encodingForModel(model as TiktokenModel);
         this._encodingCache.set(model, encoding);
       } catch (e) {
         this._diag.warn(e);
