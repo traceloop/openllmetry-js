@@ -188,7 +188,6 @@ describe("Test Pinecone instrumentation", function () {
   });
 
   it("should set attributes in span for DB deletes", async () => {
-
     await pc_index.namespace("ns1").deleteOne("vec1");
     await pc_index.namespace("ns1").deleteMany(["vec2", "vec3"]);
     await pc_index.namespace("ns1").deleteAll();
