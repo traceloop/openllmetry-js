@@ -26,6 +26,7 @@ import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -367,6 +368,81 @@ describe("Test SDK Decorators", () => {
     assert.strictEqual(
       chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
       undefined,
+    );
+  });
+
+  it("should create spans for manual LLM instrumentation", async () => {
+    const result = await traceloop.withWorkflow(
+      { name: "joke_generator" },
+      () =>
+        traceloop.withLLMCall(
+          { vendor: "openai", type: "chat" },
+          async ({ span }) => {
+            const messages: ChatCompletionMessageParam[] = [
+              { role: "user", content: "Tell me a joke about OpenTelemetry" },
+            ];
+            const model = "gpt-3.5-turbo";
+
+            span.reportRequest({ model, messages });
+
+            const response = await openai.chat.completions.create({
+              messages,
+              model,
+            });
+
+            span.reportResponse(response);
+
+            return response;
+          },
+        ),
+    );
+
+    const spans = memoryExporter.getFinishedSpans();
+    const workflowSpan = spans.find(
+      (span) => span.name === "joke_generator.workflow",
+    );
+    const completionSpan = spans.find((span) => span.name === "openai.chat");
+
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.ok(workflowSpan);
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
+      "joke_generator",
+    );
+    assert.strictEqual(
+      completionSpan.parentSpanId,
+      workflowSpan.spanContext().spanId,
+    );
+    assert.ok(workflowSpan.startTime <= completionSpan.startTime);
+    assert.ok(workflowSpan.endTime >= completionSpan.endTime);
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      "gpt-3.5-turbo",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_RESPONSE_MODEL}`],
+      "gpt-3.5-turbo-0125",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "Tell me a joke about OpenTelemetry",
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+    assert.equal(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      "15",
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
     );
   });
 });
