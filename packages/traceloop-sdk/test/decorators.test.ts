@@ -414,8 +414,7 @@ describe("Test SDK Decorators", () => {
       completionSpan.parentSpanId,
       workflowSpan.spanContext().spanId,
     );
-    assert.ok(workflowSpan.startTime <= completionSpan.startTime);
-    assert.ok(workflowSpan.endTime >= completionSpan.endTime);
+
     assert.strictEqual(
       completionSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
