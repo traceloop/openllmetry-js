@@ -79,7 +79,7 @@ export class LLMSpan {
     }[];
   }) {
     this.span.setAttributes({
-      [SpanAttributes.LLM_REQUEST_MODEL]: model
+      [SpanAttributes.LLM_REQUEST_MODEL]: model,
     });
 
     messages.forEach((message, index) => {
