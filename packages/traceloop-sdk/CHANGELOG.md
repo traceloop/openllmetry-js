@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.4](https://github.com/traceloop/openllmetry-js/compare/v0.8.3...v0.8.4) (2024-05-20)
+
+### Bug Fixes
+
+- **manual-tracing:** add missing llm.request.type attribute ([#269](https://github.com/traceloop/openllmetry-js/issues/269)) ([528c498](https://github.com/traceloop/openllmetry-js/commit/528c49850fb2a9b87cea92466b87aa6b0681d285))
+- **sdk:** serialize map outputs for non-promise outputs ([#276](https://github.com/traceloop/openllmetry-js/issues/276)) ([b4a8948](https://github.com/traceloop/openllmetry-js/commit/b4a8948314e413bbbee47c9f8d8698d98634ff18))
+- **sdk:** used wrong completion attribute in manual instrumentations ([#277](https://github.com/traceloop/openllmetry-js/issues/277)) ([b434f61](https://github.com/traceloop/openllmetry-js/commit/b434f61dd55da9967738bf4aa6110e1816a730e0))
+
 ## [0.8.3](https://github.com/traceloop/openllmetry-js/compare/v0.8.2...v0.8.3) (2024-05-16)
 
 ### Bug Fixes
