@@ -416,6 +416,10 @@ describe("Test SDK Decorators", () => {
     );
 
     assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_REQUEST_TYPE}`],
+      "chat",
+    );
+    assert.strictEqual(
       completionSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
     );
