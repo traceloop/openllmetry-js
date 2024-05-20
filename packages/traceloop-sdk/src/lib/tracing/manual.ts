@@ -126,9 +126,9 @@ export class LLMSpan {
       this.span.setAttributes({
         [`${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`]:
           completion.finish_reason,
-        [`${SpanAttributes.LLM_COMPLETIONS}.${index}.message.role`]:
+        [`${SpanAttributes.LLM_COMPLETIONS}.${index}.role`]:
           completion.message.role,
-        [`${SpanAttributes.LLM_COMPLETIONS}.${index}.message.content`]:
+        [`${SpanAttributes.LLM_COMPLETIONS}.${index}.content`]:
           completion.message.content || "",
       });
     });

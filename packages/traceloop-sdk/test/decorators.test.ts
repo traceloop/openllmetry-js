@@ -435,6 +435,10 @@ describe("Test SDK Decorators", () => {
       completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      result.choices[0].message.content,
+    );
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
