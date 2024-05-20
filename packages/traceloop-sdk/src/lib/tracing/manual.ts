@@ -79,7 +79,7 @@ export class LLMSpan {
     }[];
   }) {
     this.span.setAttributes({
-      [SpanAttributes.LLM_REQUEST_MODEL]: model,
+      [SpanAttributes.LLM_REQUEST_MODEL]: model
     });
 
     messages.forEach((message, index) => {
@@ -163,6 +163,7 @@ export function withLLMCall<
   F extends ({ span }: { span: LLMSpan }) => ReturnType<F>,
 >({ vendor, type }: LLMCallConfig, fn: F, thisArg?: ThisParameterType<F>) {
   const span = getTracer().startSpan(`${vendor}.${type}`, {}, context.active());
+  span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, type);
   trace.setSpan(context.active(), span);
 
   const res = fn.apply(thisArg, [{ span: new LLMSpan(span) }]);
