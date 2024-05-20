@@ -37,7 +37,7 @@
     "@azure/openai": "^1.0.0-beta.11",
     "@google-cloud/aiplatform": "^3.10.0",
     "@google-cloud/vertexai": "^0.2.1",
-    "@langchain/community": "^0.0.34",
+    "@langchain/community": "^0.2.0",
     "@pinecone-database/pinecone": "^2.0.1",
     "@traceloop/node-server-sdk": "*",
     "cohere-ai": "^7.7.5",
