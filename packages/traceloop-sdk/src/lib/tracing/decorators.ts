@@ -7,6 +7,7 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 import { withAssociationProperties } from "./association";
 import { shouldSendTraces } from ".";
+import { Telemetry } from "../telemetry/telemetry";
 
 export type DecoratorConfig = {
   name: string;
@@ -82,8 +83,8 @@ function withEntity<
                 }),
               );
             }
-          } catch {
-            /* empty */
+          } catch (error) {
+            Telemetry.getInstance().logException(error);
           }
         }
 
@@ -92,19 +93,14 @@ function withEntity<
           return res.then((resolvedRes) => {
             try {
               if (shouldSendTraces()) {
-                if (resolvedRes instanceof Map) {
-                  span.setAttribute(
-                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                    JSON.stringify(Array.from(resolvedRes.entries())),
-                  );
-                } else {
-                  span.setAttribute(
-                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                    JSON.stringify(resolvedRes),
-                  );
-                }
+                span.setAttribute(
+                  SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                  serialize(resolvedRes),
+                );
               }
               return resolvedRes;
+            } catch (error) {
+              Telemetry.getInstance().logException(error);
             } finally {
               span.end();
             }
@@ -114,10 +110,12 @@ function withEntity<
           if (shouldSendTraces()) {
             span.setAttribute(
               SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-              JSON.stringify(res),
+              serialize(res),
             );
           }
           return res;
+        } catch (error) {
+          Telemetry.getInstance().logException(error);
         } finally {
           span.end();
         }
@@ -239,4 +237,12 @@ export function tool(
     | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
 ) {
   return entity(TraceloopSpanKindValues.TOOL, config ?? {});
+}
+
+function serialize(input: unknown): string {
+  if (input instanceof Map) {
+    return JSON.stringify(Array.from(input.entries()));
+  } else {
+    return JSON.stringify(input);
+  }
 }
