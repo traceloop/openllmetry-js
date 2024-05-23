@@ -32,7 +32,9 @@ describe("Test Qdrant instrumentation", function () {
   const provider = new BasicTracerProvider();
   let instrumentation: QdrantInstrumentation;
   let contextManager: AsyncHooksContextManager;
-  const qdrantClient: qdrant.QdrantClient = new qdrant.QdrantClient({ url: 'http://127.0.0.1:6333' });
+  const qdrantClient: qdrant.QdrantClient = new qdrant.QdrantClient({
+    url: "http://127.0.0.1:6333",
+  });
 
   before(async () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
@@ -46,13 +48,12 @@ describe("Test Qdrant instrumentation", function () {
     context.setGlobalContextManager(contextManager);
     memoryExporter.reset();
 
-
     qdrantClient.createCollection(COLLECTION_NAME, {
       vectors: {
         size: 3,
         distance: "Cosine",
-      }
-    })
+      },
+    });
   });
 
   afterEach(async () => {
@@ -61,10 +62,8 @@ describe("Test Qdrant instrumentation", function () {
     context.disable();
   });
 
-
   it("should set span attributes for Upsert", async () => {
-    const points =
-    {
+    const points = {
       batch: {
         ids: [32, 23],
         vectors: [
@@ -72,7 +71,7 @@ describe("Test Qdrant instrumentation", function () {
           [9.8, 2.3, 2.9],
         ],
         payloads: [{ style: "style3" }, { style: "style4" }],
-      }
+      },
     };
 
     qdrantClient.upsert(COLLECTION_NAME, points);
@@ -86,5 +85,4 @@ describe("Test Qdrant instrumentation", function () {
     //   JSON.stringify(points.batch.ids.length),
     // );
   });
-
 });

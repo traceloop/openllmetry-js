@@ -112,8 +112,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   ): Promise<T> {
     return promise
       .then(async (result) => {
-
-        const awaitedResult = (await result);
+        const awaitedResult = await result;
 
         this._endSpan({
           methodName,
@@ -147,16 +146,19 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   }: {
     collectionName: string;
     params:
-    | qdrant.Schemas["PointInsertOperations"]
-    | qdrant.Schemas["PointsSelector"]
-    | qdrant.Schemas["PointRequest"]
-    | qdrant.Schemas['SearchRequest']
+      | qdrant.Schemas["PointInsertOperations"]
+      | qdrant.Schemas["PointsSelector"]
+      | qdrant.Schemas["PointRequest"]
+      | qdrant.Schemas["SearchRequest"];
 
     methodName: string;
   }): Span {
-    const span = this.tracer.startSpan(`qdrant.${collectionName}.${methodName}`, {
-      kind: SpanKind.CLIENT
-    });
+    const span = this.tracer.startSpan(
+      `qdrant.${collectionName}.${methodName}`,
+      {
+        kind: SpanKind.CLIENT,
+      },
+    );
 
     try {
       if (this._config.traceContent) {
@@ -166,16 +168,21 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
             params as qdrant.Schemas["PointInsertOperations"],
             methodName,
           );
-        }
-        else if (methodName === "delete") {
-          this._setDeleteAttributes(span, params as qdrant.Schemas["PointsSelector"]);
-        }
-        else if (methodName === "retrieve") {
-          this._setRetrieveAttributes(span, params as qdrant.Schemas["PointRequest"]);
-        }
-
-        else if (methodName === "search") {
-          this._setSearchAttributes(span, params as qdrant.Schemas["SearchRequest"]);
+        } else if (methodName === "delete") {
+          this._setDeleteAttributes(
+            span,
+            params as qdrant.Schemas["PointsSelector"],
+          );
+        } else if (methodName === "retrieve") {
+          this._setRetrieveAttributes(
+            span,
+            params as qdrant.Schemas["PointRequest"],
+          );
+        } else if (methodName === "search") {
+          this._setSearchAttributes(
+            span,
+            params as qdrant.Schemas["SearchRequest"],
+          );
         }
       }
     } catch (e) {
@@ -186,21 +193,17 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     return span;
   }
 
-
   private _setUpsertAttributes(
     span: Span,
     params: qdrant.Schemas["PointInsertOperations"],
     method: "add" | "update" | "upsert",
   ) {
-
     if ("batch" in params) {
       span.setAttribute(
         `db.qdrant.${method}.points_count`,
         JSON.stringify(params.batch.ids?.length),
       );
-    }
-
-    else {
+    } else {
       span.setAttribute(
         `db.qdrant.${method}.points_count`,
         JSON.stringify(params.points?.length),
@@ -208,7 +211,10 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     }
   }
 
-  private _setDeleteAttributes(span: Span, params: qdrant.Schemas["PointsSelector"]) {
+  private _setDeleteAttributes(
+    span: Span,
+    params: qdrant.Schemas["PointsSelector"],
+  ) {
     if ("filter" in params) {
       span.setAttribute(
         "db.qdrant.delete.filter.must",
@@ -229,9 +235,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
         "db.qdrant.delete.filter.min_should",
         JSON.stringify(params.filter?.min_should),
       );
-    }
-
-    else {
+    } else {
       span.setAttribute(
         "db.qdrant.delete.point_ids",
         JSON.stringify(params.points),
@@ -239,36 +243,40 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     }
   }
 
-  private _setRetrieveAttributes(span: Span, params: qdrant.Schemas["PointRequest"]) {
+  private _setRetrieveAttributes(
+    span: Span,
+    params: qdrant.Schemas["PointRequest"],
+  ) {
     span.setAttribute(
       "db.qdrant.retrieve.ids_count",
       JSON.stringify(params.ids?.length),
     );
-    span.setAttribute("db.qdrant.retrieve.with_payload", JSON.stringify(params.with_payload));
-    span.setAttribute("db.qdrant.retrieve.with_vector", JSON.stringify(params.with_vector));
+    span.setAttribute(
+      "db.qdrant.retrieve.with_payload",
+      JSON.stringify(params.with_payload),
+    );
+    span.setAttribute(
+      "db.qdrant.retrieve.with_vector",
+      JSON.stringify(params.with_vector),
+    );
   }
 
-  private _setSearchAttributes(span: Span, params: qdrant.Schemas["SearchRequest"]) {
+  private _setSearchAttributes(
+    span: Span,
+    params: qdrant.Schemas["SearchRequest"],
+  ) {
     span.setAttribute(
       "db.qdrant.search.query_vector",
       JSON.stringify(params.vector),
     );
-    span.setAttribute(
-      "db.qdrant.search.limit",
-      JSON.stringify(params.limit),
-    );
-    span.setAttribute(
-      "db.qdrant.search.offset",
-      JSON.stringify(params.offset),
-    );
+    span.setAttribute("db.qdrant.search.limit", JSON.stringify(params.limit));
+    span.setAttribute("db.qdrant.search.offset", JSON.stringify(params.offset));
     span.setAttribute(
       "db.qdrant.search.score_threshold",
       JSON.stringify(params.score_threshold),
     );
 
-    span.setAttribute("db.qdrant.search.filter",
-      JSON.stringify(params.filter),
-    );
+    span.setAttribute("db.qdrant.search.filter", JSON.stringify(params.filter));
   }
 
   private _endSpan({
