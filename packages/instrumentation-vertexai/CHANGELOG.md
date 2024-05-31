@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.5](https://github.com/traceloop/openllmetry-js/compare/v0.8.4...v0.8.5) (2024-05-31)
+
+### Bug Fixes
+
+- **vertex:** support v1.2.0 ([#290](https://github.com/traceloop/openllmetry-js/issues/290)) ([e62c9b4](https://github.com/traceloop/openllmetry-js/commit/e62c9b420881b69971d3ee910c5d3f613df3be50))
+
 # [0.8.0](https://github.com/traceloop/openllmetry-js/compare/v0.7.0...v0.8.0) (2024-04-29)
 
 ### Features
