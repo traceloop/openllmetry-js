@@ -60,9 +60,9 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const generativeModel = vertexAI.preview.getGenerativeModel({
       model,
-      generation_config: {
-        top_p: 0.9,
-        max_output_tokens: 256,
+      generationConfig: {
+        topP: 0.9,
+        maxOutputTokens: 256,
       },
     });
     const prompt = "What is Node.js?";
@@ -78,7 +78,7 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
     const aggregatedResponse = await responseStream.response;
 
     const fullTextResponse =
-      aggregatedResponse.candidates[0].content.parts[0].text;
+      aggregatedResponse.candidates![0].content.parts[0].text;
 
     const spans = memoryExporter.getFinishedSpans();
 
@@ -87,10 +87,7 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
     assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(attributes["gen_ai.request.model"], model);
-    assert.strictEqual(
-      attributes["gen_ai.request.top_p"],
-      generativeModel.generation_config?.top_p,
-    );
+    assert.strictEqual(attributes["gen_ai.request.top_p"], 0.9);
     assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt);
     assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(attributes["gen_ai.response.model"], model);
@@ -111,9 +108,9 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const generativeModel = vertexAI.preview.getGenerativeModel({
       model,
-      generation_config: {
-        top_p: 0.9,
-        max_output_tokens: 256,
+      generationConfig: {
+        topP: 0.9,
+        maxOutputTokens: 256,
       },
     });
     const prompt = "What are the 4 cardinal directions?";
@@ -129,7 +126,7 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const fullTextResponse = [];
     for await (const item of responseStream.stream) {
-      fullTextResponse.push(item.candidates[0].content.parts[0].text);
+      fullTextResponse.push(item.candidates![0].content.parts[0].text);
     }
 
     assert.ok(fullTextResponse);
@@ -143,14 +140,8 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
     assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(attributes["gen_ai.request.model"], model);
-    assert.strictEqual(
-      attributes["gen_ai.request.top_p"],
-      generativeModel.generation_config?.top_p,
-    );
-    assert.strictEqual(
-      attributes["gen_ai.request.max_tokens"],
-      generativeModel.generation_config?.max_output_tokens,
-    );
+    assert.strictEqual(attributes["gen_ai.request.top_p"], 0.9);
+    assert.strictEqual(attributes["gen_ai.request.max_tokens"], 256);
     assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt);
     assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(attributes["gen_ai.response.model"], model);
