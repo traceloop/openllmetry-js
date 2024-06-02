@@ -49,7 +49,7 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   protected init(): InstrumentationModuleDefinition<any> {
     const vertexAIModule = new InstrumentationNodeModuleDefinition<any>(
       "@google-cloud/vertexai",
-      [">=0.2.1"],
+      [">=1.1.0"],
       this.wrap.bind(this),
       this.unwrap.bind(this),
     );
@@ -57,24 +57,18 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     return vertexAIModule;
   }
 
-  private modelConfig: vertexAI.ModelParams = { model: "" };
-
-  private setModel(newValue: vertexAI.ModelParams) {
-    this.modelConfig = { ...newValue };
-  }
-
   public manuallyInstrument(module: typeof vertexAI) {
     this._diag.debug("Manually instrumenting @google-cloud/vertexai");
 
     this._wrap(
-      module.VertexAI_Preview.prototype,
-      "getGenerativeModel",
-      this.wrapperMethod("getGenerativeModel"),
+      module.GenerativeModel.prototype,
+      "generateContentStream",
+      this.wrapperMethod(),
     );
     this._wrap(
       module.GenerativeModel.prototype,
-      "generateContentStream",
-      this.wrapperMethod("generateContentStream"),
+      "generateContent",
+      this.wrapperMethod(),
     );
   }
 
@@ -82,14 +76,14 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     this._diag.debug(`Patching @google-cloud/vertexai@${moduleVersion}`);
 
     this._wrap(
-      module.VertexAI_Preview.prototype,
-      "getGenerativeModel",
-      this.wrapperMethod("getGenerativeModel"),
+      module.GenerativeModel.prototype,
+      "generateContentStream",
+      this.wrapperMethod(),
     );
     this._wrap(
       module.GenerativeModel.prototype,
-      "generateContentStream",
-      this.wrapperMethod("generateContentStream"),
+      "generateContent",
+      this.wrapperMethod(),
     );
 
     return module;
@@ -98,42 +92,21 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   private unwrap(module: typeof vertexAI, moduleVersion?: string): void {
     this._diag.debug(`Unpatching @google-cloud/vertexai@${moduleVersion}`);
 
-    this._unwrap(module.VertexAI_Preview.prototype, "getGenerativeModel");
     this._unwrap(module.GenerativeModel.prototype, "generateContentStream");
+    this._unwrap(module.GenerativeModel.prototype, "generateContent");
   }
 
-  private wrapperMethod(
-    wrappedMethodName: "getGenerativeModel" | "generateContentStream",
-  ) {
+  private wrapperMethod() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line @typescript-eslint/ban-types
     return (original: Function) => {
       return function method(
-        this: any,
+        this: vertexAI.GenerativeModel,
         ...args: (vertexAI.GenerateContentRequest & vertexAI.ModelParams)[]
       ) {
-        if (wrappedMethodName === "getGenerativeModel") {
-          plugin.setModel(args[0]);
-
-          return context.bind(
-            context.active(),
-            safeExecuteInTheMiddle(
-              () => {
-                return context.with(context.active(), () => {
-                  return original.apply(this, args);
-                });
-              },
-              (e) => {
-                if (e) {
-                  plugin._diag.error("Error in VertexAI Instrumentation", e);
-                }
-              },
-            ),
-          );
-        }
-
         const span = plugin._startSpan({
+          instance: this,
           params: args[0],
         });
 
@@ -157,8 +130,10 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
   }
 
   private _startSpan({
+    instance,
     params,
   }: {
+    instance: vertexAI.GenerativeModel;
     params: vertexAI.GenerateContentRequest;
   }): Span {
     const attributes: Attributes = {
@@ -167,28 +142,18 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     };
 
     try {
-      attributes[SpanAttributes.LLM_REQUEST_MODEL] = this.modelConfig.model;
+      attributes[SpanAttributes.LLM_REQUEST_MODEL] = instance["model"];
+      attributes[SpanAttributes.LLM_RESPONSE_MODEL] = instance["model"];
 
-      if (
-        this.modelConfig.generation_config !== undefined &&
-        typeof this.modelConfig.generation_config === "object"
-      ) {
-        if (this.modelConfig.generation_config.max_output_tokens) {
-          attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
-            this.modelConfig.generation_config.max_output_tokens;
-        }
-        if (this.modelConfig.generation_config.temperature) {
-          attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] =
-            this.modelConfig.generation_config.temperature;
-        }
-        if (this.modelConfig.generation_config.top_p) {
-          attributes[SpanAttributes.LLM_REQUEST_TOP_P] =
-            this.modelConfig.generation_config.top_p;
-        }
-        if (this.modelConfig.generation_config.top_k) {
-          attributes[SpanAttributes.LLM_TOP_K] =
-            this.modelConfig.generation_config.top_k;
-        }
+      if (instance["generationConfig"]) {
+        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+          instance["generationConfig"].max_output_tokens;
+        attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] =
+          instance["generationConfig"].temperature;
+        attributes[SpanAttributes.LLM_REQUEST_TOP_P] =
+          instance["generationConfig"].top_p;
+        attributes[SpanAttributes.LLM_TOP_K] =
+          instance["generationConfig"].top_k;
       }
 
       if (this._shouldSendPrompts() && "contents" in params) {
@@ -213,7 +178,9 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
       .then(async (result) => {
         await this._endSpan({
           span,
-          result: result as vertexAI.StreamGenerateContentResult,
+          result: result as
+            | vertexAI.StreamGenerateContentResult
+            | vertexAI.GenerateContentResult,
         });
         return new Promise<T>((resolve) => resolve(result));
       })
@@ -236,14 +203,11 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     result,
   }: {
     span: Span;
-    result: vertexAI.StreamGenerateContentResult;
+    result:
+      | vertexAI.StreamGenerateContentResult
+      | vertexAI.GenerateContentResult;
   }) {
     try {
-      span.setAttribute(
-        SpanAttributes.LLM_RESPONSE_MODEL,
-        this.modelConfig.model,
-      );
-
       const streamResponse = await result.response;
 
       if (streamResponse.usageMetadata?.totalTokenCount !== undefined)
@@ -252,20 +216,20 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
           streamResponse.usageMetadata.totalTokenCount,
         );
 
-      if (streamResponse.usageMetadata?.candidates_token_count)
+      if (streamResponse.usageMetadata?.candidatesTokenCount)
         span.setAttribute(
           SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
-          streamResponse.usageMetadata.candidates_token_count,
+          streamResponse.usageMetadata.candidatesTokenCount,
         );
 
-      if (streamResponse.usageMetadata?.prompt_token_count)
+      if (streamResponse.usageMetadata?.promptTokenCount)
         span.setAttribute(
           SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
-          streamResponse.usageMetadata.prompt_token_count,
+          streamResponse.usageMetadata.promptTokenCount,
         );
 
       if (this._shouldSendPrompts()) {
-        streamResponse.candidates.forEach((candidate, index) => {
+        streamResponse.candidates?.forEach((candidate, index) => {
           if (candidate.finishReason)
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
@@ -298,10 +262,10 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     const result = parts
       .map((part) => {
         if (part.text) return part.text;
-        else if (part.file_data)
-          return part.file_data.file_uri + "-" + part.file_data.mime_type;
-        else if (part.inline_data)
-          return part.inline_data.data + "-" + part.inline_data.mime_type;
+        else if (part.fileData)
+          return part.fileData.fileUri + "-" + part.fileData.mimeType;
+        else if (part.inlineData)
+          return part.inlineData.data + "-" + part.inlineData.mimeType;
         else return "";
       })
       .filter(Boolean);

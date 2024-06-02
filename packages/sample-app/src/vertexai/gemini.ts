@@ -18,11 +18,8 @@ async function createNonStreamingContent() {
     { name: "sample_completion" },
     async () => {
       // Instantiate the model
-      const generativeModel = vertexAI.preview.getGenerativeModel({
-        model: "gemini-pro-vision",
-        generation_config: {
-          max_output_tokens: 256,
-        },
+      const generativeModel = vertexAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
       });
 
       const request = {
@@ -42,7 +39,7 @@ async function createNonStreamingContent() {
 
       // Select the text from the response
       const fullTextResponse =
-        aggregatedResponse.candidates[0].content.parts[0].text;
+        aggregatedResponse.candidates![0].content.parts[0].text;
 
       return fullTextResponse;
     },
@@ -54,11 +51,8 @@ async function createStreamingContent() {
     { name: "sample_stream_completion" },
     async () => {
       // Instantiate the model
-      const generativeModel = vertexAI.preview.getGenerativeModel({
-        model: "gemini-pro-vision",
-        generation_config: {
-          max_output_tokens: 256,
-        },
+      const generativeModel = vertexAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
       });
 
       const request = {
@@ -79,7 +73,7 @@ async function createStreamingContent() {
 
       // Select the text from the response
       const fullTextResponse =
-        aggregatedResponse.candidates[0].content.parts[0].text;
+        aggregatedResponse.candidates![0].content.parts[0].text;
 
       return fullTextResponse;
     },
