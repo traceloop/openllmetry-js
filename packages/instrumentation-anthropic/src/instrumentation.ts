@@ -234,7 +234,7 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
@@ -290,7 +290,7 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
               }
           }
         } catch (e) {
-          this._diag.warn(e);
+          this._diag.debug(e);
           this._config.exceptionLogger?.(e);
         }
       }
@@ -321,7 +321,7 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
             result.completion += chunk.completion;
           }
         } catch (e) {
-          this._diag.warn(e);
+          this._diag.debug(e);
           this._config.exceptionLogger?.(e);
         }
       }
@@ -425,7 +425,7 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 

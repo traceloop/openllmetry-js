@@ -178,7 +178,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
             JSON.stringify(options.filter ? options.filter : {}),
           );
         } catch (e) {
-          this._diag.warn(e);
+          this._diag.debug(e);
           this._config.exceptionLogger?.(e);
         }
 
@@ -268,7 +268,7 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
                   );
                 }
               } catch (e) {
-                this._diag.warn(e);
+                this._diag.debug(e);
                 this._config.exceptionLogger?.(e);
               }
               span.end();
