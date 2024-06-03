@@ -318,7 +318,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
@@ -472,7 +472,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
             result.choices[0].text += chunk.choices[0].text;
           }
         } catch (e) {
-          this._diag.warn(e);
+          this._diag.debug(e);
           this._config.exceptionLogger?.(e);
         }
       }
@@ -500,7 +500,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
           }
         }
       } catch (e) {
-        this._diag.warn(e);
+        this._diag.debug(e);
         this._config.exceptionLogger?.(e);
       }
 
@@ -650,7 +650,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
@@ -714,7 +714,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
 
       span.addEvent("logprobs", { logprobs: JSON.stringify(result) });
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
   }
@@ -729,7 +729,7 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
         encoding = encodingForModel(model as TiktokenModel);
         this._encodingCache.set(model, encoding);
       } catch (e) {
-        this._diag.warn(e);
+        this._diag.debug(e);
         this._config.exceptionLogger?.(e);
         return 0;
       }

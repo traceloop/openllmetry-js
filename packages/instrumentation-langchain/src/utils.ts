@@ -42,7 +42,7 @@ export function genericWrapper(
             );
           }
         } catch (e) {
-          this._diag.warn(e);
+          this._diag.debug(e);
           this._config.exceptionLogger?.(e);
         }
       }
@@ -77,7 +77,7 @@ export function genericWrapper(
                 }
               }
             } catch (e) {
-              this._diag.warn(e);
+              this._diag.debug(e);
               this._config.exceptionLogger?.(e);
             } finally {
               span.end();

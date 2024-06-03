@@ -218,7 +218,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
@@ -349,7 +349,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 

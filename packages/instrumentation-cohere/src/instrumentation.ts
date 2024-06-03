@@ -267,7 +267,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
@@ -388,7 +388,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
         }
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
   }
@@ -471,7 +471,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
         );
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
   }
@@ -541,7 +541,7 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
         );
       }
     } catch (e) {
-      this._diag.warn(e);
+      this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
   }

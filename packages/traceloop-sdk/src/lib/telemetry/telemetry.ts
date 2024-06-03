@@ -3,7 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 import { PostHog } from "posthog-node";
-import * as Sentry from "@sentry/node";
 import { version } from "../../../package.json";
 
 export class Telemetry {
@@ -32,10 +31,6 @@ export class Telemetry {
       this.posthog = new PostHog(
         "phc_JMTeAfG8OpaPsyHzSBtqquMvko1fmOHcW0gyqLCrF3t",
       );
-      Sentry.init({
-        dsn: "https://0cbbe354864172adc0fbd41621a7a541@o4505278734663680.ingest.us.sentry.io/4507114378166272",
-        defaultIntegrations: false,
-      });
     }
   }
 
@@ -85,7 +80,7 @@ export class Telemetry {
 
   public logException(error: Error) {
     if (this.telemetryEnabled) {
-      Sentry.captureException(error);
+      this.capture("error", { error: error.message, stack: error.stack || "" });
     }
   }
 }
