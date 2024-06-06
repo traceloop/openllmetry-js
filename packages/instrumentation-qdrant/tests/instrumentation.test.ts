@@ -22,7 +22,8 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
-import * as qdrant from "@qdrant/js-client-rest";
+import type * as qdrant_types from "@qdrant/js-client-rest";
+import * as assert from "assert";
 
 const COLLECTION_NAME = "some_collection";
 
@@ -32,15 +33,17 @@ describe("Test Qdrant instrumentation", function () {
   const provider = new BasicTracerProvider();
   let instrumentation: QdrantInstrumentation;
   let contextManager: AsyncHooksContextManager;
-  const qdrantClient: qdrant.QdrantClient = new qdrant.QdrantClient({
-    url: "http://127.0.0.1:6333",
-  });
+  let qdrantClient: qdrant_types.QdrantClient;
 
   before(async () => {
     provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new QdrantInstrumentation({ traceContent: true });
     instrumentation.setTracerProvider(provider);
-    instrumentation.manuallyInstrument(qdrant);
+
+    const qdrant_module = await import("@qdrant/js-client-rest");
+    qdrantClient = new qdrant_module.QdrantClient({
+      url: "http://127.0.0.1:6333",
+    });
   });
 
   beforeEach(async function () {
@@ -74,15 +77,17 @@ describe("Test Qdrant instrumentation", function () {
       },
     };
 
-    qdrantClient.upsert(COLLECTION_NAME, points);
+    await qdrantClient.upsert(COLLECTION_NAME, points);
 
     const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].name, "qdrant.upsert");
 
-    // const attributes = spans[0].attributes;
+    const attributes = spans[0].attributes;
 
-    // assert.strictEqual(
-    //   attributes["db.qdrant.upsert.points_count"],
-    //   JSON.stringify(points.batch.ids.length),
-    // );
+    assert.strictEqual(
+      attributes["db.qdrant.upsert.points_count"],
+      JSON.stringify(points.batch.ids.length),
+    );
   });
 });

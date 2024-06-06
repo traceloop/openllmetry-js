@@ -27,7 +27,7 @@ import {
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
 import { QdrantInstrumentationConfig } from "./types";
-import * as qdrant from "@qdrant/js-client-rest";
+import type * as qdrant from "@qdrant/js-client-rest";
 import { version } from "../package.json";
 
 export class QdrantInstrumentation extends InstrumentationBase<any> {
