@@ -24,8 +24,10 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import type * as qdrant_types from "@qdrant/js-client-rest";
 import * as assert from "assert";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { v4 as uuidv4 } from "uuid";
 
-const COLLECTION_NAME = "some_collection";
+const COLLECTION_NAME = uuidv4();
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -44,12 +46,6 @@ describe("Test Qdrant instrumentation", function () {
     qdrantClient = new qdrant_module.QdrantClient({
       url: "http://127.0.0.1:6333",
     });
-  });
-
-  beforeEach(async function () {
-    contextManager = new AsyncHooksContextManager().enable();
-    context.setGlobalContextManager(contextManager);
-    memoryExporter.reset();
 
     await qdrantClient.createCollection(COLLECTION_NAME, {
       vectors: {
@@ -59,21 +55,41 @@ describe("Test Qdrant instrumentation", function () {
     });
   });
 
+  beforeEach(async function () {
+    contextManager = new AsyncHooksContextManager().enable();
+    context.setGlobalContextManager(contextManager);
+    memoryExporter.reset();
+  });
+
   afterEach(async () => {
-    await qdrantClient.deleteCollection(COLLECTION_NAME);
     memoryExporter.reset();
     context.disable();
   });
 
-  it("should set span attributes for Upsert", async () => {
+  this.afterAll(async () => {
+    await qdrantClient.deleteCollection(COLLECTION_NAME);
+  });
+
+  it("should set span attributes for upsert", async () => {
     const points = {
       batch: {
-        ids: [32, 23],
+        ids: [32, 23, 42, 24, 25, 26],
         vectors: [
           [1.5, 2.9, 3.4],
           [9.8, 2.3, 2.9],
+          [0.3, 0.3, 0.3],
+          [1.5, 2.9, 3.4],
+          [9.8, 2.3, 2.9],
+          [0.3, 0.3, 0.3],
         ],
-        payloads: [{ style: "style3" }, { style: "style4" }],
+        payloads: [
+          { style: "style3" },
+          { style: "style4" },
+          { style: "style5" },
+          { style: "style6" },
+          { style: "style7" },
+          { style: "style8" },
+        ],
       },
     };
 
@@ -81,13 +97,85 @@ describe("Test Qdrant instrumentation", function () {
 
     const spans = memoryExporter.getFinishedSpans();
     assert.strictEqual(spans.length, 1);
-    assert.strictEqual(spans[0].name, `qdrant.${COLLECTION_NAME}.upsert`);
+    assert.strictEqual(spans[0].name, `qdrant.upsert`);
 
     const attributes = spans[0].attributes;
-
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
+    assert.strictEqual(
+      attributes["db.qdrant.upsert.collection_name"],
+      COLLECTION_NAME,
+    );
     assert.strictEqual(
       attributes["db.qdrant.upsert.points_count"],
-      JSON.stringify(points.batch.ids.length),
+      points.batch.ids.length,
     );
+  });
+
+  it("should set attributes in span for search", async () => {
+    await qdrantClient.search(COLLECTION_NAME, {
+      vector: [0.3, 0.3, 0.3],
+      limit: 3,
+      with_payload: true,
+      with_vector: true,
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].name, `qdrant.search`);
+
+    const attributes = spans[0].attributes;
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
+    assert.strictEqual(
+      attributes["db.qdrant.search.collection_name"],
+      COLLECTION_NAME,
+    );
+
+    const span = spans[0];
+    assert.strictEqual(span.events.length, 5);
+    assert.strictEqual(span.events[0].name, "qdrant.search.request");
+    assert.strictEqual(span.events[1].name, "qdrant.search.result");
+    assert.strictEqual(span.events[2].name, "qdrant.search.result.0");
+    assert.strictEqual(span.events[3].name, "qdrant.search.result.1");
+    assert.strictEqual(span.events[4].name, "qdrant.search.result.2");
+  });
+
+  it("should set span attributes for retrieve", async () => {
+    await qdrantClient.retrieve(COLLECTION_NAME, {
+      ids: [32, 23, 42],
+      with_payload: true,
+      with_vector: true,
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].name, `qdrant.retrieve`);
+
+    const attributes = spans[0].attributes;
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
+    assert.strictEqual(
+      attributes["db.qdrant.retrieve.collection_name"],
+      COLLECTION_NAME,
+    );
+    assert.strictEqual(attributes["db.qdrant.retrieve.ids_count"], 3);
+    assert.strictEqual(attributes["db.qdrant.retrieve.with_payload"], true);
+    assert.strictEqual(attributes["db.qdrant.retrieve.with_vector"], true);
+  });
+
+  it("should set span attributes for delete", async () => {
+    await qdrantClient.delete(COLLECTION_NAME, {
+      points: [32, 23, 42, 24, 25, 26],
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].name, `qdrant.delete`);
+
+    const attributes = spans[0].attributes;
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
+    assert.strictEqual(
+      attributes["db.qdrant.delete.collection_name"],
+      COLLECTION_NAME,
+    );
+    assert.strictEqual(attributes["db.qdrant.delete.ids_count"], 6);
   });
 });

@@ -221,10 +221,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
         params.batch.ids.length,
       );
     } else {
-      span.setAttribute(
-        `db.qdrant.upsert.points_count`,
-        params.points.length,
-      );
+      span.setAttribute(`db.qdrant.upsert.points_count`, params.points.length);
     }
   }
 
@@ -259,10 +256,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
         "db.qdrant.delete.point_ids",
         JSON.stringify(params.points),
       );
-      span.setAttribute(
-        "db.qdrant.delete.ids_count",
-        params.points.length,
-      );
+      span.setAttribute("db.qdrant.delete.ids_count", params.points.length);
     }
   }
 
@@ -274,20 +268,11 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     span.setAttribute("db.qdrant.retrieve.collection_name", collectionName);
     span.setAttribute(
       "db.qdrant.retrieve.point_ids",
-      JSON.stringify(params.ids)
+      JSON.stringify(params.ids),
     );
-    span.setAttribute(
-      "db.qdrant.retrieve.ids_count",
-      params.ids.length,
-    );
-    span.setAttribute(
-      "db.qdrant.retrieve.with_payload",
-      !!params.with_payload,
-    );
-    span.setAttribute(
-      "db.qdrant.retrieve.with_vector",
-      !!params.with_vector,
-    );
+    span.setAttribute("db.qdrant.retrieve.ids_count", params.ids.length);
+    span.setAttribute("db.qdrant.retrieve.with_payload", !!params.with_payload);
+    span.setAttribute("db.qdrant.retrieve.with_vector", !!params.with_vector);
   }
 
   private _setSearchAttributes(
