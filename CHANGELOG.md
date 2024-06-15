@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.7](https://github.com/traceloop/openllmetry-js/compare/v0.8.6...v0.8.7) (2024-06-12)
+
+### Bug Fixes
+
+- **sdk:** propagate association properties within a workflow ([#318](https://github.com/traceloop/openllmetry-js/issues/318)) ([3e530bc](https://github.com/traceloop/openllmetry-js/commit/3e530bcd3f1892a2f4c5e89c59609a117742b358))
+
 ## [0.8.6](https://github.com/traceloop/openllmetry-js/compare/v0.8.5...v0.8.6) (2024-06-03)
 
 ### Bug Fixes

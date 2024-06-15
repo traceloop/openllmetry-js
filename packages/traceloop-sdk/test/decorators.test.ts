@@ -76,7 +76,7 @@ describe("Test SDK Decorators", () => {
   it("should create spans for workflows using withWorkflow syntax", async () => {
     const jokeSubject = "OpenTelemetry";
     const result = await traceloop.withWorkflow(
-      { name: "sample_chat" },
+      { name: "sample_chat", associationProperties: { userId: "123" } },
       async () => {
         const chatCompletion = await openai.chat.completions.create({
           messages: [
@@ -111,6 +111,12 @@ describe("Test SDK Decorators", () => {
       "sample_chat",
     );
     assert.strictEqual(
+      workflowSpan.attributes[
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
+      ],
+      "123",
+    );
+    assert.strictEqual(
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
       JSON.stringify({ args: [], kwargs: { jokeSubject: "OpenTelemetry" } }),
     );
@@ -119,6 +125,12 @@ describe("Test SDK Decorators", () => {
       JSON.stringify(result),
     );
     assert.ok(chatSpan);
+    assert.strictEqual(
+      chatSpan.attributes[
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
+      ],
+      "123",
+    );
     assert.strictEqual(
       chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
       "sample_chat",

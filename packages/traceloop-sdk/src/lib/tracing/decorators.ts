@@ -1,11 +1,14 @@
 import { Span, context } from "@opentelemetry/api";
-import { getTracer, WORKFLOW_NAME_KEY } from "./tracing";
+import {
+  ASSOCATION_PROPERTIES_KEY,
+  getTracer,
+  WORKFLOW_NAME_KEY,
+} from "./tracing";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
-import { withAssociationProperties } from "./association";
 import { shouldSendTraces } from ".";
 import { Telemetry } from "../telemetry/telemetry";
 
@@ -44,8 +47,14 @@ function withEntity<
       overrideTraceContent,
     );
   }
+  if (associationProperties) {
+    entityContext = entityContext.setValue(
+      ASSOCATION_PROPERTIES_KEY,
+      associationProperties,
+    );
+  }
 
-  return withAssociationProperties(associationProperties ?? {}, () =>
+  return context.with(entityContext, () =>
     getTracer().startActiveSpan(
       `${name}.${type}`,
       {},
