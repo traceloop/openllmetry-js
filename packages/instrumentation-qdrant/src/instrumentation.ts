@@ -29,6 +29,23 @@ import {
 import { QdrantInstrumentationConfig } from "./types";
 import type * as qdrant from "@qdrant/js-client-rest";
 import { version } from "../package.json";
+import {
+  SpanAttributes,
+  EventAttributes,
+} from "@traceloop/ai-semantic-conventions";
+
+const UPSERT = "upsert";
+const DELETE = "delete";
+const RETRIEVE = "retrieve";
+const SEARCH = "search";
+
+type UpsertRequest = qdrant.Schemas["PointInsertOperations"];
+type DeleteRequest = qdrant.Schemas["PointsSelector"];
+type RetrieveRequest = qdrant.Schemas["PointRequest"];
+type SearchRequest = qdrant.Schemas["SearchRequest"];
+type SearchResponse = Awaited<
+  ReturnType<typeof qdrant.QdrantClient.prototype.search>
+>;
 
 export class QdrantInstrumentation extends InstrumentationBase<any> {
   protected declare _config: QdrantInstrumentationConfig;
@@ -58,19 +75,19 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   }
 
   private wrap(module: typeof qdrant) {
-    this._wrap(module.QdrantClient.prototype, "upsert", this.wrapperMethod());
-    this._wrap(module.QdrantClient.prototype, "retrieve", this.wrapperMethod());
-    this._wrap(module.QdrantClient.prototype, "search", this.wrapperMethod());
-    this._wrap(module.QdrantClient.prototype, "delete", this.wrapperMethod());
+    this._wrap(module.QdrantClient.prototype, UPSERT, this.wrapperMethod());
+    this._wrap(module.QdrantClient.prototype, RETRIEVE, this.wrapperMethod());
+    this._wrap(module.QdrantClient.prototype, SEARCH, this.wrapperMethod());
+    this._wrap(module.QdrantClient.prototype, DELETE, this.wrapperMethod());
 
     return module;
   }
 
   private unwrap(module: typeof qdrant) {
-    this._unwrap(module.QdrantClient.prototype, "upsert");
-    this._unwrap(module.QdrantClient.prototype, "retrieve");
-    this._unwrap(module.QdrantClient.prototype, "search");
-    this._unwrap(module.QdrantClient.prototype, "delete");
+    this._unwrap(module.QdrantClient.prototype, UPSERT);
+    this._unwrap(module.QdrantClient.prototype, RETRIEVE);
+    this._unwrap(module.QdrantClient.prototype, SEARCH);
+    this._unwrap(module.QdrantClient.prototype, DELETE);
 
     return module;
   }
@@ -93,95 +110,73 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
               return original.apply(this, args);
             });
           },
-          () => null,
+          (e) => {
+            if (e) {
+              plugin._diag.error(`Error in Qdrant instrumentation`, e);
+            }
+          },
         );
-        const wrappedPromise = plugin._wrapPromise(
-          original.name,
-          span,
-          execPromise,
-        );
+        const wrappedPromise = execPromise
+          .then((result: any) => {
+            return new Promise((resolve) => {
+              plugin._endSpan({ methodName: original.name, span, result });
+              resolve(result);
+            });
+          })
+          .catch((error: Error) => {
+            return new Promise((_, reject) => {
+              span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message: error.message,
+              });
+              span.end();
+              reject(error);
+            });
+          });
         return context.bind(execContext, wrappedPromise as any);
       };
     };
   }
-
-  private _wrapPromise<T>(
-    methodName: string,
-    span: Span,
-    promise: Promise<T>,
-  ): Promise<T> {
-    return promise
-      .then(async (result) => {
-        const awaitedResult = await result;
-
-        this._endSpan({
-          methodName,
-          span,
-          result: awaitedResult,
-        });
-
-        return new Promise<T>((resolve) => {
-          resolve(result);
-        });
-      })
-      .catch((error: Error) => {
-        return new Promise<T>((_, reject) => {
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: error.message,
-          });
-          span.recordException(error);
-          reject(error);
-        });
-      })
-      .finally(() => {
-        span.end();
-      });
-  }
-
   private _startSpan({
     collectionName,
     params,
     methodName,
   }: {
     collectionName: string;
-    params:
-      | qdrant.Schemas["PointInsertOperations"]
-      | qdrant.Schemas["PointsSelector"]
-      | qdrant.Schemas["PointRequest"]
-      | qdrant.Schemas["SearchRequest"];
-
+    params: UpsertRequest | DeleteRequest | RetrieveRequest | SearchRequest;
     methodName: string;
   }): Span {
-    const span = this.tracer.startSpan(
-      `qdrant.${collectionName}.${methodName}`,
-      {
-        kind: SpanKind.CLIENT,
-      },
-    );
+    const spanName = `qdrant.${methodName}`;
+    const span = this.tracer.startSpan(spanName, {
+      kind: SpanKind.CLIENT,
+    });
+    span.setAttribute(SpanAttributes.VECTOR_DB_VENDOR, "Qdrant");
 
     try {
       if (this._config.traceContent) {
-        if (methodName === "upsert") {
+        if (methodName === UPSERT) {
           this._setUpsertAttributes(
             span,
-            params as qdrant.Schemas["PointInsertOperations"],
-            methodName,
+            collectionName,
+            params as UpsertRequest,
           );
-        } else if (methodName === "delete") {
+        } else if (methodName === DELETE) {
           this._setDeleteAttributes(
             span,
-            params as qdrant.Schemas["PointsSelector"],
+            collectionName,
+            params as DeleteRequest,
           );
-        } else if (methodName === "retrieve") {
+        } else if (methodName === RETRIEVE) {
           this._setRetrieveAttributes(
             span,
-            params as qdrant.Schemas["PointRequest"],
+            collectionName,
+            params as RetrieveRequest,
           );
-        } else if (methodName === "search") {
+        } else if (methodName === SEARCH) {
           this._setSearchAttributes(
             span,
-            params as qdrant.Schemas["SearchRequest"],
+            collectionName,
+            params as SearchRequest,
           );
         }
       }
@@ -193,28 +188,52 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     return span;
   }
 
+  private _endSpan({
+    methodName,
+    span,
+    result,
+  }: {
+    methodName: string;
+    span: Span;
+    result: any;
+  }) {
+    try {
+      if (methodName === SEARCH) {
+        this._setSearchResultAttributes(span, result as SearchResponse);
+      }
+      span.setStatus({ code: SpanStatusCode.OK });
+      span.end();
+    } catch (e) {
+      this._diag.debug(e);
+      this._config.exceptionLogger?.(e);
+    }
+  }
+
   private _setUpsertAttributes(
     span: Span,
+    collectionName: string,
     params: qdrant.Schemas["PointInsertOperations"],
-    method: "add" | "update" | "upsert",
   ) {
+    span.setAttribute("db.qdrant.upsert.collection_name", collectionName);
     if ("batch" in params) {
       span.setAttribute(
-        `db.qdrant.${method}.points_count`,
-        JSON.stringify(params.batch.ids?.length),
+        `db.qdrant.upsert.points_count`,
+        params.batch.ids.length,
       );
     } else {
       span.setAttribute(
-        `db.qdrant.${method}.points_count`,
-        JSON.stringify(params.points?.length),
+        `db.qdrant.upsert.points_count`,
+        params.points.length,
       );
     }
   }
 
   private _setDeleteAttributes(
     span: Span,
+    collectionName: string,
     params: qdrant.Schemas["PointsSelector"],
   ) {
+    span.setAttribute("db.qdrant.delete.collection_name", collectionName);
     if ("filter" in params) {
       span.setAttribute(
         "db.qdrant.delete.filter.must",
@@ -240,62 +259,104 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
         "db.qdrant.delete.point_ids",
         JSON.stringify(params.points),
       );
+      span.setAttribute(
+        "db.qdrant.delete.ids_count",
+        params.points.length,
+      );
     }
   }
 
   private _setRetrieveAttributes(
     span: Span,
+    collectionName: string,
     params: qdrant.Schemas["PointRequest"],
   ) {
+    span.setAttribute("db.qdrant.retrieve.collection_name", collectionName);
+    span.setAttribute(
+      "db.qdrant.retrieve.point_ids",
+      JSON.stringify(params.ids)
+    );
     span.setAttribute(
       "db.qdrant.retrieve.ids_count",
-      JSON.stringify(params.ids?.length),
+      params.ids.length,
     );
     span.setAttribute(
       "db.qdrant.retrieve.with_payload",
-      JSON.stringify(params.with_payload),
+      !!params.with_payload,
     );
     span.setAttribute(
       "db.qdrant.retrieve.with_vector",
-      JSON.stringify(params.with_vector),
+      !!params.with_vector,
     );
   }
 
   private _setSearchAttributes(
     span: Span,
+    collectionName: string,
     params: qdrant.Schemas["SearchRequest"],
   ) {
-    span.setAttribute(
-      "db.qdrant.search.query_vector",
+    span.setAttribute("db.qdrant.search.collection_name", collectionName);
+    const query_request_event = span.addEvent("qdrant.search.request");
+    query_request_event.setAttribute(
+      EventAttributes.VECTOR_DB_QUERY_TOP_K,
+      params.limit,
+    );
+    query_request_event.setAttribute(
+      EventAttributes.VECTOR_DB_QUERY_INCLUDE_VALUES,
+      !!params.with_vector,
+    );
+    query_request_event.setAttribute(
+      EventAttributes.VECTOR_DB_QUERY_INCLUDE_METADATA,
+      !!params.with_payload,
+    );
+    query_request_event.setAttribute(
+      EventAttributes.VECTOR_DB_QUERY_EMBEDDINGS_VECTOR,
       JSON.stringify(params.vector),
     );
-    span.setAttribute("db.qdrant.search.limit", JSON.stringify(params.limit));
-    span.setAttribute("db.qdrant.search.offset", JSON.stringify(params.offset));
-    span.setAttribute(
-      "db.qdrant.search.score_threshold",
-      JSON.stringify(params.score_threshold),
+    query_request_event.setAttribute(
+      EventAttributes.VECTOR_DB_QUERY_METADATA_FILTER,
+      JSON.stringify(params.filter ?? {}),
     );
-
-    span.setAttribute("db.qdrant.search.filter", JSON.stringify(params.filter));
   }
 
-  private _endSpan({
-    methodName,
-    span,
-    result,
-  }: {
-    methodName: string;
-    span: Span;
-    result: any;
-  }): void {
-    try {
-      // Pass
-    } catch (e) {
-      this._diag.warn(e);
-      this._config.exceptionLogger?.(e);
-    }
+  private _setSearchResultAttributes(span: Span, result: SearchResponse) {
+    const qdrant_result_event = span.addEvent("qdrant.search.result");
 
-    span.setStatus({ code: SpanStatusCode.OK });
-    span.end();
+    qdrant_result_event.setAttribute(
+      EventAttributes.VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH,
+      result.length,
+    );
+
+    for (let i = 0; i < result.length; i++) {
+      const match = result[i];
+      const search_result_match_event = qdrant_result_event.addEvent(
+        `qdrant.search.result.${i}`,
+      );
+      search_result_match_event.setAttribute(
+        EventAttributes.VECTOR_DB_QUERY_RESULT_SCORE.replace(
+          "{i}",
+          i.toString(),
+        ),
+        match.score,
+      );
+      search_result_match_event.setAttribute(
+        EventAttributes.VECTOR_DB_QUERY_RESULT_ID.replace("{i}", i.toString()),
+        match.id,
+      );
+      search_result_match_event.setAttribute(
+        EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
+          "{i}",
+          i.toString(),
+        ),
+        JSON.stringify(match.vector),
+      );
+      search_result_match_event.setAttribute(
+        EventAttributes.VECTOR_DB_QUERY_RESULT_METADATA.replace(
+          "{i}",
+          i.toString(),
+        ),
+        JSON.stringify(match.payload),
+      );
+    }
   }
 }
