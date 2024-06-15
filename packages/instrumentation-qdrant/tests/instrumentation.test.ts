@@ -51,7 +51,7 @@ describe("Test Qdrant instrumentation", function () {
     context.setGlobalContextManager(contextManager);
     memoryExporter.reset();
 
-    qdrantClient.createCollection(COLLECTION_NAME, {
+    await qdrantClient.createCollection(COLLECTION_NAME, {
       vectors: {
         size: 3,
         distance: "Cosine",
@@ -81,7 +81,7 @@ describe("Test Qdrant instrumentation", function () {
 
     const spans = memoryExporter.getFinishedSpans();
     assert.strictEqual(spans.length, 1);
-    assert.strictEqual(spans[0].name, "qdrant.upsert");
+    assert.strictEqual(spans[0].name, `qdrant.${COLLECTION_NAME}.upsert`);
 
     const attributes = spans[0].attributes;
 
