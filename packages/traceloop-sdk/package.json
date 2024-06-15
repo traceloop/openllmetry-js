@@ -47,7 +47,7 @@
     "@traceloop/instrumentation-langchain": "^0.8.6",
     "@traceloop/instrumentation-llamaindex": "^0.8.0",
     "@traceloop/instrumentation-openai": "^0.8.6",
-    "@traceloop/instrumentation-qdrant": "^0.8.1",
+    "@traceloop/instrumentation-qdrant": "^0.8.6",
     "@traceloop/instrumentation-pinecone": "^0.8.6",
     "@traceloop/instrumentation-vertexai": "^0.8.6",
     "@types/nunjucks": "^3.2.5",
