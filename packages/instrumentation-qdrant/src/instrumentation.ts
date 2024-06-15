@@ -154,30 +154,37 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
 
     try {
       if (this._config.traceContent) {
-        if (methodName === UPSERT) {
-          this._setUpsertAttributes(
-            span,
-            collectionName,
-            params as UpsertRequest,
-          );
-        } else if (methodName === DELETE) {
-          this._setDeleteAttributes(
-            span,
-            collectionName,
-            params as DeleteRequest,
-          );
-        } else if (methodName === RETRIEVE) {
-          this._setRetrieveAttributes(
-            span,
-            collectionName,
-            params as RetrieveRequest,
-          );
-        } else if (methodName === SEARCH) {
-          this._setSearchAttributes(
-            span,
-            collectionName,
-            params as SearchRequest,
-          );
+        switch (methodName) {
+          case UPSERT:
+            this._setUpsertAttributes(
+              span,
+              collectionName,
+              params as UpsertRequest,
+            );
+            break;
+          case DELETE:
+            this._setDeleteAttributes(
+              span,
+              collectionName,
+              params as DeleteRequest,
+            );
+            break;
+          case RETRIEVE:
+            this._setRetrieveAttributes(
+              span,
+              collectionName,
+              params as RetrieveRequest,
+            );
+            break;
+          case SEARCH:
+            this._setSearchAttributes(
+              span,
+              collectionName,
+              params as SearchRequest,
+            );
+            break;
+          default:
+            break;
         }
       }
     } catch (e) {
@@ -198,8 +205,10 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     result: any;
   }) {
     try {
-      if (methodName === SEARCH) {
-        this._setSearchResultAttributes(span, result as SearchResponse);
+      switch (methodName) {
+        case SEARCH: this._setSearchResultAttributes(span, result as SearchResponse);
+          break;
+        default: break;
       }
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
@@ -212,7 +221,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   private _setUpsertAttributes(
     span: Span,
     collectionName: string,
-    params: qdrant.Schemas["PointInsertOperations"],
+    params: UpsertRequest,
   ) {
     span.setAttribute("db.qdrant.upsert.collection_name", collectionName);
     if ("batch" in params) {
