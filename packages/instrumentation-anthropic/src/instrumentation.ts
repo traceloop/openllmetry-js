@@ -47,7 +47,7 @@ import type {
 } from "@anthropic-ai/sdk/resources/messages";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
-export class AnthropicInstrumentation extends InstrumentationBase<any> {
+export class AnthropicInstrumentation extends InstrumentationBase {
   protected declare _config: AnthropicInstrumentationConfig;
 
   constructor(config: AnthropicInstrumentationConfig = {}) {
@@ -73,8 +73,8 @@ export class AnthropicInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "@anthropic-ai/sdk",
       [">=0.9.1"],
       this.patch.bind(this),

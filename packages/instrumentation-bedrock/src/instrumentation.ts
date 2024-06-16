@@ -36,7 +36,7 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 import { version } from "../package.json";
 
-export class BedrockInstrumentation extends InstrumentationBase<any> {
+export class BedrockInstrumentation extends InstrumentationBase {
   protected declare _config: BedrockInstrumentationConfig;
 
   constructor(config: BedrockInstrumentationConfig = {}) {
@@ -47,8 +47,8 @@ export class BedrockInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "@aws-sdk/client-bedrock-runtime",
       [">=3.499.0"],
       this.wrap.bind(this),

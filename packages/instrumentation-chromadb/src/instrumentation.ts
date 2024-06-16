@@ -36,7 +36,7 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 import { version } from "../package.json";
 
-export class ChromaDBInstrumentation extends InstrumentationBase<any> {
+export class ChromaDBInstrumentation extends InstrumentationBase {
   protected declare _config: ChromaDBInstrumentationConfig;
 
   constructor(config: ChromaDBInstrumentationConfig = {}) {
@@ -47,8 +47,8 @@ export class ChromaDBInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "chromadb",
       ["^1.8.1"],
       this.wrap.bind(this),

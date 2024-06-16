@@ -35,7 +35,7 @@ import {
 import type * as vertexAI from "@google-cloud/vertexai";
 import { version } from "../package.json";
 
-export class VertexAIInstrumentation extends InstrumentationBase<any> {
+export class VertexAIInstrumentation extends InstrumentationBase {
   protected declare _config: VertexAIInstrumentationConfig;
 
   constructor(config: VertexAIInstrumentationConfig = {}) {
@@ -46,8 +46,8 @@ export class VertexAIInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const vertexAIModule = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const vertexAIModule = new InstrumentationNodeModuleDefinition(
       "@google-cloud/vertexai",
       [">=1.1.0"],
       this.wrap.bind(this),

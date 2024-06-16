@@ -37,7 +37,7 @@ import {
 import { version } from "../package.json";
 
 type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
-export class CohereInstrumentation extends InstrumentationBase<any> {
+export class CohereInstrumentation extends InstrumentationBase {
   protected declare _config: CohereInstrumentationConfig;
 
   constructor(config: CohereInstrumentationConfig = {}) {
@@ -48,8 +48,8 @@ export class CohereInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "cohere-ai",
       [">=7.7.5"],
       this.wrap.bind(this),
