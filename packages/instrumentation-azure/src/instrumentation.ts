@@ -40,7 +40,7 @@ import type {
 } from "@azure/openai";
 import { version } from "../package.json";
 
-export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
+export class AzureOpenAIInstrumentation extends InstrumentationBase {
   protected declare _config: AzureOpenAIInstrumentationConfig;
 
   constructor(config: AzureOpenAIInstrumentationConfig = {}) {
@@ -67,8 +67,8 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase<any> {
     );
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "@azure/openai",
       [">=1.0.0-beta.1"],
       this.patch.bind(this),

@@ -47,7 +47,7 @@ import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
 import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 
-export class OpenAIInstrumentation extends InstrumentationBase<any> {
+export class OpenAIInstrumentation extends InstrumentationBase {
   protected declare _config: OpenAIInstrumentationConfig;
 
   constructor(config: OpenAIInstrumentationConfig = {}) {
@@ -87,8 +87,8 @@ export class OpenAIInstrumentation extends InstrumentationBase<any> {
     }
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "openai",
       [">=3.1.0 <5"],
       this.patch.bind(this),
