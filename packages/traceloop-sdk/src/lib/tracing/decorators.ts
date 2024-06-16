@@ -79,15 +79,13 @@ function withEntity<
             ) {
               span.setAttribute(
                 SpanAttributes.TRACELOOP_ENTITY_INPUT,
-                JSON.stringify({ args: [], kwargs: input[0] }),
+                serialize({ args: [], kwargs: input[0] }),
               );
             } else {
               span.setAttribute(
                 SpanAttributes.TRACELOOP_ENTITY_INPUT,
-                JSON.stringify({
-                  args: input.map((arg) =>
-                    arg instanceof Map ? Array.from(arg.entries()) : arg,
-                  ),
+                serialize({
+                  args: input,
                   kwargs: {},
                 }),
               );
@@ -107,12 +105,13 @@ function withEntity<
                   serialize(resolvedRes),
                 );
               }
-              return resolvedRes;
             } catch (error) {
               Telemetry.getInstance().logException(error);
             } finally {
               span.end();
             }
+
+            return resolvedRes;
           });
         }
         try {
@@ -122,12 +121,13 @@ function withEntity<
               serialize(res),
             );
           }
-          return res;
         } catch (error) {
           Telemetry.getInstance().logException(error);
         } finally {
           span.end();
         }
+
+        return res;
       },
     ),
   );
@@ -248,10 +248,25 @@ export function tool(
   return entity(TraceloopSpanKindValues.TOOL, config ?? {});
 }
 
-function serialize(input: unknown): string {
+function cleanInput(input: unknown): unknown {
   if (input instanceof Map) {
-    return JSON.stringify(Array.from(input.entries()));
-  } else {
-    return JSON.stringify(input);
+    return Array.from(input.entries());
+  } else if (Array.isArray(input)) {
+    return input.map((value) => cleanInput(value));
+  } else if (!input) {
+    return input;
+  } else if (typeof input === "object") {
+    // serialize object one by one
+    const output: any = {};
+    Object.entries(input as any).forEach(([key, value]) => {
+      output[key] = cleanInput(value);
+    });
+    return output;
   }
+
+  return input;
+}
+
+function serialize(input: unknown): string {
+  return JSON.stringify(cleanInput(input));
 }
