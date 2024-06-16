@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.8](https://github.com/traceloop/openllmetry-js/compare/v0.8.7...v0.8.8) (2024-06-16)
+
+### Bug Fixes
+
+- **sdk:** serialization of Map in sub-objects of inputs and outputs ([#323](https://github.com/traceloop/openllmetry-js/issues/323)) ([49b032a](https://github.com/traceloop/openllmetry-js/commit/49b032af74d4d5dd6d79654e6ffc0b15f50fb983))
+
 ## [0.8.7](https://github.com/traceloop/openllmetry-js/compare/v0.8.6...v0.8.7) (2024-06-12)
 
 ### Bug Fixes
