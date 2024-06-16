@@ -233,10 +233,10 @@ describe("Test SDK Decorators", () => {
     class TestOpenAI {
       constructor(private model = "gpt-3.5-turbo") {}
 
-      @traceloop.workflow((thisArg, things) => ({
+      @traceloop.workflow((thisArg, { things }) => ({
         name: `${(thisArg as TestOpenAI).model}_${(things as Map<string, string>).get("joke")}`,
       }))
-      async chat(things: Map<string, string>) {
+      async chat({ things }: { things: Map<string, string> }) {
         const generations: Map<string, string> = new Map();
         for await (const [key, value] of things) {
           const chatCompletion = await openai.chat.completions.create({
@@ -256,12 +256,12 @@ describe("Test SDK Decorators", () => {
     }
 
     const testOpenAI = new TestOpenAI();
-    const result = await testOpenAI.chat(
-      new Map([
+    const result = await testOpenAI.chat({
+      things: new Map([
         ["joke", "OpenTelemetry"],
         ["fact", "JavaScript"],
       ]),
-    );
+    });
 
     const spans = memoryExporter.getFinishedSpans();
     const workflowName = "gpt-3.5-turbo_OpenTelemetry";
@@ -287,13 +287,13 @@ describe("Test SDK Decorators", () => {
     assert.strictEqual(
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
       JSON.stringify({
-        args: [
-          [
+        args: [],
+        kwargs: {
+          things: [
             ["joke", "OpenTelemetry"],
             ["fact", "JavaScript"],
           ],
-        ],
-        kwargs: {},
+        },
       }),
     );
     assert.strictEqual(
