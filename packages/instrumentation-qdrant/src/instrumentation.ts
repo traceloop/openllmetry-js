@@ -58,8 +58,8 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "@qdrant/js-client-rest",
       ["^1.9"],
       this.wrap.bind(this),
