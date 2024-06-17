@@ -206,9 +206,11 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   }) {
     try {
       switch (methodName) {
-        case SEARCH: this._setSearchResultAttributes(span, result as SearchResponse);
+        case SEARCH:
+          this._setSearchResultAttributes(span, result as SearchResponse);
           break;
-        default: break;
+        default:
+          break;
       }
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
