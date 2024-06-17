@@ -26,7 +26,7 @@ import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
 import { version } from "../package.json";
 
-export class LangChainInstrumentation extends InstrumentationBase<any> {
+export class LangChainInstrumentation extends InstrumentationBase {
   protected declare _config: LangChainInstrumentationConfig;
 
   constructor(config: LangChainInstrumentationConfig = {}) {
@@ -56,20 +56,20 @@ export class LangChainInstrumentation extends InstrumentationBase<any> {
     }
   }
 
-  protected init(): InstrumentationModuleDefinition<any>[] {
-    const chainModule = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition[] {
+    const chainModule = new InstrumentationNodeModuleDefinition(
       "langchain/chains.cjs",
       [">=0.1.7"],
       this.patchChainModule.bind(this),
       this.unpatchChainModule.bind(this),
     );
-    const agentModule = new InstrumentationNodeModuleDefinition<any>(
+    const agentModule = new InstrumentationNodeModuleDefinition(
       "langchain/agents.cjs",
       [">=0.1.7"],
       this.patchAgentModule.bind(this),
       this.unpatchAgentModule.bind(this),
     );
-    const toolsModule = new InstrumentationNodeModuleDefinition<any>(
+    const toolsModule = new InstrumentationNodeModuleDefinition(
       "langchain/tools.cjs",
       [">=0.1.7"],
       this.patchToolsModule.bind(this),

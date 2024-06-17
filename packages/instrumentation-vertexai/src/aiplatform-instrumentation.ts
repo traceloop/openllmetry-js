@@ -36,7 +36,7 @@ import type * as aiplatform from "@google-cloud/aiplatform";
 import type { CallOptions, Callback } from "google-gax";
 import { version } from "../package.json";
 
-export class AIPlatformInstrumentation extends InstrumentationBase<any> {
+export class AIPlatformInstrumentation extends InstrumentationBase {
   protected declare _config: AIPlatformInstrumentationConfig;
 
   constructor(config: AIPlatformInstrumentationConfig = {}) {
@@ -47,8 +47,8 @@ export class AIPlatformInstrumentation extends InstrumentationBase<any> {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const aiPlatformModule = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const aiPlatformModule = new InstrumentationNodeModuleDefinition(
       "@google-cloud/aiplatform",
       [">=3.10.0"],
       this.wrap.bind(this),

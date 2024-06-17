@@ -29,7 +29,7 @@ import {
 import { version } from "../package.json";
 import { PineconeInstrumentationConfig } from "./types";
 
-export class PineconeInstrumentation extends InstrumentationBase<any> {
+export class PineconeInstrumentation extends InstrumentationBase {
   constructor(config: PineconeInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-pinecone", version, config);
   }
@@ -42,8 +42,8 @@ export class PineconeInstrumentation extends InstrumentationBase<any> {
     this.patch(module);
   }
 
-  protected init(): InstrumentationModuleDefinition<any> {
-    const module = new InstrumentationNodeModuleDefinition<any>(
+  protected init(): InstrumentationModuleDefinition {
+    const module = new InstrumentationNodeModuleDefinition(
       "@pinecone-database/pinecone",
       [">=2.0.1"],
       this.patch.bind(this),
