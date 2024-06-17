@@ -76,7 +76,7 @@
     "cohere-ai": "^7.7.5",
     "esbuild": "^0.20.1",
     "langchain": "^0.1.7",
-    "llamaindex": "^0.1.16",
+    "llamaindex": "^0.3.17",
     "openai": "^4.51.0",
     "ts-mocha": "^10.0.0"
   }
