@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.9](https://github.com/traceloop/openllmetry-js/compare/v0.8.8...v0.8.9) (2024-06-17)
+
+### Bug Fixes
+
+- **sdk:** run workflows in parallel with different association proper… ([#329](https://github.com/traceloop/openllmetry-js/issues/329)) ([9a8f84c](https://github.com/traceloop/openllmetry-js/commit/9a8f84c3659558b88d2148a796cb3c72e3f883d1))
+
 ## [0.8.8](https://github.com/traceloop/openllmetry-js/compare/v0.8.7...v0.8.8) (2024-06-16)
 
 ### Bug Fixes
