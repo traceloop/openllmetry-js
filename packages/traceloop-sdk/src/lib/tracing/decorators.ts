@@ -199,15 +199,19 @@ function entity(
     const originalMethod = descriptor.value;
 
     descriptor.value = function (...args: unknown[]) {
+      let actualConfig;
+
       if (typeof config === "function") {
-        config = config(this, ...args);
+        actualConfig = config(this, ...args);
+      } else {
+        actualConfig = config;
       }
 
-      const entityName = config.name ?? originalMethod.name;
+      const entityName = actualConfig.name ?? originalMethod.name;
 
       return withEntity(
         type,
-        { ...config, name: entityName },
+        { ...actualConfig, name: entityName },
         originalMethod,
         this,
         ...args,
