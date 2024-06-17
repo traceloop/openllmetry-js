@@ -47,6 +47,12 @@ updates:
     labels:
       - "instrumentation-pinecone"
   - package-ecosystem: "npm"
+    directory: "/packages/instrumentation-qdrant"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "instrumentation-qdrant"
+  - package-ecosystem: "npm"
     directory: "/packages/instrumentation-vertexai"
     schedule:
       interval: "weekly"

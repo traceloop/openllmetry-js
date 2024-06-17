@@ -38,14 +38,14 @@
   "dependencies": {
     "@opentelemetry/core": "^1.8.0",
     "@opentelemetry/instrumentation": "^0.44.0",
-    "@opentelemetry/semantic-conventions": "^1.22.0",
-    "uuid": "^10.0.0"
+    "@opentelemetry/semantic-conventions": "^1.22.0"
   },
   "devDependencies": {
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
-    "@qdrant/js-client-rest": "^1.9.0"
+    "@qdrant/js-client-rest": "^1.9.0",
+    "uuid": "^10.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-qdrant",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
