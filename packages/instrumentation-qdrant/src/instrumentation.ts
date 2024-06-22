@@ -225,14 +225,14 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     collectionName: string,
     params: UpsertRequest,
   ) {
-    span.setAttribute("db.qdrant.upsert.collection_name", collectionName);
+    span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     if ("batch" in params) {
       span.setAttribute(
-        `db.qdrant.upsert.points_count`,
+          SpanAttributes.VECTOR_DB_ADD_COUNT,
         params.batch.ids.length,
       );
     } else {
-      span.setAttribute(`db.qdrant.upsert.points_count`, params.points.length);
+      span.setAttribute(SpanAttributes.VECTOR_DB_ADD_COUNT, params.points.length);
     }
   }
 
@@ -241,33 +241,18 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     collectionName: string,
     params: qdrant.Schemas["PointsSelector"],
   ) {
-    span.setAttribute("db.qdrant.delete.collection_name", collectionName);
+    span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     if ("filter" in params) {
       span.setAttribute(
-        "db.qdrant.delete.filter.must",
-        JSON.stringify(params.filter?.must),
-      );
-
-      span.setAttribute(
-        "db.qdrant.delete.filter.should",
-        JSON.stringify(params.filter?.should),
-      );
-
-      span.setAttribute(
-        "db.qdrant.delete.filter.must_not",
-        JSON.stringify(params.filter?.must_not),
-      );
-
-      span.setAttribute(
-        "db.qdrant.delete.filter.min_should",
-        JSON.stringify(params.filter?.min_should),
+        SpanAttributes.VECTOR_DB_DELETE_SELECTOR,
+        JSON.stringify(params.filter),
       );
     } else {
       span.setAttribute(
-        "db.qdrant.delete.point_ids",
+        SpanAttributes.VECTOR_DB_DELETE_SELECTOR,
         JSON.stringify(params.points),
       );
-      span.setAttribute("db.qdrant.delete.ids_count", params.points.length);
+      span.setAttribute(SpanAttributes.VECTOR_DB_DELETE_COUNT, params.points.length);
     }
   }
 
@@ -276,14 +261,14 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     collectionName: string,
     params: qdrant.Schemas["PointRequest"],
   ) {
-    span.setAttribute("db.qdrant.retrieve.collection_name", collectionName);
+    span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     span.setAttribute(
-      "db.qdrant.retrieve.point_ids",
+      SpanAttributes.VECTOR_DB_GET_SELECTOR,
       JSON.stringify(params.ids),
     );
-    span.setAttribute("db.qdrant.retrieve.ids_count", params.ids.length);
-    span.setAttribute("db.qdrant.retrieve.with_payload", !!params.with_payload);
-    span.setAttribute("db.qdrant.retrieve.with_vector", !!params.with_vector);
+    span.setAttribute(SpanAttributes.VECTOR_DB_GET_COUNT, params.ids.length);
+    span.setAttribute(SpanAttributes.VECTOR_DB_GET_INCLUDE_METADATA, !!params.with_payload);
+    span.setAttribute(SpanAttributes.VECTOR_DB_GET_INCLUDE_VALUES, !!params.with_vector);
   }
 
   private _setSearchAttributes(
@@ -291,7 +276,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     collectionName: string,
     params: qdrant.Schemas["SearchRequest"],
   ) {
-    span.setAttribute("db.qdrant.search.collection_name", collectionName);
+    span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     const query_request_event = span.addEvent("qdrant.search.request");
     query_request_event.setAttribute(
       EventAttributes.VECTOR_DB_QUERY_TOP_K,

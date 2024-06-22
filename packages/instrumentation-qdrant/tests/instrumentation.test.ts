@@ -102,11 +102,11 @@ describe("Test Qdrant instrumentation", function () {
     const attributes = spans[0].attributes;
     assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
     assert.strictEqual(
-      attributes["db.qdrant.upsert.collection_name"],
+      attributes[SpanAttributes.VECTOR_DB_TABLE_NAME],
       COLLECTION_NAME,
     );
     assert.strictEqual(
-      attributes["db.qdrant.upsert.points_count"],
+      attributes[SpanAttributes.VECTOR_DB_ADD_COUNT],
       points.batch.ids.length,
     );
   });
@@ -126,7 +126,7 @@ describe("Test Qdrant instrumentation", function () {
     const attributes = spans[0].attributes;
     assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
     assert.strictEqual(
-      attributes["db.qdrant.search.collection_name"],
+      attributes[SpanAttributes.VECTOR_DB_TABLE_NAME],
       COLLECTION_NAME,
     );
 
@@ -153,12 +153,12 @@ describe("Test Qdrant instrumentation", function () {
     const attributes = spans[0].attributes;
     assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
     assert.strictEqual(
-      attributes["db.qdrant.retrieve.collection_name"],
+      attributes[SpanAttributes.VECTOR_DB_TABLE_NAME],
       COLLECTION_NAME,
     );
-    assert.strictEqual(attributes["db.qdrant.retrieve.ids_count"], 3);
-    assert.strictEqual(attributes["db.qdrant.retrieve.with_payload"], true);
-    assert.strictEqual(attributes["db.qdrant.retrieve.with_vector"], true);
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_GET_COUNT], 3);
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_GET_INCLUDE_METADATA], true);
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_GET_INCLUDE_VALUES], true);
   });
 
   it("should set span attributes for delete", async () => {
@@ -173,9 +173,9 @@ describe("Test Qdrant instrumentation", function () {
     const attributes = spans[0].attributes;
     assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_VENDOR], "Qdrant");
     assert.strictEqual(
-      attributes["db.qdrant.delete.collection_name"],
+      attributes[SpanAttributes.VECTOR_DB_TABLE_NAME],
       COLLECTION_NAME,
     );
-    assert.strictEqual(attributes["db.qdrant.delete.ids_count"], 6);
+    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_DELETE_COUNT], 6);
   });
 });
