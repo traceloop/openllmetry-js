@@ -385,7 +385,7 @@ describe("Test SDK Decorators", () => {
 
   it("should create spans for manual LLM instrumentation", async () => {
     const result = await traceloop.withWorkflow(
-      { name: "joke_generator" },
+      { name: "joke_generator", associationProperties: { userId: "123" } },
       () =>
         traceloop.withLLMCall(
           { vendor: "openai", type: "chat" },
@@ -428,6 +428,19 @@ describe("Test SDK Decorators", () => {
     );
 
     assert.strictEqual(
+      workflowSpan.attributes[
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
+      ],
+      "123",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
+      ],
+      "123",
+    );
+
+    assert.strictEqual(
       completionSpan.attributes[`${SpanAttributes.LLM_REQUEST_TYPE}`],
       "chat",
     );
@@ -462,6 +475,62 @@ describe("Test SDK Decorators", () => {
       +completionSpan.attributes[
         `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
+    );
+  });
+
+  it("should not mix association properties for traces that run in parallel", async () => {
+    class TestOpenAI {
+      constructor(private userId: string) {}
+
+      @traceloop.workflow((thisArg) => ({
+        name: "chat",
+        associationProperties: { userId: (thisArg as TestOpenAI).userId },
+      }))
+      async chat(subject: string) {
+        const chatCompletion = await openai.chat.completions.create({
+          messages: [
+            { role: "user", content: `Tell me a joke about ${subject}` },
+          ],
+          model: "gpt-3.5-turbo",
+        });
+
+        return chatCompletion.choices[0].message.content;
+      }
+    }
+
+    const result1 = await new TestOpenAI("123").chat("OpenTelemetry");
+    const result2 = await new TestOpenAI("456").chat("Typescript");
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    assert.ok(result1);
+    assert.ok(result2);
+
+    const openAI1Span = spans.find(
+      (span) =>
+        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] ===
+        "Tell me a joke about OpenTelemetry",
+    );
+    const openAI2Span = spans.find(
+      (span) =>
+        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] ===
+        "Tell me a joke about Typescript",
+    );
+
+    assert.ok(openAI1Span);
+    assert.ok(openAI2Span);
+
+    assert.strictEqual(
+      openAI1Span.attributes[
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
+      ],
+      "123",
+    );
+    assert.strictEqual(
+      openAI2Span.attributes[
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
+      ],
+      "456",
     );
   });
 });
