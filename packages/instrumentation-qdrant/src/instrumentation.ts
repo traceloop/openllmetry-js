@@ -242,7 +242,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   private _setDeleteAttributes(
     span: Span,
     collectionName: string,
-    params: qdrant.Schemas["PointsSelector"],
+    params: DeleteRequest,
   ) {
     span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     if ("filter" in params) {
@@ -265,7 +265,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   private _setRetrieveAttributes(
     span: Span,
     collectionName: string,
-    params: qdrant.Schemas["PointRequest"],
+    params: RetrieveRequest,
   ) {
     span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     span.setAttribute(
@@ -286,7 +286,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   private _setSearchAttributes(
     span: Span,
     collectionName: string,
-    params: qdrant.Schemas["SearchRequest"],
+    params: SearchRequest,
   ) {
     span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     const query_request_event = span.addEvent("qdrant.search.request");
