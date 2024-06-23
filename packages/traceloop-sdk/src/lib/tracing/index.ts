@@ -30,6 +30,7 @@ import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
+import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -44,6 +45,7 @@ let langchainInstrumentation: LangChainInstrumentation | undefined;
 let llamaIndexInstrumentation: LlamaIndexInstrumentation | undefined;
 let pineconeInstrumentation: PineconeInstrumentation | undefined;
 let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
+let qdrantInstrumentation: QdrantInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -93,6 +95,9 @@ export const initInstrumentations = () => {
 
   chromadbInstrumentation = new ChromaDBInstrumentation({ exceptionLogger });
   instrumentations.push(chromadbInstrumentation);
+
+  qdrantInstrumentation = new QdrantInstrumentation({ exceptionLogger });
+  instrumentations.push(qdrantInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
@@ -185,6 +190,12 @@ export const manuallyInitInstrumentations = (
     chromadbInstrumentation = new ChromaDBInstrumentation({ exceptionLogger });
     instrumentations.push(chromadbInstrumentation);
     chromadbInstrumentation.manuallyInstrument(instrumentModules.chromadb);
+  }
+
+  if (instrumentModules?.qdrant) {
+    qdrantInstrumentation = new QdrantInstrumentation({ exceptionLogger });
+    instrumentations.push(qdrantInstrumentation);
+    qdrantInstrumentation.manuallyInstrument(instrumentModules.qdrant);
   }
 };
 

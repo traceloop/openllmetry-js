@@ -13,6 +13,7 @@ import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
 import type * as llamaindex from "llamaindex";
 import type * as chromadb from "chromadb";
+import type * as qdrant from "@qdrant/js-client-rest";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -86,6 +87,7 @@ export interface InitializeOptions {
     };
     llamaIndex?: typeof llamaindex;
     chromadb?: typeof chromadb;
+    qdrant?: typeof qdrant;
   };
 
   /**

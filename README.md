@@ -119,6 +119,7 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 
 - ✅ Pinecone
 - ✅ Chroma
+- ✅ Qdrant
 - ⏳ Weaviate
 - ⏳ Milvus
 

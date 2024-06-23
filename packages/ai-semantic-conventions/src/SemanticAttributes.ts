@@ -38,6 +38,14 @@ export const SpanAttributes = {
   // Vector DB
   VECTOR_DB_VENDOR: "db.system",
   VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
+  VECTOR_DB_TABLE_NAME: "db.vector.table_name",
+  VECTOR_DB_ADD_COUNT: "db.vector.add.count",
+  VECTOR_DB_DELETE_SELECTOR: "db.vector.delete.selector",
+  VECTOR_DB_DELETE_COUNT: "db.vector.delete.count",
+  VECTOR_DB_GET_SELECTOR: "db.vector.get.selector",
+  VECTOR_DB_GET_COUNT: "db.vector.get.count",
+  VECTOR_DB_GET_INCLUDE_METADATA: "db.vector.get.include_metadata",
+  VECTOR_DB_GET_INCLUDE_VALUES: "db.vector.get.include_values",
 
   // LLM Workflows
   TRACELOOP_SPAN_KIND: "traceloop.span.kind",
