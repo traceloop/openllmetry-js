@@ -23,6 +23,7 @@
     "run:llamaindex": "npm run build && node dist/src/sample_llamaindex.js",
     "run:pinecone": "npm run build && node dist/src/sample_pinecone.js",
     "run:langchain": "npm run build && node dist/src/sample_langchain.js",
+    "run:otel": "npm run build && node dist/src/sample_otel.js",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
