@@ -228,11 +228,14 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
     span.setAttribute(SpanAttributes.VECTOR_DB_TABLE_NAME, collectionName);
     if ("batch" in params) {
       span.setAttribute(
-          SpanAttributes.VECTOR_DB_ADD_COUNT,
+        SpanAttributes.VECTOR_DB_ADD_COUNT,
         params.batch.ids.length,
       );
     } else {
-      span.setAttribute(SpanAttributes.VECTOR_DB_ADD_COUNT, params.points.length);
+      span.setAttribute(
+        SpanAttributes.VECTOR_DB_ADD_COUNT,
+        params.points.length,
+      );
     }
   }
 
@@ -252,7 +255,10 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
         SpanAttributes.VECTOR_DB_DELETE_SELECTOR,
         JSON.stringify(params.points),
       );
-      span.setAttribute(SpanAttributes.VECTOR_DB_DELETE_COUNT, params.points.length);
+      span.setAttribute(
+        SpanAttributes.VECTOR_DB_DELETE_COUNT,
+        params.points.length,
+      );
     }
   }
 
@@ -267,8 +273,14 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
       JSON.stringify(params.ids),
     );
     span.setAttribute(SpanAttributes.VECTOR_DB_GET_COUNT, params.ids.length);
-    span.setAttribute(SpanAttributes.VECTOR_DB_GET_INCLUDE_METADATA, !!params.with_payload);
-    span.setAttribute(SpanAttributes.VECTOR_DB_GET_INCLUDE_VALUES, !!params.with_vector);
+    span.setAttribute(
+      SpanAttributes.VECTOR_DB_GET_INCLUDE_METADATA,
+      !!params.with_payload,
+    );
+    span.setAttribute(
+      SpanAttributes.VECTOR_DB_GET_INCLUDE_VALUES,
+      !!params.with_vector,
+    );
   }
 
   private _setSearchAttributes(

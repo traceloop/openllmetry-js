@@ -157,8 +157,14 @@ describe("Test Qdrant instrumentation", function () {
       COLLECTION_NAME,
     );
     assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_GET_COUNT], 3);
-    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_GET_INCLUDE_METADATA], true);
-    assert.strictEqual(attributes[SpanAttributes.VECTOR_DB_GET_INCLUDE_VALUES], true);
+    assert.strictEqual(
+      attributes[SpanAttributes.VECTOR_DB_GET_INCLUDE_METADATA],
+      true,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.VECTOR_DB_GET_INCLUDE_VALUES],
+      true,
+    );
   });
 
   it("should set span attributes for delete", async () => {
