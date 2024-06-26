@@ -70,11 +70,14 @@ export const initialize = (options: InitializeOptions) => {
       logLevelToOtelLogLevel(options.logLevel),
     );
   }
-  console.log(
-    `Traceloop exporting traces to ${
-      _configuration.exporter ? "a custom exporter" : _configuration.baseUrl
-    }`,
-  );
+
+  if (!options.silenceInitializationMessage) {
+    console.log(
+      `Traceloop exporting traces to ${
+        _configuration.exporter ? "a custom exporter" : _configuration.baseUrl
+      }`,
+    );
+  }
 
   startTracing(_configuration);
   initializeRegistry(_configuration);
