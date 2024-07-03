@@ -113,4 +113,10 @@ export interface InitializeOptions {
    * Defaults to TRACELOOP_SYNC_DEV_POLLING_INTERVAL environment variable or 5 if not set.
    */
   traceloopSyncDevPollingInterval?: number;
+
+  /**
+   * Whether to silence the initialization message. Optional.
+   * Defaults to false.
+   */
+  silenceInitializationMessage?: boolean;
 }
