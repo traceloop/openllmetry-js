@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-anthropic",
-  "version": "0.8.8",
+  "version": "0.9.0",
   "description": "Anthropic Instrumentaion",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -40,7 +40,7 @@
     "@opentelemetry/core": "^1.25.0",
     "@opentelemetry/instrumentation": "^0.52.0",
     "@opentelemetry/semantic-conventions": "^1.25.0",
-    "@traceloop/ai-semantic-conventions": "^0.8.0"
+    "@traceloop/ai-semantic-conventions": "^0.9.0"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.20.1",

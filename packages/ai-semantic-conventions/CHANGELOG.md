@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/traceloop/openllmetry-js/compare/v0.8.9...v0.9.0) (2024-07-04)
+
+### Bug Fixes
+
+- **sdk:** versions on workflows & tasks ([#353](https://github.com/traceloop/openllmetry-js/issues/353)) ([eb6211f](https://github.com/traceloop/openllmetry-js/commit/eb6211f5cc9a2930c6bff1d9ffe3cb995eaf6669))
+
+### Features
+
+- Qdrant instrumentation ([#278](https://github.com/traceloop/openllmetry-js/issues/278)) ([3b8224f](https://github.com/traceloop/openllmetry-js/commit/3b8224fac062b6da3f84311569a5ffcc2e3b8744))
+
 # [0.8.0](https://github.com/traceloop/openllmetry-js/compare/v0.7.0...v0.8.0) (2024-04-29)
 
 ### Features
