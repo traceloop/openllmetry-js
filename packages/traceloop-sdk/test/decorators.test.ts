@@ -147,7 +147,7 @@ describe("Test SDK Decorators", () => {
 
   it("should create spans for workflows using decoration syntax", async () => {
     class TestOpenAI {
-      @traceloop.workflow({ name: "sample_chat" })
+      @traceloop.workflow({ name: "sample_chat", version: 2 })
       async chat(things: Map<string, string>) {
         const generations: Map<string, string> = new Map();
         for await (const [key, value] of things) {
@@ -194,6 +194,10 @@ describe("Test SDK Decorators", () => {
     assert.strictEqual(
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
       "sample_chat",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_VERSION}`],
+      2,
     );
     assert.strictEqual(
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
