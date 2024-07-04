@@ -14,6 +14,7 @@ import { Telemetry } from "../telemetry/telemetry";
 
 export type DecoratorConfig = {
   name: string;
+  version?: number;
   associationProperties?: { [name: string]: string };
   traceContent?: boolean;
   inputParameters?: unknown[];
@@ -26,6 +27,7 @@ function withEntity<
   type: TraceloopSpanKindValues,
   {
     name,
+    version,
     associationProperties,
     traceContent: overrideTraceContent,
     inputParameters,
@@ -68,6 +70,10 @@ function withEntity<
         }
         span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
         span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
+
+        if (version) {
+          span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_VERSION, version);
+        }
 
         if (shouldSendTraces()) {
           try {
