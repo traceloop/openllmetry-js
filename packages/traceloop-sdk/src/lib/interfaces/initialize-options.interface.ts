@@ -1,5 +1,5 @@
-import { SpanExporter } from "@opentelemetry/sdk-trace-base";
-
+import { SpanExporter, SpanProcessor } from "@opentelemetry/sdk-trace-base";
+import { TextMapPropagator, ContextManager } from "@opentelemetry/api";
 import type * as openai from "openai";
 import type * as anthropic from "@anthropic-ai/sdk";
 import type * as azure from "@azure/openai";
@@ -66,6 +66,24 @@ export interface InitializeOptions {
    * Defaults to the OTLP exporter.
    */
   exporter?: SpanExporter;
+
+  /**
+   * The OpenTelemetry SpanProcessor to be used for processing traces data. Optional.
+   * Defaults to the BatchSpanProcessor.
+   */
+  processor?: SpanProcessor;
+
+  /**
+   * The OpenTelemetry Propagator to use. Optional.
+   * Defaults to OpenTelemetry SDK defaults.
+   */
+  propagator?: TextMapPropagator;
+
+  /**
+   * The OpenTelemetry ContextManager to use. Optional.
+   * Defaults to OpenTelemetry SDK defaults.
+   */
+  contextManager?: ContextManager;
 
   /**
    * Explicitly specify modules to instrument. Optional.
