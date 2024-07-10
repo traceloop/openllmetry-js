@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.1](https://github.com/traceloop/openllmetry-js/compare/v0.9.0...v0.9.1) (2024-07-10)
+
+### Bug Fixes
+
+- **sdk:** support parameters needed by Sentry SDK ([#360](https://github.com/traceloop/openllmetry-js/issues/360)) ([b1f195c](https://github.com/traceloop/openllmetry-js/commit/b1f195cb56106649347bea0de684c2355cdcb2a1))
+
 # [0.9.0](https://github.com/traceloop/openllmetry-js/compare/v0.8.9...v0.9.0) (2024-07-04)
 
 ### Bug Fixes
