@@ -3,6 +3,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
   SimpleSpanProcessor,
   BatchSpanProcessor,
+  SpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
 import { Span, context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
@@ -281,12 +282,19 @@ export const startTracing = (options: InitializeOptions) => {
     });
   }
 
+  const spanProcessors: SpanProcessor[] = [_spanProcessor];
+  if (options.processor) {
+    spanProcessors.push(options.processor);
+  }
+
   _sdk = new NodeSDK({
     resource: new Resource({
       [SEMRESATTRS_SERVICE_NAME]:
         options.appName || process.env.npm_package_name,
     }),
-    spanProcessors: [_spanProcessor],
+    spanProcessors,
+    contextManager: options.contextManager,
+    textMapPropagator: options.propagator,
     traceExporter,
     instrumentations,
     // We should re-consider removing unrelevant spans here in the future
