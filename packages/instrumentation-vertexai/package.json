@@ -39,7 +39,8 @@
     "@opentelemetry/core": "^1.25.0",
     "@opentelemetry/instrumentation": "^0.52.0",
     "@opentelemetry/semantic-conventions": "^1.25.0",
-    "@traceloop/ai-semantic-conventions": "^0.9.0"
+    "@traceloop/ai-semantic-conventions": "^0.9.0",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@google-cloud/aiplatform": "^3.10.0",
