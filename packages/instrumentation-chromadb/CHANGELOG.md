@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.2](https://github.com/traceloop/openllmetry-js/compare/v0.9.1...v0.9.2) (2024-07-17)
+
+### Bug Fixes
+
+- added missing tslib dependency ([#369](https://github.com/traceloop/openllmetry-js/issues/369)) ([b20145d](https://github.com/traceloop/openllmetry-js/commit/b20145d13b391737febb5b57e4bc8c66b0f32b95))
+
 # [0.9.0](https://github.com/traceloop/openllmetry-js/compare/v0.8.9...v0.9.0) (2024-07-04)
 
 **Note:** Version bump only for package @traceloop/instrumentation-chromadb
