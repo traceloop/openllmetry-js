@@ -4,7 +4,7 @@ import {
   ENTITY_NAME_KEY,
   getChainedEntityName,
   getTracer,
-  WORKFLOW_NAME_KEY
+  WORKFLOW_NAME_KEY,
 } from "./tracing";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
@@ -47,12 +47,12 @@ function withEntity<
   }
 
   let entityName = name;
-  if (type === TraceloopSpanKindValues.TOOL || type === TraceloopSpanKindValues.TASK) {
+  if (
+    type === TraceloopSpanKindValues.TOOL ||
+    type === TraceloopSpanKindValues.TASK
+  ) {
     entityName = getChainedEntityName(entityContext, name);
-    entityContext = entityContext.setValue(
-      ENTITY_NAME_KEY,
-      entityName
-    );
+    entityContext = entityContext.setValue(ENTITY_NAME_KEY, entityName);
   }
 
   if (overrideTraceContent != undefined) {

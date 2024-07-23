@@ -11,7 +11,11 @@ import { Resource } from "@opentelemetry/resources";
 import { SEMRESATTRS_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
-import { ASSOCATION_PROPERTIES_KEY, ENTITY_NAME_KEY, WORKFLOW_NAME_KEY } from "./tracing";
+import {
+  ASSOCATION_PROPERTIES_KEY,
+  ENTITY_NAME_KEY,
+  WORKFLOW_NAME_KEY,
+} from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
 import {

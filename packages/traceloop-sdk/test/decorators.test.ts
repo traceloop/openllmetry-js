@@ -542,12 +542,12 @@ describe("Test SDK Decorators", () => {
     class TestOpenAI {
       @traceloop.workflow({ name: "joke_creation_chat", version: 3 })
       async chat() {
-        return await this.jokeCreationTaskWrapper()
+        return await this.jokeCreationTaskWrapper();
       }
 
       @traceloop.task({ name: "joke_creation_task_wrapper", version: 2 })
       async jokeCreationTaskWrapper() {
-        return await this.jokeCreation()
+        return await this.jokeCreation();
       }
 
       @traceloop.task({ name: "joke_creation", version: 2 })
@@ -564,8 +564,12 @@ describe("Test SDK Decorators", () => {
     const testOpenAI = new TestOpenAI();
     const result = await testOpenAI.chat();
     const spans = memoryExporter.getFinishedSpans();
-    const jokeCreationTaskWrapperSpan = spans.find((span) => span.name === "joke_creation_task_wrapper.task",);
-    const jokeCreationSpan = spans.find((span) => span.name === "joke_creation.task",);
+    const jokeCreationTaskWrapperSpan = spans.find(
+      (span) => span.name === "joke_creation_task_wrapper.task",
+    );
+    const jokeCreationSpan = spans.find(
+      (span) => span.name === "joke_creation.task",
+    );
     const openAiChatSpans = spans.find((span) => span.name === "openai.chat");
 
     assert.ok(result);
@@ -573,7 +577,9 @@ describe("Test SDK Decorators", () => {
     assert.ok(jokeCreationSpan);
     assert.ok(openAiChatSpans);
     assert.strictEqual(
-      jokeCreationTaskWrapperSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      jokeCreationTaskWrapperSpan.attributes[
+        `${SpanAttributes.TRACELOOP_ENTITY_NAME}`
+      ],
       "joke_creation_task_wrapper",
     );
     assert.strictEqual(
