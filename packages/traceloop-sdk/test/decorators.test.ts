@@ -537,4 +537,94 @@ describe("Test SDK Decorators", () => {
       "456",
     );
   });
+
+  it("should create spans for workflow and tasks using decoration syntax", async () => {
+    class TestOpenAI {
+      @traceloop.workflow({ name: "sample_chat_oz", version: 3 })
+      async chat() {
+        await this.javascriptFact()
+        await this.piratesJoke()
+      }
+
+      @traceloop.task({ name: "pirate_joke", version: 3 })
+      async piratesJoke() {
+        const chatCompletion = await openai.chat.completions.create({
+          messages: [{ role: "user", content: `Tell me a joke about pirates` }],
+          model: "gpt-3.5-turbo",
+        });
+
+        return chatCompletion.choices[0].message.content;
+      }
+
+      @traceloop.task({ name: "javascript_fact", version: 3 })
+      async javascriptFact() {
+        const chatCompletion = await openai.chat.completions.create({
+          messages: [{ role: "user", content: `Tell me a fact about javascript_fact` }],
+          model: "gpt-3.5-turbo",
+        });
+
+        return chatCompletion.choices[0].message.content;
+      }
+    }
+
+    const testOpenAI = new TestOpenAI();
+    const result = await testOpenAI.chat();
+    const spans = memoryExporter.getFinishedSpans();
+    console.log(spans.map((s) => { return {name: s.name, attributes: s.attributes} }))
+    const workflowSpan = spans.find(
+      (span) => span.name === "sample_chat.workflow",
+    );
+    const chatSpan = spans.find((span) => span.name === "openai.chat");
+
+    assert.ok(result);
+    assert.ok(workflowSpan);
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
+      "sample_chat",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_SPAN_KIND}`],
+      "workflow",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      "sample_chat",
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_VERSION}`],
+      2,
+    );
+    assert.strictEqual(
+      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
+      JSON.stringify({
+        args: [
+          [
+            ["joke", "OpenTelemetry"],
+            ["fact", "JavaScript"],
+          ],
+        ],
+        kwargs: {},
+      }),
+    );
+    // assert.strictEqual(
+    //   workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
+    //   JSON.stringify([
+    //     ["joke", result.get("joke")],
+    //     ["fact", result.get("fact")],
+    //   ]),
+    // );
+    assert.ok(chatSpan);
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
+      "sample_chat",
+    );
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "Tell me a joke about OpenTelemetry",
+    );
+  });
 });

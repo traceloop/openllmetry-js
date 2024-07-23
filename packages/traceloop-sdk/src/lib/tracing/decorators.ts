@@ -43,6 +43,16 @@ function withEntity<
   ) {
     entityContext = entityContext.setValue(WORKFLOW_NAME_KEY, name);
   }
+
+  let entityName = name;
+  if (type === TraceloopSpanKindValues.TOOL || type === TraceloopSpanKindValues.TASK) {
+    entityName = getChainedEntityName(entityContext, name);
+    entityContext = entityContext.setValue(
+      ENTITY_NAME_KEY,
+      entityName
+    );
+  }
+
   if (overrideTraceContent != undefined) {
     entityContext = entityContext.setValue(
       CONTEXT_KEY_ALLOW_TRACE_CONTENT,
@@ -69,14 +79,8 @@ function withEntity<
           span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
         }
 
-        let entityName = name;
-        if (type === TraceloopSpanKindValues.TOOL || type === TraceloopSpanKindValues.TASK) {
-          entityName = getChainedEntityName(entityContext, name);
-          entityContext.setValue(ENTITY_NAME_KEY, entityName)
-        }
-
-        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
         span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
+        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
         if (version) {
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_VERSION, version);
         }
