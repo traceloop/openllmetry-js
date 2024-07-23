@@ -1,6 +1,8 @@
 import { Span, context } from "@opentelemetry/api";
 import {
-  ASSOCATION_PROPERTIES_KEY, ENTITY_NAME_KEY, getChainedEntityName,
+  ASSOCATION_PROPERTIES_KEY,
+  ENTITY_NAME_KEY,
+  getChainedEntityName,
   getTracer,
   WORKFLOW_NAME_KEY
 } from "./tracing";
@@ -78,9 +80,9 @@ function withEntity<
         ) {
           span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
         }
-
-        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
         span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
+        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
+
         if (version) {
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_VERSION, version);
         }
