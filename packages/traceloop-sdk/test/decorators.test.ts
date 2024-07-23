@@ -538,28 +538,22 @@ describe("Test SDK Decorators", () => {
     );
   });
 
-  it("should create spans for workflow and tasks using decoration syntax", async () => {
+  it("should create workflow and tasks spans with chained entity names", async () => {
     class TestOpenAI {
-      @traceloop.workflow({ name: "sample_chat_oz", version: 3 })
+      @traceloop.workflow({ name: "joke_creation_chat", version: 3 })
       async chat() {
-        await this.javascriptFact()
-        await this.piratesJoke()
+        return await this.jokeCreationTaskWrapper()
       }
 
-      @traceloop.task({ name: "pirate_joke", version: 3 })
-      async piratesJoke() {
-        const chatCompletion = await openai.chat.completions.create({
-          messages: [{ role: "user", content: `Tell me a joke about pirates` }],
-          model: "gpt-3.5-turbo",
-        });
-
-        return chatCompletion.choices[0].message.content;
+      @traceloop.task({ name: "joke_creation_task_wrapper", version: 2 })
+      async jokeCreationTaskWrapper() {
+        return await this.jokeCreation()
       }
 
-      @traceloop.task({ name: "javascript_fact", version: 3 })
-      async javascriptFact() {
+      @traceloop.task({ name: "joke_creation", version: 2 })
+      async jokeCreation() {
         const chatCompletion = await openai.chat.completions.create({
-          messages: [{ role: "user", content: `Tell me a fact about javascript_fact` }],
+          messages: [{ role: "user", content: "Tell me a joke about pirates" }],
           model: "gpt-3.5-turbo",
         });
 
@@ -570,61 +564,29 @@ describe("Test SDK Decorators", () => {
     const testOpenAI = new TestOpenAI();
     const result = await testOpenAI.chat();
     const spans = memoryExporter.getFinishedSpans();
-    console.log(spans.map((s) => { return {name: s.name, attributes: s.attributes} }))
-    const workflowSpan = spans.find(
-      (span) => span.name === "sample_chat.workflow",
-    );
-    const chatSpan = spans.find((span) => span.name === "openai.chat");
+    const jokeCreationTaskWrapperSpan = spans.find((span) => span.name === "joke_creation_task_wrapper.task",);
+    const jokeCreationSpan = spans.find((span) => span.name === "joke_creation.task",);
+    const openAiChatSpans = spans.find((span) => span.name === "openai.chat");
 
     assert.ok(result);
-    assert.ok(workflowSpan);
+    assert.ok(jokeCreationTaskWrapperSpan);
+    assert.ok(jokeCreationSpan);
+    assert.ok(openAiChatSpans);
     assert.strictEqual(
-      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
-      "sample_chat",
+      jokeCreationTaskWrapperSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      "joke_creation_task_wrapper",
     );
     assert.strictEqual(
-      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_SPAN_KIND}`],
-      "workflow",
+      jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      "joke_creation_task_wrapper.joke_creation",
     );
     assert.strictEqual(
-      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
-      "sample_chat",
+      openAiChatSpans.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      "joke_creation_task_wrapper.joke_creation",
     );
     assert.strictEqual(
-      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_VERSION}`],
-      2,
-    );
-    assert.strictEqual(
-      workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_INPUT}`],
-      JSON.stringify({
-        args: [
-          [
-            ["joke", "OpenTelemetry"],
-            ["fact", "JavaScript"],
-          ],
-        ],
-        kwargs: {},
-      }),
-    );
-    // assert.strictEqual(
-    //   workflowSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
-    //   JSON.stringify([
-    //     ["joke", result.get("joke")],
-    //     ["fact", result.get("fact")],
-    //   ]),
-    // );
-    assert.ok(chatSpan);
-    assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
-      "sample_chat",
-    );
-    assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-      "Tell me a joke about OpenTelemetry",
+      jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
+      JSON.stringify(result),
     );
   });
 });
