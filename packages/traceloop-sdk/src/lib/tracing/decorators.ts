@@ -1,8 +1,8 @@
 import { Span, context } from "@opentelemetry/api";
 import {
-  ASSOCATION_PROPERTIES_KEY,
+  ASSOCATION_PROPERTIES_KEY, ENTITY_NAME_KEY, getChainedEntityName,
   getTracer,
-  WORKFLOW_NAME_KEY,
+  WORKFLOW_NAME_KEY
 } from "./tracing";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
@@ -68,9 +68,15 @@ function withEntity<
         ) {
           span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
         }
-        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
-        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
 
+        let entityName = name;
+        if (type === TraceloopSpanKindValues.TOOL || type === TraceloopSpanKindValues.TASK) {
+          entityName = getChainedEntityName(entityContext, name);
+          entityContext.setValue(ENTITY_NAME_KEY, entityName)
+        }
+
+        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
+        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
         if (version) {
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_VERSION, version);
         }
