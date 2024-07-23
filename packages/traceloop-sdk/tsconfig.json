@@ -4,7 +4,7 @@
     "outDir": "dist",
     "rootDir": ".",
     "experimentalDecorators": true,
-    "target": "es2017",
+    "target": "es2017"
   },
   "include": ["src/**/*.ts"],
   "references": []
