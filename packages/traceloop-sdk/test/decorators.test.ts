@@ -537,4 +537,62 @@ describe("Test SDK Decorators", () => {
       "456",
     );
   });
+
+  it("should create workflow and tasks spans with chained entity names", async () => {
+    class TestOpenAI {
+      @traceloop.workflow({ name: "joke_creation_chat", version: 3 })
+      async chat() {
+        return await this.jokeCreationTaskWrapper();
+      }
+
+      @traceloop.task({ name: "joke_creation_task_wrapper", version: 2 })
+      async jokeCreationTaskWrapper() {
+        return await this.jokeCreation();
+      }
+
+      @traceloop.task({ name: "joke_creation", version: 2 })
+      async jokeCreation() {
+        const chatCompletion = await openai.chat.completions.create({
+          messages: [{ role: "user", content: "Tell me a joke about pirates" }],
+          model: "gpt-3.5-turbo",
+        });
+
+        return chatCompletion.choices[0].message.content;
+      }
+    }
+
+    const testOpenAI = new TestOpenAI();
+    const result = await testOpenAI.chat();
+    const spans = memoryExporter.getFinishedSpans();
+    const jokeCreationTaskWrapperSpan = spans.find(
+      (span) => span.name === "joke_creation_task_wrapper.task",
+    );
+    const jokeCreationSpan = spans.find(
+      (span) => span.name === "joke_creation.task",
+    );
+    const openAiChatSpans = spans.find((span) => span.name === "openai.chat");
+
+    assert.ok(result);
+    assert.ok(jokeCreationTaskWrapperSpan);
+    assert.ok(jokeCreationSpan);
+    assert.ok(openAiChatSpans);
+    assert.strictEqual(
+      jokeCreationTaskWrapperSpan.attributes[
+        `${SpanAttributes.TRACELOOP_ENTITY_NAME}`
+      ],
+      "joke_creation_task_wrapper",
+    );
+    assert.strictEqual(
+      jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      "joke_creation_task_wrapper.joke_creation",
+    );
+    assert.strictEqual(
+      openAiChatSpans.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      "joke_creation_task_wrapper.joke_creation",
+    );
+    assert.strictEqual(
+      jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
+      JSON.stringify(result),
+    );
+  });
 });
