@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
