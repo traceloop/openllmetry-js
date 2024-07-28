@@ -56,9 +56,11 @@ const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = () => {
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+  const enrichTokens =
+    (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
   openAIInstrumentation = new OpenAIInstrumentation({
-    enrichTokens: _configuration?.shouldEnrichMetrics,
+    enrichTokens,
     exceptionLogger,
   });
   instrumentations.push(openAIInstrumentation);
@@ -109,13 +111,15 @@ export const manuallyInitInstrumentations = (
   instrumentModules: InitializeOptions["instrumentModules"],
 ) => {
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+  const enrichTokens =
+    (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
   // Clear the instrumentations array that was initialized by default
   instrumentations.length = 0;
 
   if (instrumentModules?.openAI) {
     openAIInstrumentation = new OpenAIInstrumentation({
-      enrichTokens: _configuration?.shouldEnrichMetrics,
+      enrichTokens,
       exceptionLogger,
     });
     instrumentations.push(openAIInstrumentation);
