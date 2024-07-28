@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.4](https://github.com/traceloop/openllmetry-js/compare/v0.9.3...v0.9.4) (2024-07-28)
+
+### Bug Fixes
+
+- **sdk:** properly initialize token enrich value for instrumentations ([#384](https://github.com/traceloop/openllmetry-js/issues/384)) ([143bc66](https://github.com/traceloop/openllmetry-js/commit/143bc6671447299824d5cf1d4b4da4eea417d6f4))
+
 ## [0.9.3](https://github.com/traceloop/openllmetry-js/compare/v0.9.2...v0.9.3) (2024-07-25)
 
 **Note:** Version bump only for package openllmetry-js
