@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.9.5](https://github.com/traceloop/openllmetry-js/compare/v0.9.4...v0.9.5) (2024-07-30)
+
+### Bug Fixes
+
+- **sdk:** option to suppress instrumentations ([#392](https://github.com/traceloop/openllmetry-js/issues/392)) ([d6ccf0d](https://github.com/traceloop/openllmetry-js/commit/d6ccf0d1633255499c06521dca179bec2deb9bbd))
+
 ## [0.9.4](https://github.com/traceloop/openllmetry-js/compare/v0.9.3...v0.9.4) (2024-07-28)
 
 ### Bug Fixes
