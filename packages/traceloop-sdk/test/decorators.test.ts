@@ -145,6 +145,33 @@ describe("Test SDK Decorators", () => {
     );
   });
 
+  it("should not create spans if suppressed", async () => {
+    const jokeSubject = "OpenTelemetry";
+    const result = await traceloop.withWorkflow(
+      {
+        name: "sample_chat",
+        associationProperties: { userId: "123" },
+        suppressTracing: true,
+      },
+      async () => {
+        const chatCompletion = await openai.chat.completions.create({
+          messages: [
+            { role: "user", content: `Tell me a joke about ${jokeSubject}` },
+          ],
+          model: "gpt-3.5-turbo",
+        });
+
+        return chatCompletion.choices[0].message.content;
+      },
+      { jokeSubject },
+    );
+
+    assert.ok(result);
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 0);
+  });
+
   it("should create spans for workflows using decoration syntax", async () => {
     class TestOpenAI {
       @traceloop.workflow({ name: "sample_chat", version: 2 })

@@ -1,4 +1,5 @@
 import { Span, context } from "@opentelemetry/api";
+import { suppressTracing } from "@opentelemetry/core";
 import {
   ASSOCATION_PROPERTIES_KEY,
   ENTITY_NAME_KEY,
@@ -20,6 +21,7 @@ export type DecoratorConfig = {
   associationProperties?: { [name: string]: string };
   traceContent?: boolean;
   inputParameters?: unknown[];
+  suppressTracing?: boolean;
 };
 
 function withEntity<
@@ -33,6 +35,7 @@ function withEntity<
     associationProperties,
     traceContent: overrideTraceContent,
     inputParameters,
+    suppressTracing: shouldSuppressTracing,
   }: DecoratorConfig,
   fn: F,
   thisArg?: ThisParameterType<F>,
@@ -66,6 +69,10 @@ function withEntity<
       ASSOCATION_PROPERTIES_KEY,
       associationProperties,
     );
+  }
+
+  if (shouldSuppressTracing) {
+    entityContext = suppressTracing(entityContext);
   }
 
   return context.with(entityContext, () =>
