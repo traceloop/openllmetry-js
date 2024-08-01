@@ -88,7 +88,10 @@ function withEntity<
           span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
         }
         span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, name);
-        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_PATH, entityPath || "");
+        span.setAttribute(
+          SpanAttributes.TRACELOOP_ENTITY_PATH,
+          entityPath || "",
+        );
         span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
 
         if (version) {

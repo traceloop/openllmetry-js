@@ -12,9 +12,7 @@ export const getTracer = () => {
   return trace.getTracer(TRACER_NAME);
 };
 
-export const getEntityPath = (
-  entityContext: Context
-): string | undefined => {
+export const getEntityPath = (entityContext: Context): string | undefined => {
   const path = entityContext.getValue(ENTITY_NAME_KEY);
 
   return path ? `${path}` : undefined;
