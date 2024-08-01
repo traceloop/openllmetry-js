@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/traceloop/openllmetry-js/compare/v0.9.5...v0.10.0) (2024-08-01)
+
+### Features
+
+- introduce traceloop.entity.path instead of traceloop.entity.name chaining ([#393](https://github.com/traceloop/openllmetry-js/issues/393)) ([207f9fe](https://github.com/traceloop/openllmetry-js/commit/207f9fe552cccad23f483ac106833e23186581e7))
+
 # [0.9.0](https://github.com/traceloop/openllmetry-js/compare/v0.8.9...v0.9.0) (2024-07-04)
 
 ### Bug Fixes
