@@ -268,7 +268,7 @@ export const startTracing = (options: InitializeOptions) => {
     const entityName = context.active().getValue(ENTITY_NAME_KEY);
     if (entityName) {
       span.setAttribute(
-        SpanAttributes.TRACELOOP_ENTITY_NAME,
+        SpanAttributes.TRACELOOP_ENTITY_PATH,
         entityName as string,
       );
     }
@@ -313,7 +313,7 @@ export const startTracing = (options: InitializeOptions) => {
     textMapPropagator: options.propagator,
     traceExporter,
     instrumentations,
-    // We should re-consider removing unrelevant spans here in the future
+    // We should re-consider removing irrelevant spans here in the future
     // sampler: new TraceloopSampler(),
   });
 

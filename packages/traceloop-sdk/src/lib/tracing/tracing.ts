@@ -14,8 +14,8 @@ export const getTracer = () => {
 
 export const getEntityPath = (
   entityContext: Context
-): string => {
+): string | undefined => {
   const path = entityContext.getValue(ENTITY_NAME_KEY);
 
-  return path ? `${path}` : "";
+  return path ? `${path}` : undefined;
 };
