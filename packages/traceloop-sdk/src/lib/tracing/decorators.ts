@@ -3,7 +3,7 @@ import { suppressTracing } from "@opentelemetry/core";
 import {
   ASSOCATION_PROPERTIES_KEY,
   ENTITY_NAME_KEY,
-  getChainedEntityName,
+  getEntityPath,
   getTracer,
   WORKFLOW_NAME_KEY,
 } from "./tracing";
@@ -50,11 +50,13 @@ function withEntity<
   }
 
   let entityName = name;
+  let entityPath = entityName;
   if (
     type === TraceloopSpanKindValues.TOOL ||
     type === TraceloopSpanKindValues.TASK
   ) {
-    entityName = getChainedEntityName(entityContext, name);
+    entityName = name;
+    entityPath = getEntityPath(entityContext);
     entityContext = entityContext.setValue(ENTITY_NAME_KEY, entityName);
   }
 
@@ -88,6 +90,7 @@ function withEntity<
           span.setAttribute(SpanAttributes.TRACELOOP_WORKFLOW_NAME, name);
         }
         span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
+        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_PATH, entityPath);
         span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
 
         if (version) {

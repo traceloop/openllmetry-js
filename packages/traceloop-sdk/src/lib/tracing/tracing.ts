@@ -12,11 +12,10 @@ export const getTracer = () => {
   return trace.getTracer(TRACER_NAME);
 };
 
-export const getChainedEntityName = (
-  entityContext: Context,
-  entityName: string,
+export const getEntityPath = (
+  entityContext: Context
 ): string => {
-  const parentEntityName = entityContext.getValue(ENTITY_NAME_KEY);
+  const path = entityContext.getValue(ENTITY_NAME_KEY);
 
-  return parentEntityName ? `${parentEntityName}.${entityName}` : entityName;
+  return path ? `${path}` : "";
 };

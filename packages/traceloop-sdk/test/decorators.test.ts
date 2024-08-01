@@ -610,11 +610,11 @@ describe("Test SDK Decorators", () => {
       "joke_creation_task_wrapper",
     );
     assert.strictEqual(
-      jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
-      "joke_creation_task_wrapper.joke_creation",
+      jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_PATH}`],
+      "joke_creation_task_wrapper",
     );
     assert.strictEqual(
-      openAiChatSpans.attributes[`${SpanAttributes.TRACELOOP_ENTITY_NAME}`],
+      openAiChatSpans.attributes[`${SpanAttributes.TRACELOOP_ENTITY_PATH}`],
       "joke_creation_task_wrapper.joke_creation",
     );
     assert.strictEqual(
