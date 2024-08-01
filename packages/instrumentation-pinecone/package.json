@@ -44,7 +44,7 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@pinecone-database/pinecone": "^2.0.1",
+    "@pinecone-database/pinecone": "^3.0.0",
     "@pollyjs/adapter-fetch": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6"
