@@ -51,7 +51,7 @@
     "@pollyjs/persister-fs": "^6.0.6",
     "@types/mocha": "^10.0.6",
     "hnswlib-node": "^1.4.2",
-    "langchain": "^0.1.25",
+    "langchain": "^0.2.15",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0"
   },
