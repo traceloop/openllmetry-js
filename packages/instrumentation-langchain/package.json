@@ -44,7 +44,7 @@
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@langchain/community": "^0.0.34",
+    "@langchain/community": "^0.2.26",
     "@langchain/openai": "^0.0.15",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
