@@ -43,7 +43,7 @@
     "@traceloop/node-server-sdk": "*",
     "cohere-ai": "^7.7.5",
     "langchain": "^0.1.7",
-    "llamaindex": "^0.1.16",
+    "llamaindex": "^0.5.19",
     "openai": "^4.51.0",
     "chromadb": "^1.8.1"
   },
