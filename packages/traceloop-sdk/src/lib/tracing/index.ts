@@ -5,6 +5,7 @@ import {
   BatchSpanProcessor,
   SpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
+import { baggageUtils } from "@opentelemetry/core";
 import { Span, context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
@@ -246,11 +247,15 @@ export const startTracing = (options: InitializeOptions) => {
     });
   }
 
+  const headers = process.env.TRACELOOP_HEADERS
+    ? baggageUtils.parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
+    : { Authorization: `Bearer ${options.apiKey}` };
+
   const traceExporter =
     options.exporter ??
     new OTLPTraceExporter({
       url: `${options.baseUrl}/v1/traces`,
-      headers: { Authorization: `Bearer ${options.apiKey}` },
+      headers,
     });
   _spanProcessor = options.disableBatch
     ? new SimpleSpanProcessor(traceExporter)
