@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/traceloop/openllmetry-js/compare/v0.10.0...v0.11.0) (2024-08-27)
+
+### Bug Fixes
+
+- include dist .mjs for packages with modules declared ([#425](https://github.com/traceloop/openllmetry-js/issues/425)) ([4a7ec33](https://github.com/traceloop/openllmetry-js/commit/4a7ec33ca5de6a1ad4ba6364bcff4fff8cb2b664))
+
 # [0.10.0](https://github.com/traceloop/openllmetry-js/compare/v0.9.5...v0.10.0) (2024-08-01)
 
 **Note:** Version bump only for package @traceloop/instrumentation-cohere
