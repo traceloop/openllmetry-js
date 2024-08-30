@@ -38,14 +38,14 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/core": "^1.25.0",
-    "@opentelemetry/instrumentation": "^0.52.0",
-    "@opentelemetry/semantic-conventions": "^1.25.0",
+    "@opentelemetry/core": "^1.26.0",
+    "@opentelemetry/instrumentation": "^0.53.0",
+    "@opentelemetry/semantic-conventions": "^1.26.0",
     "@traceloop/ai-semantic-conventions": "^0.11.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.20.1",
+    "@anthropic-ai/sdk": "^0.27.1",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",

@@ -38,21 +38,20 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/core": "^1.25.0",
-    "@opentelemetry/instrumentation": "^0.52.0",
-    "@opentelemetry/semantic-conventions": "^1.25.0",
+    "@opentelemetry/core": "^1.26.0",
+    "@opentelemetry/instrumentation": "^0.53.0",
+    "@opentelemetry/semantic-conventions": "^1.26.0",
     "@traceloop/ai-semantic-conventions": "^0.11.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@langchain/community": "^0.0.34",
-    "@langchain/openai": "^0.0.15",
+    "@langchain/community": "^0.2.31",
+    "@langchain/openai": "^0.2.8",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
     "@types/mocha": "^10.0.6",
-    "hnswlib-node": "^1.4.2",
-    "langchain": "^0.1.25",
+    "langchain": "^0.2.12",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0"
   },

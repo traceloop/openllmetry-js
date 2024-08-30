@@ -33,19 +33,19 @@
     "node": ">=14"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.20.1",
+    "@anthropic-ai/sdk": "^0.27.1",
     "@aws-sdk/client-bedrock-runtime": "^3.499.0",
     "@azure/openai": "^1.0.0-beta.11",
     "@google-cloud/aiplatform": "^3.10.0",
     "@google-cloud/vertexai": "^1.2.0",
-    "@langchain/community": "^0.0.34",
+    "@langchain/community": "^0.2.31",
     "@pinecone-database/pinecone": "^2.0.1",
     "@traceloop/node-server-sdk": "*",
+    "chromadb": "^1.8.1",
     "cohere-ai": "^7.7.5",
-    "langchain": "^0.1.7",
-    "llamaindex": "^0.1.16",
-    "openai": "^4.51.0",
-    "chromadb": "^1.8.1"
+    "langchain": "^0.2.12",
+    "llamaindex": "^0.5.20",
+    "openai": "^4.57.0"
   },
   "private": true,
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

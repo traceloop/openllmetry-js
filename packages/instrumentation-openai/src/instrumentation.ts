@@ -356,7 +356,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             index: 0,
             logprobs: null,
             finish_reason: "stop",
-            message: { role: "assistant", content: "" },
+            message: { role: "assistant", content: "", refusal: null },
           },
         ],
         object: "chat.completion",
