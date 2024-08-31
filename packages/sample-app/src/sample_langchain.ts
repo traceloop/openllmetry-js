@@ -8,7 +8,7 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator";
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { pull } from "langchain/hub";

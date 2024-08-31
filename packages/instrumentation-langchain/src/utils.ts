@@ -15,7 +15,7 @@ export function genericWrapper(
   return (original: Function) => {
     return function method(this: any, ...args: unknown[]) {
       const span = tracer().startSpan(
-        spanName || `langchain.${spanKind}.${this.constructor.name}`,
+        spanName || `${this.constructor.name}.${spanKind}`,
       );
       span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, spanKind);
 

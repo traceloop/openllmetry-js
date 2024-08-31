@@ -208,11 +208,11 @@ export class CohereInstrumentation extends InstrumentationBase {
     type,
   }: {
     params:
-    | cohere.Cohere.GenerateRequest
-    | cohere.Cohere.GenerateStreamRequest
-    | cohere.Cohere.ChatRequest
-    | cohere.Cohere.ChatStreamRequest
-    | cohere.Cohere.RerankRequest;
+      | cohere.Cohere.GenerateRequest
+      | cohere.Cohere.GenerateStreamRequest
+      | cohere.Cohere.ChatRequest
+      | cohere.Cohere.ChatStreamRequest
+      | cohere.Cohere.RerankRequest;
     type: LLM_COMPLETION_TYPE;
   }): Span {
     const attributes: Attributes = {
@@ -248,7 +248,8 @@ export class CohereInstrumentation extends InstrumentationBase {
             attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
               msg.role;
             if (msg.role !== "TOOL") {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] = msg.message;
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                msg.message;
             }
           });
 
@@ -285,35 +286,35 @@ export class CohereInstrumentation extends InstrumentationBase {
     result,
   }:
     | {
-      type: "completion";
-      span: Span;
-      streaming: false;
-      result: cohere.Cohere.Generation;
-    }
+        type: "completion";
+        span: Span;
+        streaming: false;
+        result: cohere.Cohere.Generation;
+      }
     | {
-      type: "completion";
-      span: Span;
-      streaming: true;
-      result: AsyncIterable<cohere.Cohere.GenerateStreamedResponse>;
-    }
+        type: "completion";
+        span: Span;
+        streaming: true;
+        result: AsyncIterable<cohere.Cohere.GenerateStreamedResponse>;
+      }
     | {
-      type: "chat";
-      span: Span;
-      streaming: false;
-      result: cohere.Cohere.NonStreamedChatResponse;
-    }
+        type: "chat";
+        span: Span;
+        streaming: false;
+        result: cohere.Cohere.NonStreamedChatResponse;
+      }
     | {
-      type: "chat";
-      span: Span;
-      streaming: true;
-      result: AsyncIterable<cohere.Cohere.StreamedChatResponse>;
-    }
+        type: "chat";
+        span: Span;
+        streaming: true;
+        result: AsyncIterable<cohere.Cohere.StreamedChatResponse>;
+      }
     | {
-      type: "rerank";
-      span: Span;
-      streaming: false;
-      result: cohere.Cohere.RerankResponse;
-    }) {
+        type: "rerank";
+        span: Span;
+        streaming: false;
+        result: cohere.Cohere.RerankResponse;
+      }) {
     if (type === "completion") {
       if (streaming) {
         for await (const message of result) {
@@ -506,7 +507,7 @@ export class CohereInstrumentation extends InstrumentationBase {
           span.setAttribute(
             SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
             result.meta?.billedUnits?.inputTokens +
-            result.meta?.billedUnits?.outputTokens,
+              result.meta?.billedUnits?.outputTokens,
           );
         }
       }

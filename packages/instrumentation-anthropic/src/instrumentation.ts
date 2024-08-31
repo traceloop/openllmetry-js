@@ -118,17 +118,17 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         const span =
           type === "chat"
             ? plugin.startSpan({
-              type,
-              params: args[0] as MessageCreateParamsNonStreaming & {
-                extraAttributes?: Record<string, any>;
-              },
-            })
+                type,
+                params: args[0] as MessageCreateParamsNonStreaming & {
+                  extraAttributes?: Record<string, any>;
+                },
+              })
             : plugin.startSpan({
-              type,
-              params: args[0] as CompletionCreateParamsNonStreaming & {
-                extraAttributes?: Record<string, any>;
-              },
-            });
+                type,
+                params: args[0] as CompletionCreateParamsNonStreaming & {
+                  extraAttributes?: Record<string, any>;
+                },
+              });
 
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
@@ -150,8 +150,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         if (
           (
             args[0] as
-            | MessageCreateParamsStreaming
-            | CompletionCreateParamsStreaming
+              | MessageCreateParamsStreaming
+              | CompletionCreateParamsStreaming
           ).stream &&
           type === "completion" // For some reason, this causes an exception with chat, so disabled for now
         ) {
@@ -177,17 +177,17 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     params,
   }:
     | {
-      type: "chat";
-      params: MessageCreateParamsNonStreaming & {
-        extraAttributes?: Record<string, any>;
-      };
-    }
+        type: "chat";
+        params: MessageCreateParamsNonStreaming & {
+          extraAttributes?: Record<string, any>;
+        };
+      }
     | {
-      type: "completion";
-      params: CompletionCreateParamsNonStreaming & {
-        extraAttributes?: Record<string, any>;
-      };
-    }): Span {
+        type: "completion";
+        params: CompletionCreateParamsNonStreaming & {
+          extraAttributes?: Record<string, any>;
+        };
+      }): Span {
     const attributes: Attributes = {
       [SpanAttributes.LLM_SYSTEM]: "Anthropic",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
@@ -250,15 +250,15 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     promise,
   }:
     | {
-      span: Span;
-      type: "chat";
-      promise: Promise<Stream<MessageStreamEvent>>;
-    }
+        span: Span;
+        type: "chat";
+        promise: Promise<Stream<MessageStreamEvent>>;
+      }
     | {
-      span: Span;
-      type: "completion";
-      promise: Promise<Stream<Completion>>;
-    }) {
+        span: Span;
+        type: "completion";
+        promise: Promise<Stream<Completion>>;
+      }) {
     if (type === "chat") {
       const result: Message = {
         id: "0",
@@ -284,7 +284,10 @@ export class AnthropicInstrumentation extends InstrumentationBase {
             case "content_block_delta":
               if (chunk.index < result.content.length) {
                 const current = result.content[chunk.index];
-                if (current.type === "text" && chunk.delta.type === "text_delta") {
+                if (
+                  current.type === "text" &&
+                  chunk.delta.type === "text_delta"
+                ) {
                   result.content[chunk.index] = {
                     type: "text",
                     text: current.text + chunk.delta.text,
@@ -379,10 +382,10 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   }:
     | { span: Span; type: "chat"; result: Message }
     | {
-      span: Span;
-      type: "completion";
-      result: Completion;
-    }) {
+        span: Span;
+        type: "completion";
+        result: Completion;
+      }) {
     try {
       span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
       if (type === "chat" && result.usage) {
