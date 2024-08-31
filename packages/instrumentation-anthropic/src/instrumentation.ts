@@ -283,10 +283,16 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
             case "content_block_delta":
               if (chunk.index < result.content.length) {
-                result.content[chunk.index] = {
-                  type: "text",
-                  text: result.content[chunk.index].text + chunk.delta.text,
-                };
+                const current = result.content[chunk.index];
+                if (
+                  current.type === "text" &&
+                  chunk.delta.type === "text_delta"
+                ) {
+                  result.content[chunk.index] = {
+                    type: "text",
+                    text: current.text + chunk.delta.text,
+                  };
+                }
               }
           }
         } catch (e) {

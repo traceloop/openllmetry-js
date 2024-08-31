@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "@opentelemetry/core": "^1.8.0",
-    "@opentelemetry/instrumentation": "^0.52.0",
+    "@opentelemetry/instrumentation": "^0.53.0",
     "@traceloop/ai-semantic-conventions": "^0.11.0",
     "tslib": "^2.3.0"
   },

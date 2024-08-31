@@ -24,6 +24,8 @@ import { taskWrapper, workflowWrapper } from "./utils";
 import type * as ChainsModule from "langchain/chains";
 import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
+import type * as VectorStoreModule from "langchain/vectorstores/base.cjs";
+import type * as RunnablesModule from "@langchain/core/runnables";
 import { version } from "../package.json";
 
 export class LangChainInstrumentation extends InstrumentationBase {
@@ -37,10 +39,14 @@ export class LangChainInstrumentation extends InstrumentationBase {
     chainsModule,
     agentsModule,
     toolsModule,
+    vectorStoreModule,
+    runnablesModule,
   }: {
     chainsModule?: any;
     agentsModule?: any;
     toolsModule?: any;
+    vectorStoreModule?: any;
+    runnablesModule?: any;
   }) {
     if (chainsModule) {
       this._diag.debug("Manually instrumenting langchain chains");
@@ -53,6 +59,14 @@ export class LangChainInstrumentation extends InstrumentationBase {
     if (toolsModule) {
       this._diag.debug("Manually instrumenting langchain tools");
       this.patchToolsModule(toolsModule);
+    }
+    if (vectorStoreModule) {
+      this._diag.debug("Manually instrumenting langchain vector stores");
+      this.patchVectorStoreModule(vectorStoreModule);
+    }
+    if (runnablesModule) {
+      this._diag.debug("Manually instrumenting @langchain/core/runnables");
+      this.patchRunnablesModule(runnablesModule);
     }
   }
 
@@ -75,7 +89,25 @@ export class LangChainInstrumentation extends InstrumentationBase {
       this.patchToolsModule.bind(this),
       this.unpatchToolsModule.bind(this),
     );
-    return [chainModule, agentModule, toolsModule];
+    const vectorStoreModule = new InstrumentationNodeModuleDefinition(
+      "langchain/vectorstores/base.cjs",
+      [">=0.1.7"],
+      this.patchVectorStoreModule.bind(this),
+      this.unpatchVectorStoreModule.bind(this),
+    );
+    const runnablesModule = new InstrumentationNodeModuleDefinition(
+      "@langchain/core/runnables.cjs",
+      [">=0.1.7"],
+      this.patchRunnablesModule.bind(this),
+      this.unpatchRunnablesModule.bind(this),
+    );
+    return [
+      chainModule,
+      agentModule,
+      toolsModule,
+      vectorStoreModule,
+      runnablesModule,
+    ];
   }
 
   private patchChainModule(
@@ -133,6 +165,33 @@ export class LangChainInstrumentation extends InstrumentationBase {
     return moduleExports;
   }
 
+  private patchVectorStoreModule(
+    moduleExports: typeof VectorStoreModule,
+    moduleVersion?: string,
+  ) {
+    this._diag.debug(`Patching langchain/vectorstores.cjs@${moduleVersion}`);
+
+    this._wrap(
+      moduleExports.VectorStoreRetriever.prototype,
+      "_getRelevantDocuments",
+      taskWrapper(() => this.tracer, this._shouldSendPrompts()),
+    );
+    return moduleExports;
+  }
+
+  private patchRunnablesModule(
+    moduleExports: typeof RunnablesModule,
+    moduleVersion?: string,
+  ) {
+    this._diag.debug(`Patching @langchain/core/runnables@${moduleVersion}`);
+
+    this._wrap(
+      moduleExports.RunnableSequence.prototype,
+      "invoke",
+      taskWrapper(() => this.tracer, this._shouldSendPrompts()),
+    );
+  }
+
   private unpatchChainModule(
     moduleExports: typeof ChainsModule,
     moduleVersion?: string,
@@ -158,6 +217,23 @@ export class LangChainInstrumentation extends InstrumentationBase {
     this._diag.debug(`Unpatching langchain/tools.cjs`);
 
     this._unwrap(moduleExports.Tool.prototype, "call");
+    return moduleExports;
+  }
+
+  private unpatchVectorStoreModule(moduleExports: typeof VectorStoreModule) {
+    this._diag.debug(`Unpatching langchain/vectorstores.cjs`);
+
+    this._unwrap(
+      moduleExports.VectorStoreRetriever.prototype,
+      "_getRelevantDocuments",
+    );
+    return moduleExports;
+  }
+
+  private unpatchRunnablesModule(moduleExports: typeof RunnablesModule) {
+    this._diag.debug(`Unpatching @langchain/core/runnables`);
+
+    this._unwrap(moduleExports.Runnable.prototype, "invoke");
     return moduleExports;
   }
 

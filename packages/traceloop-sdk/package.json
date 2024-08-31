@@ -35,9 +35,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.49.1",
-    "@opentelemetry/sdk-node": "^0.49.1",
-    "@sentry/node": "^7.111.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.53.0",
+    "@opentelemetry/sdk-node": "^0.53.0",
     "@traceloop/ai-semantic-conventions": "^0.11.0",
     "@traceloop/instrumentation-anthropic": "^0.11.0",
     "@traceloop/instrumentation-azure": "^0.11.0",
@@ -61,7 +60,7 @@
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.20.1",
+    "@anthropic-ai/sdk": "^0.27.1",
     "@aws-sdk/client-bedrock-runtime": "^3.499.0",
     "@azure/openai": "^1.0.0-beta.11",
     "@google-cloud/aiplatform": "^3.10.0",
@@ -77,9 +76,9 @@
     "chromadb": "^1.8.1",
     "cohere-ai": "^7.7.5",
     "esbuild": "^0.20.1",
-    "langchain": "^0.1.7",
+    "langchain": "^0.2.17",
     "llamaindex": "^0.1.16",
-    "openai": "^4.51.0",
+    "openai": "^4.57.0",
     "ts-mocha": "^10.0.0"
   }
 }

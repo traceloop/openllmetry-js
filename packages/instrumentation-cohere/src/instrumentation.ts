@@ -247,8 +247,10 @@ export class CohereInstrumentation extends InstrumentationBase {
           params.chatHistory?.forEach((msg, index) => {
             attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
               msg.role;
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.user`] =
-              msg.message;
+            if (msg.role !== "TOOL") {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                msg.message;
+            }
           });
 
           attributes[
@@ -452,10 +454,12 @@ export class CohereInstrumentation extends InstrumentationBase {
 
         if (result.searchResults?.length) {
           result.searchResults.forEach((searchResult, index) => {
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.text`,
-              searchResult.searchQuery.text,
-            );
+            if (searchResult.searchQuery) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.text`,
+                searchResult.searchQuery.text,
+              );
+            }
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.connector`,
               searchResult.connector.id,
