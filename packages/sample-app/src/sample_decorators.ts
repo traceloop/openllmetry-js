@@ -31,6 +31,7 @@ class SampleOpenAI {
       prompt: `Tell me a joke about ${jokeSubject}`,
       model: "gpt-3.5-turbo-instruct",
     });
+    traceloop.reportCustomMetric("test_metric2", 20);
 
     return completion.choices[0].text;
   }
