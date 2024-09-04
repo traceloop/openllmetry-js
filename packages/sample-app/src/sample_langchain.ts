@@ -8,7 +8,6 @@ import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 import { SerpAPI } from "@langchain/community/tools/serpapi";
-import { Calculator } from "@langchain/community/tools/calculator";
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
 import { pull } from "langchain/hub";
@@ -54,7 +53,7 @@ class SampleLangchain {
   @traceloop.workflow({ name: "sample_tools_example" })
   async toolsExample() {
     const llm = new ChatOpenAI({});
-    const tools = [new Calculator(), new SerpAPI()];
+    const tools = [new SerpAPI()];
     const prompt = await pull<ChatPromptTemplate>(
       "hwchase17/openai-tools-agent",
     );
