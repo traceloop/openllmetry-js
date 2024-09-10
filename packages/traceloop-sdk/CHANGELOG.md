@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.2](https://github.com/traceloop/openllmetry-js/compare/v0.11.1...v0.11.2) (2024-09-10)
+
+### Bug Fixes
+
+- **sdk:** support custom metrics ([#446](https://github.com/traceloop/openllmetry-js/issues/446)) ([7c77047](https://github.com/traceloop/openllmetry-js/commit/7c770478de41ac5fb934abf7cdeef2abf9c4e018))
+
 ## [0.11.1](https://github.com/traceloop/openllmetry-js/compare/v0.11.0...v0.11.1) (2024-08-31)
 
 ### Bug Fixes
