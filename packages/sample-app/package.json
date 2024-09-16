@@ -39,7 +39,7 @@
     "@google-cloud/aiplatform": "^3.10.0",
     "@google-cloud/vertexai": "^1.2.0",
     "@langchain/community": "^0.2.31",
-    "@pinecone-database/pinecone": "^2.0.1",
+    "@pinecone-database/pinecone": "^3.0.3",
     "@traceloop/node-server-sdk": "*",
     "cheerio": "^1.0.0",
     "chromadb": "^1.8.1",
