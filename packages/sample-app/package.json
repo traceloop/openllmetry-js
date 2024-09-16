@@ -45,7 +45,7 @@
     "chromadb": "^1.8.1",
     "cohere-ai": "^7.7.5",
     "langchain": "^0.2.12",
-    "llamaindex": "^0.5.20",
+    "llamaindex": "^0.6.0",
     "openai": "^4.57.0"
   },
   "private": true,
