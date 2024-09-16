@@ -44,7 +44,7 @@
     "cheerio": "^1.0.0",
     "chromadb": "^1.8.1",
     "cohere-ai": "^7.7.5",
-    "langchain": "^0.2.12",
+    "langchain": "^0.3.2",
     "llamaindex": "^0.5.20",
     "openai": "^4.57.0"
   },
