@@ -483,14 +483,14 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.name`
+        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.arguments`
+          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.arguments`
         ]! as string,
       ),
       { location: "Boston, MA" },
