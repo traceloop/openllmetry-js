@@ -745,7 +745,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   private tokenCountFromString(text: string, model: string) {
     if (!text) {
       return 0;
-    };
+    }
 
     let encoding = this._encodingCache.get(model);
 
