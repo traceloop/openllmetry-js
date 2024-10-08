@@ -403,16 +403,16 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
           if (result.choices[0].message.tool_calls) {
             if (toolCall.id) {
-              result.choices[0].message.tool_calls[toolCall.index].id = toolCall.id;
+              result.choices[0].message.tool_calls[toolCall.index].id += toolCall.id;
             }
             if (toolCall.type) {
-              result.choices[0].message.tool_calls[toolCall.index].type = toolCall.type;
+              result.choices[0].message.tool_calls[toolCall.index].type += toolCall.type;
             }
             if (toolCall.function?.name) {
-              result.choices[0].message.tool_calls[toolCall.index].function.name = toolCall.function.name;
+              result.choices[0].message.tool_calls[toolCall.index].function.name += toolCall.function.name;
             }
             if (toolCall.function?.arguments) {
-              result.choices[0].message.tool_calls[toolCall.index].function.arguments = toolCall.function.arguments;
+              result.choices[0].message.tool_calls[toolCall.index].function.arguments += toolCall.function.arguments;
             }
           }
         }

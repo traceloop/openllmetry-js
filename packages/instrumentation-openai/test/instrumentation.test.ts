@@ -508,4 +508,99 @@ describe("Test OpenAI instrumentation", async function () {
       ]! > 0,
     );
   });
+
+  it("should set function_call attributes in span for stream completion when multiple tools called", async () => {
+    const stream = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "user", content: "What's the weather today in Boston and what will the weather be tomorrow in Chicago?" },
+      ],
+      stream: true,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: {
+                  type: "string",
+                  enum: ["celsius", "fahrenheit"],
+                },
+              },
+              required: ["location"],
+            },
+          },
+        },
+        {
+          type: "function",
+          function: {
+            name: "get_tomorrow_weather",
+            description: "Get tomorrow's weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: {
+                  type: "string",
+                  enum: ["celsius", "fahrenheit"],
+                },
+              },
+              required: ["location"],
+            },
+          },
+        }
+      ],
+    });
+
+    let result = "";
+    for await (const chunk of stream) {
+      result += chunk.choices[0]?.delta?.content || "";
+    }
+
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "openai.chat");
+
+    console.log("here we go");
+    console.log(spans);
+
+    assert.ok(completionSpan);
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.name`
+      ],
+      "get_current_weather",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.arguments`
+        ]! as string,
+      ),
+      { location: "Boston, MA" },
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.1.name`
+      ],
+      "get_tomorrow_weather",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.1.arguments`
+        ]! as string,
+      ),
+      { location: "Chicago, IL" },
+    );
+  });
 });
