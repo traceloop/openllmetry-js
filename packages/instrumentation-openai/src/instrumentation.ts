@@ -388,7 +388,6 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             arguments: chunk.choices[0].delta.function_call.arguments,
           };
         }
-        // GF: Log toolcalls over multiple chunks
         for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {                                    
           if ((result.choices[0].message.tool_calls?.length ?? 0) < toolCall.index + 1) {
               result.choices[0].message.tool_calls?.push({ 
@@ -649,21 +648,10 @@ export class OpenAIInstrumentation extends InstrumentationBase {
                 choice.message.function_call.arguments,
               );
             }
-            // GF: Allow multiple tool calls
             for (const [toolIndex, toolCall] of choice?.message?.tool_calls?.entries() || []) {
               span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.${toolIndex}.name`, toolCall.function.name);
               span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.${toolIndex}.arguments`, toolCall.function.arguments);
             }
-            // if (choice.message.tool_calls) {
-            //   span.setAttribute(
-            //     `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-            //     choice.message.tool_calls[0].function.name,
-            //   );
-            //   span.setAttribute(
-            //     `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-            //     choice.message.tool_calls[0].function.arguments,
-            //   );
-            // }
           });
         } else {
           result.choices.forEach((choice, index) => {
@@ -755,7 +743,6 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   private _encodingCache = new Map<string, Tiktoken>();
 
   private tokenCountFromString(text: string, model: string) {
-    // GF: Some streaming chunks may not have text
     if (!text) {
       return 0;
     };

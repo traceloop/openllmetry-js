@@ -570,9 +570,6 @@ describe("Test OpenAI instrumentation", async function () {
     const spans = memoryExporter.getFinishedSpans();
     const completionSpan = spans.find((span) => span.name === "openai.chat");
 
-    console.log("here we go");
-    console.log(spans);
-
     assert.ok(completionSpan);
     assert.strictEqual(
       completionSpan.attributes[
