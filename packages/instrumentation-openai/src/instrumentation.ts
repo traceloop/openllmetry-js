@@ -415,27 +415,6 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             }
           }
         }
-        // if (chunk.choices[0]?.delta.tool_calls) {
-          // I needed to re-build the object so that Typescript will understand that arguments are not null.
-          // result.choices[0].message.tool_calls = [];
-          // for (const toolCall of chunk.choices[0].delta.tool_calls) {
-          //   if (
-          //     toolCall.id &&
-          //     toolCall.type &&
-          //     toolCall.function?.name &&
-          //     toolCall.function?.arguments
-          //   ) {
-          //     result.choices[0].message.tool_calls.push({
-          //       id: toolCall.id,
-          //       type: toolCall.type,
-          //       function: {
-          //         name: toolCall.function.name,
-          //         arguments: toolCall.function.arguments,
-          //       },
-          //     });
-          //   }
-          // }
-        // }
       }
 
       if (result.choices[0].logprobs?.content) {
