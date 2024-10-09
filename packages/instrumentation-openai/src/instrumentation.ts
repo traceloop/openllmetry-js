@@ -356,7 +356,12 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             index: 0,
             logprobs: null,
             finish_reason: "stop",
-            message: { role: "assistant", content: "", refusal: null, tool_calls: [] },
+            message: {
+              role: "assistant",
+              content: "",
+              refusal: null,
+              tool_calls: [],
+            },
           },
         ],
         object: "chat.completion",
@@ -388,30 +393,39 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             arguments: chunk.choices[0].delta.function_call.arguments,
           };
         }
-        for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {                                    
-          if ((result.choices[0].message.tool_calls?.length ?? 0) < toolCall.index + 1) {
-              result.choices[0].message.tool_calls?.push({ 
-                  function: {
-                      name: "", 
-                      arguments: ""
-                  }, 
-                  id: "", 
-                  type: "function"
-              });
+        for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {
+          if (
+            (result.choices[0].message.tool_calls?.length ?? 0) <
+            toolCall.index + 1
+          ) {
+            result.choices[0].message.tool_calls?.push({
+              function: {
+                name: "",
+                arguments: "",
+              },
+              id: "",
+              type: "function",
+            });
           }
 
           if (result.choices[0].message.tool_calls) {
             if (toolCall.id) {
-              result.choices[0].message.tool_calls[toolCall.index].id += toolCall.id;
+              result.choices[0].message.tool_calls[toolCall.index].id +=
+                toolCall.id;
             }
             if (toolCall.type) {
-              result.choices[0].message.tool_calls[toolCall.index].type += toolCall.type;
+              result.choices[0].message.tool_calls[toolCall.index].type +=
+                toolCall.type;
             }
             if (toolCall.function?.name) {
-              result.choices[0].message.tool_calls[toolCall.index].function.name += toolCall.function.name;
+              result.choices[0].message.tool_calls[
+                toolCall.index
+              ].function.name += toolCall.function.name;
             }
             if (toolCall.function?.arguments) {
-              result.choices[0].message.tool_calls[toolCall.index].function.arguments += toolCall.function.arguments;
+              result.choices[0].message.tool_calls[
+                toolCall.index
+              ].function.arguments += toolCall.function.arguments;
             }
           }
         }
@@ -627,9 +641,18 @@ export class OpenAIInstrumentation extends InstrumentationBase {
                 choice.message.function_call.arguments,
               );
             }
-            for (const [toolIndex, toolCall] of choice?.message?.tool_calls?.entries() || []) {
-              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`, toolCall.function.name);
-              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`, toolCall.function.arguments);
+            for (const [
+              toolIndex,
+              toolCall,
+            ] of choice?.message?.tool_calls?.entries() || []) {
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
+                toolCall.function.name,
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
+                toolCall.function.arguments,
+              );
             }
           });
         } else {

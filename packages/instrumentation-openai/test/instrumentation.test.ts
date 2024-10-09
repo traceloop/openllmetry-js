@@ -513,7 +513,11 @@ describe("Test OpenAI instrumentation", async function () {
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
-        { role: "user", content: "What's the weather today in Boston and what will the weather be tomorrow in Chicago?" },
+        {
+          role: "user",
+          content:
+            "What's the weather today in Boston and what will the weather be tomorrow in Chicago?",
+        },
       ],
       stream: true,
       tools: [
@@ -558,7 +562,7 @@ describe("Test OpenAI instrumentation", async function () {
               required: ["location"],
             },
           },
-        }
+        },
       ],
     });
 
