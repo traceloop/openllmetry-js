@@ -483,14 +483,14 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.name`
+        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.arguments`
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
         ]! as string,
       ),
       { location: "Boston, MA" },
@@ -570,31 +570,32 @@ describe("Test OpenAI instrumentation", async function () {
     const spans = memoryExporter.getFinishedSpans();
     const completionSpan = spans.find((span) => span.name === "openai.chat");
 
+    assert.strictEqual(result, "");
     assert.ok(completionSpan);
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.name`
+        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.0.arguments`
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
         ]! as string,
       ),
       { location: "Boston, MA" },
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.1.name`
+        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.name`
       ],
       "get_tomorrow_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.1.arguments`
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.arguments`
         ]! as string,
       ),
       { location: "Chicago, IL" },

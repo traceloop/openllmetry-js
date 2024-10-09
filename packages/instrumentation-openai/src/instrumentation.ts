@@ -628,8 +628,8 @@ export class OpenAIInstrumentation extends InstrumentationBase {
               );
             }
             for (const [toolIndex, toolCall] of choice?.message?.tool_calls?.entries() || []) {
-              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.${toolIndex}.name`, toolCall.function.name);
-              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.${toolIndex}.arguments`, toolCall.function.arguments);
+              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`, toolCall.function.name);
+              span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`, toolCall.function.arguments);
             }
           });
         } else {
