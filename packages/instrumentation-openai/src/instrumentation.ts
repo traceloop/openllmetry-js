@@ -356,7 +356,12 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             index: 0,
             logprobs: null,
             finish_reason: "stop",
-            message: { role: "assistant", content: "", refusal: null },
+            message: {
+              role: "assistant",
+              content: "",
+              refusal: null,
+              tool_calls: [],
+            },
           },
         ],
         object: "chat.completion",
@@ -388,24 +393,39 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             arguments: chunk.choices[0].delta.function_call.arguments,
           };
         }
-        if (chunk.choices[0]?.delta.tool_calls) {
-          // I needed to re-build the object so that Typescript will understand that arguments are not null.
-          result.choices[0].message.tool_calls = [];
-          for (const toolCall of chunk.choices[0].delta.tool_calls) {
-            if (
-              toolCall.id &&
-              toolCall.type &&
-              toolCall.function?.name &&
-              toolCall.function?.arguments
-            ) {
-              result.choices[0].message.tool_calls.push({
-                id: toolCall.id,
-                type: toolCall.type,
-                function: {
-                  name: toolCall.function.name,
-                  arguments: toolCall.function.arguments,
-                },
-              });
+        for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {
+          if (
+            (result.choices[0].message.tool_calls?.length ?? 0) <
+            toolCall.index + 1
+          ) {
+            result.choices[0].message.tool_calls?.push({
+              function: {
+                name: "",
+                arguments: "",
+              },
+              id: "",
+              type: "function",
+            });
+          }
+
+          if (result.choices[0].message.tool_calls) {
+            if (toolCall.id) {
+              result.choices[0].message.tool_calls[toolCall.index].id +=
+                toolCall.id;
+            }
+            if (toolCall.type) {
+              result.choices[0].message.tool_calls[toolCall.index].type +=
+                toolCall.type;
+            }
+            if (toolCall.function?.name) {
+              result.choices[0].message.tool_calls[
+                toolCall.index
+              ].function.name += toolCall.function.name;
+            }
+            if (toolCall.function?.arguments) {
+              result.choices[0].message.tool_calls[
+                toolCall.index
+              ].function.arguments += toolCall.function.arguments;
             }
           }
         }
@@ -621,14 +641,17 @@ export class OpenAIInstrumentation extends InstrumentationBase {
                 choice.message.function_call.arguments,
               );
             }
-            if (choice.message.tool_calls) {
+            for (const [
+              toolIndex,
+              toolCall,
+            ] of choice?.message?.tool_calls?.entries() || []) {
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
-                choice.message.tool_calls[0].function.name,
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
+                toolCall.function.name,
               );
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
-                choice.message.tool_calls[0].function.arguments,
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
+                toolCall.function.arguments,
               );
             }
           });
@@ -722,6 +745,10 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   private _encodingCache = new Map<string, Tiktoken>();
 
   private tokenCountFromString(text: string, model: string) {
+    if (!text) {
+      return 0;
+    }
+
     let encoding = this._encodingCache.get(model);
 
     if (!encoding) {
