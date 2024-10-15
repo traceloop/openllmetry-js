@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-azure",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Azure OpenAI Instrumentaion",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
