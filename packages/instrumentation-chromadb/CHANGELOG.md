@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.3](https://github.com/traceloop/openllmetry-js/compare/v0.11.2...v0.11.3) (2024-10-16)
+
+### Bug Fixes
+
+- **openai:** streaming tool_call + logging multiple tool_call ([#463](https://github.com/traceloop/openllmetry-js/issues/463)) ([5d5de09](https://github.com/traceloop/openllmetry-js/commit/5d5de09e6d32c36a2775ca36cbb14a18fd22f98d))
+
 ## [0.11.1](https://github.com/traceloop/openllmetry-js/compare/v0.11.0...v0.11.1) (2024-08-31)
 
 ### Bug Fixes
