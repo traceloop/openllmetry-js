@@ -33,6 +33,10 @@ jobs:
         image: qdrant/qdrant
         ports:
           - 6333:6333
+      chroma:
+        image: chromadb/chroma
+        ports:
+          - 8000:8000
     permissions:
       contents: "read"
       id-token: "write"
@@ -46,8 +50,6 @@ jobs:
         with:
           cache: "npm"
           node-version-file: ".nvmrc"
-
-      - run: pip3 install chromadb
 
       - uses: nrwl/nx-set-shas@v3
       - run: npm ci
