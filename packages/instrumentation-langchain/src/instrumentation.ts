@@ -190,6 +190,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
       "invoke",
       taskWrapper(() => this.tracer, this._shouldSendPrompts()),
     );
+    return moduleExports;
   }
 
   private unpatchChainModule(
