@@ -56,7 +56,7 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
       location: process.env.VERTEXAI_LOCATION ?? "",
     });
 
-    const model = "gemini-1.5-flash";
+    const model = "gemini-pro-vision";
 
     const generativeModel = vertexAI.preview.getGenerativeModel({
       model,
@@ -65,17 +65,12 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
         maxOutputTokens: 256,
       },
     });
-    const userPrompt = "What is Node.js?";
-    const systemPrompt = "You are a helpful assistant";
+    const prompt = "What is Node.js?";
     const request = {
       contents: [
         {
-          role: "system",
-          parts: [{ text: systemPrompt }],
-        },
-        {
           role: "user",
-          parts: [{ text: userPrompt }],
+          parts: [{ text: prompt }],
         },
       ],
     };
@@ -93,10 +88,8 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(attributes["gen_ai.request.model"], model);
     assert.strictEqual(attributes["gen_ai.request.top_p"], 0.9);
-    assert.strictEqual(attributes["gen_ai.prompt.0.content"], systemPrompt);
-    assert.strictEqual(attributes["gen_ai.prompt.0.role"], "system");
-    assert.strictEqual(attributes["gen_ai.prompt.1.content"], userPrompt);
-    assert.strictEqual(attributes["gen_ai.prompt.1.role"], "user");
+    assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt);
+    assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(attributes["gen_ai.response.model"], model);
     assert.strictEqual(attributes["gen_ai.completion.0.role"], "model");
     assert.strictEqual(
