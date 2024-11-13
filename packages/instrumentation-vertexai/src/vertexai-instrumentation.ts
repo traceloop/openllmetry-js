@@ -168,9 +168,9 @@ export class VertexAIInstrumentation extends InstrumentationBase {
         }
 
         params.contents.forEach((content, j) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${i+j}.role`] =
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${i + j}.role`] =
             content.role ?? "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${i+j}.content`] =
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${i + j}.content`] =
             this._formatPartsData(content.parts);
         });
       }
