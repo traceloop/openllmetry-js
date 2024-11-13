@@ -25,6 +25,10 @@ async function createNonStreamingContent() {
       const request = {
         contents: [
           {
+            role: "system",
+            parts: [{ text: "You are a helpful assistant" }],
+          },
+          {
             role: "user",
             parts: [{ text: "What are the 4 cardinal directions?" }],
           },
