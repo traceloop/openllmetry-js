@@ -157,10 +157,20 @@ export class VertexAIInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts() && "contents" in params) {
-        params.contents.forEach((content, index) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+        let i = 0;
+
+        if (instance["systemInstruction"]) {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.role`] = "system";
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.content`] =
+            this._formatPartsData(instance["systemInstruction"].parts);
+
+          i++;
+        }
+
+        params.contents.forEach((content, j) => {
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${i+j}.role`] =
             content.role ?? "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${i+j}.content`] =
             this._formatPartsData(content.parts);
         });
       }

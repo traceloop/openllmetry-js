@@ -20,14 +20,14 @@ async function createNonStreamingContent() {
       // Instantiate the model
       const generativeModel = vertexAI.getGenerativeModel({
         model: "gemini-1.5-flash",
+        systemInstruction: {
+          role: "system",
+          parts: [{ text: "You are a helpful assistant" }],
+        },
       });
 
       const request = {
         contents: [
-          {
-            role: "system",
-            parts: [{ text: "You are a helpful assistant" }],
-          },
           {
             role: "user",
             parts: [{ text: "What are the 4 cardinal directions?" }],
@@ -57,6 +57,10 @@ async function createStreamingContent() {
       // Instantiate the model
       const generativeModel = vertexAI.getGenerativeModel({
         model: "gemini-1.5-flash",
+        systemInstruction: {
+          role: "system",
+          parts: [{ text: "You are a helpful assistant" }],
+        },
       });
 
       const request = {
