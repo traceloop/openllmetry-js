@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.4](https://github.com/traceloop/openllmetry-js/compare/v0.11.3...v0.11.4) (2024-11-13)
+
+### Bug Fixes
+
+- **langchain:** return exports in langchain runnables module patch ([#470](https://github.com/traceloop/openllmetry-js/issues/470)) ([23fdb28](https://github.com/traceloop/openllmetry-js/commit/23fdb28ab5d7d70a963559b26aae31dde8347082))
+
 ## [0.11.1](https://github.com/traceloop/openllmetry-js/compare/v0.11.0...v0.11.1) (2024-08-31)
 
 ### Bug Fixes

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.4](https://github.com/traceloop/openllmetry-js/compare/v0.11.3...v0.11.4) (2024-11-13)
+
+### Bug Fixes
+
+- **vertex-ai:** missing system prompt ([#473](https://github.com/traceloop/openllmetry-js/issues/473)) ([663e438](https://github.com/traceloop/openllmetry-js/commit/663e438c5bce18b8fa20c16b7f6d53355bb7b7f9))
+
 ## [0.11.1](https://github.com/traceloop/openllmetry-js/compare/v0.11.0...v0.11.1) (2024-08-31)
 
 ### Bug Fixes

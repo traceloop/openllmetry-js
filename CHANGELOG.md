@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.4](https://github.com/traceloop/openllmetry-js/compare/v0.11.3...v0.11.4) (2024-11-13)
+
+### Bug Fixes
+
+- **langchain:** return exports in langchain runnables module patch ([#470](https://github.com/traceloop/openllmetry-js/issues/470)) ([23fdb28](https://github.com/traceloop/openllmetry-js/commit/23fdb28ab5d7d70a963559b26aae31dde8347082))
+- **vertex-ai:** missing system prompt ([#473](https://github.com/traceloop/openllmetry-js/issues/473)) ([663e438](https://github.com/traceloop/openllmetry-js/commit/663e438c5bce18b8fa20c16b7f6d53355bb7b7f9))
+
 ## [0.11.3](https://github.com/traceloop/openllmetry-js/compare/v0.11.2...v0.11.3) (2024-10-16)
 
 ### Bug Fixes
