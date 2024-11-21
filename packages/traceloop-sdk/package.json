@@ -51,7 +51,7 @@
     "@traceloop/instrumentation-vertexai": "^0.11.4",
     "@types/nunjucks": "^3.2.5",
     "cross-fetch": "^4.0.0",
-    "fetch-retry": "^5.0.6",
+    "fetch-retry": "^6.0.0",
     "nunjucks": "^3.2.4",
     "posthog-node": "^3.6.3",
     "supports-color": "^8.1.1",
