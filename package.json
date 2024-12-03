@@ -4,7 +4,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "build:all": "npx nx run-many -t build",
-    "build:effected": "npx nx affected -t build"
+    "build:effected": "npx nx affected -t build",
+    "postinstall": "patch-package"
   },
   "private": true,
   "devDependencies": {
@@ -38,5 +39,8 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "patch-package": "^8.0.0"
   }
 }

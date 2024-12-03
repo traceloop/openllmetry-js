@@ -1,0 +1,34 @@
+diff --git a/node_modules/chromadb/dist/chromadb.d.ts b/node_modules/chromadb/dist/chromadb.d.ts
+index 1b0cea2..ba3ae1d 100644
+--- a/node_modules/chromadb/dist/chromadb.d.ts
++++ b/node_modules/chromadb/dist/chromadb.d.ts
+@@ -1378,4 +1378,4 @@ declare class OllamaEmbeddingFunction implements IEmbeddingFunction {
+     generate(texts: string[]): Promise<number[][]>;
+ }
+ 
+-export { AddRecordsParams, AdminClient, ChromaClient, ChromaClientParams, CloudClient, CohereEmbeddingFunction, CollectionMetadata, CollectionParams, CollectionType, CreateCollectionParams, DefaultEmbeddingFunction, DeleteCollectionParams, DeleteParams, Document, Documents, Embedding, Embeddings, GetCollectionParams, GetOrCreateCollectionParams, GetParams, GetResponse, GoogleGenerativeAiEmbeddingFunction, HuggingFaceEmbeddingServerFunction, ID, IDs, IEmbeddingFunction, IncludeEnum, JinaEmbeddingFunction, ListCollectionsParams, Metadata, Metadatas, ModifyCollectionParams, OllamaEmbeddingFunction, OpenAIEmbeddingFunction, PeekParams, QueryRecordsParams, QueryResponse, TransformersEmbeddingFunction, UpdateRecordsParams, UpsertRecordsParams, Where, WhereDocument };
++export { AddRecordsParams, AdminClient, ChromaClient, ChromaClientParams, CloudClient, Collection, CohereEmbeddingFunction, CollectionMetadata, CollectionParams, CollectionType, CreateCollectionParams, DefaultEmbeddingFunction, DeleteCollectionParams, DeleteParams, Document, Documents, Embedding, Embeddings, GetCollectionParams, GetOrCreateCollectionParams, GetParams, GetResponse, GoogleGenerativeAiEmbeddingFunction, HuggingFaceEmbeddingServerFunction, ID, IDs, IEmbeddingFunction, IncludeEnum, JinaEmbeddingFunction, ListCollectionsParams, Metadata, Metadatas, ModifyCollectionParams, OllamaEmbeddingFunction, OpenAIEmbeddingFunction, PeekParams, QueryRecordsParams, QueryResponse, TransformersEmbeddingFunction, UpdateRecordsParams, UpsertRecordsParams, Where, WhereDocument };
+diff --git a/node_modules/chromadb/dist/chromadb.mjs b/node_modules/chromadb/dist/chromadb.mjs
+index b422fd5..eed5593 100644
+--- a/node_modules/chromadb/dist/chromadb.mjs
++++ b/node_modules/chromadb/dist/chromadb.mjs
+@@ -3648,6 +3648,7 @@ export {
+   AdminClient,
+   ChromaClient,
+   CloudClient,
++  Collection,
+   CohereEmbeddingFunction,
+   DefaultEmbeddingFunction,
+   GoogleGenerativeAiEmbeddingFunction,
+diff --git a/node_modules/chromadb/dist/cjs/chromadb.cjs b/node_modules/chromadb/dist/cjs/chromadb.cjs
+index 6f41943..31245ee 100644
+--- a/node_modules/chromadb/dist/cjs/chromadb.cjs
++++ b/node_modules/chromadb/dist/cjs/chromadb.cjs
+@@ -47,6 +47,7 @@ __export(src_exports, {
+   AdminClient: () => AdminClient,
+   ChromaClient: () => ChromaClient,
+   CloudClient: () => CloudClient,
++  Collection: () => Collection,
+   CohereEmbeddingFunction: () => CohereEmbeddingFunction,
+   DefaultEmbeddingFunction: () => DefaultEmbeddingFunction,
+   GoogleGenerativeAiEmbeddingFunction: () => GoogleGenerativeAiEmbeddingFunction,

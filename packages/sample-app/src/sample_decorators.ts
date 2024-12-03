@@ -31,7 +31,6 @@ class SampleOpenAI {
       prompt: `Tell me a joke about ${jokeSubject}`,
       model: "gpt-3.5-turbo-instruct",
     });
-    traceloop.reportCustomMetric("test_metric", 50.2);
 
     return completion.choices[0].text;
   }
@@ -46,7 +45,5 @@ traceloop.withAssociationProperties(
 
     const completion = await sampleOpenAI.completion("TypeScript");
     console.log(completion);
-
-    await traceloop.reportScore({ chat_id: "789" }, 1);
   },
 );

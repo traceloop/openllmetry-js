@@ -137,6 +137,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
           ),
         );
       } else if (this.isSynthesizer(cls.prototype)) {
+        console.log("Synthesizer", cls.name);
         this._wrap(
           cls.prototype,
           "synthesize",

@@ -22,6 +22,7 @@
     "run:openai_streaming": "npm run build && node dist/src/sample_openai_streaming.js",
     "run:sampler": "npm run build && node dist/src/sample_sampler.js",
     "run:llamaindex": "npm run build && node dist/src/sample_llamaindex.js",
+    "run:llamaindex_chat": "npm run build && node dist/src/sample_llamaindex_chat.js",
     "run:pinecone": "npm run build && node dist/src/sample_pinecone.js",
     "run:langchain": "npm run build && node dist/src/sample_langchain.js",
     "lint": "eslint . --ext .ts",
@@ -45,7 +46,7 @@
     "chromadb": "^1.8.1",
     "cohere-ai": "^7.7.5",
     "langchain": "^0.2.12",
-    "llamaindex": "^0.5.20",
+    "llamaindex": "<=0.8.23",
     "openai": "^4.57.0"
   },
   "private": true,

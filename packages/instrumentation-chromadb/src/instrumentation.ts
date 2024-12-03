@@ -156,13 +156,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
     params,
     methodName,
   }: {
-    params:
-      | chromadb.AddParams
-      | chromadb.DeleteParams
-      | chromadb.GetParams
-      | chromadb.ModifyCollectionParams
-      | chromadb.PeekParams
-      | chromadb.QueryParams;
+    params: any;
     methodName: string;
   }): Span {
     const attributes: Attributes = {
@@ -182,22 +176,22 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
         ) {
           this._setAddOrUpdateOrUpsertAttributes(
             span,
-            params as chromadb.AddParams,
+            params,
             methodName,
           );
         } else if (methodName === "delete") {
-          this._setDeleteAttributes(span, params as chromadb.DeleteParams);
+          this._setDeleteAttributes(span, params);
         } else if (methodName === "get") {
-          this._setGetAttributes(span, params as chromadb.GetParams);
+          this._setGetAttributes(span, params);
         } else if (methodName === "modify") {
           this._setModifyAttributes(
             span,
             params as chromadb.ModifyCollectionParams,
           );
         } else if (methodName === "peek") {
-          this._setPeekAttributes(span, params as chromadb.PeekParams);
+          this._setPeekAttributes(span, params);
         } else if (methodName === "query") {
-          this._setQueryAttributes(span, params as chromadb.GetParams);
+          this._setQueryAttributes(span, params);
         }
       }
     } catch (e) {
@@ -212,7 +206,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
 
   private _setAddOrUpdateOrUpsertAttributes(
     span: Span,
-    params: chromadb.AddParams,
+    params: any,
     method: "add" | "update" | "upsert",
   ) {
     span.setAttribute(
@@ -233,7 +227,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
     );
   }
 
-  private _setDeleteAttributes(span: Span, params: chromadb.DeleteParams) {
+  private _setDeleteAttributes(span: Span, params: any) {
     span.setAttribute(
       "db.chroma.delete.ids_count",
       JSON.stringify(params.ids?.length),
@@ -245,7 +239,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
     );
   }
 
-  private _setGetAttributes(span: Span, params: chromadb.GetParams) {
+  private _setGetAttributes(span: Span, params: any) {
     span.setAttribute(
       "db.chroma.get.ids_count",
       JSON.stringify(params.ids?.length),
@@ -262,7 +256,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
 
   private _setModifyAttributes(
     span: Span,
-    params: chromadb.ModifyCollectionParams,
+    params: any,
   ) {
     span.setAttribute("db.chroma.modify.name", JSON.stringify(params.name));
     span.setAttribute(
@@ -271,11 +265,11 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
     );
   }
 
-  private _setPeekAttributes(span: Span, params: chromadb.PeekParams) {
+  private _setPeekAttributes(span: Span, params: any) {
     span.setAttribute("db.chroma.peek.limit", JSON.stringify(params.limit));
   }
 
-  private _setQueryAttributes(span: Span, params: chromadb.QueryParams) {
+  private _setQueryAttributes(span: Span, params: any) {
     span.setAttribute(
       "db.chroma.query.query_embeddings_count",
       JSON.stringify(params.queryEmbeddings?.length),
