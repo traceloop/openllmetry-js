@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.5](https://github.com/traceloop/openllmetry-js/compare/v0.11.4...v0.11.5) (2024-12-11)
+
+### Bug Fixes
+
+- **openai:** structured output promise unwrapping exception ([#474](https://github.com/traceloop/openllmetry-js/issues/474)) ([546fd9e](https://github.com/traceloop/openllmetry-js/commit/546fd9e6d05eef98a5db7726e3bce267ab57da18))
+
 ## [0.11.4](https://github.com/traceloop/openllmetry-js/compare/v0.11.3...v0.11.4) (2024-11-13)
 
 ### Bug Fixes
