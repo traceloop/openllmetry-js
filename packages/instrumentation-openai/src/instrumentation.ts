@@ -20,7 +20,7 @@ import {
   Span,
   Attributes,
   SpanKind,
-  SpanStatusCode,
+  // SpanStatusCode,
 } from "@opentelemetry/api";
 import {
   InstrumentationBase,
@@ -535,60 +535,47 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     span: Span,
     promise: APIPromise<T>,
   ): APIPromise<T> {
-    return new APIPromise<T>(
-        promise
-          ._thenUnwrap((data, props) => {
-            if (version === "v3") {
-              if (type === "chat") {
-                this._addLogProbsEvent(
-                  span,
-                  (data as ChatCompletion).choices[0].logprobs,
-                );
-                this._endSpan({
-                  type,
-                  span,
-                  result: data as ChatCompletion,
-                });
-              } else {
-                this._addLogProbsEvent(
-                  span,
-                  (data as Completion).choices[0].logprobs,
-                );
-                this._endSpan({
-                  type,
-                  span,
-                  result: data as Completion,
-                });
-              }
-            } else {
-              if (type === "chat") {
-                this._addLogProbsEvent(
-                  span,
-                  (data as ChatCompletion).choices[0].logprobs,
-                );
-                this._endSpan({ type, span, result: data as ChatCompletion });
-              } else {
-                this._addLogProbsEvent(
-                  span,
-                  (data as Completion).choices[0].logprobs,
-                );
-                this._endSpan({ type, span, result: data as Completion });
-              }
-            }
-            
-            return props;
-        })
-        .catch((error: Error) => {
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: error.message,
+    return promise._thenUnwrap((result) => {
+      if (version === "v3") {
+        if (type === "chat") {
+          this._addLogProbsEvent(
+            span,
+            ((result as any).data as ChatCompletion).choices[0].logprobs,
+          );
+          this._endSpan({
+            type,
+            span,
+            result: (result as any).data as ChatCompletion,
           });
-          span.recordException(error);
-          span.end();
+        } else {
+          this._addLogProbsEvent(
+            span,
+            ((result as any).data as Completion).choices[0].logprobs,
+          );
+          this._endSpan({
+            type,
+            span,
+            result: (result as any).data as Completion,
+          });
+        }
+      } else {
+        if (type === "chat") {
+          this._addLogProbsEvent(
+            span,
+            (result as ChatCompletion).choices[0].logprobs,
+          );
+          this._endSpan({ type, span, result: result as ChatCompletion });
+        } else {
+          this._addLogProbsEvent(
+            span,
+            (result as Completion).choices[0].logprobs,
+          );
+          this._endSpan({ type, span, result: result as Completion });
+        }
+      }
 
-          throw error;
-        })
-    );
+      return result;
+    });
   }
 
   private _endSpan({
