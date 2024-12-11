@@ -536,24 +536,58 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     promise: APIPromise<T>,
   ): APIPromise<T> {
     return new APIPromise<T>(
-      new Promise((resolve, reject) => {
         promise
-          ._thenUnwrap((result) => {
-            const data = version === "v3" ? (result as any).data : result;
-
-            this._endSpan({ type, span, result: data as any });
-            return result;
-          })
-          .catch((error: Error) => {
-            span.setStatus({
-              code: SpanStatusCode.ERROR,
-              message: error.message,
-            });
-            span.recordException(error);
-            span.end();
-            throw error;
+          ._thenUnwrap((data, props) => {
+            if (version === "v3") {
+              if (type === "chat") {
+                this._addLogProbsEvent(
+                  span,
+                  (data as ChatCompletion).choices[0].logprobs,
+                );
+                this._endSpan({
+                  type,
+                  span,
+                  result: data as ChatCompletion,
+                });
+              } else {
+                this._addLogProbsEvent(
+                  span,
+                  (data as Completion).choices[0].logprobs,
+                );
+                this._endSpan({
+                  type,
+                  span,
+                  result: data as Completion,
+                });
+              }
+            } else {
+              if (type === "chat") {
+                this._addLogProbsEvent(
+                  span,
+                  (data as ChatCompletion).choices[0].logprobs,
+                );
+                this._endSpan({ type, span, result: data as ChatCompletion });
+              } else {
+                this._addLogProbsEvent(
+                  span,
+                  (data as Completion).choices[0].logprobs,
+                );
+                this._endSpan({ type, span, result: data as Completion });
+              }
+            }
+            
+            return props;
+        })
+        .catch((error: Error) => {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error.message,
           });
-      }),
+          span.recordException(error);
+          span.end();
+
+          throw error;
+        })
     );
   }
 
