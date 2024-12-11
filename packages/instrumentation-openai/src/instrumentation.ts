@@ -20,7 +20,6 @@ import {
   Span,
   Attributes,
   SpanKind,
-  // SpanStatusCode,
 } from "@opentelemetry/api";
 import {
   InstrumentationBase,
