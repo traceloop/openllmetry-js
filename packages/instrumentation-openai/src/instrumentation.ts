@@ -46,6 +46,7 @@ import type {
 import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
 import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
+import { APIPromise } from "openai/core";
 
 export class OpenAIInstrumentation extends InstrumentationBase {
   protected declare _config: OpenAIInstrumentationConfig;
@@ -338,13 +339,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         span: Span;
         type: "chat";
         params: ChatCompletionCreateParamsStreaming;
-        promise: Promise<Stream<ChatCompletionChunk>>;
+        promise: APIPromise<Stream<ChatCompletionChunk>>;
       }
     | {
         span: Span;
         params: CompletionCreateParamsStreaming;
         type: "completion";
-        promise: Promise<Stream<Completion>>;
+        promise: APIPromise<Stream<Completion>>;
       }) {
     if (type === "chat") {
       const result: ChatCompletion = {
@@ -532,63 +533,26 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     type: "chat" | "completion",
     version: "v3" | "v4",
     span: Span,
-    promise: Promise<T>,
-  ): Promise<T> {
-    return promise
-      .then((result) => {
-        return new Promise<T>((resolve) => {
-          if (version === "v3") {
-            if (type === "chat") {
-              this._addLogProbsEvent(
-                span,
-                ((result as any).data as ChatCompletion).choices[0].logprobs,
-              );
-              this._endSpan({
-                type,
-                span,
-                result: (result as any).data as ChatCompletion,
-              });
-            } else {
-              this._addLogProbsEvent(
-                span,
-                ((result as any).data as Completion).choices[0].logprobs,
-              );
-              this._endSpan({
-                type,
-                span,
-                result: (result as any).data as Completion,
-              });
-            }
-          } else {
-            if (type === "chat") {
-              this._addLogProbsEvent(
-                span,
-                (result as ChatCompletion).choices[0].logprobs,
-              );
-              this._endSpan({ type, span, result: result as ChatCompletion });
-            } else {
-              this._addLogProbsEvent(
-                span,
-                (result as Completion).choices[0].logprobs,
-              );
-              this._endSpan({ type, span, result: result as Completion });
-            }
-          }
-          resolve(result);
-        });
-      })
-      .catch((error: Error) => {
-        return new Promise<T>((_, reject) => {
+    promise: APIPromise<T>,
+  ): APIPromise<T> {
+    return new APIPromise<T>(
+      new Promise((resolve, reject) => {
+        promise._thenUnwrap((result) => {
+          const data = version === "v3" ? (result as any).data : result;
+
+          this._endSpan({ type, span, result: data as any });
+          return result;
+        }).catch((error: Error) => {
           span.setStatus({
             code: SpanStatusCode.ERROR,
             message: error.message,
           });
           span.recordException(error);
           span.end();
-
-          reject(error);
-        });
-      });
+          throw error;
+        })
+      })
+    );
   }
 
   private _endSpan({
