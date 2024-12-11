@@ -14,13 +14,7 @@
  * limitations under the License.
  */
 import type * as openai from "openai";
-import {
-  context,
-  trace,
-  Span,
-  Attributes,
-  SpanKind,
-} from "@opentelemetry/api";
+import { context, trace, Span, Attributes, SpanKind } from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
