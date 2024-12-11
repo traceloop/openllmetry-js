@@ -537,21 +537,23 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   ): APIPromise<T> {
     return new APIPromise<T>(
       new Promise((resolve, reject) => {
-        promise._thenUnwrap((result) => {
-          const data = version === "v3" ? (result as any).data : result;
+        promise
+          ._thenUnwrap((result) => {
+            const data = version === "v3" ? (result as any).data : result;
 
-          this._endSpan({ type, span, result: data as any });
-          return result;
-        }).catch((error: Error) => {
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: error.message,
+            this._endSpan({ type, span, result: data as any });
+            return result;
+          })
+          .catch((error: Error) => {
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: error.message,
+            });
+            span.recordException(error);
+            span.end();
+            throw error;
           });
-          span.recordException(error);
-          span.end();
-          throw error;
-        })
-      })
+      }),
     );
   }
 
