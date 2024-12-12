@@ -116,6 +116,18 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
       ),
     );
 
+    this._wrap(
+      moduleExports.OpenAIAgent.prototype,
+      "chat",
+      genericWrapper(
+        moduleExports.OpenAIAgent.name,
+        "chat",
+        TraceloopSpanKindValues.AGENT,
+        () => this.tracer,
+        shouldSendPrompts(this._config),
+      ),
+    );
+
     for (const key in moduleExports) {
       const cls = (moduleExports as any)[key];
       if (this.isLLM(cls.prototype)) {

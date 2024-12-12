@@ -80,6 +80,7 @@ export function genericWrapper(
   tracer: () => Tracer,
   shouldSendPrompts: boolean,
 ) {
+  console.log("genericWrapper", className, methodName, kind, shouldSendPrompts);
   // eslint-disable-next-line @typescript-eslint/ban-types
   return (original: Function) => {
     return function method(this: any, ...args: unknown[]) {
