@@ -151,8 +151,9 @@ export class BedrockInstrumentation extends InstrumentationBase {
     let attributes: Attributes = {};
 
     try {
-      const [vendor, model] = params.input.modelId
-        ? params.input.modelId.split(".")
+      const input = params.input as bedrock.InvokeModelCommandInput;
+      const [vendor, model] = input.modelId
+        ? input.modelId.split(".")
         : ["", ""];
 
       attributes = {
@@ -162,8 +163,8 @@ export class BedrockInstrumentation extends InstrumentationBase {
         [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
       };
 
-      if (typeof params.input.body === "string") {
-        const requestBody = JSON.parse(params.input.body);
+      if (typeof input.body === "string") {
+        const requestBody = JSON.parse(input.body);
 
         attributes = {
           ...attributes,
