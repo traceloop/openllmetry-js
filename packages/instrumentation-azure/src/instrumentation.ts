@@ -35,7 +35,11 @@ import {
 import { AzureOpenAIInstrumentationConfig } from "./types";
 import type {
   ChatCompletions,
+  ChatRequestAssistantMessage,
   ChatRequestMessage,
+  ChatRequestSystemMessage,
+  ChatRequestToolMessage,
+  ChatRequestUserMessage,
   Completions,
 } from "@azure/openai";
 import { version } from "../package.json";
@@ -192,14 +196,29 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           params.forEach((message, index) => {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-              message.role;
-            if (typeof message.content === "string") {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-                (message.content as string) || "";
-            } else {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-                JSON.stringify(message.content);
+            let content: string | undefined;
+
+            switch (message.role) {
+              case "user":
+                content = (message as ChatRequestUserMessage).content as string;
+                break;
+              case "assistant":
+                content = (message as ChatRequestAssistantMessage).content as string;
+                break;
+              case "system":
+                content = (message as ChatRequestSystemMessage).content as string;
+                break;
+              case "tool":
+                content = (message as ChatRequestToolMessage).content as string;
+                break;
+              default:
+                content = JSON.stringify(message);
+                break;
+            }
+
+            if (content) {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = message.role;
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] = content;
             }
           });
         } else {

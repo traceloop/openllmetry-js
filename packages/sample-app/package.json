@@ -35,21 +35,21 @@
     "node": ">=14"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.27.1",
-    "@aws-sdk/client-bedrock-runtime": "^3.499.0",
-    "@azure/openai": "^1.0.0-beta.11",
-    "@google-cloud/aiplatform": "^3.32.0",
-    "@google-cloud/vertexai": "^1.9.0",
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@aws-sdk/client-bedrock-runtime": "^3.709.0",
+    "@azure/openai": "^1.0.0-beta.13",
+    "@google-cloud/aiplatform": "^3.34.0",
+    "@google-cloud/vertexai": "^1.9.2",
     "@langchain/community": "^0.3.18",
-    "@pinecone-database/pinecone": "^2.0.1",
+    "@pinecone-database/pinecone": "^2.2.2",
     "@traceloop/node-server-sdk": "*",
     "cheerio": "^1.0.0",
-    "chromadb": "^1.8.1",
-    "cohere-ai": "^7.7.5",
-    "langchain": "^0.2.12",
+    "chromadb": "^1.9.4",
+    "cohere-ai": "^7.15.0",
+    "langchain": "^0.3.7",
     "llamaindex": "^0.8.28",
-    "openai": "^4.57.0",
-    "zod": "^3.23.8"
+    "openai": "^4.76.2",
+    "zod": "^3.24.1"
   },
   "private": true,
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

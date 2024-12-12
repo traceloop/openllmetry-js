@@ -61,10 +61,19 @@ export class CustomLLMInstrumentation {
           );
           if (shouldSendPrompts(plugin.config)) {
             for (const messageIdx in messages) {
-              span.setAttribute(
-                `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
-                messages[messageIdx].content,
-              );
+              const content = messages[messageIdx].content;
+              if (typeof content === "string") {
+                span.setAttribute(
+                  `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
+                  content as string,
+                );
+              } else if ((content as llamaindex.MessageContentDetail[])[0].type === "text") {
+                span.setAttribute(
+                  `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
+                  (content as llamaindex.MessageContentTextDetail[])[0].text,
+                );
+              }
+
               span.setAttribute(
                 `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.role`,
                 messages[messageIdx].role,
@@ -136,10 +145,18 @@ export class CustomLLMInstrumentation {
           `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
           (result as llamaindex.ChatResponse).message.role,
         );
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-          (result as llamaindex.ChatResponse).message.content,
-        );
+        const content = (result as llamaindex.ChatResponse).message.content;
+        if (typeof content === "string") {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            content,
+          );
+        } else if (content[0].type === "text") {
+          span.setAttribute(
+            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            content[0].text,
+          );
+        }
         span.setStatus({ code: SpanStatusCode.OK });
       }
     } catch (e) {

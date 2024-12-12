@@ -37,20 +37,20 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/core": "^1.26.0",
-    "@opentelemetry/instrumentation": "^0.53.0",
-    "@opentelemetry/semantic-conventions": "^1.26.0",
+    "@opentelemetry/core": "^1.29.0",
+    "@opentelemetry/instrumentation": "^0.56.0",
+    "@opentelemetry/semantic-conventions": "^1.28.0",
     "@traceloop/ai-semantic-conventions": "^0.11.0",
-    "js-tiktoken": "^1.0.12",
-    "tslib": "^2.3.0"
+    "js-tiktoken": "^1.0.15",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
-    "@types/mocha": "^10.0.6",
-    "mocha": "^10.4.0",
-    "openai": "^4.57.0",
+    "@types/mocha": "^10.0.10",
+    "mocha": "^10.8.2",
+    "openai": "^4.76.2",
     "ts-mocha": "^10.0.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
