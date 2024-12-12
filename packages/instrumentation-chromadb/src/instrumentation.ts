@@ -37,7 +37,7 @@ import type * as chromadb from "chromadb";
 import { version } from "../package.json";
 
 export class ChromaDBInstrumentation extends InstrumentationBase {
-  protected declare _config: ChromaDBInstrumentationConfig;
+  declare protected _config: ChromaDBInstrumentationConfig;
 
   constructor(config: ChromaDBInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-chromadb", version, config);

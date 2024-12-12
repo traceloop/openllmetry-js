@@ -29,7 +29,7 @@ import type * as RunnablesModule from "@langchain/core/runnables";
 import { version } from "../package.json";
 
 export class LangChainInstrumentation extends InstrumentationBase {
-  protected declare _config: LangChainInstrumentationConfig;
+  declare protected _config: LangChainInstrumentationConfig;
 
   constructor(config: LangChainInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-langchain", version, config);

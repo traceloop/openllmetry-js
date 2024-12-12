@@ -48,7 +48,7 @@ import type {
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 
 export class AnthropicInstrumentation extends InstrumentationBase {
-  protected declare _config: AnthropicInstrumentationConfig;
+  declare protected _config: AnthropicInstrumentationConfig;
 
   constructor(config: AnthropicInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-anthropic", version, config);

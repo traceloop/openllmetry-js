@@ -42,7 +42,7 @@ import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 import { APIPromise } from "openai/core";
 
 export class OpenAIInstrumentation extends InstrumentationBase {
-  protected declare _config: OpenAIInstrumentationConfig;
+  declare protected _config: OpenAIInstrumentationConfig;
 
   constructor(config: OpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-openai", version, config);

@@ -45,7 +45,7 @@ import type {
 import { version } from "../package.json";
 
 export class AzureOpenAIInstrumentation extends InstrumentationBase {
-  protected declare _config: AzureOpenAIInstrumentationConfig;
+  declare protected _config: AzureOpenAIInstrumentationConfig;
 
   constructor(config: AzureOpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-azure", version, config);
@@ -203,10 +203,12 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
                 content = (message as ChatRequestUserMessage).content as string;
                 break;
               case "assistant":
-                content = (message as ChatRequestAssistantMessage).content as string;
+                content = (message as ChatRequestAssistantMessage)
+                  .content as string;
                 break;
               case "system":
-                content = (message as ChatRequestSystemMessage).content as string;
+                content = (message as ChatRequestSystemMessage)
+                  .content as string;
                 break;
               case "tool":
                 content = (message as ChatRequestToolMessage).content as string;
@@ -217,8 +219,10 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
             }
 
             if (content) {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = message.role;
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] = content;
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+                message.role;
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+                content;
             }
           });
         } else {

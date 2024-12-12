@@ -36,7 +36,7 @@ import type * as vertexAI from "@google-cloud/vertexai";
 import { version } from "../package.json";
 
 export class VertexAIInstrumentation extends InstrumentationBase {
-  protected declare _config: VertexAIInstrumentationConfig;
+  declare protected _config: VertexAIInstrumentationConfig;
 
   constructor(config: VertexAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-vertexai", version, config);

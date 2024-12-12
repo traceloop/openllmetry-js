@@ -35,7 +35,7 @@ import { TraceloopSpanKindValues } from "@traceloop/ai-semantic-conventions";
 import { version } from "../package.json";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase {
-  protected declare _config: LlamaIndexInstrumentationConfig;
+  declare protected _config: LlamaIndexInstrumentationConfig;
 
   constructor(config: LlamaIndexInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-llamaindex", version, config);

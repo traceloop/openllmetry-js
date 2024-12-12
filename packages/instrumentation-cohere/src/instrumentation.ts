@@ -38,7 +38,7 @@ import { version } from "../package.json";
 
 type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
 export class CohereInstrumentation extends InstrumentationBase {
-  protected declare _config: CohereInstrumentationConfig;
+  declare protected _config: CohereInstrumentationConfig;
 
   constructor(config: CohereInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-cohere", version, config);

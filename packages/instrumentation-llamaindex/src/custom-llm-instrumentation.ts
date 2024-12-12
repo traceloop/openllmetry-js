@@ -67,7 +67,10 @@ export class CustomLLMInstrumentation {
                   `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
                   content as string,
                 );
-              } else if ((content as llamaindex.MessageContentDetail[])[0].type === "text") {
+              } else if (
+                (content as llamaindex.MessageContentDetail[])[0].type ===
+                "text"
+              ) {
                 span.setAttribute(
                   `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
                   (content as llamaindex.MessageContentTextDetail[])[0].text,
