@@ -1,17 +1,19 @@
-import { FunctionTool, OpenAIAgent } from "llamaindex";
+import * as llamaindex from "llamaindex";
 import * as traceloop from "@traceloop/node-server-sdk";
 import OpenAI from "openai";
+import { OpenAIAgent, OpenAI as LLamaOpenAI } from "@llamaindex/openai";
 
 traceloop.initialize({
   appName: "sample_llamaindex_openai_agent",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
   instrumentModules: {
+    llamaIndex: llamaindex,
     openAI: OpenAI,
   },
 });
 
-const sumNumbers = FunctionTool.from(
+const sumNumbers = llamaindex.FunctionTool.from(
   ({ a, b }: { a: number; b: number }) => `${a + b}`,
   {
     name: "sumNumbers",
@@ -33,7 +35,7 @@ const sumNumbers = FunctionTool.from(
   },
 );
 
-const divideNumbers = FunctionTool.from(
+const divideNumbers = llamaindex.FunctionTool.from(
   ({ a, b }: { a: number; b: number }) => `${a / b}`,
   {
     name: "divideNumbers",
@@ -57,6 +59,11 @@ const divideNumbers = FunctionTool.from(
 
 async function main() {
   const agent = new OpenAIAgent({
+    llm: new LLamaOpenAI({
+      session: new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      }),
+    }),
     tools: [sumNumbers, divideNumbers],
   });
 

@@ -121,7 +121,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
       "chat",
       genericWrapper(
         moduleExports.OpenAIAgent.name,
-        "chat",
+        "agent",
         TraceloopSpanKindValues.AGENT,
         () => this.tracer,
         shouldSendPrompts(this._config),
