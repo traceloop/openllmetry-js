@@ -130,9 +130,9 @@ describe("Test LlamaIndex instrumentation", async function () {
       JSON.parse(
         retrieverQueryEngineSpan.attributes[
           "traceloop.entity.output"
-        ].toString()
+        ].toString(),
       ).message,
-      result.message
+      result.message,
     );
   }).timeout(60000);
 
@@ -166,7 +166,7 @@ describe("Test LlamaIndex instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    
+
     const retrieverQueryEngineQuerySpan = spans.find(
       (span) => span.name === "retriever_query_engine.query",
     );
