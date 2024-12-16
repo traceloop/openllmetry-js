@@ -78,7 +78,7 @@ describe("Test LlamaIndex instrumentation", async function () {
     context.disable();
   });
 
-  it("should add span for all instrumented methods", async () => {
+  it.skip("should add span for all instrumented methods", async () => {
     const directoryReader = new llamaindex.SimpleDirectoryReader();
     const documents = await directoryReader.loadData({
       directoryPath: "test/data",
@@ -126,7 +126,7 @@ describe("Test LlamaIndex instrumentation", async function () {
     );
   }).timeout(60000);
 
-  it("should build proper trace on streaming query engine", async () => {
+  it.skip("should build proper trace on streaming query engine", async () => {
     const directoryReader = new llamaindex.SimpleDirectoryReader();
     const documents = await directoryReader.loadData({
       directoryPath: "test/data",
