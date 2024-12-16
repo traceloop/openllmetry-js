@@ -35,13 +35,17 @@ import {
 import { AzureOpenAIInstrumentationConfig } from "./types";
 import type {
   ChatCompletions,
+  ChatRequestAssistantMessage,
   ChatRequestMessage,
+  ChatRequestSystemMessage,
+  ChatRequestToolMessage,
+  ChatRequestUserMessage,
   Completions,
 } from "@azure/openai";
 import { version } from "../package.json";
 
 export class AzureOpenAIInstrumentation extends InstrumentationBase {
-  protected declare _config: AzureOpenAIInstrumentationConfig;
+  declare protected _config: AzureOpenAIInstrumentationConfig;
 
   constructor(config: AzureOpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-azure", version, config);
@@ -103,7 +107,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
   private patchOpenAI(type: "chat" | "completion") {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const deployment = args[0] as string;
@@ -192,14 +196,33 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           params.forEach((message, index) => {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-              message.role;
-            if (typeof message.content === "string") {
+            let content: string | undefined;
+
+            switch (message.role) {
+              case "user":
+                content = (message as ChatRequestUserMessage).content as string;
+                break;
+              case "assistant":
+                content = (message as ChatRequestAssistantMessage)
+                  .content as string;
+                break;
+              case "system":
+                content = (message as ChatRequestSystemMessage)
+                  .content as string;
+                break;
+              case "tool":
+                content = (message as ChatRequestToolMessage).content as string;
+                break;
+              default:
+                content = JSON.stringify(message);
+                break;
+            }
+
+            if (content) {
+              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+                message.role;
               attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-                (message.content as string) || "";
-            } else {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-                JSON.stringify(message.content);
+                content;
             }
           });
         } else {
@@ -303,21 +326,24 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           result.choices.forEach((choice, index) => {
-            choice.finishReason &&
+            if (choice.finishReason) {
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
                 choice.finishReason,
               );
-            choice.message &&
+            }
+            if (choice.message) {
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
                 choice.message.role,
               );
-            choice.message?.content &&
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-                choice.message.content,
-              );
+              if (choice.message.content) {
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                  choice.message.content,
+                );
+              }
+            }
 
             if (choice.message?.functionCall) {
               span.setAttribute(
@@ -332,19 +358,20 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
           });
         } else {
           result.choices.forEach((choice, index) => {
-            choice.finishReason &&
+            if (choice.finishReason) {
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
                 choice.finishReason,
               );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-              "assistant",
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-              choice.text,
-            );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+                "assistant",
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                choice.text,
+              );
+            }
           });
         }
       }

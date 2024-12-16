@@ -7,8 +7,8 @@
   "repository": "traceloop/openllmetry-js",
   "scripts": {
     "build": "tsc --build tsconfig.json",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [
     "opentelemetry",
@@ -34,7 +34,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/api": "^1.7.0"
+    "@opentelemetry/api": "^1.9.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/ai-semantic-conventions",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

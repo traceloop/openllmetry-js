@@ -48,7 +48,7 @@ type SearchResponse = Awaited<
 >;
 
 export class QdrantInstrumentation extends InstrumentationBase<any> {
-  protected declare _config: QdrantInstrumentationConfig;
+  declare protected _config: QdrantInstrumentationConfig;
 
   constructor(config: QdrantInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-qdrant", version, config);
@@ -95,7 +95,7 @@ export class QdrantInstrumentation extends InstrumentationBase<any> {
   private wrapperMethod() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: any) {
         const span = plugin._startSpan({

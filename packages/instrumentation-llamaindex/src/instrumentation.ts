@@ -35,7 +35,7 @@ import { TraceloopSpanKindValues } from "@traceloop/ai-semantic-conventions";
 import { version } from "../package.json";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase {
-  protected declare _config: LlamaIndexInstrumentationConfig;
+  declare protected _config: LlamaIndexInstrumentationConfig;
 
   constructor(config: LlamaIndexInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-llamaindex", version, config);
@@ -111,6 +111,18 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
         moduleExports.ContextChatEngine.name,
         "chat",
         TraceloopSpanKindValues.WORKFLOW,
+        () => this.tracer,
+        shouldSendPrompts(this._config),
+      ),
+    );
+
+    this._wrap(
+      moduleExports.OpenAIAgent.prototype,
+      "chat",
+      genericWrapper(
+        moduleExports.OpenAIAgent.name,
+        "agent",
+        TraceloopSpanKindValues.AGENT,
         () => this.tracer,
         shouldSendPrompts(this._config),
       ),

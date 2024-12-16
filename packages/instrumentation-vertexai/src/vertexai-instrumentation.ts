@@ -36,7 +36,7 @@ import type * as vertexAI from "@google-cloud/vertexai";
 import { version } from "../package.json";
 
 export class VertexAIInstrumentation extends InstrumentationBase {
-  protected declare _config: VertexAIInstrumentationConfig;
+  declare protected _config: VertexAIInstrumentationConfig;
 
   constructor(config: VertexAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-vertexai", version, config);
@@ -99,7 +99,7 @@ export class VertexAIInstrumentation extends InstrumentationBase {
   private wrapperMethod() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(
         this: vertexAI.GenerativeModel,

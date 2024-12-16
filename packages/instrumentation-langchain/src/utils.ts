@@ -11,7 +11,7 @@ export function genericWrapper(
   spanKind: TraceloopSpanKindValues,
   spanName?: string,
 ) {
-  // eslint-disable-next-line @typescript-eslint/ban-types
+  // eslint-disable-next-line
   return (original: Function) => {
     return function method(this: any, ...args: unknown[]) {
       const span = tracer().startSpan(

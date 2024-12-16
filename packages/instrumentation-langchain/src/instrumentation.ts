@@ -24,12 +24,12 @@ import { taskWrapper, workflowWrapper } from "./utils";
 import type * as ChainsModule from "langchain/chains";
 import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
-import type * as VectorStoreModule from "langchain/vectorstores/base.cjs";
+import type * as VectorStoreModule from "@langchain/core/vectorstores";
 import type * as RunnablesModule from "@langchain/core/runnables";
 import { version } from "../package.json";
 
 export class LangChainInstrumentation extends InstrumentationBase {
-  protected declare _config: LangChainInstrumentationConfig;
+  declare protected _config: LangChainInstrumentationConfig;
 
   constructor(config: LangChainInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-langchain", version, config);
@@ -73,31 +73,31 @@ export class LangChainInstrumentation extends InstrumentationBase {
   protected init(): InstrumentationModuleDefinition[] {
     const chainModule = new InstrumentationNodeModuleDefinition(
       "langchain/chains.cjs",
-      [">=0.1.7"],
+      [">=0.3.0"],
       this.patchChainModule.bind(this),
       this.unpatchChainModule.bind(this),
     );
     const agentModule = new InstrumentationNodeModuleDefinition(
       "langchain/agents.cjs",
-      [">=0.1.7"],
+      [">=0.3.0"],
       this.patchAgentModule.bind(this),
       this.unpatchAgentModule.bind(this),
     );
     const toolsModule = new InstrumentationNodeModuleDefinition(
       "langchain/tools.cjs",
-      [">=0.1.7"],
+      [">=0.3.0"],
       this.patchToolsModule.bind(this),
       this.unpatchToolsModule.bind(this),
     );
     const vectorStoreModule = new InstrumentationNodeModuleDefinition(
-      "langchain/vectorstores/base.cjs",
-      [">=0.1.7"],
+      "langchain/core/vectorstores.cjs",
+      [">=0.3.0"],
       this.patchVectorStoreModule.bind(this),
       this.unpatchVectorStoreModule.bind(this),
     );
     const runnablesModule = new InstrumentationNodeModuleDefinition(
       "@langchain/core/runnables.cjs",
-      [">=0.1.7"],
+      [">=0.3.0"],
       this.patchRunnablesModule.bind(this),
       this.unpatchRunnablesModule.bind(this),
     );

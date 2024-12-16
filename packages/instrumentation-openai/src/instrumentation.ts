@@ -42,7 +42,7 @@ import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 import { APIPromise } from "openai/core";
 
 export class OpenAIInstrumentation extends InstrumentationBase {
-  protected declare _config: OpenAIInstrumentationConfig;
+  declare protected _config: OpenAIInstrumentationConfig;
 
   constructor(config: OpenAIInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-openai", version, config);
@@ -146,7 +146,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span =

@@ -101,7 +101,7 @@ export class PineconeInstrumentation extends InstrumentationBase {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span = tracer.startSpan(`pinecone.${methodName}`);
@@ -144,7 +144,7 @@ export class PineconeInstrumentation extends InstrumentationBase {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
 
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span = tracer.startSpan(`pinecone.query`);

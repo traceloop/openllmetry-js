@@ -37,7 +37,7 @@ import {
 import { version } from "../package.json";
 
 export class BedrockInstrumentation extends InstrumentationBase {
-  protected declare _config: BedrockInstrumentationConfig;
+  declare protected _config: BedrockInstrumentationConfig;
 
   constructor(config: BedrockInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-bedrock", version, config);
@@ -93,7 +93,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
   private wrapperMethod() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: any) {
         const span = plugin._startSpan({
@@ -151,8 +151,9 @@ export class BedrockInstrumentation extends InstrumentationBase {
     let attributes: Attributes = {};
 
     try {
-      const [vendor, model] = params.input.modelId
-        ? params.input.modelId.split(".")
+      const input = params.input as bedrock.InvokeModelCommandInput;
+      const [vendor, model] = input.modelId
+        ? input.modelId.split(".")
         : ["", ""];
 
       attributes = {
@@ -162,8 +163,8 @@ export class BedrockInstrumentation extends InstrumentationBase {
         [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
       };
 
-      if (typeof params.input.body === "string") {
-        const requestBody = JSON.parse(params.input.body);
+      if (typeof input.body === "string") {
+        const requestBody = JSON.parse(input.body);
 
         attributes = {
           ...attributes,

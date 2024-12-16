@@ -38,7 +38,7 @@ import { version } from "../package.json";
 
 type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
 export class CohereInstrumentation extends InstrumentationBase {
-  protected declare _config: CohereInstrumentationConfig;
+  declare protected _config: CohereInstrumentationConfig;
 
   constructor(config: CohereInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-cohere", version, config);
@@ -108,7 +108,7 @@ export class CohereInstrumentation extends InstrumentationBase {
   private wrapperMethod(type: LLM_COMPLETION_TYPE, streaming: boolean) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: any) {
         const span = plugin._startSpan({
