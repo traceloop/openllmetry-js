@@ -82,6 +82,7 @@ describe("Test LlamaIndex instrumentation", async function () {
     const documents = await directoryReader.loadData({
       directoryPath: "test/data",
     });
+
     const embedModel = new llamaindex.OpenAIEmbedding();
     const vectorStore = new llamaindex.SimpleVectorStore();
 
