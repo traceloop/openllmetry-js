@@ -10,6 +10,8 @@
   "devDependencies": {
     "@commitlint/cli": "^19.6.1",
     "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/eslintrc": "^3.2.0",
+    "@eslint/js": "^9.17.0",
     "@jscutlery/semver": "^5.5.1",
     "@nx/eslint-plugin": "^20.2.2",
     "@nx/js": "^20.2.2",
@@ -23,6 +25,7 @@
     "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.13.0",
     "husky": "^9.1.7",
     "lerna": "^8.1.9",
     "nx": "^20.2.2",

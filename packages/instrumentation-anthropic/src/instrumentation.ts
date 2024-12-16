@@ -112,7 +112,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   private patchAnthropic(type: "chat" | "completion") {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span =
@@ -403,11 +403,12 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         );
       }
 
-      result.stop_reason &&
+      if (result.stop_reason) {
         span.setAttribute(
           `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-          result.stop_reason,
+          result.stop_reason
         );
+      }
 
       if (this._shouldSendPrompts()) {
         if (type === "chat") {

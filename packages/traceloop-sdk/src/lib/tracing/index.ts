@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+ 
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
   SimpleSpanProcessor,

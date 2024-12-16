@@ -8,8 +8,8 @@
   "repository": "traceloop/openllmetry-js",
   "scripts": {
     "build": "rollup -c",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "ts-mocha -p tsconfig.json 'tests/**/*.test.ts' --timeout 20000"
   },
   "keywords": [

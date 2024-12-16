@@ -89,7 +89,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
   private wrapperMethod() {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(
         this: any,

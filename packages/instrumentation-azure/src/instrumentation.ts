@@ -107,7 +107,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
   private patchOpenAI(type: "chat" | "completion") {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line 
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const deployment = args[0] as string;
@@ -326,21 +326,24 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           result.choices.forEach((choice, index) => {
-            choice.finishReason &&
+            if (choice.finishReason) {
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
                 choice.finishReason,
               );
-            choice.message &&
+            }
+            if (choice.message) {
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
                 choice.message.role,
               );
-            choice.message?.content &&
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-                choice.message.content,
-              );
+              if (choice.message.content) {
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                  choice.message.content,
+                );
+              }
+            }
 
             if (choice.message?.functionCall) {
               span.setAttribute(
@@ -355,7 +358,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
           });
         } else {
           result.choices.forEach((choice, index) => {
-            choice.finishReason &&
+            if (choice.finishReason) {
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
                 choice.finishReason,
@@ -367,7 +370,8 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
               choice.text,
-            );
+              );
+            }
           });
         }
       }
