@@ -83,21 +83,7 @@ describe("Test LlamaIndex instrumentation", async function () {
       directoryPath: "test/data",
     });
 
-    const embedModel = new llamaindex.OpenAIEmbedding();
-    const vectorStore = new llamaindex.SimpleVectorStore();
-
-    const serviceContext = llamaindex.serviceContextFromDefaults({
-      embedModel,
-    });
-    const storageContext = await llamaindex.storageContextFromDefaults({
-      vectorStore,
-    });
-
-    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents, {
-      storageContext,
-      serviceContext,
-    });
-
+    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents);
     const queryEngine = index.asQueryEngine();
 
     const result = await queryEngine.query({
@@ -144,21 +130,8 @@ describe("Test LlamaIndex instrumentation", async function () {
     const documents = await directoryReader.loadData({
       directoryPath: "test/data",
     });
-    const embedModel = new llamaindex.OpenAIEmbedding();
-    const vectorStore = new llamaindex.SimpleVectorStore();
 
-    const serviceContext = llamaindex.serviceContextFromDefaults({
-      embedModel,
-    });
-    const storageContext = await llamaindex.storageContextFromDefaults({
-      vectorStore,
-    });
-
-    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents, {
-      storageContext,
-      serviceContext,
-    });
-
+    const index = await llamaindex.VectorStoreIndex.fromDocuments(documents);
     const queryEngine = index.asQueryEngine();
 
     const result = await queryEngine.query({
