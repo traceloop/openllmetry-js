@@ -46,6 +46,7 @@ describe("Test LlamaIndex instrumentation", async function () {
     recordIfMissing: process.env.RECORD_MODE === "NEW",
     matchRequestsBy: {
       headers: false,
+      order: false,
     },
   });
 
