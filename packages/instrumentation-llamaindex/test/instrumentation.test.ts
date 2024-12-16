@@ -46,7 +46,6 @@ describe("Test LlamaIndex instrumentation", async function () {
     recordIfMissing: process.env.RECORD_MODE === "NEW",
     matchRequestsBy: {
       headers: false,
-      order: false,
     },
   });
 
@@ -80,7 +79,9 @@ describe("Test LlamaIndex instrumentation", async function () {
 
   it("should add span for all instrumented methods", async () => {
     const directoryReader = new llamaindex.SimpleDirectoryReader();
-    const documents = await directoryReader.loadData({ directoryPath: "test/data" });
+    const documents = await directoryReader.loadData({
+      directoryPath: "test/data",
+    });
     const embedModel = new llamaindex.OpenAIEmbedding();
     const vectorStore = new llamaindex.SimpleVectorStore();
 
@@ -139,7 +140,9 @@ describe("Test LlamaIndex instrumentation", async function () {
 
   it("should build proper trace on streaming query engine", async () => {
     const directoryReader = new llamaindex.SimpleDirectoryReader();
-    const documents = await directoryReader.loadData({ directoryPath: "test/data" });
+    const documents = await directoryReader.loadData({
+      directoryPath: "test/data",
+    });
     const embedModel = new llamaindex.OpenAIEmbedding();
     const vectorStore = new llamaindex.SimpleVectorStore();
 
