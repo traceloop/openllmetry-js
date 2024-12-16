@@ -406,7 +406,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       if (result.stop_reason) {
         span.setAttribute(
           `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
-          result.stop_reason
+          result.stop_reason,
         );
       }
 

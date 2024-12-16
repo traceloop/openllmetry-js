@@ -35,7 +35,7 @@ export class CustomLLMInstrumentation {
   chatWrapper({ className }: { className: string }) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-     
+
     return (original: LLM["chat"]) => {
       return function method(this: LLM, ...args: Parameters<LLM["chat"]>) {
         const params = args[0];

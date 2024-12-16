@@ -1,4 +1,3 @@
- 
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import {
   SimpleSpanProcessor,

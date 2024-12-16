@@ -2,7 +2,6 @@ const dts = require("rollup-plugin-dts");
 const typescript = require("@rollup/plugin-typescript");
 const json = require("@rollup/plugin-json");
 
- 
 const name = require("./package.json").main.replace(/\.js$/, "");
 
 const bundle = (config) => ({

@@ -107,7 +107,7 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
   private patchOpenAI(type: "chat" | "completion") {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
-    // eslint-disable-next-line 
+    // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const deployment = args[0] as string;
@@ -363,13 +363,13 @@ export class AzureOpenAIInstrumentation extends InstrumentationBase {
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
                 choice.finishReason,
               );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
-              "assistant",
-            );
-            span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
-              choice.text,
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+                "assistant",
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                choice.text,
               );
             }
           });
