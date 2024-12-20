@@ -20,10 +20,14 @@ import { InMemorySpanExporter } from "@opentelemetry/sdk-trace-base";
 
 import type * as OpenAIModule from "openai";
 
+import { openai as vercel_openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
+
 import * as traceloop from "../src";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
@@ -31,13 +35,14 @@ import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 const memoryExporter = new InMemorySpanExporter();
 
 Polly.register(NodeHttpAdapter);
+Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test SDK Decorators", () => {
   let openai: OpenAIModule.OpenAI;
 
   setupPolly({
-    adapters: ["node-http"],
+    adapters: ["node-http", "fetch"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
     matchRequestsBy: {
@@ -620,6 +625,63 @@ describe("Test SDK Decorators", () => {
     assert.strictEqual(
       jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
       JSON.stringify(result),
+    );
+  });
+
+  it("should fix Vercel AI spans to match OpenLLMetry format", async () => {
+    const result = await generateText({
+      messages: [{ role: "user", content: "What is the capital of France?" }],
+      model: vercel_openai("gpt-3.5-turbo"),
+      experimental_telemetry: { isEnabled: true },
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    const generateTextSpan = spans.find(
+      (span) => span.name === "ai.generateText.generate",
+    );
+
+    assert.ok(result);
+    assert.ok(generateTextSpan);
+    assert.strictEqual(
+      generateTextSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      `[{"type":"text","text":"What is the capital of France?"}]`,
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      "gpt-3.5-turbo",
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[`${SpanAttributes.LLM_RESPONSE_MODEL}`],
+      "gpt-3.5-turbo-0125",
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      "assistant",
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+      ],
+      result.text,
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      14,
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ],
+      8,
+    );
+    assert.strictEqual(
+      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      22,
     );
   });
 });
