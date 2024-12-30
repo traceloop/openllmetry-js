@@ -2,6 +2,10 @@ import { _configuration } from "../configuration";
 import { diag } from "@opentelemetry/api";
 import { version } from "../../../package.json";
 
+/**
+ * @deprecated This function is deprecated and will be removed in a future version.
+ * Please use reportLabeling() instead.
+ */
 export async function reportScore(
   associationProperty: { [name: string]: string },
   score: number,
