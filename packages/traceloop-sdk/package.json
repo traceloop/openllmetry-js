@@ -54,7 +54,7 @@
     "fetch-retry": "^5.0.6",
     "nunjucks": "^3.2.4",
     "posthog-node": "^3.6.3",
-    "supports-color": "^8.1.1",
+    "supports-color": "^10.0.0",
     "uuid": "^9.0.1"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
