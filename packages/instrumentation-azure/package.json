@@ -45,7 +45,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@azure/openai": "^1.0.0-beta.13",
+    "@azure/openai": "^2.0.0",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
