@@ -3,8 +3,10 @@ import { validateConfiguration } from "./validation";
 import { startTracing } from "../tracing";
 import { initializeRegistry } from "../prompts/registry";
 import { diag, DiagConsoleLogger, DiagLogLevel } from "@opentelemetry/api";
+import { TraceloopClient } from "../client/traceloop-client";
 
 export let _configuration: InitializeOptions | undefined;
+let _client: TraceloopClient | undefined;
 
 /**
  * Initializes the Traceloop SDK.
@@ -77,6 +79,11 @@ export const initialize = (options: InitializeOptions) => {
 
   startTracing(_configuration);
   initializeRegistry(_configuration);
+  if (options.apiKey) {
+    _client = new TraceloopClient(options.apiKey, options.baseUrl);
+    return _client;
+  }
+  return;
 };
 
 const logLevelToOtelLogLevel = (
@@ -92,4 +99,14 @@ const logLevelToOtelLogLevel = (
     case "error":
       return DiagLogLevel.ERROR;
   }
+};
+
+export const getClient = (): TraceloopClient => {
+  if (!_client) {
+    throw new Error(
+      "Traceloop must be initialized before getting client, Call initialize() first." +
+        "If you already called initialize(), make sure you have an api key.",
+    );
+  }
+  return _client;
 };
