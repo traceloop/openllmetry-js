@@ -4,7 +4,7 @@ import { version } from "../../../package.json";
 
 /**
  * @deprecated This function is deprecated and will be removed in a future version.
- * Please use reportLabeling() instead.
+ * Please use annotation.create() instead.
  */
 export async function reportScore(
   associationProperty: { [name: string]: string },
