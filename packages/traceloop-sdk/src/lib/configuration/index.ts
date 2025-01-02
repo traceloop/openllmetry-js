@@ -9,11 +9,19 @@ export let _configuration: InitializeOptions | undefined;
 let _client: TraceloopClient | undefined;
 
 /**
- * Initializes the Traceloop SDK.
+ * Initializes the Traceloop SDK and creates a singleton client instance if API key is provided.
  * Must be called once before any other SDK methods.
  *
  * @param options - The options to initialize the SDK. See the {@link InitializeOptions} for details.
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
+ *
+ * @example
+ * ```typescript
+ * initialize({
+ *   apiKey: 'your-api-key',
+ *   appName: 'your-app',
+ * });
+ * ```
  */
 export const initialize = (options: InitializeOptions) => {
   if (_configuration) {
@@ -101,6 +109,19 @@ const logLevelToOtelLogLevel = (
   }
 };
 
+/**
+ * Gets the singleton instance of the TraceloopClient.
+ * The SDK must be initialized with an API key before calling this function.
+ *
+ * @returns The TraceloopClient singleton instance
+ * @throws {Error} if the SDK hasn't been initialized or was initialized without an API key
+ *
+ * @example
+ * ```typescript
+ * const client = getClient();
+ * await client.annotation.create('taskId', 'entityId', { score: 0.9 });
+ * ```
+ */
 export const getClient = (): TraceloopClient => {
   if (!_client) {
     throw new Error(
