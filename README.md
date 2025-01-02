@@ -128,6 +128,18 @@ OpenLLMetry-JS can instrument everything that [OpenTelemetry already instruments
 - ✅ LangChain
 - ✅ LlamaIndex
 
+## 🔎 Telemetry
+
+The SDK provided with OpenLLMetry (not the instrumentations) contains a telemetry feature that collects **anonymous** usage information.
+
+You can opt out of telemetry by setting the `TRACELOOP_TELEMETRY` environment variable to `FALSE`.
+
+### Why we collect telemetry
+
+- The primary purpose is to detect exceptions within instrumentations. Since LLM providers frequently update their APIs, this helps us quickly identify and fix any breaking changes.
+- We only collect anonymous data, with no personally identifiable information. You can view exactly what data we collect in our [Privacy documentation](https://www.traceloop.com/docs/openllmetry/privacy/telemetry).
+- Telemetry is only collected in the SDK. If you use the instrumentations directly without the SDK, no telemetry is collected.
+
 ## 🌱 Contributing
 
 Whether it's big or small, we love contributions ❤️ Check out our guide to see how to [get started](https://traceloop.com/docs/openllmetry/contributing/overview).
