@@ -13,6 +13,7 @@ let _client: TraceloopClient | undefined;
  * Must be called once before any other SDK methods.
  *
  * @param options - The options to initialize the SDK. See the {@link InitializeOptions} for details.
+ * @returns TraceloopClient - The singleton client instance if API key is provided, otherwise undefined.
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  *
  * @example
@@ -123,7 +124,7 @@ const logLevelToOtelLogLevel = (
  * @example
  * ```typescript
  * const client = getClient();
- * await client.annotation.create('taskId', 'entityId', { score: 0.9 });
+ * await client.annotation.create({ annotationTask: 'taskId', entityInstanceId: 'entityId', tags: { score: 0.9 } });
  * ```
  */
 export const getClient = (): TraceloopClient => {
