@@ -1,3 +1,4 @@
+import { TraceloopClientOptions } from "../interfaces";
 import { Annotation } from "./annotation";
 import { version } from "../../../package.json";
 
@@ -16,28 +17,31 @@ import { version } from "../../../package.json";
  */
 export class TraceloopClient {
   private version: string = version;
+  public appName: string;
+  private baseUrl: string;
+  private apiKey: string;
 
   /**
    * Creates a new instance of the TraceloopClient.
    *
-   * @param apiKey - The API key for authentication with Traceloop services
-   * @param baseUrl - Optional custom base URL for the Traceloop API. Defaults to https://api.traceloop.com
+   * @param options - Configuration options for the client
    */
-  constructor(
-    private apiKey: string,
-    private baseUrl?: string,
-  ) {
-    if (!baseUrl) {
-      this.baseUrl =
-        process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com";
-    }
+  constructor(options: TraceloopClientOptions) {
+    this.apiKey = options.apiKey;
+    this.appName = options.appName;
+    this.baseUrl =
+      options.baseUrl ||
+      process.env.TRACELOOP_BASE_URL ||
+      "https://api.traceloop.com";
   }
+
   annotation = new Annotation(this);
 
   async post(path: string, body: Record<string, unknown>) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
         "X-Traceloop-SDK-Version": this.version,
       },

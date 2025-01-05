@@ -88,7 +88,11 @@ export const initialize = (options: InitializeOptions) => {
   startTracing(_configuration);
   initializeRegistry(_configuration);
   if (options.apiKey) {
-    _client = new TraceloopClient(options.apiKey, options.baseUrl);
+    _client = new TraceloopClient({
+      apiKey: options.apiKey,
+      baseUrl: options.baseUrl,
+      appName: options.appName!,
+    });
     return _client;
   }
   return;

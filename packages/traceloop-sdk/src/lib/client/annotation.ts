@@ -1,7 +1,6 @@
 import { TraceloopClient } from "./traceloop-client";
 import { diag } from "@opentelemetry/api";
-
-type TagValue = string | number | string[];
+import { CreateAnnotationOptions } from "../interfaces/annotations.interface";
 
 export class Annotation {
   constructor(private client: TraceloopClient) {}
@@ -9,33 +8,37 @@ export class Annotation {
   /**
    * Creates a new annotation for a specific task and entity.
    *
-   * @param annotationTaskId - The ID of the annotation task, Can be found at app.traceloop.com/annotation_tasks/:annotationTaskId
-   * @param entityInstanceId - The ID of the entity instance to annotate
-   * @param tags - Key-value pairs of annotation data, should match the tags defined in the annotation task
-   * @param flow - The type of feedback flow. Defaults to "user_feedback"
+   * @param options - The options for creating an annotation
    * @returns Promise resolving to the fetch Response
    *
    * @example
    * ```typescript
-   * await client.annotation.create('annotationTaskId', 'entityInstanceId', {
-   *   sentiment: 'positive',
-   *   score: 0.85,
-   *   tones: ['happy', 'excited']
+   * await client.annotation.create({
+   *   annotationTaskIdOrSlug: 'sample-annotation-task',
+   *   entityInstanceId: '123456',
+   *   tags: {
+   *     sentiment: 'positive',
+   *     score: 0.85,
+   *     tones: ['happy', 'surprised']
+   *   }
    * });
    * ```
    */
-  async create(
-    annotationTaskId: string,
-    entityInstanceId: string,
-    tags: { [key: string]: TagValue },
-    flow: "user_feedback" | "llm_feedback" = "user_feedback",
-  ) {
+  async create({
+    annotationTask,
+    entityInstanceId,
+    tags,
+  }: CreateAnnotationOptions) {
     const res = await this.client.post(
-      `/v2/annotation-tasks/${annotationTaskId}/annotations`,
+      `/v2/annotation-tasks/${annotationTask}/annotations`,
       {
         entity_instance_id: entityInstanceId,
         tags,
-        flow,
+        flow: "user_feedback",
+        actor: {
+          type: "service",
+          id: this.client.appName,
+        },
       },
     );
     if (!res.ok) {

@@ -8,7 +8,6 @@ export { forceFlush } from "./tracing";
 export * from "./tracing/decorators";
 export * from "./tracing/manual";
 export * from "./tracing/association";
-export * from "./tracing/score";
 export * from "./tracing/custom-metric";
 export * from "./prompts";
 

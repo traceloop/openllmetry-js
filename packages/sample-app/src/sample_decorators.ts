@@ -38,7 +38,7 @@ class SampleOpenAI {
 }
 
 traceloop.withAssociationProperties(
-  { user_id: "12345", chat_id: "789" },
+  { user_id: "12345", chat_id: "789", test_entity: "test_entity" },
   async () => {
     const sampleOpenAI = new SampleOpenAI();
     const chat = await sampleOpenAI.chat();
@@ -47,6 +47,14 @@ traceloop.withAssociationProperties(
     const completion = await sampleOpenAI.completion("TypeScript");
     console.log(completion);
 
-    await traceloop.reportScore({ chat_id: "789" }, 1);
+    await traceloop.getClient().annotation.create({
+      annotationTask: "sample-annotation-task",
+      entityInstanceId: "12345",
+      tags: {
+        sentiment: "positive",
+        score: 0.85,
+        tones: ["happy", "sad"],
+      },
+    });
   },
 );
