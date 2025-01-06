@@ -34,6 +34,7 @@ export class Annotation {
       {
         entity_instance_id: entityInstanceId,
         tags,
+        source: "sdk",
         flow: "user_feedback",
         actor: {
           type: "service",
