@@ -1,7 +1,11 @@
 import { initInstrumentations } from "./tracing";
 
 export * from "./errors";
-export { InitializeOptions } from "./interfaces";
+export {
+  InitializeOptions,
+  TraceloopClientOptions,
+  AnnotationCreateOptions,
+} from "./interfaces";
 export { TraceloopClient } from "./client/traceloop-client";
 export { initialize, getClient } from "./configuration";
 export { forceFlush } from "./tracing";

@@ -47,9 +47,11 @@ traceloop.withAssociationProperties(
     const completion = await sampleOpenAI.completion("TypeScript");
     console.log(completion);
 
-    await traceloop.getClient().annotation.create({
+    await traceloop.getClient().userFeedback.create({
       annotationTask: "sample-annotation-task",
-      entityInstanceId: "12345",
+      entity: {
+        id: "12345",
+      },
       tags: {
         sentiment: "positive",
         score: 0.85,

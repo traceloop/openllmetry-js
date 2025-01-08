@@ -1,6 +1,6 @@
 import { TraceloopClientOptions } from "../interfaces";
-import { Annotation } from "./annotation";
 import { version } from "../../../package.json";
+import { UserFeedback } from "./annotation/user-feedback";
 
 /**
  * The main client for interacting with Traceloop's API.
@@ -35,7 +35,7 @@ export class TraceloopClient {
       "https://api.traceloop.com";
   }
 
-  annotation = new Annotation(this);
+  userFeedback = new UserFeedback(this);
 
   async post(path: string, body: Record<string, unknown>) {
     return await fetch(`${this.baseUrl}${path}`, {
