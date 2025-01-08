@@ -4,19 +4,18 @@ import * as traceloop from "../src";
 
 const memoryExporter = new InMemorySpanExporter();
 
-traceloop.initialize({
-  appName: "test_user_feedback",
-  apiKey: "test-key",
-  baseUrl: "https://api.traceloop.com",
-  disableBatch: true,
-  exporter: memoryExporter,
-});
+let client: traceloop.TraceloopClient;
 
 describe("UserFeedback", () => {
-  let originalFetch: typeof global.fetch;
+    let originalFetch: typeof global.fetch;
 
   before(() => {
     originalFetch = global.fetch;
+    client = new traceloop.TraceloopClient({
+      appName: "test_user_feedback",
+      apiKey: "test-key",
+      baseUrl: "https://api.traceloop.com",
+    });
   });
 
   afterEach(() => {
@@ -30,7 +29,6 @@ describe("UserFeedback", () => {
         status: 200,
       })) as typeof global.fetch;
 
-    const client = traceloop.getClient();
     const response = await client.userFeedback.create({
       annotationTask: "sample-annotation-task",
       entity: {
@@ -59,7 +57,6 @@ describe("UserFeedback", () => {
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }) as typeof global.fetch;
 
-    const client = traceloop.getClient();
     await client.userFeedback.create({
       annotationTask: "sample-annotation-task",
       entity: {
@@ -107,7 +104,6 @@ describe("UserFeedback", () => {
         status: 200,
       })) as typeof global.fetch;
 
-    const client = traceloop.getClient();
     await traceloop.withAssociationProperties(
       { entity_id: "test-entity-123" },
       async () => {
