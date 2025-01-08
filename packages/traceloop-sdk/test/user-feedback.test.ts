@@ -7,7 +7,7 @@ const memoryExporter = new InMemorySpanExporter();
 let client: traceloop.TraceloopClient;
 
 describe("UserFeedback", () => {
-    let originalFetch: typeof global.fetch;
+  let originalFetch: typeof global.fetch;
 
   before(() => {
     originalFetch = global.fetch;
