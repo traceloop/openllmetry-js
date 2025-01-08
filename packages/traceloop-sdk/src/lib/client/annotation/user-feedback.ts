@@ -10,7 +10,6 @@ export class UserFeedback extends BaseAnnotation {
     super(client, "user_feedback");
   }
 
-
   /**
    * Creates a new annotation for a specific task and entity.
    *
