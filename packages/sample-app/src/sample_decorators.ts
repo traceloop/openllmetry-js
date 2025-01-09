@@ -38,7 +38,7 @@ class SampleOpenAI {
 }
 
 traceloop.withAssociationProperties(
-  { user_id: "12345", chat_id: "789", test_entity: "test_entity" },
+  { user_id: "12345", chat_id: "789" },
   async () => {
     const sampleOpenAI = new SampleOpenAI();
     const chat = await sampleOpenAI.chat();
@@ -47,7 +47,8 @@ traceloop.withAssociationProperties(
     const completion = await sampleOpenAI.completion("TypeScript");
     console.log(completion);
 
-    await traceloop.getClient().userFeedback.create({
+    const client = traceloop.getClient();
+    await client.userFeedback.create({
       annotationTask: "sample-annotation-task",
       entity: {
         id: "12345",
