@@ -3,15 +3,26 @@ import { validateConfiguration } from "./validation";
 import { startTracing } from "../tracing";
 import { initializeRegistry } from "../prompts/registry";
 import { diag, DiagConsoleLogger, DiagLogLevel } from "@opentelemetry/api";
+import { TraceloopClient } from "../client/traceloop-client";
 
 export let _configuration: InitializeOptions | undefined;
+let _client: TraceloopClient | undefined;
 
 /**
- * Initializes the Traceloop SDK.
+ * Initializes the Traceloop SDK and creates a singleton client instance if API key is provided.
  * Must be called once before any other SDK methods.
  *
  * @param options - The options to initialize the SDK. See the {@link InitializeOptions} for details.
+ * @returns TraceloopClient - The singleton client instance if API key is provided, otherwise undefined.
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
+ *
+ * @example
+ * ```typescript
+ * initialize({
+ *   apiKey: 'your-api-key',
+ *   appName: 'your-app',
+ * });
+ * ```
  */
 export const initialize = (options: InitializeOptions) => {
   if (_configuration) {
@@ -77,6 +88,15 @@ export const initialize = (options: InitializeOptions) => {
 
   startTracing(_configuration);
   initializeRegistry(_configuration);
+  if (options.apiKey) {
+    _client = new TraceloopClient({
+      apiKey: options.apiKey,
+      baseUrl: options.baseUrl,
+      appName: options.appName!,
+    });
+    return _client;
+  }
+  return;
 };
 
 const logLevelToOtelLogLevel = (
@@ -92,4 +112,27 @@ const logLevelToOtelLogLevel = (
     case "error":
       return DiagLogLevel.ERROR;
   }
+};
+
+/**
+ * Gets the singleton instance of the TraceloopClient.
+ * The SDK must be initialized with an API key before calling this function.
+ *
+ * @returns The TraceloopClient singleton instance
+ * @throws {Error} if the SDK hasn't been initialized or was initialized without an API key
+ *
+ * @example
+ * ```typescript
+ * const client = getClient();
+ * await client.annotation.create({ annotationTask: 'taskId', entityInstanceId: 'entityId', tags: { score: 0.9 } });
+ * ```
+ */
+export const getClient = (): TraceloopClient => {
+  if (!_client) {
+    throw new Error(
+      "Traceloop must be initialized before getting client, Call initialize() first." +
+        "If you already called initialize(), make sure you have an api key.",
+    );
+  }
+  return _client;
 };

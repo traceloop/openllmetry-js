@@ -47,6 +47,17 @@ traceloop.withAssociationProperties(
     const completion = await sampleOpenAI.completion("TypeScript");
     console.log(completion);
 
-    await traceloop.reportScore({ chat_id: "789" }, 1);
+    const client = traceloop.getClient();
+    await client.userFeedback.create({
+      annotationTask: "sample-annotation-task",
+      entity: {
+        id: "12345",
+      },
+      tags: {
+        sentiment: "positive",
+        score: 0.85,
+        tones: ["happy", "sad"],
+      },
+    });
   },
 );
