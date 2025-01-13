@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/traceloop/openllmetry-js/compare/v0.11.7...v0.12.0) (2025-01-13)
+
+### Features
+
+- **sdk:** client, annotations ([#498](https://github.com/traceloop/openllmetry-js/issues/498)) ([6e4192e](https://github.com/traceloop/openllmetry-js/commit/6e4192ebb69ec5f3e65cef9aa3c91a5251ab1ab2))
+
 ## [0.11.7](https://github.com/traceloop/openllmetry-js/compare/v0.11.6...v0.11.7) (2024-12-20)
 
 ### Bug Fixes
