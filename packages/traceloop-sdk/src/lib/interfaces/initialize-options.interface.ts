@@ -8,6 +8,7 @@ import type * as bedrock from "@aws-sdk/client-bedrock-runtime";
 import type * as aiplatform from "@google-cloud/aiplatform";
 import type * as vertexAI from "@google-cloud/vertexai";
 import type * as pinecone from "@pinecone-database/pinecone";
+import type * as together from "together-ai";
 import type * as ChainsModule from "langchain/chains";
 import type * as AgentsModule from "langchain/agents";
 import type * as ToolsModule from "langchain/tools";
@@ -94,6 +95,7 @@ export interface InitializeOptions {
     google_vertexai?: typeof vertexAI;
     google_aiplatform?: typeof aiplatform;
     pinecone?: typeof pinecone;
+    together?: typeof together;
     langchain?: {
       chainsModule?: typeof ChainsModule;
       agentsModule?: typeof AgentsModule;

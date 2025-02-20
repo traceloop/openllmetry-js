@@ -218,98 +218,63 @@ describe("Test Together instrumentation", async function () {
     }
   });
 
-  // it.skip("should set attributes in span for streaming chat with new API", async () => {
-  //   const stream = together.chat.completions.stream({
-  //     messages: [
-  //       { role: "user", content: "Tell me a joke about OpenTelemetry" },
-  //     ],
-  //     model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
-  //     stream: true,
-  //   });
+  it("should set attributes in span for completion", async () => {
+    const result = await together.completions.create({
+      prompt: "Tell me a joke about OpenTelemetry",
+      model: "mistralai/Mistral-7B-v0.1",
+    });
 
-  //   let result = "";
-  //   for await (const chunk of stream) {
-  //     result += chunk.choices[0]?.delta?.content || "";
-  //   }
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find(
+      (span) => span.name === "togetherai.completion",
+    );
 
-  //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find((span) => span.name === "together.chat");
-
-  //   assert.ok(result);
-  //   assert.ok(completionSpan);
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-  //     "user",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-  //     "Tell me a joke about OpenTelemetry",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
-  //     result,
-  //   );
-  //   assert.ok(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
-  //   );
-  //   assert.ok(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-  //     ],
-  //   );
-  //   assert.ok(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
-  //   );
-  //   assert.equal(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
-  //     "8",
-  //   );
-  //   assert.ok(
-  //     +completionSpan.attributes[
-  //       `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-  //     ]! > 0,
-  //   );
-  // });
-
-  // it("should set attributes in span for completion", async () => {
-  //   const result = await together.completions.create({
-  //     prompt: "Tell me a joke about OpenTelemetry",
-  //     model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
-  //   });
-
-  //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find(
-  //     (span) => span.name === "openai.completion",
-  //   );
-
-  //   assert.ok(result);
-  //   assert.ok(completionSpan);
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-  //     "user",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-  //     "Tell me a joke about OpenTelemetry",
-  //   );
-  // });
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "Tell me a joke about OpenTelemetry",
+    );
+  });
 
   // it("should set attributes in span for streaming completion", async () => {
+  //   console.log("Starting streaming completion test");
+  //   console.log("Making streaming completion request with:", {
+  //     prompt: "Tell me a joke about OpenTelemetry",
+  //     model: "mistralai/Mistral-7B-v0.1",
+  //     stream: true,
+  //   });
+
   //   const stream = await together.completions.create({
   //     prompt: "Tell me a joke about OpenTelemetry",
-  //     model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
+  //     model: "mistralai/Mistral-7B-v0.1",
   //     stream: true,
   //   });
 
   //   let result = "";
+  //   console.log("Processing stream chunks...");
   //   for await (const chunk of stream) {
+  //     console.log("Got chunk:", chunk);
   //     result += chunk.choices[0]?.text || "";
   //   }
+  //   console.log("Final result:", result);
 
   //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find(
-  //     (span) => span.name === "together.completion",
+  //   console.log("Got finished spans:", spans.length);
+  //   console.log(
+  //     "All span names:",
+  //     spans.map((s) => s.name),
   //   );
+
+  //   const completionSpan = spans.find(
+  //     (span) => span.name === "togetherai.completion",
+  //   );
+  //   console.log("Found completion span:", completionSpan?.name);
+  //   console.log("Completion span attributes:", completionSpan?.attributes);
 
   //   assert.ok(result);
   //   assert.ok(completionSpan);
