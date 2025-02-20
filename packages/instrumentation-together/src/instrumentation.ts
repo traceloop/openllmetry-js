@@ -30,7 +30,6 @@ import type { Completion } from "together-ai/resources";
 
 import type { Stream } from "together-ai/streaming";
 import { version } from "../package.json";
-import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 import { APIPromise } from "together-ai/core";
 import {
   ChatCompletionChunk,
@@ -398,30 +397,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
         }
       }
 
-      // Only calculate tokens if we didn't get them from the API
-      if (!result.usage && this._config.enrichTokens) {
-        let promptTokens = 0;
-        for (const message of params.messages) {
-          promptTokens +=
-            this.tokenCountFromString(
-              message.content as string,
-              result.model,
-            ) ?? 0;
-        }
-
-        const completionTokens = this.tokenCountFromString(
-          result.choices[0].message?.content ?? "",
-          result.model,
-        );
-        if (completionTokens) {
-          result.usage = {
-            prompt_tokens: promptTokens,
-            completion_tokens: completionTokens,
-            total_tokens: promptTokens + completionTokens,
-          };
-        }
-      }
-
       this._endSpan({ span, type, result });
     } else {
       const result: Completion = {
@@ -469,32 +444,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
           this._diag.debug(e);
           this._config.exceptionLogger?.(e);
         }
-      }
-
-      try {
-        if (this._config.enrichTokens) {
-          const promptTokens =
-            this.tokenCountFromString(params.prompt as string, result.model) ??
-            0;
-
-          const completionTokens = this.tokenCountFromString(
-            result.choices[0].text ?? "",
-            result.model,
-          );
-
-          if (completionTokens) {
-            result.usage = {
-              prompt_tokens: promptTokens,
-              completion_tokens: completionTokens,
-              total_tokens: promptTokens + completionTokens,
-            };
-          }
-        } else {
-        }
-      } catch (e) {
-        console.error("Error enriching tokens:", e);
-        this._diag.debug(e);
-        this._config.exceptionLogger?.(e);
       }
 
       this._endSpan({ span, type, result });
@@ -594,10 +543,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
                 choice.message?.function_call?.arguments ?? "",
               );
             } else if (choice.message?.tool_calls?.[0]) {
-              // If there's no function_call but there are tool_calls, use the first tool call as function_call
-              console.log(
-                "Setting function call attributes from tool calls...",
-              );
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
                 choice.message.tool_calls[0].function.name ?? "",
@@ -648,31 +593,5 @@ export class TogetherInstrumentation extends InstrumentationBase {
     }
 
     span.end();
-  }
-
-  private _encodingCache = new Map<string, Tiktoken>();
-
-  private tokenCountFromString(text: string, model: string) {
-    if (!text) {
-      return 0;
-    }
-
-    let encoding = this._encodingCache.get(model);
-
-    if (!encoding) {
-      try {
-        encoding = encodingForModel(model as TiktokenModel);
-        this._encodingCache.set(model, encoding);
-      } catch (e) {
-        console.error("Error creating encoding:", e);
-        this._diag.debug(e);
-        this._config.exceptionLogger?.(e);
-        return 0;
-      }
-    }
-
-    const tokenCount = encoding.encode(text).length;
-
-    return tokenCount;
   }
 }

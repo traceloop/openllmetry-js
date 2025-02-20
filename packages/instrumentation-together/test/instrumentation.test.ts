@@ -83,34 +83,6 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for function calling", async () => {
-    console.log("Creating chat completion with params:", {
-      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-      messages: [
-        { role: "user", content: "What's the weather like in Boston?" },
-      ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "get_current_weather",
-            description: "Get the current weather in a given location",
-            parameters: {
-              type: "object",
-              properties: {
-                location: {
-                  type: "string",
-                  description: "The city and state, e.g. San Francisco, CA",
-                },
-                unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-              },
-              required: ["location"],
-            },
-          },
-        },
-      ],
-      function_call: "auto",
-    });
-
     const result = await together.chat.completions.create({
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
       messages: [
@@ -144,19 +116,7 @@ describe("Test Together instrumentation", async function () {
 
     const spans = memoryExporter.getFinishedSpans();
 
-    console.log(
-      "Span names:",
-      spans.map((s) => s.name),
-    );
-
     const completionSpan = spans.find((span) => span.name === "together.chat");
-
-    if (completionSpan) {
-      console.log(
-        "Span attributes:",
-        JSON.stringify(completionSpan.attributes, null, 2),
-      );
-    }
 
     assert.ok(result);
     assert.ok(completionSpan);
@@ -226,13 +186,6 @@ describe("Test Together instrumentation", async function () {
 
   it("should set attributes in span for chat", async () => {
     try {
-      console.log("Making chat completion request with:", {
-        messages: [
-          { role: "user", content: "Tell me a joke about OpenTelemetry" },
-        ],
-        model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
-      });
-
       const result = await together.chat.completions.create({
         messages: [
           { role: "user", content: "Tell me a joke about OpenTelemetry" },
@@ -241,11 +194,6 @@ describe("Test Together instrumentation", async function () {
       });
 
       const spans = memoryExporter.getFinishedSpans();
-
-      console.log(
-        "All span names:",
-        spans.map((s) => s.name),
-      );
 
       const completionSpan = spans.find(
         (span) => span.name === "together.chat",
@@ -281,14 +229,6 @@ describe("Test Together instrumentation", async function () {
 
   it("should set attributes in span for streaming chat", async () => {
     try {
-      console.log("Making streaming chat completion request with:", {
-        messages: [
-          { role: "user", content: "Tell me a joke about OpenTelemetry" },
-        ],
-        model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
-        stream: true,
-      });
-
       const stream = await together.chat.completions.create({
         messages: [
           { role: "user", content: "Tell me a joke about OpenTelemetry" },
@@ -304,11 +244,6 @@ describe("Test Together instrumentation", async function () {
       }
 
       const spans = memoryExporter.getFinishedSpans();
-
-      console.log(
-        "All span names:",
-        spans.map((s) => s.name),
-      );
 
       const completionSpan = spans.find(
         (span) => span.name === "together.chat",
@@ -349,11 +284,6 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for completion", async () => {
-    console.log("Making completion request with:", {
-      prompt: "Tell me a joke about OpenTelemetry",
-      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-    });
-
     const result = await together.completions.create({
       prompt: "Tell me a joke about OpenTelemetry",
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
@@ -361,21 +291,9 @@ describe("Test Together instrumentation", async function () {
 
     const spans = memoryExporter.getFinishedSpans();
 
-    console.log(
-      "Span names:",
-      spans.map((s) => s.name),
-    );
-
     const completionSpan = spans.find(
       (span) => span.name === "together.completion",
     );
-
-    if (completionSpan) {
-      console.log(
-        "Span attributes:",
-        JSON.stringify(completionSpan.attributes, null, 2),
-      );
-    }
 
     assert.ok(result);
     assert.ok(completionSpan);
@@ -400,18 +318,18 @@ describe("Test Together instrumentation", async function () {
       "assistant",
     );
     assert.ok(
-      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]
-        ?.length > 0,
+      typeof completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+      ] === "string" &&
+        (
+          completionSpan.attributes[
+            `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+          ] as string
+        ).length > 0,
     );
   });
 
   it("should set attributes in span for streaming completion", async () => {
-    console.log("Making streaming completion request with:", {
-      prompt: "Tell me a joke about OpenTelemetry",
-      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-      stream: true,
-    });
-
     const stream = await together.completions.create({
       prompt: "Tell me a joke about OpenTelemetry",
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
@@ -429,18 +347,8 @@ describe("Test Together instrumentation", async function () {
 
     const spans = memoryExporter.getFinishedSpans();
 
-    console.log(
-      "All span names:",
-      spans.map((s) => s.name),
-    );
-
     const completionSpan = spans.find(
       (span) => span.name === "together.completion",
-    );
-
-    console.log(
-      "Completion span attributes:",
-      JSON.stringify(completionSpan?.attributes, null, 2),
     );
 
     assert.ok(result, "Result should not be empty");
@@ -471,8 +379,14 @@ describe("Test Together instrumentation", async function () {
       "Completion role should be 'assistant'",
     );
     assert.ok(
-      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]
-        ?.length > 0,
+      typeof completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+      ] === "string" &&
+        (
+          completionSpan.attributes[
+            `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+          ] as string
+        ).length > 0,
       "Completion content should not be empty",
     );
   });
