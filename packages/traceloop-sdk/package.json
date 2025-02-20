@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -48,8 +48,8 @@
     "@traceloop/instrumentation-openai": "^0.12.0",
     "@traceloop/instrumentation-pinecone": "^0.12.0",
     "@traceloop/instrumentation-qdrant": "^0.12.0",
+    "@traceloop/instrumentation-together": "^0.12.1",
     "@traceloop/instrumentation-vertexai": "^0.12.0",
-    "@traceloop/instrumentation-together": "^0.12.0",
     "@types/nunjucks": "^3.2.6",
     "cross-fetch": "^4.0.0",
     "fetch-retry": "^5.0.6",
