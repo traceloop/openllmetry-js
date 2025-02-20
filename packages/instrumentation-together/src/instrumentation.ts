@@ -77,7 +77,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
   }
 
   protected init(): InstrumentationModuleDefinition {
-    console.log("init");
     const module = new InstrumentationNodeModuleDefinition(
       "together-ai",
       [">=0.13.0"],
@@ -88,7 +87,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
   }
 
   private patch(moduleExports: typeof togetherai, moduleVersion?: string) {
-    console.log("patch");
     this._diag.debug(`Patching togetherai@${moduleVersion}`);
     this._wrap(
       moduleExports.Together.Chat.Completions.prototype,
@@ -115,13 +113,11 @@ export class TogetherInstrumentation extends InstrumentationBase {
   }
 
   private patchTogether(type: "chat" | "completion") {
-    console.log(`Setting up patch for ${type}`);
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
-        console.log(`Executing ${type} method with args:`, args);
         const span =
           type === "chat"
             ? plugin.startSpan({
@@ -137,8 +133,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
                 },
               });
 
-        console.log(`Created span for ${type}`);
-
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           () => {
@@ -146,7 +140,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
               if ((args?.[0] as any)?.extraAttributes) {
                 delete (args[0] as any).extraAttributes;
               }
-              console.log(`Calling original ${type} method`);
+
               return original.apply(this, args);
             });
           },
@@ -159,7 +153,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
         );
 
         if ((args[0] as CompletionCreateParamsStreamingType).stream) {
-          console.log(`${type} is streaming`);
           return context.bind(
             execContext,
             plugin._streamingWrapPromise({
@@ -171,7 +164,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
           );
         }
 
-        console.log(`${type} is not streaming, wrapping promise`);
         const wrappedPromise = plugin._wrapPromise(type, span, execPromise);
 
         return context.bind(execContext, wrappedPromise as any);
@@ -195,16 +187,12 @@ export class TogetherInstrumentation extends InstrumentationBase {
           extraAttributes?: Record<string, any>;
         };
       }): Span {
-    console.log(`\n=== Starting span creation for ${type} ===`);
-    console.log("Params:", JSON.stringify(params, null, 2));
-
     const attributes: Attributes = {
       [SpanAttributes.LLM_SYSTEM]: "TogetherAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
     try {
-      console.log("Setting basic attributes...");
       attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
       if (params.max_tokens) {
         attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
@@ -224,7 +212,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
           params.presence_penalty;
       }
 
-      console.log("Checking for extra attributes...");
       if (
         params.extraAttributes !== undefined &&
         typeof params.extraAttributes === "object"
@@ -234,12 +221,9 @@ export class TogetherInstrumentation extends InstrumentationBase {
         });
       }
 
-      console.log("Checking if should send prompts...");
       if (this._shouldSendPrompts()) {
-        console.log("Setting prompt attributes...");
         if (type === "chat") {
           params.messages.forEach((message, index) => {
-            console.log(`Setting message ${index} attributes...`);
             attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
               message.role;
             if (typeof message.content === "string") {
@@ -251,9 +235,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
             }
           });
 
-          console.log("Setting tool attributes...");
           params.tools?.forEach((func, index) => {
-            console.log(`Setting tool ${index} attributes...`);
             attributes[
               `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
             ] = func.function?.name;
@@ -290,15 +272,12 @@ export class TogetherInstrumentation extends InstrumentationBase {
           }
         }
       }
-
-      console.log("Final attributes:", JSON.stringify(attributes, null, 2));
     } catch (e) {
       console.error("Error setting span attributes:", e);
       this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
-    console.log("Creating span...");
     return this.tracer.startSpan(`together.${type}`, {
       kind: SpanKind.CLIENT,
       attributes,
@@ -323,10 +302,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
         type: "completion";
         promise: APIPromise<Stream<Completion>>;
       }) {
-    console.log("\n=== Starting _streamingWrapPromise ===");
-    console.log("Type:", type);
-    console.log("Params:", JSON.stringify(params, null, 2));
-
     if (type === "chat") {
       const result: ChatCompletion = {
         id: "0",
@@ -349,7 +324,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
 
       const stream = await promise;
       for await (const chunk of stream) {
-        console.log("\nProcessing chunk:", JSON.stringify(chunk, null, 2));
         yield chunk;
 
         result.id = chunk.id;
@@ -420,7 +394,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
 
         // Use token usage information from the final chunk if available
         if (chunk.usage) {
-          console.log("\nChunk usage info:", chunk.usage);
           result.usage = chunk.usage;
         }
       }
@@ -469,9 +442,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
         },
       };
 
-      console.log("\nStarting stream processing...");
       for await (const chunk of await promise) {
-        console.log("\nProcessing chunk:", JSON.stringify(chunk, null, 2));
         yield chunk;
 
         try {
@@ -491,7 +462,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
 
           // Log any usage info from chunk
           if (chunk.usage) {
-            console.log("\nChunk usage info:", chunk.usage);
             result.usage = chunk.usage;
           }
         } catch (e) {
@@ -501,22 +471,16 @@ export class TogetherInstrumentation extends InstrumentationBase {
         }
       }
 
-      console.log("\nStream processing complete");
-      console.log("Final result:", JSON.stringify(result, null, 2));
-
       try {
         if (this._config.enrichTokens) {
-          console.log("\nEnriching tokens...");
           const promptTokens =
             this.tokenCountFromString(params.prompt as string, result.model) ??
             0;
-          console.log("Calculated prompt tokens:", promptTokens);
 
           const completionTokens = this.tokenCountFromString(
             result.choices[0].text ?? "",
             result.model,
           );
-          console.log("Calculated completion tokens:", completionTokens);
 
           if (completionTokens) {
             result.usage = {
@@ -524,10 +488,8 @@ export class TogetherInstrumentation extends InstrumentationBase {
               completion_tokens: completionTokens,
               total_tokens: promptTokens + completionTokens,
             };
-            console.log("Updated usage:", result.usage);
           }
         } else {
-          console.log("Token enrichment disabled");
         }
       } catch (e) {
         console.error("Error enriching tokens:", e);
@@ -545,7 +507,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
     promise: APIPromise<T>,
   ): APIPromise<T> {
     return promise._thenUnwrap((result) => {
-      console.log(`Got ${type} result:`, result);
       if (type === "chat") {
         this._endSpan({
           type,
@@ -584,16 +545,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
   }:
     | { span: Span; type: "chat"; result: ChatCompletion }
     | { span: Span; type: "completion"; result: Completion }) {
-    console.log(`\n=== Ending span for ${type} ===`);
-    console.log("Result:", JSON.stringify(result, null, 2));
-    console.log("Result usage:", result.usage);
-
     try {
-      console.log("Setting response attributes...");
       span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
 
       if (result.usage) {
-        console.log("Setting usage attributes with:", result.usage);
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
           result.usage?.total_tokens,
@@ -608,19 +563,14 @@ export class TogetherInstrumentation extends InstrumentationBase {
         );
 
         // Verify the attributes were set
-        console.log("Verifying span attributes:");
+
         const spanContext = span.spanContext();
-        console.log("Span context:", spanContext);
-        console.log("Span ID:", spanContext.spanId);
       } else {
-        console.log("No usage information available in result");
       }
 
       if (this._shouldSendPrompts()) {
-        console.log("Setting completion attributes...");
         if (type === "chat") {
           result.choices.forEach((choice, index) => {
-            console.log(`Setting choice ${index} attributes...`);
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
               choice.finish_reason ?? "",
@@ -635,7 +585,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
             );
 
             if (choice.message?.function_call) {
-              console.log("Setting function call attributes...");
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
                 choice.message?.function_call?.name ?? "",
@@ -659,13 +608,11 @@ export class TogetherInstrumentation extends InstrumentationBase {
               );
             }
 
-            console.log("Setting tool calls attributes...");
             if (choice?.message?.tool_calls) {
               for (const [
                 toolIndex,
                 toolCall,
               ] of choice.message.tool_calls.entries()) {
-                console.log(`Setting tool call ${toolIndex} attributes...`);
                 span.setAttribute(
                   `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
                   toolCall.function.name,
@@ -700,19 +647,13 @@ export class TogetherInstrumentation extends InstrumentationBase {
       this._config.exceptionLogger?.(e);
     }
 
-    console.log("Ending span...");
     span.end();
   }
 
   private _encodingCache = new Map<string, Tiktoken>();
 
   private tokenCountFromString(text: string, model: string) {
-    console.log("\n=== tokenCountFromString ===");
-    console.log("Text:", text);
-    console.log("Model:", model);
-
     if (!text) {
-      console.log("No text provided, returning 0");
       return 0;
     }
 
@@ -720,7 +661,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
 
     if (!encoding) {
       try {
-        console.log("Creating new encoding for model");
         encoding = encodingForModel(model as TiktokenModel);
         this._encodingCache.set(model, encoding);
       } catch (e) {
@@ -732,7 +672,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
     }
 
     const tokenCount = encoding.encode(text).length;
-    console.log("Calculated token count:", tokenCount);
+
     return tokenCount;
   }
 }

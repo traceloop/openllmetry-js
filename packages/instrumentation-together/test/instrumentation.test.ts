@@ -1,7 +1,3 @@
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// ... existing code ...
-
 /*
  * Copyright Traceloop
  *
@@ -87,7 +83,6 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for function calling", async () => {
-    console.log("\n=== Starting function calling test ===");
     console.log("Creating chat completion with params:", {
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
       messages: [
@@ -147,17 +142,15 @@ describe("Test Together instrumentation", async function () {
       function_call: "auto",
     });
 
-    console.log("Got chat completion result:", JSON.stringify(result, null, 2));
-
     const spans = memoryExporter.getFinishedSpans();
-    console.log("\nFinished spans:", spans.length);
+
     console.log(
       "Span names:",
       spans.map((s) => s.name),
     );
 
     const completionSpan = spans.find((span) => span.name === "together.chat");
-    console.log("\nCompletion span found:", !!completionSpan);
+
     if (completionSpan) {
       console.log(
         "Span attributes:",
@@ -232,7 +225,6 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for chat", async () => {
-    console.log("Starting chat test");
     try {
       console.log("Making chat completion request with:", {
         messages: [
@@ -248,10 +240,8 @@ describe("Test Together instrumentation", async function () {
         model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
       });
 
-      console.log("Chat completion result:", result);
-
       const spans = memoryExporter.getFinishedSpans();
-      console.log("Got finished spans:", spans.length);
+
       console.log(
         "All span names:",
         spans.map((s) => s.name),
@@ -290,7 +280,6 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for streaming chat", async () => {
-    console.log("Starting streaming chat test");
     try {
       console.log("Making streaming chat completion request with:", {
         messages: [
@@ -309,15 +298,13 @@ describe("Test Together instrumentation", async function () {
       });
 
       let result = "";
-      console.log("Processing stream chunks...");
+
       for await (const chunk of stream) {
-        console.log("Got chunk:", chunk);
         result += chunk.choices[0]?.delta?.content || "";
       }
-      console.log("Final result:", result);
 
       const spans = memoryExporter.getFinishedSpans();
-      console.log("Got finished spans:", spans.length);
+
       console.log(
         "All span names:",
         spans.map((s) => s.name),
@@ -326,8 +313,6 @@ describe("Test Together instrumentation", async function () {
       const completionSpan = spans.find(
         (span) => span.name === "together.chat",
       );
-      console.log("Found completion span:", completionSpan?.name);
-      console.log("Completion span attributes:", completionSpan?.attributes);
 
       assert.ok(result);
       assert.ok(completionSpan);
@@ -364,7 +349,6 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for completion", async () => {
-    console.log("\n=== Starting completion test ===");
     console.log("Making completion request with:", {
       prompt: "Tell me a joke about OpenTelemetry",
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
@@ -375,10 +359,8 @@ describe("Test Together instrumentation", async function () {
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
     });
 
-    console.log("Completion result:", JSON.stringify(result, null, 2));
-
     const spans = memoryExporter.getFinishedSpans();
-    console.log("\nFinished spans:", spans.length);
+
     console.log(
       "Span names:",
       spans.map((s) => s.name),
@@ -388,7 +370,6 @@ describe("Test Together instrumentation", async function () {
       (span) => span.name === "together.completion",
     );
 
-    console.log("\nCompletion span found:", !!completionSpan);
     if (completionSpan) {
       console.log(
         "Span attributes:",
@@ -425,7 +406,6 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for streaming completion", async () => {
-    console.log("\n=== Starting streaming completion test ===");
     console.log("Making streaming completion request with:", {
       prompt: "Tell me a joke about OpenTelemetry",
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
@@ -437,26 +417,18 @@ describe("Test Together instrumentation", async function () {
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
       stream: true,
     });
-    console.log("Got stream object:", stream);
 
     let result = "";
     let chunkCount = 0;
-    console.log("Processing stream chunks...");
+
     for await (const chunk of stream) {
       chunkCount++;
-      console.log(`\nChunk #${chunkCount}:`, JSON.stringify(chunk, null, 2));
-      console.log("Chunk choices:", chunk.choices);
-      console.log("Chunk text:", chunk.choices[0]?.text);
+
       result += chunk.choices[0]?.text || "";
-      console.log("Current accumulated result:", result);
     }
-    console.log("\nStream processing complete");
-    console.log("Total chunks received:", chunkCount);
-    console.log("Final result:", result);
 
     const spans = memoryExporter.getFinishedSpans();
-    console.log("\nSpan information:");
-    console.log("Total finished spans:", spans.length);
+
     console.log(
       "All span names:",
       spans.map((s) => s.name),
@@ -465,8 +437,7 @@ describe("Test Together instrumentation", async function () {
     const completionSpan = spans.find(
       (span) => span.name === "together.completion",
     );
-    console.log("\nCompletion span details:");
-    console.log("Found completion span:", completionSpan?.name);
+
     console.log(
       "Completion span attributes:",
       JSON.stringify(completionSpan?.attributes, null, 2),
