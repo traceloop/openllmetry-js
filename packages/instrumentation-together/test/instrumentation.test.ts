@@ -86,6 +86,151 @@ describe("Test Together instrumentation", async function () {
     context.disable();
   });
 
+  it("should set attributes in span for function calling", async () => {
+    console.log("\n=== Starting function calling test ===");
+    console.log("Creating chat completion with params:", {
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      messages: [
+        { role: "user", content: "What's the weather like in Boston?" },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+              },
+              required: ["location"],
+            },
+          },
+        },
+      ],
+      function_call: "auto",
+    });
+
+    const result = await together.chat.completions.create({
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      messages: [
+        { role: "user", content: "What's the weather like in Boston?" },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: {
+                  type: "string",
+                  enum: ["celsius", "fahrenheit"],
+                },
+              },
+              required: ["location"],
+            },
+          },
+        },
+      ],
+      function_call: "auto",
+    });
+
+    console.log("Got chat completion result:", JSON.stringify(result, null, 2));
+
+    const spans = memoryExporter.getFinishedSpans();
+    console.log("\nFinished spans:", spans.length);
+    console.log(
+      "Span names:",
+      spans.map((s) => s.name),
+    );
+
+    const completionSpan = spans.find((span) => span.name === "together.chat");
+    console.log("\nCompletion span found:", !!completionSpan);
+    if (completionSpan) {
+      console.log(
+        "Span attributes:",
+        JSON.stringify(completionSpan.attributes, null, 2),
+      );
+    }
+
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "What's the weather like in Boston?",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
+      ],
+      "get_current_weather",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
+      ],
+      "Get the current weather in a given location",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
+      ],
+      JSON.stringify({
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "The city and state, e.g. San Francisco, CA",
+          },
+          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+        },
+        required: ["location"],
+      }),
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.name`
+      ],
+      "get_current_weather",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.arguments`
+        ]! as string,
+      ),
+      { location: "Boston, MA" },
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+    assert.equal(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      333,
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
+    );
+  });
+
   it("should set attributes in span for chat", async () => {
     console.log("Starting chat test");
     try {
@@ -113,7 +258,7 @@ describe("Test Together instrumentation", async function () {
       );
 
       const completionSpan = spans.find(
-        (span) => span.name === "togetherai.chat",
+        (span) => span.name === "together.chat",
       );
 
       assert.ok(result);
@@ -179,7 +324,7 @@ describe("Test Together instrumentation", async function () {
       );
 
       const completionSpan = spans.find(
-        (span) => span.name === "togetherai.chat",
+        (span) => span.name === "together.chat",
       );
       console.log("Found completion span:", completionSpan?.name);
       console.log("Completion span attributes:", completionSpan?.attributes);
@@ -219,15 +364,37 @@ describe("Test Together instrumentation", async function () {
   });
 
   it("should set attributes in span for completion", async () => {
-    const result = await together.completions.create({
+    console.log("\n=== Starting completion test ===");
+    console.log("Making completion request with:", {
       prompt: "Tell me a joke about OpenTelemetry",
-      model: "mistralai/Mistral-7B-v0.1",
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
     });
 
+    const result = await together.completions.create({
+      prompt: "Tell me a joke about OpenTelemetry",
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+    });
+
+    console.log("Completion result:", JSON.stringify(result, null, 2));
+
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find(
-      (span) => span.name === "togetherai.completion",
+    console.log("\nFinished spans:", spans.length);
+    console.log(
+      "Span names:",
+      spans.map((s) => s.name),
     );
+
+    const completionSpan = spans.find(
+      (span) => span.name === "together.completion",
+    );
+
+    console.log("\nCompletion span found:", !!completionSpan);
+    if (completionSpan) {
+      console.log(
+        "Span attributes:",
+        JSON.stringify(completionSpan.attributes, null, 2),
+      );
+    }
 
     assert.ok(result);
     assert.ok(completionSpan);
@@ -239,155 +406,105 @@ describe("Test Together instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      "assistant",
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]
+        ?.length > 0,
+    );
   });
 
-  // it("should set attributes in span for streaming completion", async () => {
-  //   console.log("Starting streaming completion test");
-  //   console.log("Making streaming completion request with:", {
-  //     prompt: "Tell me a joke about OpenTelemetry",
-  //     model: "mistralai/Mistral-7B-v0.1",
-  //     stream: true,
-  //   });
+  it("should set attributes in span for streaming completion", async () => {
+    console.log("\n=== Starting streaming completion test ===");
+    console.log("Making streaming completion request with:", {
+      prompt: "Tell me a joke about OpenTelemetry",
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      stream: true,
+    });
 
-  //   const stream = await together.completions.create({
-  //     prompt: "Tell me a joke about OpenTelemetry",
-  //     model: "mistralai/Mistral-7B-v0.1",
-  //     stream: true,
-  //   });
+    const stream = await together.completions.create({
+      prompt: "Tell me a joke about OpenTelemetry",
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      stream: true,
+    });
+    console.log("Got stream object:", stream);
 
-  //   let result = "";
-  //   console.log("Processing stream chunks...");
-  //   for await (const chunk of stream) {
-  //     console.log("Got chunk:", chunk);
-  //     result += chunk.choices[0]?.text || "";
-  //   }
-  //   console.log("Final result:", result);
+    let result = "";
+    let chunkCount = 0;
+    console.log("Processing stream chunks...");
+    for await (const chunk of stream) {
+      chunkCount++;
+      console.log(`\nChunk #${chunkCount}:`, JSON.stringify(chunk, null, 2));
+      console.log("Chunk choices:", chunk.choices);
+      console.log("Chunk text:", chunk.choices[0]?.text);
+      result += chunk.choices[0]?.text || "";
+      console.log("Current accumulated result:", result);
+    }
+    console.log("\nStream processing complete");
+    console.log("Total chunks received:", chunkCount);
+    console.log("Final result:", result);
 
-  //   const spans = memoryExporter.getFinishedSpans();
-  //   console.log("Got finished spans:", spans.length);
-  //   console.log(
-  //     "All span names:",
-  //     spans.map((s) => s.name),
-  //   );
+    const spans = memoryExporter.getFinishedSpans();
+    console.log("\nSpan information:");
+    console.log("Total finished spans:", spans.length);
+    console.log(
+      "All span names:",
+      spans.map((s) => s.name),
+    );
 
-  //   const completionSpan = spans.find(
-  //     (span) => span.name === "togetherai.completion",
-  //   );
-  //   console.log("Found completion span:", completionSpan?.name);
-  //   console.log("Completion span attributes:", completionSpan?.attributes);
+    const completionSpan = spans.find(
+      (span) => span.name === "together.completion",
+    );
+    console.log("\nCompletion span details:");
+    console.log("Found completion span:", completionSpan?.name);
+    console.log(
+      "Completion span attributes:",
+      JSON.stringify(completionSpan?.attributes, null, 2),
+    );
 
-  //   assert.ok(result);
-  //   assert.ok(completionSpan);
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-  //     "user",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-  //     "Tell me a joke about OpenTelemetry",
-  //   );
-  // });
-
-  // it("should set attributes in span for function calling", async () => {
-  //   const result = await together.chat.completions.create({
-  //     model: "gpt-4",
-  //     messages: [
-  //       { role: "user", content: "What's the weather like in Boston?" },
-  //     ],
-  //     tools: [
-  //       {
-  //         type: "function",
-  //         function: {
-  //           name: "get_current_weather",
-  //           description: "Get the current weather in a given location",
-  //           parameters: {
-  //             type: "object",
-  //             properties: {
-  //               location: {
-  //                 type: "string",
-  //                 description: "The city and state, e.g. San Francisco, CA",
-  //               },
-  //               unit: {
-  //                 type: "string",
-  //                 enum: ["celsius", "fahrenheit"],
-  //               },
-  //             },
-  //             required: ["location"],
-  //           },
-  //         },
-  //       },
-  //     ],
-  //     function_call: "auto",
-  //   });
-
-  //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find((span) => span.name === "together.chat");
-
-  //   assert.ok(result);
-  //   assert.ok(completionSpan);
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-  //     "user",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-  //     "What's the weather like in Boston?",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
-  //     ],
-  //     "get_current_weather",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
-  //     ],
-  //     "Get the current weather in a given location",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
-  //     ],
-  //     JSON.stringify({
-  //       type: "object",
-  //       properties: {
-  //         location: {
-  //           type: "string",
-  //           description: "The city and state, e.g. San Francisco, CA",
-  //         },
-  //         unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-  //       },
-  //       required: ["location"],
-  //     }),
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.name`
-  //     ],
-  //     "get_current_weather",
-  //   );
-  //   assert.deepEqual(
-  //     JSON.parse(
-  //       completionSpan.attributes[
-  //         `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.arguments`
-  //       ]! as string,
-  //     ),
-  //     { location: "Boston" },
-  //   );
-  //   assert.ok(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
-  //   );
-  //   assert.equal(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
-  //     82,
-  //   );
-  //   assert.ok(
-  //     +completionSpan.attributes[
-  //       `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-  //     ]! > 0,
-  //   );
-  // });
+    assert.ok(result, "Result should not be empty");
+    assert.ok(completionSpan, "Completion span should exist");
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+      "Prompt role should be 'user'",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "Tell me a joke about OpenTelemetry",
+      "Prompt content should match input",
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      "Total tokens should be set",
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
+      "Completion tokens should be greater than 0",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      "assistant",
+      "Completion role should be 'assistant'",
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]
+        ?.length > 0,
+      "Completion content should not be empty",
+    );
+  });
 
   // it("should set attributes in span for tool calling", async () => {
   //   const result = await together.chat.completions.create({

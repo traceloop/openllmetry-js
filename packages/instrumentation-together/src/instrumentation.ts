@@ -192,12 +192,16 @@ export class TogetherInstrumentation extends InstrumentationBase {
           extraAttributes?: Record<string, any>;
         };
       }): Span {
+    console.log(`\n=== Starting span creation for ${type} ===`);
+    console.log("Params:", JSON.stringify(params, null, 2));
+
     const attributes: Attributes = {
       [SpanAttributes.LLM_SYSTEM]: "TogetherAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
     try {
+      console.log("Setting basic attributes...");
       attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
       if (params.max_tokens) {
         attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
@@ -217,6 +221,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
           params.presence_penalty;
       }
 
+      console.log("Checking for extra attributes...");
       if (
         params.extraAttributes !== undefined &&
         typeof params.extraAttributes === "object"
@@ -226,9 +231,12 @@ export class TogetherInstrumentation extends InstrumentationBase {
         });
       }
 
+      console.log("Checking if should send prompts...");
       if (this._shouldSendPrompts()) {
+        console.log("Setting prompt attributes...");
         if (type === "chat") {
           params.messages.forEach((message, index) => {
+            console.log(`Setting message ${index} attributes...`);
             attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
               message.role;
             if (typeof message.content === "string") {
@@ -239,7 +247,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
                 JSON.stringify(message.content);
             }
           });
+
+          console.log("Setting tool attributes...");
           params.tools?.forEach((func, index) => {
+            console.log(`Setting tool ${index} attributes...`);
             attributes[
               `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
             ] = func.function?.name;
@@ -276,12 +287,16 @@ export class TogetherInstrumentation extends InstrumentationBase {
           }
         }
       }
+
+      console.log("Final attributes:", JSON.stringify(attributes, null, 2));
     } catch (e) {
+      console.error("Error setting span attributes:", e);
       this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
-    return this.tracer.startSpan(`togetherai.${type}`, {
+    console.log("Creating span...");
+    return this.tracer.startSpan(`together.${type}`, {
       kind: SpanKind.CLIENT,
       attributes,
     });
@@ -539,9 +554,14 @@ export class TogetherInstrumentation extends InstrumentationBase {
   }:
     | { span: Span; type: "chat"; result: ChatCompletion }
     | { span: Span; type: "completion"; result: Completion }) {
+    console.log(`\n=== Ending span for ${type} ===`);
+    console.log("Result:", JSON.stringify(result, null, 2));
+
     try {
+      console.log("Setting response attributes...");
       span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
       if (result.usage) {
+        console.log("Setting usage attributes...");
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
           result.usage?.total_tokens,
@@ -557,8 +577,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts()) {
+        console.log("Setting completion attributes...");
         if (type === "chat") {
           result.choices.forEach((choice, index) => {
+            console.log(`Setting choice ${index} attributes...`);
             span.setAttribute(
               `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
               choice.finish_reason ?? "",
@@ -573,6 +595,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
             );
 
             if (choice.message?.function_call) {
+              console.log("Setting function call attributes...");
               span.setAttribute(
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
                 choice.message?.function_call?.name ?? "",
@@ -581,19 +604,37 @@ export class TogetherInstrumentation extends InstrumentationBase {
                 `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
                 choice.message?.function_call?.arguments ?? "",
               );
+            } else if (choice.message?.tool_calls?.[0]) {
+              // If there's no function_call but there are tool_calls, use the first tool call as function_call
+              console.log(
+                "Setting function call attributes from tool calls...",
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.name`,
+                choice.message.tool_calls[0].function.name ?? "",
+              );
+              span.setAttribute(
+                `${SpanAttributes.LLM_COMPLETIONS}.${index}.function_call.arguments`,
+                choice.message.tool_calls[0].function.arguments ?? "",
+              );
             }
-            for (const [
-              toolIndex,
-              toolCall,
-            ] of choice?.message?.tool_calls?.entries() || []) {
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
-                toolCall.function.name,
-              );
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
-                toolCall.function.arguments,
-              );
+
+            console.log("Setting tool calls attributes...");
+            if (choice?.message?.tool_calls) {
+              for (const [
+                toolIndex,
+                toolCall,
+              ] of choice.message.tool_calls.entries()) {
+                console.log(`Setting tool call ${toolIndex} attributes...`);
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
+                  toolCall.function.name,
+                );
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
+                  toolCall.function.arguments,
+                );
+              }
             }
           });
         } else {
@@ -614,10 +655,12 @@ export class TogetherInstrumentation extends InstrumentationBase {
         }
       }
     } catch (e) {
+      console.error("Error ending span:", e);
       this._diag.debug(e);
       this._config.exceptionLogger?.(e);
     }
 
+    console.log("Ending span...");
     span.end();
   }
 
