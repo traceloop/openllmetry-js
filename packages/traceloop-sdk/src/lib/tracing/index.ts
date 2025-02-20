@@ -37,6 +37,7 @@ import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
+import { TogetherInstrumentation } from "@traceloop/instrumentation-together";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
@@ -52,6 +53,7 @@ let llamaIndexInstrumentation: LlamaIndexInstrumentation | undefined;
 let pineconeInstrumentation: PineconeInstrumentation | undefined;
 let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
 let qdrantInstrumentation: QdrantInstrumentation | undefined;
+let togetherInstrumentation: TogetherInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -106,6 +108,9 @@ export const initInstrumentations = () => {
 
   qdrantInstrumentation = new QdrantInstrumentation({ exceptionLogger });
   instrumentations.push(qdrantInstrumentation);
+
+  togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
+  instrumentations.push(togetherInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
@@ -207,6 +212,12 @@ export const manuallyInitInstrumentations = (
     instrumentations.push(qdrantInstrumentation);
     qdrantInstrumentation.manuallyInstrument(instrumentModules.qdrant);
   }
+
+  if (instrumentModules?.together) {
+    togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
+    instrumentations.push(togetherInstrumentation);
+    togetherInstrumentation.manuallyInstrument(instrumentModules.together);
+  }
 };
 
 /**
@@ -243,6 +254,9 @@ export const startTracing = (options: InitializeOptions) => {
       traceContent: false,
     });
     chromadbInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    togetherInstrumentation?.setConfig({
       traceContent: false,
     });
   }
