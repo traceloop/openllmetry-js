@@ -318,14 +318,15 @@ export class TogetherInstrumentation extends InstrumentationBase {
             message: {
               role: "assistant",
               content: "",
-
               tool_calls: [],
             },
           },
         ],
         object: "chat.completion",
       };
-      for await (const chunk of await promise) {
+
+      const stream = await promise;
+      for await (const chunk of stream) {
         yield chunk;
 
         result.id = chunk.id;
@@ -339,18 +340,19 @@ export class TogetherInstrumentation extends InstrumentationBase {
         if (result.choices[0].message && chunk.choices[0]?.delta.content) {
           result.choices[0].message.content += chunk.choices[0].delta.content;
         }
+
         if (
           result.choices[0].message &&
           chunk.choices[0]?.delta.function_call &&
           chunk.choices[0]?.delta.function_call.arguments &&
           chunk.choices[0]?.delta.function_call.name
         ) {
-          // I needed to re-build the object so that Typescript will understand that `name` and `argument` are not null.
           result.choices[0].message.function_call = {
             name: chunk.choices[0].delta.function_call.name,
             arguments: chunk.choices[0].delta.function_call.arguments,
           };
         }
+
         for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {
           if (
             result.choices[0].message &&
@@ -392,9 +394,15 @@ export class TogetherInstrumentation extends InstrumentationBase {
             }
           }
         }
+
+        // Use token usage information from the final chunk if available
+        if (chunk.usage) {
+          result.usage = chunk.usage;
+        }
       }
 
-      if (this._config.enrichTokens) {
+      // Only calculate tokens if we didn't get them from the API
+      if (!result.usage && this._config.enrichTokens) {
         let promptTokens = 0;
         for (const message of params.messages) {
           promptTokens +=

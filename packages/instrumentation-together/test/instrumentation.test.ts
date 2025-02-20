@@ -144,52 +144,79 @@ describe("Test Together instrumentation", async function () {
     }
   });
 
-  // it("should set attributes in span for streaming chat", async () => {
-  //   const stream = await together.chat.completions.create({
-  //     messages: [
-  //       { role: "user", content: "Tell me a joke about OpenTelemetry" },
-  //     ],
-  //     model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
-  //     stream: true,
-  //   });
+  it("should set attributes in span for streaming chat", async () => {
+    console.log("Starting streaming chat test");
+    try {
+      console.log("Making streaming chat completion request with:", {
+        messages: [
+          { role: "user", content: "Tell me a joke about OpenTelemetry" },
+        ],
+        model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
+        stream: true,
+      });
 
-  //   let result = "";
-  //   for await (const chunk of stream) {
-  //     result += chunk.choices[0]?.delta?.content || "";
-  //   }
+      const stream = await together.chat.completions.create({
+        messages: [
+          { role: "user", content: "Tell me a joke about OpenTelemetry" },
+        ],
+        model: "Qwen/Qwen2.5-72B-Instruct-Turbo",
+        stream: true,
+      });
 
-  //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find(
-  //     (span) => span.name === "togetherai.chat",
-  //   );
+      let result = "";
+      console.log("Processing stream chunks...");
+      for await (const chunk of stream) {
+        console.log("Got chunk:", chunk);
+        result += chunk.choices[0]?.delta?.content || "";
+      }
+      console.log("Final result:", result);
 
-  //   assert.ok(result);
-  //   assert.ok(completionSpan);
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-  //     "user",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-  //     "Tell me a joke about OpenTelemetry",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
-  //     result,
-  //   );
-  //   assert.ok(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
-  //   );
-  //   assert.equal(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
-  //     "8",
-  //   );
-  //   assert.ok(
-  //     +completionSpan.attributes[
-  //       `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-  //     ]! > 0,
-  //   );
-  // });
+      const spans = memoryExporter.getFinishedSpans();
+      console.log("Got finished spans:", spans.length);
+      console.log(
+        "All span names:",
+        spans.map((s) => s.name),
+      );
+
+      const completionSpan = spans.find(
+        (span) => span.name === "togetherai.chat",
+      );
+      console.log("Found completion span:", completionSpan?.name);
+      console.log("Completion span attributes:", completionSpan?.attributes);
+
+      assert.ok(result);
+      assert.ok(completionSpan);
+      assert.strictEqual(
+        completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+        "user",
+      );
+      assert.strictEqual(
+        completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        "Tell me a joke about OpenTelemetry",
+      );
+      assert.strictEqual(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+        ],
+        result,
+      );
+      assert.ok(
+        completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      );
+      assert.equal(
+        completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+        37,
+      );
+      assert.ok(
+        +completionSpan.attributes[
+          `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+        ]! > 0,
+      );
+    } catch (error) {
+      console.error("Error in streaming test:", error);
+      throw error;
+    }
+  });
 
   // it.skip("should set attributes in span for streaming chat with new API", async () => {
   //   const stream = together.chat.completions.stream({
