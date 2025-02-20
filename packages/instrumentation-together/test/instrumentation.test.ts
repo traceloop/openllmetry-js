@@ -506,200 +506,200 @@ describe("Test Together instrumentation", async function () {
     );
   });
 
-  // it("should set attributes in span for tool calling", async () => {
-  //   const result = await together.chat.completions.create({
-  //     model: "gpt-4",
-  //     messages: [
-  //       { role: "user", content: "What's the weather like in Boston?" },
-  //     ],
-  //     tools: [
-  //       {
-  //         type: "function",
-  //         function: {
-  //           name: "get_current_weather",
-  //           description: "Get the current weather in a given location",
-  //           parameters: {
-  //             type: "object",
-  //             properties: {
-  //               location: {
-  //                 type: "string",
-  //                 description: "The city and state, e.g. San Francisco, CA",
-  //               },
-  //               unit: {
-  //                 type: "string",
-  //                 enum: ["celsius", "fahrenheit"],
-  //               },
-  //             },
-  //             required: ["location"],
-  //           },
-  //         },
-  //       },
-  //     ],
-  //   });
+  it("should set attributes in span for tool calling", async () => {
+    const result = await together.chat.completions.create({
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      messages: [
+        { role: "user", content: "What's the weather like in Boston?" },
+      ],
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: {
+                  type: "string",
+                  enum: ["celsius", "fahrenheit"],
+                },
+              },
+              required: ["location"],
+            },
+          },
+        },
+      ],
+    });
 
-  //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find((span) => span.name === "together.chat");
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "together.chat");
 
-  //   assert.ok(result);
-  //   assert.ok(completionSpan);
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-  //     "user",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-  //     "What's the weather like in Boston?",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
-  //     ],
-  //     "get_current_weather",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
-  //     ],
-  //     "Get the current weather in a given location",
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
-  //     ],
-  //     JSON.stringify({
-  //       type: "object",
-  //       properties: {
-  //         location: {
-  //           type: "string",
-  //           description: "The city and state, e.g. San Francisco, CA",
-  //         },
-  //         unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-  //       },
-  //       required: ["location"],
-  //     }),
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
-  //     ],
-  //     "get_current_weather",
-  //   );
-  //   assert.deepEqual(
-  //     JSON.parse(
-  //       completionSpan.attributes[
-  //         `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
-  //       ]! as string,
-  //     ),
-  //     { location: "Boston, MA" },
-  //   );
-  //   assert.ok(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
-  //   );
-  //   assert.equal(
-  //     completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
-  //     82,
-  //   );
-  //   assert.ok(
-  //     +completionSpan.attributes[
-  //       `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-  //     ]! > 0,
-  //   );
-  // });
+    assert.ok(result);
+    assert.ok(completionSpan);
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "What's the weather like in Boston?",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
+      ],
+      "get_current_weather",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
+      ],
+      "Get the current weather in a given location",
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
+      ],
+      JSON.stringify({
+        type: "object",
+        properties: {
+          location: {
+            type: "string",
+            description: "The city and state, e.g. San Francisco, CA",
+          },
+          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
+        },
+        required: ["location"],
+      }),
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
+      ],
+      "get_current_weather",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
+        ]! as string,
+      ),
+      { location: "Boston, MA" },
+    );
+    assert.ok(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+    assert.equal(
+      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      333,
+    );
+    assert.ok(
+      +completionSpan.attributes[
+        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
+    );
+  });
 
-  // it("should set function_call attributes in span for stream completion when multiple tools called", async () => {
-  //   const stream = await together.chat.completions.create({
-  //     model: "meta-llama/Meta-Llama-3-8B-Instruct",
-  //     messages: [
-  //       {
-  //         role: "user",
-  //         content:
-  //           "What's the weather today in Boston and what will the weather be tomorrow in Chicago?",
-  //       },
-  //     ],
-  //     stream: true,
-  //     tools: [
-  //       {
-  //         type: "function",
-  //         function: {
-  //           name: "get_current_weather",
-  //           description: "Get the current weather in a given location",
-  //           parameters: {
-  //             type: "object",
-  //             properties: {
-  //               location: {
-  //                 type: "string",
-  //                 description: "The city and state, e.g. San Francisco, CA",
-  //               },
-  //               unit: {
-  //                 type: "string",
-  //                 enum: ["celsius", "fahrenheit"],
-  //               },
-  //             },
-  //             required: ["location"],
-  //           },
-  //         },
-  //       },
-  //       {
-  //         type: "function",
-  //         function: {
-  //           name: "get_tomorrow_weather",
-  //           description: "Get tomorrow's weather in a given location",
-  //           parameters: {
-  //             type: "object",
-  //             properties: {
-  //               location: {
-  //                 type: "string",
-  //                 description: "The city and state, e.g. San Francisco, CA",
-  //               },
-  //               unit: {
-  //                 type: "string",
-  //                 enum: ["celsius", "fahrenheit"],
-  //               },
-  //             },
-  //             required: ["location"],
-  //           },
-  //         },
-  //       },
-  //     ],
-  //   });
+  it("should set function_call attributes in span for stream completion when multiple tools called", async () => {
+    const stream = await together.chat.completions.create({
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      messages: [
+        {
+          role: "user",
+          content:
+            "What's the weather today in Boston and what will the weather be tomorrow in Chicago?",
+        },
+      ],
+      stream: true,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "get_current_weather",
+            description: "Get the current weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: {
+                  type: "string",
+                  enum: ["celsius", "fahrenheit"],
+                },
+              },
+              required: ["location"],
+            },
+          },
+        },
+        {
+          type: "function",
+          function: {
+            name: "get_tomorrow_weather",
+            description: "Get tomorrow's weather in a given location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: {
+                  type: "string",
+                  description: "The city and state, e.g. San Francisco, CA",
+                },
+                unit: {
+                  type: "string",
+                  enum: ["celsius", "fahrenheit"],
+                },
+              },
+              required: ["location"],
+            },
+          },
+        },
+      ],
+    });
 
-  //   let result = "";
-  //   for await (const chunk of stream) {
-  //     result += chunk.choices[0]?.delta?.content || "";
-  //   }
+    let result = "";
+    for await (const chunk of stream) {
+      result += chunk.choices[0]?.delta?.content || "";
+    }
 
-  //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find((span) => span.name === "together.chat");
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "together.chat");
 
-  //   assert.strictEqual(result, "");
-  //   assert.ok(completionSpan);
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
-  //     ],
-  //     "get_current_weather",
-  //   );
-  //   assert.deepEqual(
-  //     JSON.parse(
-  //       completionSpan.attributes[
-  //         `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
-  //       ]! as string,
-  //     ),
-  //     { location: "Boston, MA" },
-  //   );
-  //   assert.strictEqual(
-  //     completionSpan.attributes[
-  //       `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.name`
-  //     ],
-  //     "get_tomorrow_weather",
-  //   );
-  //   assert.deepEqual(
-  //     JSON.parse(
-  //       completionSpan.attributes[
-  //         `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.arguments`
-  //       ]! as string,
-  //     ),
-  //     { location: "Chicago, IL" },
-  //   );
-  // });
+    assert.strictEqual(result, "");
+    assert.ok(completionSpan);
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
+      ],
+      "get_current_weather",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
+        ]! as string,
+      ),
+      { location: "Boston, MA", unit: "fahrenheit" },
+    );
+    assert.strictEqual(
+      completionSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.name`
+      ],
+      "get_tomorrow_weather",
+    );
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.arguments`
+        ]! as string,
+      ),
+      { location: "Chicago, IL", unit: "fahrenheit" },
+    );
+  });
 });

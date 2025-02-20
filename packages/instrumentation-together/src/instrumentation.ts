@@ -52,7 +52,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
   declare protected _config: TogetherAIInstrumentationConfig;
 
   constructor(config: TogetherAIInstrumentationConfig = {}) {
-    super("@traceloop/instrumentation-together-ai", version, config);
+    super("@traceloop/instrumentation-together-ai", version, {
+      enrichTokens: true,
+      ...config,
+    });
   }
 
   public override setConfig(config: TogetherAIInstrumentationConfig = {}) {
@@ -320,6 +323,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
         type: "completion";
         promise: APIPromise<Stream<Completion>>;
       }) {
+    console.log("\n=== Starting _streamingWrapPromise ===");
+    console.log("Type:", type);
+    console.log("Params:", JSON.stringify(params, null, 2));
+
     if (type === "chat") {
       const result: ChatCompletion = {
         id: "0",
@@ -342,6 +349,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
 
       const stream = await promise;
       for await (const chunk of stream) {
+        console.log("\nProcessing chunk:", JSON.stringify(chunk, null, 2));
         yield chunk;
 
         result.id = chunk.id;
@@ -412,6 +420,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
 
         // Use token usage information from the final chunk if available
         if (chunk.usage) {
+          console.log("\nChunk usage info:", chunk.usage);
           result.usage = chunk.usage;
         }
       }
@@ -459,7 +468,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
           total_tokens: 0,
         },
       };
+
+      console.log("\nStarting stream processing...");
       for await (const chunk of await promise) {
+        console.log("\nProcessing chunk:", JSON.stringify(chunk, null, 2));
         yield chunk;
 
         try {
@@ -476,31 +488,49 @@ export class TogetherInstrumentation extends InstrumentationBase {
           if (chunk.choices[0]?.text) {
             result.choices[0].text += chunk.choices[0].text;
           }
+
+          // Log any usage info from chunk
+          if (chunk.usage) {
+            console.log("\nChunk usage info:", chunk.usage);
+            result.usage = chunk.usage;
+          }
         } catch (e) {
+          console.error("Error processing chunk:", e);
           this._diag.debug(e);
           this._config.exceptionLogger?.(e);
         }
       }
 
+      console.log("\nStream processing complete");
+      console.log("Final result:", JSON.stringify(result, null, 2));
+
       try {
         if (this._config.enrichTokens) {
+          console.log("\nEnriching tokens...");
           const promptTokens =
             this.tokenCountFromString(params.prompt as string, result.model) ??
             0;
+          console.log("Calculated prompt tokens:", promptTokens);
 
           const completionTokens = this.tokenCountFromString(
             result.choices[0].text ?? "",
             result.model,
           );
+          console.log("Calculated completion tokens:", completionTokens);
+
           if (completionTokens) {
             result.usage = {
               prompt_tokens: promptTokens,
               completion_tokens: completionTokens,
               total_tokens: promptTokens + completionTokens,
             };
+            console.log("Updated usage:", result.usage);
           }
+        } else {
+          console.log("Token enrichment disabled");
         }
       } catch (e) {
+        console.error("Error enriching tokens:", e);
         this._diag.debug(e);
         this._config.exceptionLogger?.(e);
       }
@@ -556,12 +586,14 @@ export class TogetherInstrumentation extends InstrumentationBase {
     | { span: Span; type: "completion"; result: Completion }) {
     console.log(`\n=== Ending span for ${type} ===`);
     console.log("Result:", JSON.stringify(result, null, 2));
+    console.log("Result usage:", result.usage);
 
     try {
       console.log("Setting response attributes...");
       span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
+
       if (result.usage) {
-        console.log("Setting usage attributes...");
+        console.log("Setting usage attributes with:", result.usage);
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
           result.usage?.total_tokens,
@@ -574,6 +606,14 @@ export class TogetherInstrumentation extends InstrumentationBase {
           SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
           result.usage?.prompt_tokens,
         );
+
+        // Verify the attributes were set
+        console.log("Verifying span attributes:");
+        const spanContext = span.spanContext();
+        console.log("Span context:", spanContext);
+        console.log("Span ID:", spanContext.spanId);
+      } else {
+        console.log("No usage information available in result");
       }
 
       if (this._shouldSendPrompts()) {
@@ -667,7 +707,12 @@ export class TogetherInstrumentation extends InstrumentationBase {
   private _encodingCache = new Map<string, Tiktoken>();
 
   private tokenCountFromString(text: string, model: string) {
+    console.log("\n=== tokenCountFromString ===");
+    console.log("Text:", text);
+    console.log("Model:", model);
+
     if (!text) {
+      console.log("No text provided, returning 0");
       return 0;
     }
 
@@ -675,15 +720,19 @@ export class TogetherInstrumentation extends InstrumentationBase {
 
     if (!encoding) {
       try {
+        console.log("Creating new encoding for model");
         encoding = encodingForModel(model as TiktokenModel);
         this._encodingCache.set(model, encoding);
       } catch (e) {
+        console.error("Error creating encoding:", e);
         this._diag.debug(e);
         this._config.exceptionLogger?.(e);
         return 0;
       }
     }
 
-    return encoding.encode(text).length;
+    const tokenCount = encoding.encode(text).length;
+    console.log("Calculated token count:", tokenCount);
+    return tokenCount;
   }
 }
