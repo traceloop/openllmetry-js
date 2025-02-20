@@ -95,7 +95,7 @@ export interface InitializeOptions {
     google_vertexai?: typeof vertexAI;
     google_aiplatform?: typeof aiplatform;
     pinecone?: typeof pinecone;
-    together?: typeof together;
+    together?: typeof together.Together;
     langchain?: {
       chainsModule?: typeof ChainsModule;
       agentsModule?: typeof AgentsModule;
