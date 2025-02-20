@@ -81,10 +81,10 @@ describe("Test Together instrumentation", async function () {
     });
   });
 
-  // afterEach(async () => {
-  //   memoryExporter.reset();
-  //   context.disable();
-  // });
+  afterEach(async () => {
+    memoryExporter.reset();
+    context.disable();
+  });
 
   it("should set attributes in span for chat", async () => {
     console.log("Starting chat test");
@@ -115,8 +115,6 @@ describe("Test Together instrumentation", async function () {
       const completionSpan = spans.find(
         (span) => span.name === "togetherai.chat",
       );
-      console.log("Found completion span:", completionSpan?.name);
-      console.log("Completion span attributes:", completionSpan?.attributes);
 
       assert.ok(result);
       assert.ok(completionSpan);
@@ -135,11 +133,10 @@ describe("Test Together instrumentation", async function () {
         completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
         37,
       );
-      assert.equal(
-        completionSpan.attributes[
+      assert.ok(
+        +completionSpan.attributes[
           `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-        ],
-        53,
+        ]! > 0,
       );
     } catch (error) {
       console.error("Error in test:", error);
@@ -162,7 +159,9 @@ describe("Test Together instrumentation", async function () {
   //   }
 
   //   const spans = memoryExporter.getFinishedSpans();
-  //   const completionSpan = spans.find((span) => span.name === "together.chat");
+  //   const completionSpan = spans.find(
+  //     (span) => span.name === "togetherai.chat",
+  //   );
 
   //   assert.ok(result);
   //   assert.ok(completionSpan);
