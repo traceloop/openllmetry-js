@@ -510,11 +510,6 @@ export class TogetherInstrumentation extends InstrumentationBase {
           SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
           result.usage?.prompt_tokens,
         );
-
-        // Verify the attributes were set
-
-        const spanContext = span.spanContext();
-      } else {
       }
 
       if (this._shouldSendPrompts()) {
