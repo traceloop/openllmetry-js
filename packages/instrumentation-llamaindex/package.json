@@ -50,7 +50,7 @@
     "@pollyjs/persister-fs": "^6.0.6",
     "@types/mocha": "^10.0.10",
     "llamaindex": "^0.8.28",
-    "ts-mocha": "^10.0.0"
+    "ts-mocha": "^11.1.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-llamaindex",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"
