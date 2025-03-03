@@ -44,7 +44,7 @@
     "@google-cloud/vertexai": "^1.9.2",
     "@langchain/community": "^0.3.18",
     "@llamaindex/openai": "^0.1.44",
-    "@pinecone-database/pinecone": "^2.2.2",
+    "@pinecone-database/pinecone": "^5.1.0",
     "@traceloop/node-server-sdk": "*",
     "ai": "^4.0.20",
     "cheerio": "^1.0.0",
