@@ -65,6 +65,11 @@ export interface InitializeOptions {
   exporter?: SpanExporter;
 
   /**
+   * The headers to be sent with the traces data. Optional.
+   */
+  headers?: Record<string, string>;
+
+  /**
    * The OpenTelemetry SpanProcessor to be used for processing traces data. Optional.
    * Defaults to the BatchSpanProcessor.
    */
