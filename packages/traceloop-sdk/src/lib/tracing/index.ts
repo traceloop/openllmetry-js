@@ -261,9 +261,11 @@ export const startTracing = (options: InitializeOptions) => {
     });
   }
 
-  const headers = process.env.TRACELOOP_HEADERS
-    ? baggageUtils.parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
-    : { Authorization: `Bearer ${options.apiKey}` };
+  const headers =
+    options.headers ||
+    (process.env.TRACELOOP_HEADERS
+      ? baggageUtils.parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
+      : { Authorization: `Bearer ${options.apiKey}` });
 
   const traceExporter =
     options.exporter ??
