@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.12.2](https://github.com/traceloop/openllmetry-js/compare/v0.12.1...v0.12.2) (2025-03-12)
+
+### Bug Fixes
+
+- **sdk:** headers as an argument in initialization ([#569](https://github.com/traceloop/openllmetry-js/issues/569)) ([7aec655](https://github.com/traceloop/openllmetry-js/commit/7aec65515256ae9fa0fae44d03bc9059eeb3adcc))
+
 ## [0.12.1](https://github.com/traceloop/openllmetry-js/compare/v0.12.0...v0.12.1) (2025-02-20)
 
 **Note:** Version bump only for package @traceloop/node-server-sdk
