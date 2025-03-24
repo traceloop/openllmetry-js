@@ -37,7 +37,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/core": "^1.29.0",
+    "@opentelemetry/core": "^2.0.0",
     "@opentelemetry/instrumentation": "^0.56.0",
     "@opentelemetry/semantic-conventions": "^1.28.0",
     "@traceloop/ai-semantic-conventions": "^0.12.0",
