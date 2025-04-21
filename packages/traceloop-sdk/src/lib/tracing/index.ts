@@ -1,28 +1,15 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import {
-  SimpleSpanProcessor,
-  BatchSpanProcessor,
-  SpanProcessor,
-  ReadableSpan,
-} from "@opentelemetry/sdk-trace-node";
+import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { baggageUtils } from "@opentelemetry/core";
-import { Span, context, diag } from "@opentelemetry/api";
+import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
 import { SEMRESATTRS_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
-import {
-  ASSOCATION_PROPERTIES_KEY,
-  ENTITY_NAME_KEY,
-  WORKFLOW_NAME_KEY,
-} from "./tracing";
 import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
-import {
-  CONTEXT_KEY_ALLOW_TRACE_CONTENT,
-  SpanAttributes,
-} from "@traceloop/ai-semantic-conventions";
+import { CONTEXT_KEY_ALLOW_TRACE_CONTENT } from "@traceloop/ai-semantic-conventions";
 import { AnthropicInstrumentation } from "@traceloop/instrumentation-anthropic";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
 import { AzureOpenAIInstrumentation } from "@traceloop/instrumentation-azure";
@@ -38,9 +25,10 @@ import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
 import { TogetherInstrumentation } from "@traceloop/instrumentation-together";
+import { createSpanProcessor } from "./span-processor";
 
 let _sdk: NodeSDK;
-let _spanProcessor: SimpleSpanProcessor | BatchSpanProcessor;
+let _spanProcessor: SpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation | undefined;
 let anthropicInstrumentation: AnthropicInstrumentation | undefined;
 let azureOpenAIInstrumentation: AzureOpenAIInstrumentation | undefined;
@@ -273,117 +261,14 @@ export const startTracing = (options: InitializeOptions) => {
       url: `${options.baseUrl}/v1/traces`,
       headers,
     });
-  _spanProcessor = options.disableBatch
-    ? new SimpleSpanProcessor(traceExporter)
-    : new BatchSpanProcessor(traceExporter);
 
-  _spanProcessor.onStart = (span: Span) => {
-    const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);
-    if (workflowName) {
-      span.setAttribute(
-        SpanAttributes.TRACELOOP_WORKFLOW_NAME,
-        workflowName as string,
-      );
-    }
-
-    const entityName = context.active().getValue(ENTITY_NAME_KEY);
-    if (entityName) {
-      span.setAttribute(
-        SpanAttributes.TRACELOOP_ENTITY_PATH,
-        entityName as string,
-      );
-    }
-
-    const associationProperties = context
-      .active()
-      .getValue(ASSOCATION_PROPERTIES_KEY);
-    if (associationProperties) {
-      for (const [key, value] of Object.entries(associationProperties)) {
-        span.setAttribute(
-          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
-          value,
-        );
-      }
-    }
-  };
-
-  const originalOnEnd = _spanProcessor.onEnd?.bind(_spanProcessor);
-  _spanProcessor.onEnd = (span: ReadableSpan) => {
-    // Vercel AI Adapters
-    const attributes = span.attributes;
-
-    // Adapt span names
-    const nameMap: Record<string, string> = {
-      "ai.generateText.doGenerate": "ai.generateText.generate",
-      "ai.streamText.doStream": "ai.streamText.stream",
-    };
-    if (span.name in nameMap) {
-      // Unfortuantely, the span name is not writable as this is not the intended behavior
-      // but it is a workaround to set the correct span name
-      (span as any).name = nameMap[span.name];
-    }
-
-    if ("ai.response.text" in attributes) {
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
-        attributes["ai.response.text"];
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
-      delete attributes["ai.response.text"];
-    }
-
-    if ("ai.prompt.messages" in attributes) {
-      try {
-        const messages = JSON.parse(attributes["ai.prompt.messages"] as string);
-        messages.forEach(
-          (msg: { role: string; content: any }, index: number) => {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content);
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-              msg.role;
-          },
-        );
-        delete attributes["ai.prompt.messages"];
-      } catch (e) {
-        //Skip if JSON parsing fails
-      }
-    }
-
-    if ("ai.usage.promptTokens" in attributes) {
-      attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] =
-        attributes["ai.usage.promptTokens"];
-      delete attributes["ai.usage.promptTokens"];
-    }
-
-    if ("ai.usage.completionTokens" in attributes) {
-      attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`] =
-        attributes["ai.usage.completionTokens"];
-      delete attributes["ai.usage.completionTokens"];
-    }
-
-    if (
-      attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] &&
-      attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]
-    ) {
-      attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =
-        Number(attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]) +
-        Number(attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]);
-    }
-
-    originalOnEnd?.(span);
-  };
-
-  if (options.exporter) {
-    Telemetry.getInstance().capture("tracer:init", {
-      exporter: "custom",
-      processor: options.disableBatch ? "simple" : "batch",
-    });
-  } else {
-    Telemetry.getInstance().capture("tracer:init", {
-      exporter: options.baseUrl ?? "",
-      processor: options.disableBatch ? "simple" : "batch",
-    });
-  }
+  _spanProcessor = createSpanProcessor({
+    apiKey: options.apiKey,
+    baseUrl: options.baseUrl,
+    disableBatch: options.disableBatch,
+    exporter: traceExporter,
+    headers,
+  });
 
   const spanProcessors: SpanProcessor[] = [_spanProcessor];
   if (options.processor) {

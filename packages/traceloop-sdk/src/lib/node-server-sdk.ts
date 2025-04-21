@@ -13,6 +13,7 @@ export * from "./tracing/decorators";
 export * from "./tracing/manual";
 export * from "./tracing/association";
 export * from "./tracing/custom-metric";
+export * from "./tracing/span-processor";
 export * from "./prompts";
 
 initInstrumentations();
