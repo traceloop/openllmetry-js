@@ -49,11 +49,13 @@ export interface SpanProcessorOptions {
 /**
  * Creates a span processor with Traceloop's custom span handling logic.
  * This can be used independently of the full SDK initialization.
- * 
+ *
  * @param options - Configuration options for the span processor
  * @returns A configured SpanProcessor instance
  */
-export const createSpanProcessor = (options: SpanProcessorOptions): SpanProcessor => {
+export const createSpanProcessor = (
+  options: SpanProcessorOptions,
+): SpanProcessor => {
   const url = `${options.baseUrl || process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com"}/v1/traces`;
   const headers =
     options.headers ||
@@ -74,12 +76,12 @@ export const createSpanProcessor = (options: SpanProcessorOptions): SpanProcesso
 
   // Store the original onEnd method
   const originalOnEnd = spanProcessor.onEnd.bind(spanProcessor);
-  
+
   spanProcessor.onStart = onSpanStart;
   spanProcessor.onEnd = onSpanEnd(originalOnEnd);
 
   return spanProcessor;
-} 
+};
 
 /**
  * Handles span start event, enriching it with workflow and entity information
@@ -179,7 +181,7 @@ const onSpanEnd = (originalOnEnd: (span: ReadableSpan) => void) => {
         Number(attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]) +
         Number(attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]);
     }
-    
+
     originalOnEnd(span);
   };
 };
