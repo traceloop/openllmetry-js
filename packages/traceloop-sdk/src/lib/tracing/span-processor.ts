@@ -54,6 +54,7 @@ export interface SpanProcessorOptions {
  * @returns A configured SpanProcessor instance
  */
 export const createSpanProcessor = (options: SpanProcessorOptions): SpanProcessor => {
+  const url = `${options.baseUrl || process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com"}/v1/traces`;
   const headers =
     options.headers ||
     (process.env.TRACELOOP_HEADERS
@@ -63,7 +64,7 @@ export const createSpanProcessor = (options: SpanProcessorOptions): SpanProcesso
   const traceExporter =
     options.exporter ??
     new OTLPTraceExporter({
-      url: `${options.baseUrl || process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com"}/v1/traces`,
+      url,
       headers,
     });
 
@@ -71,37 +72,53 @@ export const createSpanProcessor = (options: SpanProcessorOptions): SpanProcesso
     ? new SimpleSpanProcessor(traceExporter)
     : new BatchSpanProcessor(traceExporter);
 
-  spanProcessor.onStart = (span: Span) => {
-    const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);
-    if (workflowName) {
+  // Store the original onEnd method
+  const originalOnEnd = spanProcessor.onEnd.bind(spanProcessor);
+  
+  spanProcessor.onStart = onSpanStart;
+  spanProcessor.onEnd = onSpanEnd(originalOnEnd);
+
+  return spanProcessor;
+} 
+
+/**
+ * Handles span start event, enriching it with workflow and entity information
+ */
+const onSpanStart = (span: Span): void => {
+  const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);
+  if (workflowName) {
+    span.setAttribute(
+      SpanAttributes.TRACELOOP_WORKFLOW_NAME,
+      workflowName as string,
+    );
+  }
+
+  const entityName = context.active().getValue(ENTITY_NAME_KEY);
+  if (entityName) {
+    span.setAttribute(
+      SpanAttributes.TRACELOOP_ENTITY_PATH,
+      entityName as string,
+    );
+  }
+
+  const associationProperties = context
+    .active()
+    .getValue(ASSOCATION_PROPERTIES_KEY);
+  if (associationProperties) {
+    for (const [key, value] of Object.entries(associationProperties)) {
       span.setAttribute(
-        SpanAttributes.TRACELOOP_WORKFLOW_NAME,
-        workflowName as string,
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
+        value,
       );
     }
+  }
+};
 
-    const entityName = context.active().getValue(ENTITY_NAME_KEY);
-    if (entityName) {
-      span.setAttribute(
-        SpanAttributes.TRACELOOP_ENTITY_PATH,
-        entityName as string,
-      );
-    }
-
-    const associationProperties = context
-      .active()
-      .getValue(ASSOCATION_PROPERTIES_KEY);
-    if (associationProperties) {
-      for (const [key, value] of Object.entries(associationProperties)) {
-        span.setAttribute(
-          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
-          value,
-        );
-      }
-    }
-  };
-
-  spanProcessor.onEnd = (span: ReadableSpan) => {
+/**
+ * Handles span end event, adapting attributes for Vercel AI compatibility
+ */
+const onSpanEnd = (originalOnEnd: (span: ReadableSpan) => void) => {
+  return (span: ReadableSpan): void => {
     // Vercel AI Adapters
     const attributes = span.attributes;
 
@@ -137,7 +154,7 @@ export const createSpanProcessor = (options: SpanProcessorOptions): SpanProcesso
           },
         );
         delete attributes["ai.prompt.messages"];
-      } catch (e) {
+      } catch {
         //Skip if JSON parsing fails
       }
     }
@@ -162,20 +179,7 @@ export const createSpanProcessor = (options: SpanProcessorOptions): SpanProcesso
         Number(attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]) +
         Number(attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]);
     }
+    
+    originalOnEnd(span);
   };
-
-  // TODO: move this to the index.ts file
-  // if (options.exporter) {
-  //   Telemetry.getInstance().capture("tracer:init", {
-  //     exporter: "custom",
-  //     processor: options.disableBatch ? "simple" : "batch",
-  //   });
-  // } else {
-  //   Telemetry.getInstance().capture("tracer:init", {
-  //     exporter: options.baseUrl ?? "",
-  //     processor: options.disableBatch ? "simple" : "batch",
-  //   });
-  // }
-
-  return spanProcessor;
-} 
+};
