@@ -181,10 +181,9 @@ describe("Test Langchain instrumentation", async function () {
         new OpenAIEmbeddings(),
       );
       const chain = new langchainChainsModule.RetrievalQAChain({
-        combineDocumentsChain: langchainChainsModule.loadQAStuffChain(
-          llm,
-          { prompt },
-        ),
+        combineDocumentsChain: langchainChainsModule.loadQAStuffChain(llm, {
+          prompt,
+        }),
         retriever: vectorStore.asRetriever(2),
         returnSourceDocuments: true,
       });

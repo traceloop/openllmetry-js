@@ -52,7 +52,8 @@ describe("Test Qdrant instrumentation", function () {
   before(async () => {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.QDRANT_API_KEY = "test";
-      process.env.QDRANT_URL = "https://t13e63c17a3354e.us-east.aws.cloud.qdrant.io:6333";
+      process.env.QDRANT_URL =
+        "https://t13e63c17a3354e.us-east.aws.cloud.qdrant.io:6333";
     }
     instrumentation = new QdrantInstrumentation();
     instrumentation.setTracerProvider(provider);

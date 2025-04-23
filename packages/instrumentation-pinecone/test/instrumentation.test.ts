@@ -135,7 +135,8 @@ describe("Test Pinecone instrumentation", async function () {
   });
 
   after(async () => {
-    if (process.env.RECORD_MODE == "NEW") pinecone.deleteIndex(PINECONE_TEST_INDEX);
+    if (process.env.RECORD_MODE == "NEW")
+      pinecone.deleteIndex(PINECONE_TEST_INDEX);
   });
 
   it("should set attributes in span for DB upsert", async () => {
