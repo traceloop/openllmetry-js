@@ -29,13 +29,14 @@ import { google } from "@google-cloud/aiplatform/build/protos/protos";
 const memoryExporter = new InMemorySpanExporter();
 
 describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: AIPlatformInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let aiplatform: typeof aiplatformImport;
 
   before(() => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new AIPlatformInstrumentation();
     instrumentation.setTracerProvider(provider);
     aiplatform = require("@google-cloud/aiplatform");

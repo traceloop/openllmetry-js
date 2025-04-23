@@ -36,7 +36,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test Meta with AWS Bedrock Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: BedrockInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let bedrock: typeof bedrockModule;
@@ -50,9 +52,6 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
   });
 
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-    instrumentation = new BedrockInstrumentation();
-    instrumentation.setTracerProvider(provider);
     bedrock = await import("@aws-sdk/client-bedrock-runtime");
 
     bedrockRuntimeClient = new bedrock.BedrockRuntimeClient(
@@ -63,6 +62,9 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
           }
         : {},
     );
+
+    instrumentation = new BedrockInstrumentation();
+    instrumentation.setTracerProvider(provider);
   });
 
   after(() => {

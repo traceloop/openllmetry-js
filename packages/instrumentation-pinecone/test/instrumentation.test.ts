@@ -36,16 +36,17 @@ const PINECONE_TEST_INDEX = "pincone-instrumentation-test";
 Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
-describe("Test Pinecone instrumentation", function () {
-  const provider = new BasicTracerProvider();
-  let pineconeModule: typeof pineconeModuleType;
+describe("Test Pinecone instrumentation", async function () {
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: PineconeInstrumentation;
   let contextManager: AsyncHooksContextManager;
-  let pc: pineconeModuleType.Pinecone;
+  let pinecone: any;
   let pc_index: pineconeModuleType.Index;
 
   setupPolly({
-    adapters: ["fetch"],
+    adapters: ["node-http"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
     matchRequestsBy: {
@@ -57,19 +58,19 @@ describe("Test Pinecone instrumentation", function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.PINECONE_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new PineconeInstrumentation();
     instrumentation.setTracerProvider(provider);
 
-    pineconeModule = await import("@pinecone-database/pinecone");
-
-    pc = new pineconeModule.Pinecone({
-      apiKey: process.env.PINECONE_API_KEY || "",
+    // Import the pinecone lib dynamically, since we want to give the
+    // instrumentation a chance to patch the lib before we use it
+    const pineImport = await import("@pinecone-database/pinecone");
+    pinecone = new pineImport.Pinecone({
+      apiKey: process.env.PINECONE_API_KEY || "test",
     });
 
-    pc_index = pc.index(PINECONE_TEST_INDEX);
+    pc_index = pinecone.index(PINECONE_TEST_INDEX);
     if (process.env.RECORD_MODE == "NEW") {
-      await pc.createIndex({
+      await pinecone.createIndex({
         name: PINECONE_TEST_INDEX,
         dimension: 8,
         metric: "cosine",
@@ -81,7 +82,7 @@ describe("Test Pinecone instrumentation", function () {
         },
       });
 
-      const pc_index = pc.index(PINECONE_TEST_INDEX);
+      const pc_index = pinecone.index(PINECONE_TEST_INDEX);
 
       await pc_index.namespace("ns1").upsert([
         {
@@ -122,12 +123,8 @@ describe("Test Pinecone instrumentation", function () {
       );
     });
 
-    pc = new pineconeModule.Pinecone({
-      apiKey: process.env.PINECONE_API_KEY || "",
-    });
-    pc_index = pc.index(PINECONE_TEST_INDEX);
-    await pc.listIndexes();
-    await pc.describeIndex(PINECONE_TEST_INDEX);
+    await pinecone.listIndexes();
+    await pinecone.describeIndex(PINECONE_TEST_INDEX);
 
     memoryExporter.reset();
   });
@@ -138,7 +135,7 @@ describe("Test Pinecone instrumentation", function () {
   });
 
   after(async () => {
-    if (process.env.RECORD_MODE == "NEW") pc.deleteIndex(PINECONE_TEST_INDEX);
+    if (process.env.RECORD_MODE == "NEW") pinecone.deleteIndex(PINECONE_TEST_INDEX);
   });
 
   it("should set attributes in span for DB upsert", async () => {

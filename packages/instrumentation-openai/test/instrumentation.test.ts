@@ -39,7 +39,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: OpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let openai: OpenAIModule.OpenAI;
@@ -57,8 +59,7 @@ describe("Test OpenAI instrumentation", async function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.OPENAI_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-    instrumentation = new OpenAIInstrumentation({ enrichTokens: true });
+    instrumentation = new OpenAIInstrumentation();
     instrumentation.setTracerProvider(provider);
 
     const openAIModule: typeof OpenAIModule = await import("openai");

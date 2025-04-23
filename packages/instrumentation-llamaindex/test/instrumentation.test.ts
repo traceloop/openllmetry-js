@@ -35,7 +35,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test LlamaIndex instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: LlamaIndexInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let llamaindex: typeof llamaindexImport;
@@ -50,12 +52,10 @@ describe("Test LlamaIndex instrumentation", async function () {
     },
   });
 
-  before(() => {
+  before(async () => {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.OPENAI_API_KEY = "test";
     }
-
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new LlamaIndexInstrumentation();
     instrumentation.setTracerProvider(provider);
     llamaindex = require("llamaindex");

@@ -35,31 +35,33 @@ const memoryExporter = new InMemorySpanExporter();
 Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
-describe.skip("Test Generate with Cohere Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+describe("Test Cohere generate instrumentation", async function () {
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: CohereInstrumentation;
   let contextManager: AsyncHooksContextManager;
-  let cohere: typeof cohereModule;
-  let cohereClient: cohereModule.CohereClient;
+  let cohere: any;
 
   setupPolly({
-    adapters: [FetchAdapter],
+    adapters: ["node-http"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
-    matchRequestsBy: { headers: false },
+    matchRequestsBy: {
+      headers: false,
+    },
   });
 
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    if (process.env.RECORD_MODE !== "NEW") {
+      process.env.COHERE_API_KEY = "dummy_key";
+    }
     instrumentation = new CohereInstrumentation();
     instrumentation.setTracerProvider(provider);
-    cohere = await import("cohere-ai");
 
-    cohereClient = new cohere.CohereClient({
-      token:
-        process.env.RECORD_MODE === "NEW"
-          ? "test"
-          : process.env.COHERE_API_KEY!,
+    const cohereModule = await import("cohere-ai");
+    cohere = new cohereModule.CohereClient({
+      token: process.env.COHERE_API_KEY as string,
     });
   });
 
@@ -87,7 +89,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       k: 1,
       temperature: 2,
     };
-    const response = await cohereClient.generate(params);
+    const response = await cohere.generate(params);
 
     const spans = memoryExporter.getFinishedSpans();
 
@@ -164,7 +166,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       k: 1,
       temperature: 2,
     };
-    const streamedResponse = await cohereClient.generateStream(params);
+    const streamedResponse = await cohere.generateStream(params);
 
     const spans = memoryExporter.getFinishedSpans();
     const attributes = spans[0].attributes;

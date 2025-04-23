@@ -32,7 +32,7 @@ import { createOpenAIToolsAgent } from "langchain/agents";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { pull } from "langchain/hub";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
-import { ChatOpenAI, OpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_run";
@@ -49,12 +49,15 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test Langchain instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: LangChainInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let langchainAgentsModule: typeof AgentsModule;
   let langchainChainsModule: typeof ChainsModule;
   let langchainToolsModule: typeof ToolsModule;
+  let llm: any;
 
   setupPolly({
     adapters: ["node-http"],
@@ -65,13 +68,20 @@ describe("Test Langchain instrumentation", async function () {
     },
   });
 
-  before(() => {
+  before(async () => {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.OPENAI_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new LangChainInstrumentation();
     instrumentation.setTracerProvider(provider);
+
+    const mod = await import("langchain/prompts");
+    PromptTemplate = mod.PromptTemplate;
+
+    const openai = await import("@langchain/openai");
+    llm = new openai.OpenAI({
+      modelName: "gpt-3.5-turbo-instruct",
+    });
 
     langchainAgentsModule = require("langchain/agents");
     langchainChainsModule = require("langchain/chains");
@@ -121,7 +131,6 @@ describe("Test Langchain instrumentation", async function () {
   });
 
   it("should set attributes in span for agent instrumentation", async function () {
-    const llm = new ChatOpenAI({});
     const tools = [new Calculator()];
     const prompt = await pull<ChatPromptTemplate>(
       "hwchase17/openai-tools-agent",
@@ -157,10 +166,6 @@ describe("Test Langchain instrumentation", async function () {
   it.skip(
     "should set attributes in span for chain instrumentation",
     async () => {
-      const slowerModel = new OpenAI({
-        modelName: "gpt-3.5-turbo-instruct",
-        temperature: 0.0,
-      });
       const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
     If you don't know the answer, just say that you don't know, don't try to make up an answer.
     ----------------
@@ -177,7 +182,7 @@ describe("Test Langchain instrumentation", async function () {
       );
       const chain = new langchainChainsModule.RetrievalQAChain({
         combineDocumentsChain: langchainChainsModule.loadQAStuffChain(
-          slowerModel,
+          llm,
           { prompt },
         ),
         retriever: vectorStore.asRetriever(2),
@@ -241,7 +246,6 @@ describe("Test Langchain instrumentation", async function () {
   it.skip(
     "should set attributes in span for retrieval qa instrumentation",
     async () => {
-      const llm = new ChatOpenAI({});
       const text = "sample text";
       const textSplitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,

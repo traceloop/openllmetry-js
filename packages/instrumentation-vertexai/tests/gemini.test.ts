@@ -28,13 +28,14 @@ import type * as vertexAiImport from "@google-cloud/vertexai";
 const memoryExporter = new InMemorySpanExporter();
 
 describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: VertexAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let vertexAi: typeof vertexAiImport;
 
   before(() => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new VertexAIInstrumentation();
     instrumentation.setTracerProvider(provider);
     vertexAi = require("@google-cloud/vertexai");

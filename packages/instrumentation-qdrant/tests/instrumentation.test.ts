@@ -26,20 +26,35 @@ import type * as qdrant_types from "@qdrant/js-client-rest";
 import * as assert from "assert";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { v4 as uuidv4 } from "uuid";
+import { setupPolly } from "polly-js";
 
 const COLLECTION_NAME = uuidv4();
 
 const memoryExporter = new InMemorySpanExporter();
 
 describe("Test Qdrant instrumentation", function () {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: QdrantInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let qdrantClient: qdrant_types.QdrantClient;
 
+  setupPolly({
+    adapters: ["node-http"],
+    persister: "fs",
+    recordIfMissing: process.env.RECORD_MODE === "NEW",
+    matchRequestsBy: {
+      headers: false,
+    },
+  });
+
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
-    instrumentation = new QdrantInstrumentation({ traceContent: true });
+    if (process.env.RECORD_MODE !== "NEW") {
+      process.env.QDRANT_API_KEY = "test";
+      process.env.QDRANT_URL = "https://t13e63c17a3354e.us-east.aws.cloud.qdrant.io:6333";
+    }
+    instrumentation = new QdrantInstrumentation();
     instrumentation.setTracerProvider(provider);
 
     const qdrant_module = await import("@qdrant/js-client-rest");
