@@ -4,7 +4,7 @@ import { baggageUtils } from "@opentelemetry/core";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
-import { SEMRESATTRS_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
+import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
 import { Telemetry } from "../telemetry/telemetry";
@@ -25,7 +25,10 @@ import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
 import { TogetherInstrumentation } from "@traceloop/instrumentation-together";
-import { createSpanProcessor } from "./span-processor";
+import {
+  ALL_INSTRUMENTATION_LIBRARIES,
+  createSpanProcessor,
+} from "./span-processor";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SpanProcessor;
@@ -268,6 +271,7 @@ export const startTracing = (options: InitializeOptions) => {
     disableBatch: options.disableBatch,
     exporter: traceExporter,
     headers,
+    allowedInstrumentationLibraries: ALL_INSTRUMENTATION_LIBRARIES,
   });
 
   const spanProcessors: SpanProcessor[] = [_spanProcessor];
@@ -277,8 +281,7 @@ export const startTracing = (options: InitializeOptions) => {
 
   _sdk = new NodeSDK({
     resource: new Resource({
-      [SEMRESATTRS_SERVICE_NAME]:
-        options.appName || process.env.npm_package_name,
+      [ATTR_SERVICE_NAME]: options.appName || process.env.npm_package_name,
     }),
     spanProcessors,
     contextManager: options.contextManager,

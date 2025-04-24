@@ -1,6 +1,6 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { Resource } from "@opentelemetry/resources";
-import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import {
   createSpanProcessor,
   withTask,
@@ -13,12 +13,13 @@ const traceloopSpanProcessor = createSpanProcessor({
   apiKey: process.env.TRACELOOP_API_KEY,
   baseUrl: process.env.TRACELOOP_BASE_URL,
   disableBatch: true,
+  allowedInstrumentationLibraries: ["my-sample-app"],
 });
 
 // Initialize the OpenTelemetry SDK with Traceloop's span processor
 const sdk = new NodeSDK({
   resource: new Resource({
-    [SemanticResourceAttributes.SERVICE_NAME]: "my-sample-app",
+    [ATTR_SERVICE_NAME]: "my-sample-app",
   }),
   spanProcessors: [traceloopSpanProcessor],
 });
