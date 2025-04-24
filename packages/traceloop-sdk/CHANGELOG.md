@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.1](https://github.com/traceloop/openllmetry-js/compare/v0.13.0...v0.13.1) (2025-04-24)
+
+### Bug Fixes
+
+- **traceloop-sdk:** omit spans of non-traceloop instrumentations by default when using standalone processor ([#598](https://github.com/traceloop/openllmetry-js/issues/598)) ([c6b40a0](https://github.com/traceloop/openllmetry-js/commit/c6b40a0e3ad5fe4a40dddf01b03bce20d94bf46b))
+
 # [0.13.0](https://github.com/traceloop/openllmetry-js/compare/v0.12.2...v0.13.0) (2025-04-22)
 
 ### Features
