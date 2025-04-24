@@ -163,17 +163,11 @@ const onSpanEnd = (
   originalOnEnd: (span: ReadableSpan) => void,
   instrumentationLibraries?: string[],
 ) => {
-  console.log("instrumentation libraries", instrumentationLibraries);
   return (span: ReadableSpan): void => {
-    console.log(
-      "instrumentation library name",
-      span.instrumentationLibrary.name,
-    );
     if (
       instrumentationLibraries &&
       !instrumentationLibraries.includes(span.instrumentationLibrary.name)
     ) {
-      console.log("skipping span", span.instrumentationLibrary.name);
       return;
     }
 
