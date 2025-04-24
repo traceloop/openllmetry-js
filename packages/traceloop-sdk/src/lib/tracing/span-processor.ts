@@ -95,7 +95,7 @@ export const createSpanProcessor = (
   ) {
     spanProcessor.onEnd = onSpanEnd(originalOnEnd);
   } else {
-    const instrumentationLibraries = traceloopInstrumentationLibraries;
+    const instrumentationLibraries = [...traceloopInstrumentationLibraries];
 
     if (options.allowedInstrumentationLibraries) {
       instrumentationLibraries.push(...options.allowedInstrumentationLibraries);
