@@ -15,6 +15,9 @@ import {
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
+export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
+type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
+
 export interface SpanProcessorOptions {
   /**
    * The API Key for sending traces data. Optional.
@@ -44,6 +47,14 @@ export interface SpanProcessorOptions {
    * The headers to be sent with the traces data. Optional.
    */
   headers?: Record<string, string>;
+
+  /**
+   * The instrumentation libraries to be allowed in the traces. Optional.
+   * Defaults to Traceloop instrumentation libraries.
+   * If set to ALL_INSTRUMENTATION_LIBRARIES, all instrumentation libraries will be allowed.
+   * If set to an array of instrumentation libraries, only traceloop instrumentation libraries and the specified instrumentation libraries will be allowed.
+   */
+  allowedInstrumentationLibraries?: string[] | AllInstrumentationLibraries;
 }
 
 /**
@@ -78,10 +89,39 @@ export const createSpanProcessor = (
   const originalOnEnd = spanProcessor.onEnd.bind(spanProcessor);
 
   spanProcessor.onStart = onSpanStart;
-  spanProcessor.onEnd = onSpanEnd(originalOnEnd);
+
+  if (
+    options.allowedInstrumentationLibraries === ALL_INSTRUMENTATION_LIBRARIES
+  ) {
+    spanProcessor.onEnd = onSpanEnd(originalOnEnd);
+  } else {
+    const instrumentationLibraries = traceloopInstrumentationLibraries;
+
+    if (options.allowedInstrumentationLibraries) {
+      instrumentationLibraries.push(...options.allowedInstrumentationLibraries);
+    }
+
+    spanProcessor.onEnd = onSpanEnd(originalOnEnd, instrumentationLibraries);
+  }
 
   return spanProcessor;
 };
+
+export const traceloopInstrumentationLibraries = [
+  "@traceloop/node-server-sdk",
+  "@traceloop/instrumentation-openai",
+  "@traceloop/instrumentation-langchain",
+  "@traceloop/instrumentation-chroma",
+  "@traceloop/instrumentation-anthropic",
+  "@traceloop/instrumentation-azure",
+  "@traceloop/instrumentation-llamaindex",
+  "@traceloop/instrumentation-vertexai",
+  "@traceloop/instrumentation-bedrock",
+  "@traceloop/instrumentation-cohere",
+  "@traceloop/instrumentation-pinecone",
+  "@traceloop/instrumentation-qdrant",
+  "@traceloop/instrumentation-together",
+];
 
 /**
  * Handles span start event, enriching it with workflow and entity information
@@ -119,8 +159,24 @@ const onSpanStart = (span: Span): void => {
 /**
  * Handles span end event, adapting attributes for Vercel AI compatibility
  */
-const onSpanEnd = (originalOnEnd: (span: ReadableSpan) => void) => {
+const onSpanEnd = (
+  originalOnEnd: (span: ReadableSpan) => void,
+  instrumentationLibraries?: string[],
+) => {
+  console.log("instrumentation libraries", instrumentationLibraries);
   return (span: ReadableSpan): void => {
+    console.log(
+      "instrumentation library name",
+      span.instrumentationLibrary.name,
+    );
+    if (
+      instrumentationLibraries &&
+      !instrumentationLibraries.includes(span.instrumentationLibrary.name)
+    ) {
+      console.log("skipping span", span.instrumentationLibrary.name);
+      return;
+    }
+
     // Vercel AI Adapters
     const attributes = span.attributes;
 
