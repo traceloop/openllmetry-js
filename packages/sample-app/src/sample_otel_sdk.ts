@@ -1,15 +1,16 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
-import {
-  createSpanProcessor,
-  withTask,
-  withWorkflow,
-} from "@traceloop/node-server-sdk";
+import * as traceloop from "@traceloop/node-server-sdk";
 import { trace } from "@opentelemetry/api";
 import OpenAI from "openai";
 
-const traceloopSpanProcessor = createSpanProcessor({
+traceloop.initialize({
+  tracingEnabled: false,
+  traceloopSyncEnabled: false,
+});
+
+const traceloopSpanProcessor = traceloop.createSpanProcessor({
   apiKey: process.env.TRACELOOP_API_KEY,
   baseUrl: process.env.TRACELOOP_BASE_URL,
   disableBatch: true,
@@ -45,9 +46,9 @@ async function main() {
 }
 
 async function chat() {
-  return await withWorkflow({ name: "sample_chat" }, async () => {
-    return await withTask({ name: "parent_task" }, async () => {
-      return await withTask({ name: "child_task" }, async () => {
+  return await traceloop.withWorkflow({ name: "sample_chat" }, async () => {
+    return await traceloop.withTask({ name: "parent_task" }, async () => {
+      return await traceloop.withTask({ name: "child_task" }, async () => {
         const chatCompletion = await openai.chat.completions.create({
           messages: [
             { role: "user", content: "Tell me a joke about OpenTelemetry" },

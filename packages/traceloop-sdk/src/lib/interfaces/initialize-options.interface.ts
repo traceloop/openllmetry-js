@@ -142,4 +142,10 @@ export interface InitializeOptions {
    * Defaults to false.
    */
   silenceInitializationMessage?: boolean;
+
+  /**
+   * Whether to enable tracing. Optional.
+   * Defaults to true.
+   */
+  tracingEnabled?: boolean;
 }
