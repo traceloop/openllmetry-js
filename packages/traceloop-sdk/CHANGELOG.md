@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.2](https://github.com/traceloop/openllmetry-js/compare/v0.13.1...v0.13.2) (2025-04-27)
+
+### Bug Fixes
+
+- **tracing:** introduce tracingEnabled option to support sdk initialization for standalone processor ([#599](https://github.com/traceloop/openllmetry-js/issues/599)) ([1fa682e](https://github.com/traceloop/openllmetry-js/commit/1fa682e89cdb232388efef8d265c67396f539293))
+
 ## [0.13.1](https://github.com/traceloop/openllmetry-js/compare/v0.13.0...v0.13.1) (2025-04-24)
 
 ### Bug Fixes
