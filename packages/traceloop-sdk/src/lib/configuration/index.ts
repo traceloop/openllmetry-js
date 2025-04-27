@@ -86,7 +86,10 @@ export const initialize = (options: InitializeOptions) => {
     );
   }
 
-  startTracing(_configuration);
+  if (options.tracingEnabled === undefined || options.tracingEnabled) {
+    startTracing(_configuration);
+  }
+
   initializeRegistry(_configuration);
   if (options.apiKey) {
     _client = new TraceloopClient({
