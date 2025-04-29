@@ -71,13 +71,6 @@ export const initialize = (options: InitializeOptions) => {
 
   _configuration = Object.freeze(options);
 
-  if (options.logLevel) {
-    diag.setLogger(
-      new DiagConsoleLogger(),
-      logLevelToOtelLogLevel(options.logLevel),
-    );
-  }
-
   if (!options.silenceInitializationMessage) {
     console.log(
       `Traceloop exporting traces to ${
@@ -87,6 +80,13 @@ export const initialize = (options: InitializeOptions) => {
   }
 
   if (options.tracingEnabled === undefined || options.tracingEnabled) {
+    if (options.logLevel) {
+      diag.setLogger(
+        new DiagConsoleLogger(),
+        logLevelToOtelLogLevel(options.logLevel),
+      );
+    }
+
     startTracing(_configuration);
   }
 
