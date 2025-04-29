@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.3](https://github.com/traceloop/openllmetry-js/compare/v0.13.2...v0.13.3) (2025-04-29)
+
+### Bug Fixes
+
+- **tracing:** otel log level setup only for non-standalone processor ([#600](https://github.com/traceloop/openllmetry-js/issues/600)) ([f2e432f](https://github.com/traceloop/openllmetry-js/commit/f2e432f8ce15198ea6982b5107b465a9ab0f8c34))
+
 ## [0.13.2](https://github.com/traceloop/openllmetry-js/compare/v0.13.1...v0.13.2) (2025-04-27)
 
 ### Bug Fixes
