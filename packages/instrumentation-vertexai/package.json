@@ -44,7 +44,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@google-cloud/aiplatform": "^3.34.0",
+    "@google-cloud/aiplatform": "^4.1.0",
     "@google-cloud/vertexai": "^1.9.2"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
