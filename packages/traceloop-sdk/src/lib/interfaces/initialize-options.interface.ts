@@ -17,6 +17,7 @@ import type * as VectorStoreModule from "@langchain/core/vectorstores";
 import type * as llamaindex from "llamaindex";
 import type * as chromadb from "chromadb";
 import type * as qdrant from "@qdrant/js-client-rest";
+import type * as cerebras from "@cerebras/cerebras_cloud_sdk";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -111,6 +112,7 @@ export interface InitializeOptions {
     llamaIndex?: typeof llamaindex;
     chromadb?: typeof chromadb;
     qdrant?: typeof qdrant;
+    cerebras?: typeof cerebras;
   };
 
   /**
