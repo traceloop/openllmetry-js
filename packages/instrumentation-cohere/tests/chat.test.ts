@@ -35,31 +35,33 @@ const memoryExporter = new InMemorySpanExporter();
 Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
-describe.skip("Test Chat with Cohere Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+describe("Test Cohere chat instrumentation", async function () {
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: CohereInstrumentation;
   let contextManager: AsyncHooksContextManager;
-  let cohere: typeof cohereModule;
-  let cohereClient: cohereModule.CohereClient;
+  let cohere: any;
 
   setupPolly({
-    adapters: [FetchAdapter],
+    adapters: ["node-http"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
-    matchRequestsBy: { headers: false },
+    matchRequestsBy: {
+      headers: false,
+    },
   });
 
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    if (process.env.RECORD_MODE !== "NEW") {
+      process.env.COHERE_API_KEY = "dummy_key";
+    }
     instrumentation = new CohereInstrumentation();
     instrumentation.setTracerProvider(provider);
-    cohere = await import("cohere-ai");
 
-    cohereClient = new cohere.CohereClient({
-      token:
-        process.env.RECORD_MODE === "NEW"
-          ? "test"
-          : process.env.COHERE_API_KEY!,
+    const cohereModule = await import("cohere-ai");
+    cohere = new cohereModule.CohereClient({
+      token: process.env.COHERE_API_KEY as string,
     });
   });
 
@@ -94,7 +96,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       // perform web search before answering the question. You can also use your own custom connector.
       connectors: [{ id: "web-search" }],
     };
-    const response = await cohereClient.chat(params);
+    const response = await cohere.chat(params);
 
     const spans = memoryExporter.getFinishedSpans();
 
@@ -191,7 +193,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       // perform web search before answering the question. You can also use your own custom connector.
       connectors: [{ id: "web-search" }],
     };
-    const streamedResponse = await cohereClient.chatStream(params);
+    const streamedResponse = await cohere.chatStream(params);
 
     const spans = memoryExporter.getFinishedSpans();
 

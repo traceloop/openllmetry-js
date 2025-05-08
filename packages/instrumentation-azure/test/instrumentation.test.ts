@@ -40,7 +40,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: AzureOpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let azureOpenAi: AzureOpenAIModule.OpenAIClient;
@@ -60,7 +62,6 @@ describe("Test OpenAI instrumentation", async function () {
       process.env.AZURE_API_KEY = "test-key";
       process.env.AZURE_DEPLOYMENT_ID = "openllmetry-testing";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new AzureOpenAIInstrumentation();
     instrumentation.setTracerProvider(provider);
 

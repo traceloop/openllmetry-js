@@ -39,7 +39,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test Anthropic instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: AnthropicInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let anthropic: AnthropicModule.Anthropic;
@@ -57,7 +59,6 @@ describe("Test Anthropic instrumentation", async function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.ANTHROPIC_API_KEY = "test-key";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
     instrumentation = new AnthropicInstrumentation();
     instrumentation.setTracerProvider(provider);
 
