@@ -46,6 +46,7 @@ import type {
   MessageStreamEvent,
 } from "@anthropic-ai/sdk/resources/messages";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
+import type { APIPromise, BaseAnthropic } from "@anthropic-ai/sdk";
 
 export class AnthropicInstrumentation extends InstrumentationBase {
   declare protected _config: AnthropicInstrumentationConfig;
@@ -64,12 +65,12 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     this._wrap(
       module.Anthropic.Completions.prototype,
       "create",
-      this.patchAnthropic("completion"),
+      this.patchAnthropic("completion", module),
     );
     this._wrap(
       module.Anthropic.Messages.prototype,
       "create",
-      this.patchAnthropic("chat"),
+      this.patchAnthropic("chat", module),
     );
   }
 
@@ -84,17 +85,17 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   }
 
   private patch(moduleExports: typeof anthropic, moduleVersion?: string) {
-    this._diag.debug(`Patching  @anthropic-ai/sdk@${moduleVersion}`);
+    this._diag.debug(`Patching @anthropic-ai/sdk@${moduleVersion}`);
 
     this._wrap(
       moduleExports.Anthropic.Completions.prototype,
       "create",
-      this.patchAnthropic("completion"),
+      this.patchAnthropic("completion", moduleExports),
     );
     this._wrap(
       moduleExports.Anthropic.Messages.prototype,
       "create",
-      this.patchAnthropic("chat"),
+      this.patchAnthropic("chat", moduleExports),
     );
     return moduleExports;
   }
@@ -103,13 +104,16 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     moduleExports: typeof anthropic,
     moduleVersion?: string,
   ): void {
-    this._diag.debug(`Unpatching @azure/openai@${moduleVersion}`);
+    this._diag.debug(`Unpatching @anthropic-ai/sdk@${moduleVersion}`);
 
     this._unwrap(moduleExports.Anthropic.Completions.prototype, "create");
     this._unwrap(moduleExports.Anthropic.Messages.prototype, "create");
   }
 
-  private patchAnthropic(type: "chat" | "completion") {
+  private patchAnthropic(
+    type: "chat" | "completion",
+    moduleExports: typeof anthropic,
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
     // eslint-disable-next-line
@@ -152,12 +156,11 @@ export class AnthropicInstrumentation extends InstrumentationBase {
             args[0] as
               | MessageCreateParamsStreaming
               | CompletionCreateParamsStreaming
-          ).stream &&
-          type === "completion" // For some reason, this causes an exception with chat, so disabled for now
+          ).stream
         ) {
           return context.bind(
             execContext,
-            plugin._streamingWrapPromise({
+            plugin._streamingWrapPromise(this._client, moduleExports, {
               span,
               type,
               promise: execPromise,
@@ -244,96 +247,150 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     });
   }
 
-  private async *_streamingWrapPromise({
-    span,
-    type,
-    promise,
-  }:
-    | {
-        span: Span;
-        type: "chat";
-        promise: Promise<Stream<MessageStreamEvent>>;
-      }
-    | {
-        span: Span;
-        type: "completion";
-        promise: Promise<Stream<Completion>>;
-      }) {
-    if (type === "chat") {
-      const result: Message = {
-        id: "0",
-        type: "message",
-        model: "",
-        role: "assistant",
-        stop_reason: null,
-        stop_sequence: null,
-        usage: { input_tokens: 0, output_tokens: 0 },
-        content: [],
-      };
-      for await (const chunk of await promise) {
-        yield chunk;
-
-        try {
-          switch (chunk.type) {
-            case "content_block_start":
-              if (result.content.length <= chunk.index) {
-                result.content.push(chunk.content_block);
-              }
-              break;
-
-            case "content_block_delta":
-              if (chunk.index < result.content.length) {
-                const current = result.content[chunk.index];
-                if (
-                  current.type === "text" &&
-                  chunk.delta.type === "text_delta"
-                ) {
-                  result.content[chunk.index] = {
-                    type: "text",
-                    text: current.text + chunk.delta.text,
-                  };
-                }
-              }
-          }
-        } catch (e) {
-          this._diag.debug(e);
-          this._config.exceptionLogger?.(e);
+  private _streamingWrapPromise(
+    client: BaseAnthropic,
+    moduleExports: typeof anthropic,
+    {
+      span,
+      type,
+      promise,
+    }:
+      | {
+          span: Span;
+          type: "chat";
+          promise: APIPromise<Stream<MessageStreamEvent>>;
         }
-      }
+      | {
+          span: Span;
+          type: "completion";
+          promise: APIPromise<Stream<Completion>>;
+        },
+  ) {
+    async function* iterateStream(
+      this: AnthropicInstrumentation,
+      stream: Stream<MessageStreamEvent> | Stream<Completion>,
+    ) {
+      try {
+        if (type === "chat") {
+          const result: Message = {
+            id: "0",
+            type: "message",
+            model: "",
+            role: "assistant",
+            stop_reason: null,
+            stop_sequence: null,
+            usage: {
+              input_tokens: 0,
+              output_tokens: 0,
+              cache_creation_input_tokens: 0,
+              cache_read_input_tokens: 0,
+              server_tool_use: null,
+            },
+            content: [],
+          };
 
-      this._endSpan({ span, type, result });
-    } else {
-      const result: Completion = {
-        id: "0",
-        type: "completion",
-        model: "",
-        completion: "",
-        stop_reason: null,
-      };
-      for await (const chunk of await promise) {
-        yield chunk;
+          for await (const chunk of stream) {
+            yield chunk;
 
-        try {
-          result.id = chunk.id;
-          result.model = chunk.model;
+            try {
+              switch (chunk.type) {
+                case "message_start":
+                  result.id = chunk.message.id;
+                  result.model = chunk.message.model;
+                  Object.assign(result.usage, chunk.message.usage);
+                  break;
+                case "message_delta":
+                  if (chunk.usage) {
+                    Object.assign(result.usage, chunk.usage);
+                  }
+                  break;
+                case "content_block_start":
+                  if (result.content.length <= chunk.index) {
+                    result.content.push({ ...chunk.content_block });
+                  }
+                  break;
 
-          if (chunk.stop_reason) {
-            result.stop_reason = chunk.stop_reason;
+                case "content_block_delta":
+                  if (chunk.index < result.content.length) {
+                    const current = result.content[chunk.index];
+                    if (
+                      current.type === "text" &&
+                      chunk.delta.type === "text_delta"
+                    ) {
+                      result.content[chunk.index] = {
+                        type: "text",
+                        text: current.text + chunk.delta.text,
+                        citations: current.citations,
+                      };
+                    }
+                  }
+                  break;
+              }
+            } catch (e) {
+              this._diag.debug(e);
+              this._config.exceptionLogger?.(e);
+            }
           }
-          if (chunk.model) {
-            result.model = chunk.model;
+
+          this._endSpan({ span, type, result });
+        } else {
+          const result: Completion = {
+            id: "0",
+            type: "completion",
+            model: "",
+            completion: "",
+            stop_reason: null,
+          };
+          for await (const chunk of stream as Stream<Completion>) {
+            yield chunk;
+
+            try {
+              result.id = chunk.id;
+              result.model = chunk.model;
+
+              if (chunk.stop_reason) {
+                result.stop_reason = chunk.stop_reason;
+              }
+              if (chunk.model) {
+                result.model = chunk.model;
+              }
+              if (chunk.completion) {
+                result.completion += chunk.completion;
+              }
+            } catch (e) {
+              this._diag.debug(e);
+              this._config.exceptionLogger?.(e);
+            }
           }
-          if (chunk.completion) {
-            result.completion += chunk.completion;
-          }
-        } catch (e) {
-          this._diag.debug(e);
-          this._config.exceptionLogger?.(e);
+
+          this._endSpan({ span, type, result });
         }
+      } catch (error) {
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: error.message,
+        });
+        span.recordException(error);
+        span.end();
+        throw error;
       }
-
-      this._endSpan({ span, type, result });
     }
+
+    return new moduleExports.APIPromise(
+      client,
+      (promise as any).responsePromise,
+      async (client, props) => {
+        const realStream = await (promise as any).parseResponse(client, props);
+
+        // take the incoming stream, iterate it using our instrumented function, and wrap it in a new stream to keep the rich object type the same
+        return new realStream.constructor(
+          () => iterateStream.call(this, realStream),
+          realStream.controller,
+        );
+      },
+    ) as
+      | APIPromise<Stream<MessageStreamEvent>>
+      | APIPromise<Stream<Completion>>;
   }
 
   private _wrapPromise<T>(
@@ -343,35 +400,31 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   ): Promise<T> {
     return promise
       .then((result) => {
-        return new Promise<T>((resolve) => {
-          if (type === "chat") {
-            this._endSpan({
-              type,
-              span,
-              result: result as Message,
-            });
-          } else {
-            this._endSpan({
-              type,
-              span,
-              result: result as Completion,
-            });
-          }
+        if (type === "chat") {
+          this._endSpan({
+            type,
+            span,
+            result: result as Message,
+          });
+        } else {
+          this._endSpan({
+            type,
+            span,
+            result: result as Completion,
+          });
+        }
 
-          resolve(result);
-        });
+        return result;
       })
       .catch((error: Error) => {
-        return new Promise<T>((_, reject) => {
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: error.message,
-          });
-          span.recordException(error);
-          span.end();
-
-          reject(error);
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: error.message,
         });
+        span.recordException(error);
+        span.end();
+
+        throw error;
       });
   }
 
