@@ -1,4 +1,4 @@
-import { InstrumentationBase, InstrumentationModuleDefinition, InstrumentationNodeModuleDefinition, safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
+import { InstrumentationBase, InstrumentationModuleDefinition, safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 import { context, Span, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import type * as sse from "@modelcontextprotocol/sdk/client/sse"
 import type * as stdio from "@modelcontextprotocol/sdk/client/stdio"
@@ -130,7 +130,7 @@ export class McpInstrumentation extends InstrumentationBase {
     private async _wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
         try {
             const result = await promise;
-            this._endSpan(span);
+            span.end();
             return result;
         } catch (error) {
             span.setStatus({
@@ -145,8 +145,4 @@ export class McpInstrumentation extends InstrumentationBase {
             throw error;
         }
       }
-    
-    private _endSpan(span: Span) {
-        span.end();
-    }
 }
