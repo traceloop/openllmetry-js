@@ -1,6 +1,7 @@
-import { InstrumentationBase, InstrumentationModuleDefinition, safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
+import { InstrumentationBase, InstrumentationModuleDefinition, InstrumentationNodeModuleDefinition, safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 import { context, Span, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import type * as sse from "@modelcontextprotocol/sdk/client/sse"
+import type * as stdio from "@modelcontextprotocol/sdk/client/stdio"
 
 import { McpInstrumentationConfig } from "./types";
 import { version } from "../package.json"
@@ -21,8 +22,9 @@ export class McpInstrumentation extends InstrumentationBase {
         return []
     }
 
-    public manuallyInstrument(sseModule: typeof sse) {
+    public manuallyInstrument(sseModule: typeof sse, stdioModule: typeof stdio) {
         this.wrapSSEClient(sseModule);
+        this.wrapStdioClient(stdioModule);
     }
 
     private wrapSSEClient(module: typeof sse) {
@@ -54,6 +56,37 @@ export class McpInstrumentation extends InstrumentationBase {
         // this._wrap(module.SSEClientTransport.prototype, "send", this.wrapperMethod());
         
     }
+
+    private wrapStdioClient(module: typeof stdio) {
+        this._diag.debug(`Patching @modelcontextprotocol/sdk/client/stdio`);
+        
+        // Store reference to the wrapper method
+        const wrapperMethod = this.wrapperMethod();
+        
+        Object.defineProperty(module.StdioClientTransport.prototype, 'onmessage', {
+            get(this: any) {
+                return this._wrappedOnMessage || this._originalOnMessage;
+            },
+            set(this: any, newHandler: Function) {
+                
+                // Store the original handler
+                this._originalOnMessage = newHandler;
+                
+                // Wrap the new handler if it's a function
+                if (typeof newHandler === 'function') {
+                    this._wrappedOnMessage = wrapperMethod(newHandler);
+                } else {
+                    this._wrappedOnMessage = newHandler;
+                }
+            },
+            configurable: true,
+            enumerable: true
+        });
+
+        // this._wrap(module.SSEClientTransport.prototype, "send", this.wrapperMethod());
+        
+    }
+
 
 
     private wrapperMethod() {
@@ -88,7 +121,7 @@ export class McpInstrumentation extends InstrumentationBase {
             "mcp.response.value": JSON.stringify(params.result || params.params?.content || params.params?.data),
             "mcp.method.name": params.params.method,
         }
-        return this.tracer.startSpan("mcp.request", {
+        return this.tracer.startSpan("mcp.client.response", {
             kind: SpanKind.CLIENT,
             attributes
         });
