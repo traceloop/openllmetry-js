@@ -259,9 +259,7 @@ export const startTracing = (options: InitializeOptions) => {
     togetherInstrumentation?.setConfig({
       traceContent: false,
     });
-    mcpInstrumentation?.setConfig({
-      traceContent: false,
-    });
+    mcpInstrumentation?.setConfig({});
   }
 
   const headers =
