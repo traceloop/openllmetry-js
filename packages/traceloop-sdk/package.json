@@ -50,7 +50,7 @@
     "@traceloop/instrumentation-qdrant": "^0.13.0",
     "@traceloop/instrumentation-together": "^0.13.0",
     "@traceloop/instrumentation-vertexai": "^0.13.0",
-    "@traceloop/instrumentation-mcp": "file:/home/naren/Code/traceloop/openllmetry-js/packages/instrumentation-mcp",
+    "@traceloop/instrumentation-mcp": "^0.13.0",
     "@types/nunjucks": "^3.2.6",
     "cross-fetch": "^4.0.0",
     "fetch-retry": "^5.0.6",

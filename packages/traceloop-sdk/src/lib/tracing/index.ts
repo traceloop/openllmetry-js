@@ -104,9 +104,6 @@ export const initInstrumentations = () => {
 
   togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
   instrumentations.push(togetherInstrumentation);
-
-  mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
-  instrumentations.push(mcpInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
