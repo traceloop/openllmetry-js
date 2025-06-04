@@ -55,7 +55,9 @@
     "langchain": "^0.3.7",
     "llamaindex": "^0.8.28",
     "openai": "^4.76.2",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod-to-json-schema": "^3.23.5"
   },
   "private": true,
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

@@ -56,6 +56,13 @@ export const SpanAttributes = {
   TRACELOOP_ASSOCIATION_PROPERTIES: "traceloop.association.properties",
   TRACELOOP_ENTITY_INPUT: "traceloop.entity.input",
   TRACELOOP_ENTITY_OUTPUT: "traceloop.entity.output",
+
+  // MCP
+  MCP_METHOD_NAME: "mcp.method.name",
+  MCP_REQUEST_ARGUMENT: "mcp.request.argument",
+  MCP_REQUEST_ID: "mcp.request.id",
+  MCP_SESSION_INIT_OPTIONS: "mcp.session.init_options",
+  MCP_RESPONSE_VALUE: "mcp.response.value",
 };
 
 export const Events = {
