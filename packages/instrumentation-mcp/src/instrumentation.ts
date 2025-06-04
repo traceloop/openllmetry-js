@@ -127,7 +127,6 @@ export class McpInstrumentation extends InstrumentationBase {
     return (original: Function) => {
       return function method(this: any, ...args: any) {
         const span = plugin._startSpan(args[0], "request");
-        console.log("on send args", JSON.stringify(args[0], null, 2));
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           (): Promise<void> => {
