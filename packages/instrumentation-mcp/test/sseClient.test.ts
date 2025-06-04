@@ -56,13 +56,6 @@ describe("Test MCP SSE Client", () => {
   beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
-
-    const { server } = this.polly as Polly;
-    server.any().on("beforePersist", (_req, recording) => {
-      recording.request.headers = recording.request.headers.filter(
-        ({ name }: { name: string }) => name !== "authorization",
-      );
-    });
   });
 
   afterEach(async () => {
