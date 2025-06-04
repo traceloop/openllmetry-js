@@ -10,7 +10,7 @@ import {
   trace,
 } from "@opentelemetry/api";
 import type * as sse from "@modelcontextprotocol/sdk/client/sse";
-import type * as stdio from "@modelcontextprotocol/sdk/client/stdio";
+import type * as stdio from "@modelcontextprotocol/sdk/client/stdio.js";
 
 import { McpInstrumentationConfig } from "./types";
 import { version } from "../package.json";
