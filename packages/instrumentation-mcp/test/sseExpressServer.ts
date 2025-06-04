@@ -1,6 +1,6 @@
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import express from "express";
-import { createServer } from "./sseServer";
+import { createServer } from "./mcpServer";
 
 console.error('Starting SSE server...');
 

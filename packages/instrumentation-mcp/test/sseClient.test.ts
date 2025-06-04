@@ -16,6 +16,7 @@ import * as sse from "@modelcontextprotocol/sdk/client/sse.js";
 import * as stdio from "@modelcontextprotocol/sdk/client/stdio.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import app from "./sseExpressServer";
+import { Server } from "http";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -28,6 +29,7 @@ describe("Test MCP SSE Client", () => {
   let contextManager: AsyncHooksContextManager;
   let sseModule: typeof sse;
   let stdioModule: typeof stdio;
+  let expressServer: Server;
 
   setupPolly({
     adapters: ["node-http"],
@@ -48,7 +50,7 @@ describe("Test MCP SSE Client", () => {
 
     instrumentation.manuallyInstrument({sseModule, stdioModule});
 
-    app.listen(3001, () => {
+    expressServer = app.listen(3001, () => {
       console.error(`Server is running on port 3001`);
     });
   });
@@ -85,5 +87,6 @@ describe("Test MCP SSE Client", () => {
     assert.ok(promptsListSpan);
 
     sseClient.close();
+    expressServer.close()
   });
 });
