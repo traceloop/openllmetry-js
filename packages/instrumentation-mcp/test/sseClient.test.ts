@@ -46,7 +46,7 @@ describe("Test MCP SSE Client", () => {
     sseModule = require("@modelcontextprotocol/sdk/client/sse.js");
     stdioModule = require("@modelcontextprotocol/sdk/client/stdio.js");
 
-    instrumentation.manuallyInstrument(sseModule, stdioModule);
+    instrumentation.manuallyInstrument({sseModule, stdioModule});
 
     app.listen(3001, () => {
       console.error(`Server is running on port 3001`);

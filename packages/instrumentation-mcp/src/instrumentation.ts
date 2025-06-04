@@ -29,9 +29,19 @@ export class McpInstrumentation extends InstrumentationBase {
   // auto-instrumentation doesn't work for the modules we're instrumenting
   protected init() {}
 
-  public manuallyInstrument(sseModule: typeof sse, stdioModule: typeof stdio) {
-    this.wrapSSEClient(sseModule);
-    this.wrapStdioClient(stdioModule);
+  public manuallyInstrument({
+    sseModule,
+    stdioModule,
+  }: {
+    sseModule?: typeof sse;
+    stdioModule?: typeof stdio;
+  }) {
+    if (sseModule) {
+      this.wrapSSEClient(sseModule);
+    }
+    if (stdioModule) {
+      this.wrapStdioClient(stdioModule);
+    }
   }
 
   private wrapSSEClient(module: typeof sse) {

@@ -215,7 +215,6 @@ export const manuallyInitInstrumentations = (
   if (instrumentModules?.mcp) {
     mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
     instrumentations.push(mcpInstrumentation);
-    // @ts-ignore
     mcpInstrumentation.manuallyInstrument(instrumentModules.mcp);
   }
 };
