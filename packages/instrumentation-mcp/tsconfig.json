@@ -5,6 +5,6 @@
     "rootDir": "."
   },
   "files": [],
-  "include": ["src/**/*.ts", "test/**/*.ts", "package.json"],
+  "include": ["src/**/*.ts", "test/**/*.ts", "package.json", "test/**/*.js"],
   "references": []
 }
