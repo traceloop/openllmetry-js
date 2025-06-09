@@ -1,9 +1,9 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import * as traceloop from "@traceloop/node-server-sdk";
 import { trace } from "@opentelemetry/api";
 import OpenAI from "openai";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 
 traceloop.initialize({
   tracingEnabled: false,
@@ -19,7 +19,7 @@ const traceloopSpanProcessor = traceloop.createSpanProcessor({
 
 // Initialize the OpenTelemetry SDK with Traceloop's span processor
 const sdk = new NodeSDK({
-  resource: new Resource({
+  resource: resourceFromAttributes({
     [ATTR_SERVICE_NAME]: "my-sample-app",
   }),
   spanProcessors: [traceloopSpanProcessor],

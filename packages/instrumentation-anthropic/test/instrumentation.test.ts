@@ -19,10 +19,10 @@ import * as assert from "assert";
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
-  BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
 import * as AnthropicModule from "@anthropic-ai/sdk";
 
@@ -39,7 +39,7 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test Anthropic instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  let provider: NodeTracerProvider;
   let instrumentation: AnthropicInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let anthropic: AnthropicModule.Anthropic;
@@ -57,7 +57,9 @@ describe("Test Anthropic instrumentation", async function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.ANTHROPIC_API_KEY = "test-key";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    provider = new NodeTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+    });
     instrumentation = new AnthropicInstrumentation();
     instrumentation.setTracerProvider(provider);
 
