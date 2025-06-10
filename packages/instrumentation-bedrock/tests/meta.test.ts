@@ -19,7 +19,6 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { BedrockInstrumentation } from "../src/instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
@@ -29,6 +28,7 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FSPersister from "@pollyjs/persister-fs";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -36,7 +36,7 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test Meta with AWS Bedrock Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+  let provider: NodeTracerProvider;
   let instrumentation: BedrockInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let bedrock: typeof bedrockModule;
@@ -50,7 +50,9 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
   });
 
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    provider = new NodeTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+    });
     instrumentation = new BedrockInstrumentation();
     instrumentation.setTracerProvider(provider);
     bedrock = await import("@aws-sdk/client-bedrock-runtime");

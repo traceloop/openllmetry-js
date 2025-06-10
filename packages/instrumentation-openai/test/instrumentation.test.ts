@@ -19,10 +19,10 @@ import * as assert from "assert";
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
-  BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
 import type * as OpenAIModule from "openai";
 
@@ -39,7 +39,7 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  let provider: NodeTracerProvider;
   let instrumentation: OpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let openai: OpenAIModule.OpenAI;
@@ -57,7 +57,9 @@ describe("Test OpenAI instrumentation", async function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.OPENAI_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    provider = new NodeTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+    });
     instrumentation = new OpenAIInstrumentation({ enrichTokens: true });
     instrumentation.setTracerProvider(provider);
 

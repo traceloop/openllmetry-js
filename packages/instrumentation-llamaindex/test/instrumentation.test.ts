@@ -19,7 +19,6 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { LlamaIndexInstrumentation } from "../src/instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
@@ -28,6 +27,7 @@ import type * as llamaindexImport from "llamaindex";
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FSPersister from "@pollyjs/persister-fs";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -35,7 +35,7 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test LlamaIndex instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  let provider: NodeTracerProvider;
   let instrumentation: LlamaIndexInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let llamaindex: typeof llamaindexImport;
@@ -55,7 +55,9 @@ describe("Test LlamaIndex instrumentation", async function () {
       process.env.OPENAI_API_KEY = "test";
     }
 
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    provider = new NodeTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+    });
     instrumentation = new LlamaIndexInstrumentation();
     instrumentation.setTracerProvider(provider);
     llamaindex = require("llamaindex");
@@ -163,22 +165,22 @@ describe("Test LlamaIndex instrumentation", async function () {
     );
 
     assert.strictEqual(
-      synthesizeSpan?.parentSpanId,
+      synthesizeSpan?.parentSpanContext?.spanId,
       retrieverQueryEngineQuerySpan?.spanContext().spanId,
     );
 
     assert.strictEqual(
-      retrieverQueryEngineRetrieveSpan?.parentSpanId,
+      retrieverQueryEngineRetrieveSpan?.parentSpanContext?.spanId,
       retrieverQueryEngineQuerySpan?.spanContext().spanId,
     );
 
     assert.strictEqual(
-      vectorIndexRetrieverSpan?.parentSpanId,
+      vectorIndexRetrieverSpan?.parentSpanContext?.spanId,
       retrieverQueryEngineRetrieveSpan?.spanContext().spanId,
     );
 
     assert.strictEqual(
-      openAIEmbeddingSpan?.parentSpanId,
+      openAIEmbeddingSpan?.parentSpanContext?.spanId,
       vectorIndexRetrieverSpan?.spanContext().spanId,
     );
   }).timeout(60000);

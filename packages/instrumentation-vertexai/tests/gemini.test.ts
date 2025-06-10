@@ -19,22 +19,24 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { VertexAIInstrumentation } from "../src/vertexai-instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import type * as vertexAiImport from "@google-cloud/vertexai";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 
 const memoryExporter = new InMemorySpanExporter();
 
 describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+  let provider: NodeTracerProvider;
   let instrumentation: VertexAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let vertexAi: typeof vertexAiImport;
 
   before(() => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    provider = new NodeTracerProvider({
+      spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+    });
     instrumentation = new VertexAIInstrumentation();
     instrumentation.setTracerProvider(provider);
     vertexAi = require("@google-cloud/vertexai");

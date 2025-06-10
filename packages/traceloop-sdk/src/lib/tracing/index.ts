@@ -1,9 +1,9 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
-import { baggageUtils } from "@opentelemetry/core";
+import { resourceFromAttributes } from "@opentelemetry/resources";
+import { parseKeyPairsIntoRecord } from "@opentelemetry/core";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
@@ -255,7 +255,7 @@ export const startTracing = (options: InitializeOptions) => {
   const headers =
     options.headers ||
     (process.env.TRACELOOP_HEADERS
-      ? baggageUtils.parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
+      ? parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
       : { Authorization: `Bearer ${options.apiKey}` });
 
   const traceExporter =
@@ -280,7 +280,7 @@ export const startTracing = (options: InitializeOptions) => {
   }
 
   _sdk = new NodeSDK({
-    resource: new Resource({
+    resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: options.appName || process.env.npm_package_name,
     }),
     spanProcessors,
