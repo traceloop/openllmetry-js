@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.4](https://github.com/traceloop/openllmetry-js/compare/v0.13.3...v0.13.4) (2025-06-10)
+
+### Bug Fixes
+
+- **anthropic:** upgrade supported version of anthropic SDK ([#604](https://github.com/traceloop/openllmetry-js/issues/604)) ([1ac8678](https://github.com/traceloop/openllmetry-js/commit/1ac8678b269c080eaaa6766e11bac4ace633f3b1))
+
 # [0.13.0](https://github.com/traceloop/openllmetry-js/compare/v0.12.2...v0.13.0) (2025-04-22)
 
 **Note:** Version bump only for package @traceloop/instrumentation-anthropic

@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-anthropic",
-  "version": "0.13.0",
+  "version": "0.13.4",
   "description": "Anthropic Instrumentaion",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -46,8 +46,8 @@
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.50.4",
-    "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/adapter-fetch": "^6.0.7",
+    "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
     "@types/mocha": "^10.0.10",
