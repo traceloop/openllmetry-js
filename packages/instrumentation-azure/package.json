@@ -50,7 +50,7 @@
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
     "@types/mocha": "^10.0.10",
-    "ts-mocha": "^10.0.0"
+    "ts-mocha": "^11.1.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-azure"
 }
