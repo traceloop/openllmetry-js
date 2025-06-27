@@ -108,6 +108,7 @@ export const createSpanProcessor = (
 };
 
 export const traceloopInstrumentationLibraries = [
+  "ai",
   "@traceloop/node-server-sdk",
   "@traceloop/instrumentation-openai",
   "@traceloop/instrumentation-langchain",
