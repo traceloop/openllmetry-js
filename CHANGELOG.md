@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.13.5](https://github.com/traceloop/openllmetry-js/compare/v0.13.4...v0.13.5) (2025-06-27)
+
+### Bug Fixes
+
+- **sdk:** add vercel AI SDK to span-processor whitelist ([#607](https://github.com/traceloop/openllmetry-js/issues/607)) ([667ba2d](https://github.com/traceloop/openllmetry-js/commit/667ba2d306eb915b086212c15f2571d91be650cd))
+
 ## [0.13.4](https://github.com/traceloop/openllmetry-js/compare/v0.13.3...v0.13.4) (2025-06-10)
 
 ### Bug Fixes
