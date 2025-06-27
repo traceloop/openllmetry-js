@@ -19,6 +19,7 @@ import {
   VertexAIInstrumentation,
 } from "@traceloop/instrumentation-vertexai";
 import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
+import { CerebrasInstrumentation } from "@traceloop/instrumentation-cerebras";
 import { CohereInstrumentation } from "@traceloop/instrumentation-cohere";
 import { PineconeInstrumentation } from "@traceloop/instrumentation-pinecone";
 import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
@@ -45,6 +46,7 @@ let pineconeInstrumentation: PineconeInstrumentation | undefined;
 let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
 let qdrantInstrumentation: QdrantInstrumentation | undefined;
 let togetherInstrumentation: TogetherInstrumentation | undefined;
+let cerebrasInstrumentation: CerebrasInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -102,6 +104,9 @@ export const initInstrumentations = () => {
 
   togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
   instrumentations.push(togetherInstrumentation);
+
+  cerebrasInstrumentation = new CerebrasInstrumentation({ exceptionLogger });
+  instrumentations.push(cerebrasInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
@@ -208,6 +213,12 @@ export const manuallyInitInstrumentations = (
     togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
     instrumentations.push(togetherInstrumentation);
     togetherInstrumentation.manuallyInstrument(instrumentModules.together);
+  }
+
+  if (instrumentModules?.cerebras) {
+    cerebrasInstrumentation = new CerebrasInstrumentation({ exceptionLogger });
+    instrumentations.push(cerebrasInstrumentation);
+    cerebrasInstrumentation.manuallyInstrument(instrumentModules.cerebras);
   }
 };
 
