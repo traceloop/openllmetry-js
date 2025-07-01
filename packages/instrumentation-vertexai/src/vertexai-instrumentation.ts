@@ -137,7 +137,7 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     params: vertexAI.GenerateContentRequest;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_SYSTEM]: "VertexAI",
+      [SpanAttributes.LLM_SYSTEM]: "Google",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
