@@ -152,7 +152,9 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
     try {
       const input = params.input as bedrock.InvokeModelCommandInput;
-      const { systemVendor, model } = this._extractVendorAndModel(input.modelId || "");
+      const { systemVendor, model } = this._extractVendorAndModel(
+        input.modelId || "",
+      );
 
       attributes = {
         [SpanAttributes.LLM_SYSTEM]: "AWS",
@@ -197,11 +199,13 @@ export class BedrockInstrumentation extends InstrumentationBase {
             : {};
 
         if (SpanAttributes.LLM_SYSTEM in attributes) {
-          const modelId = attributes[SpanAttributes.LLM_RESPONSE_MODEL] as string;
+          const modelId = attributes[
+            SpanAttributes.LLM_RESPONSE_MODEL
+          ] as string;
           const { systemVendor, model } = this._extractVendorAndModel(modelId);
-          
+
           span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, model);
-          
+
           if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
             const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
 
@@ -498,11 +502,14 @@ export class BedrockInstrumentation extends InstrumentationBase {
       : true;
   }
 
-  private _extractVendorAndModel(modelId: string): { systemVendor: string; model: string } {
+  private _extractVendorAndModel(modelId: string): {
+    systemVendor: string;
+    model: string;
+  } {
     if (!modelId) {
       return { systemVendor: "", model: "" };
     }
-    
+
     const parts = modelId.split(".");
     return {
       systemVendor: parts[0] || "",

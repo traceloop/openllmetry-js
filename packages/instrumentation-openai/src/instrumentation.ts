@@ -233,7 +233,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         client: any;
       }): Span {
     const { platformVendor } = this._detectVendorFromURL(client);
-    
+
     const attributes: Attributes = {
       [SpanAttributes.LLM_SYSTEM]: platformVendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
@@ -752,36 +752,42 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     return encoding.encode(text).length;
   }
 
-  private _detectVendorFromURL(client: any): { platformVendor: string; systemVendor: string } {
+  private _detectVendorFromURL(client: any): {
+    platformVendor: string;
+    systemVendor: string;
+  } {
     const systemVendor = "OpenAI";
-    
+
     try {
       if (!client?.baseURL) {
         return { platformVendor: "OpenAI", systemVendor };
       }
-      
+
       const baseURL = client.baseURL.toLowerCase();
-      
+
       if (baseURL.includes("azure") || baseURL.includes("openai.azure.com")) {
         return { platformVendor: "Azure", systemVendor };
       }
-      
-      if (baseURL.includes("openai.com") || baseURL.includes("api.openai.com")) {
+
+      if (
+        baseURL.includes("openai.com") ||
+        baseURL.includes("api.openai.com")
+      ) {
         return { platformVendor: "OpenAI", systemVendor };
       }
-      
+
       if (baseURL.includes("amazonaws.com") || baseURL.includes("bedrock")) {
         return { platformVendor: "AWS", systemVendor };
       }
-      
+
       if (baseURL.includes("googleapis.com")) {
         return { platformVendor: "Google", systemVendor };
       }
-      
+
       if (baseURL.includes("openrouter")) {
         return { platformVendor: "OpenRouter", systemVendor };
       }
-      
+
       return { platformVendor: "OpenAI", systemVendor };
     } catch (e) {
       this._diag.debug(`Failed to detect vendor from URL: ${e}`);
