@@ -152,7 +152,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
     try {
       const input = params.input as bedrock.InvokeModelCommandInput;
-      const { systemVendor, model } = this._extractVendorAndModel(
+      const { modelVendor, model } = this._extractVendorAndModel(
         input.modelId || "",
       );
 
@@ -168,7 +168,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
         attributes = {
           ...attributes,
-          ...this._setRequestAttributes(systemVendor, requestBody),
+          ...this._setRequestAttributes(modelVendor, requestBody),
         };
       }
     } catch (e) {
@@ -202,7 +202,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
           const modelId = attributes[
             SpanAttributes.LLM_RESPONSE_MODEL
           ] as string;
-          const { systemVendor, model } = this._extractVendorAndModel(modelId);
+          const { modelVendor, model } = this._extractVendorAndModel(modelId);
 
           span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, model);
 
@@ -242,7 +242,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
               }
 
               let responseAttributes = this._setResponseAttributes(
-                systemVendor,
+                modelVendor,
                 parsedResponse,
                 true,
               );
@@ -273,7 +273,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
             const parsedResponse = JSON.parse(jsonString);
 
             const responseAttributes = this._setResponseAttributes(
-              systemVendor,
+              modelVendor,
               parsedResponse,
             );
 
@@ -503,16 +503,16 @@ export class BedrockInstrumentation extends InstrumentationBase {
   }
 
   private _extractVendorAndModel(modelId: string): {
-    systemVendor: string;
+    modelVendor: string;
     model: string;
   } {
     if (!modelId) {
-      return { systemVendor: "", model: "" };
+      return { modelVendor: "", model: "" };
     }
 
     const parts = modelId.split(".");
     return {
-      systemVendor: parts[0] || "",
+      modelVendor: parts[0] || "",
       model: parts[1] || "",
     };
   }
