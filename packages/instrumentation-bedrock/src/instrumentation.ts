@@ -152,14 +152,14 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
     try {
       const input = params.input as bedrock.InvokeModelCommandInput;
-      const [vendor, model] = input.modelId
-        ? input.modelId.split(".")
-        : ["", ""];
+      const { modelVendor, model } = this._extractVendorAndModel(
+        input.modelId || "",
+      );
 
       attributes = {
-        [SpanAttributes.LLM_SYSTEM]: vendor,
+        [SpanAttributes.LLM_SYSTEM]: "AWS",
         [SpanAttributes.LLM_REQUEST_MODEL]: model,
-        [SpanAttributes.LLM_RESPONSE_MODEL]: model,
+        [SpanAttributes.LLM_RESPONSE_MODEL]: input.modelId,
         [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
       };
 
@@ -168,7 +168,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
         attributes = {
           ...attributes,
-          ...this._setRequestAttributes(vendor, requestBody),
+          ...this._setRequestAttributes(modelVendor, requestBody),
         };
       }
     } catch (e) {
@@ -199,6 +199,13 @@ export class BedrockInstrumentation extends InstrumentationBase {
             : {};
 
         if (SpanAttributes.LLM_SYSTEM in attributes) {
+          const modelId = attributes[
+            SpanAttributes.LLM_RESPONSE_MODEL
+          ] as string;
+          const { modelVendor, model } = this._extractVendorAndModel(modelId);
+
+          span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, model);
+
           if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
             const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
 
@@ -235,7 +242,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
               }
 
               let responseAttributes = this._setResponseAttributes(
-                attributes[SpanAttributes.LLM_SYSTEM],
+                modelVendor,
                 parsedResponse,
                 true,
               );
@@ -266,7 +273,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
             const parsedResponse = JSON.parse(jsonString);
 
             const responseAttributes = this._setResponseAttributes(
-              attributes[SpanAttributes.LLM_SYSTEM],
+              modelVendor,
               parsedResponse,
             );
 
@@ -493,5 +500,20 @@ export class BedrockInstrumentation extends InstrumentationBase {
     return this._config.traceContent !== undefined
       ? this._config.traceContent
       : true;
+  }
+
+  private _extractVendorAndModel(modelId: string): {
+    modelVendor: string;
+    model: string;
+  } {
+    if (!modelId) {
+      return { modelVendor: "", model: "" };
+    }
+
+    const parts = modelId.split(".");
+    return {
+      modelVendor: parts[0] || "",
+      model: parts[1] || "",
+    };
   }
 }

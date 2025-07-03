@@ -107,7 +107,7 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
       body: JSON.stringify(params),
     };
 
-    const [vendor, model] = input.modelId.split(".");
+    const [, model] = input.modelId.split(".");
 
     const command = new bedrock.InvokeModelCommand(input);
     const response = await bedrockRuntimeClient.send(command);
@@ -117,7 +117,7 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], vendor);
+    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",

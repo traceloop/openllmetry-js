@@ -92,7 +92,7 @@ describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(attributes["gen_ai.request.model"], model);
     assert.strictEqual(attributes["gen_ai.request.top_p"], parameter.topP);
@@ -165,7 +165,7 @@ describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(attributes["gen_ai.request.model"], model);
     assert.strictEqual(attributes["gen_ai.request.top_p"], parameter.topP);

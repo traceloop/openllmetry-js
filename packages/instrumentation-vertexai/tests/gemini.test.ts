@@ -84,7 +84,7 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(attributes["gen_ai.request.model"], model);
     assert.strictEqual(attributes["gen_ai.request.top_p"], 0.9);
@@ -137,7 +137,7 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes["gen_ai.system"], "VertexAI");
+    assert.strictEqual(attributes["gen_ai.system"], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(attributes["gen_ai.request.model"], model);
     assert.strictEqual(attributes["gen_ai.request.top_p"], 0.9);
