@@ -232,10 +232,10 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         };
         client: any;
       }): Span {
-    const { platformVendor } = this._detectVendorFromURL(client);
+    const { provider } = this._detectVendorFromURL(client);
 
     const attributes: Attributes = {
-      [SpanAttributes.LLM_SYSTEM]: platformVendor,
+      [SpanAttributes.LLM_SYSTEM]: provider,
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
@@ -753,45 +753,45 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   }
 
   private _detectVendorFromURL(client: any): {
-    platformVendor: string;
+    provider: string;
     modelVendor: string;
   } {
     const modelVendor = "OpenAI";
 
     try {
       if (!client?.baseURL) {
-        return { platformVendor: "OpenAI", modelVendor };
+        return { provider: "OpenAI", modelVendor };
       }
 
       const baseURL = client.baseURL.toLowerCase();
 
       if (baseURL.includes("azure") || baseURL.includes("openai.azure.com")) {
-        return { platformVendor: "Azure", modelVendor };
+        return { provider: "Azure", modelVendor };
       }
 
       if (
         baseURL.includes("openai.com") ||
         baseURL.includes("api.openai.com")
       ) {
-        return { platformVendor: "OpenAI", modelVendor };
+        return { provider: "OpenAI", modelVendor };
       }
 
       if (baseURL.includes("amazonaws.com") || baseURL.includes("bedrock")) {
-        return { platformVendor: "AWS", modelVendor };
+        return { provider: "AWS", modelVendor };
       }
 
       if (baseURL.includes("googleapis.com")) {
-        return { platformVendor: "Google", modelVendor };
+        return { provider: "Google", modelVendor };
       }
 
       if (baseURL.includes("openrouter")) {
-        return { platformVendor: "OpenRouter", modelVendor };
+        return { provider: "OpenRouter", modelVendor };
       }
 
-      return { platformVendor: "OpenAI", modelVendor };
+      return { provider: "OpenAI", modelVendor };
     } catch (e) {
       this._diag.debug(`Failed to detect vendor from URL: ${e}`);
-      return { platformVendor: "OpenAI", modelVendor };
+      return { provider: "OpenAI", modelVendor };
     }
   }
 }
