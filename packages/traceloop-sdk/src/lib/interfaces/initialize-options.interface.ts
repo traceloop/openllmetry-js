@@ -17,6 +17,8 @@ import type * as VectorStoreModule from "@langchain/core/vectorstores";
 import type * as llamaindex from "llamaindex";
 import type * as chromadb from "chromadb";
 import type * as qdrant from "@qdrant/js-client-rest";
+import type * as sse from "@modelcontextprotocol/sdk/client/sse.js";
+import type * as stdio from "@modelcontextprotocol/sdk/client/stdio.js";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -111,6 +113,10 @@ export interface InitializeOptions {
     llamaIndex?: typeof llamaindex;
     chromadb?: typeof chromadb;
     qdrant?: typeof qdrant;
+    mcp?: {
+      sseModule?: typeof sse;
+      stdioModule?: typeof stdio;
+    };
   };
 
   /**
