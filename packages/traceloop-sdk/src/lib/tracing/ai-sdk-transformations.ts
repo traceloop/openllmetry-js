@@ -22,7 +22,9 @@ export const transformAiSdkSpanName = (span: ReadableSpan): void => {
   }
 };
 
-export const transformResponseText = (attributes: Record<string, any>): void => {
+export const transformResponseText = (
+  attributes: Record<string, any>,
+): void => {
   if (AI_RESPONSE_TEXT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
       attributes[AI_RESPONSE_TEXT];
@@ -31,19 +33,19 @@ export const transformResponseText = (attributes: Record<string, any>): void => 
   }
 };
 
-export const transformPromptMessages = (attributes: Record<string, any>): void => {
+export const transformPromptMessages = (
+  attributes: Record<string, any>,
+): void => {
   if (AI_PROMPT_MESSAGES in attributes) {
     try {
       const messages = JSON.parse(attributes[AI_PROMPT_MESSAGES] as string);
-      messages.forEach(
-        (msg: { role: string; content: any }, index: number) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-            typeof msg.content === "string"
-              ? msg.content
-              : JSON.stringify(msg.content);
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
-        },
-      );
+      messages.forEach((msg: { role: string; content: any }, index: number) => {
+        attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+          typeof msg.content === "string"
+            ? msg.content
+            : JSON.stringify(msg.content);
+        attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
+      });
       delete attributes[AI_PROMPT_MESSAGES];
     } catch {
       // Skip if JSON parsing fails
@@ -51,7 +53,9 @@ export const transformPromptMessages = (attributes: Record<string, any>): void =
   }
 };
 
-export const transformPromptTokens = (attributes: Record<string, any>): void => {
+export const transformPromptTokens = (
+  attributes: Record<string, any>,
+): void => {
   if (AI_USAGE_PROMPT_TOKENS in attributes) {
     attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] =
       attributes[AI_USAGE_PROMPT_TOKENS];
@@ -59,7 +63,9 @@ export const transformPromptTokens = (attributes: Record<string, any>): void => 
   }
 };
 
-export const transformCompletionTokens = (attributes: Record<string, any>): void => {
+export const transformCompletionTokens = (
+  attributes: Record<string, any>,
+): void => {
   if (AI_USAGE_COMPLETION_TOKENS in attributes) {
     attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`] =
       attributes[AI_USAGE_COMPLETION_TOKENS];
@@ -69,7 +75,8 @@ export const transformCompletionTokens = (attributes: Record<string, any>): void
 
 export const calculateTotalTokens = (attributes: Record<string, any>): void => {
   const promptTokens = attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`];
-  const completionTokens = attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
+  const completionTokens =
+    attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
 
   if (promptTokens && completionTokens) {
     attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =
@@ -89,7 +96,9 @@ export const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
-export const transformAiSdkAttributes = (attributes: Record<string, any>): void => {
+export const transformAiSdkAttributes = (
+  attributes: Record<string, any>,
+): void => {
   transformResponseText(attributes);
   transformPromptMessages(attributes);
   transformPromptTokens(attributes);
@@ -101,4 +110,4 @@ export const transformAiSdkAttributes = (attributes: Record<string, any>): void 
 export const transformAiSdkSpan = (span: ReadableSpan): void => {
   transformAiSdkSpanName(span);
   transformAiSdkAttributes(span.attributes);
-}; 
+};
