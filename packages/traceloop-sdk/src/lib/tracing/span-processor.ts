@@ -14,6 +14,7 @@ import {
   WORKFLOW_NAME_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { transformAiSdkSpan } from "./ai-sdk-transformations";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
@@ -172,66 +173,8 @@ const onSpanEnd = (
       return;
     }
 
-    // Vercel AI Adapters
-    const attributes = span.attributes;
-
-    // Adapt span names
-    const nameMap: Record<string, string> = {
-      "ai.generateText.doGenerate": "ai.generateText.generate",
-      "ai.streamText.doStream": "ai.streamText.stream",
-    };
-    if (span.name in nameMap) {
-      // Unfortunately, the span name is not writable as this is not the intended behavior
-      // but it is a workaround to set the correct span name
-      (span as any).name = nameMap[span.name];
-    }
-
-    if ("ai.response.text" in attributes) {
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
-        attributes["ai.response.text"];
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
-      delete attributes["ai.response.text"];
-    }
-
-    if ("ai.prompt.messages" in attributes) {
-      try {
-        const messages = JSON.parse(attributes["ai.prompt.messages"] as string);
-        messages.forEach(
-          (msg: { role: string; content: any }, index: number) => {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-              typeof msg.content === "string"
-                ? msg.content
-                : JSON.stringify(msg.content);
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-              msg.role;
-          },
-        );
-        delete attributes["ai.prompt.messages"];
-      } catch {
-        //Skip if JSON parsing fails
-      }
-    }
-
-    if ("ai.usage.promptTokens" in attributes) {
-      attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] =
-        attributes["ai.usage.promptTokens"];
-      delete attributes["ai.usage.promptTokens"];
-    }
-
-    if ("ai.usage.completionTokens" in attributes) {
-      attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`] =
-        attributes["ai.usage.completionTokens"];
-      delete attributes["ai.usage.completionTokens"];
-    }
-
-    if (
-      attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] &&
-      attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]
-    ) {
-      attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =
-        Number(attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]) +
-        Number(attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]);
-    }
+    // Apply AI SDK transformations (if needed)
+    transformAiSdkSpan(span);
 
     originalOnEnd(span);
   };
