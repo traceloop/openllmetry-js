@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0](https://github.com/traceloop/openllmetry-js/compare/v0.13.5...v0.14.0) (2025-07-04)
+
+### Bug Fixes
+
+- **ai-sdk:** model provider attribute transformation for openai ([#609](https://github.com/traceloop/openllmetry-js/issues/609)) ([5525329](https://github.com/traceloop/openllmetry-js/commit/5525329b6ddb95c32203c9b77b933705aa718f01))
+
 ## [0.13.5](https://github.com/traceloop/openllmetry-js/compare/v0.13.4...v0.13.5) (2025-06-27)
 
 ### Bug Fixes

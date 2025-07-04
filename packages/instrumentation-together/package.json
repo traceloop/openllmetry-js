@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-together",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Together Instrumentation",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -40,7 +40,7 @@
     "@opentelemetry/core": "^1.29.0",
     "@opentelemetry/instrumentation": "^0.56.0",
     "@opentelemetry/semantic-conventions": "^1.28.0",
-    "@traceloop/ai-semantic-conventions": "^0.13.0",
+    "@traceloop/ai-semantic-conventions": "^0.14.0",
     "js-tiktoken": "^1.0.15",
     "tslib": "^2.8.1"
   },

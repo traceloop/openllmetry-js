@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0](https://github.com/traceloop/openllmetry-js/compare/v0.13.5...v0.14.0) (2025-07-04)
+
+### Features
+
+- added dynamic vendor detection ([#608](https://github.com/traceloop/openllmetry-js/issues/608)) ([288d5c8](https://github.com/traceloop/openllmetry-js/commit/288d5c893fc9635939fbfb6f16222ca394bb068d))
+
 # [0.13.0](https://github.com/traceloop/openllmetry-js/compare/v0.12.2...v0.13.0) (2025-04-22)
 
 **Note:** Version bump only for package @traceloop/instrumentation-bedrock
