@@ -3,23 +3,23 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_STREAM_TEXT_DO_STREAM = "ai.streamText.doStream";
+const HANDLED_SPAN_NAMES: Record<string, string> = {
+  [AI_GENERATE_TEXT_DO_GENERATE]: "ai.generateText.generate",
+  [AI_STREAM_TEXT_DO_STREAM]: "ai.streamText.stream",
+};
+
 const AI_RESPONSE_TEXT = "ai.response.text";
 const AI_PROMPT_MESSAGES = "ai.prompt.messages";
 const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 
-export const transformAiSdkSpanName = (span: ReadableSpan): void => {
-  const nameMap: Record<string, string> = {
-    [AI_GENERATE_TEXT_DO_GENERATE]: "ai.generateText.generate",
-    [AI_STREAM_TEXT_DO_STREAM]: "ai.streamText.stream",
-  };
 
-  if (span.name in nameMap) {
+
+export const transformAiSdkSpanName = (span: ReadableSpan): void => {
     // Unfortunately, the span name is not writable as this is not the intended behavior
     // but it is a workaround to set the correct span name
-    (span as any).name = nameMap[span.name];
-  }
+    (span as any).name = HANDLED_SPAN_NAMES[span.name];
 };
 
 export const transformResponseText = (
@@ -107,7 +107,14 @@ export const transformAiSdkAttributes = (
   transformVendor(attributes);
 };
 
+export const shouldHandleSpan = (span: ReadableSpan): boolean => {
+  return span.name in HANDLED_SPAN_NAMES;
+};
+
 export const transformAiSdkSpan = (span: ReadableSpan): void => {
+  if (!shouldHandleSpan(span)) {
+    return;
+  } 
   transformAiSdkSpanName(span);
   transformAiSdkAttributes(span.attributes);
 };
