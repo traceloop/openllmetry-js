@@ -14,12 +14,12 @@ const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 
-
-
 export const transformAiSdkSpanName = (span: ReadableSpan): void => {
-    // Unfortunately, the span name is not writable as this is not the intended behavior
-    // but it is a workaround to set the correct span name
+  // Unfortunately, the span name is not writable as this is not the intended behavior
+  // but it is a workaround to set the correct span name
+  if (span.name in HANDLED_SPAN_NAMES) {
     (span as any).name = HANDLED_SPAN_NAMES[span.name];
+  }
 };
 
 export const transformResponseText = (
@@ -114,7 +114,7 @@ export const shouldHandleSpan = (span: ReadableSpan): boolean => {
 export const transformAiSdkSpan = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
-  } 
+  }
   transformAiSdkSpanName(span);
   transformAiSdkAttributes(span.attributes);
 };
