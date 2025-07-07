@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.1](https://github.com/traceloop/openllmetry-js/compare/v0.14.0...v0.14.1) (2025-07-07)
+
+### Bug Fixes
+
+- **ai-sdk:** transform only specific vercel spans ([#610](https://github.com/traceloop/openllmetry-js/issues/610)) ([04c9dd6](https://github.com/traceloop/openllmetry-js/commit/04c9dd65b010087d19d37db21d365a3b70fb2aa4))
+
 # [0.14.0](https://github.com/traceloop/openllmetry-js/compare/v0.13.5...v0.14.0) (2025-07-04)
 
 ### Bug Fixes
