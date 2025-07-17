@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.3](https://github.com/traceloop/openllmetry-js/compare/v0.14.2...v0.14.3) (2025-07-17)
+
+### Bug Fixes
+
+- **anthropic:** add system prompt to span attributes ([#612](https://github.com/traceloop/openllmetry-js/issues/612)) ([719c6f8](https://github.com/traceloop/openllmetry-js/commit/719c6f83689f3ee341bdc4a777f9b78205340161))
+
 ## [0.14.2](https://github.com/traceloop/openllmetry-js/compare/v0.14.1...v0.14.2) (2025-07-17)
 
 ### Bug Fixes
