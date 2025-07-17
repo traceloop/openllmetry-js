@@ -220,15 +220,30 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
+          let promptIndex = 0;
+
+          // If a system prompt is provided, it should always be first
+          if ("system" in params && params.system !== undefined) {
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "system";
+            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+              typeof params.system === "string"
+                ? params.system
+                : JSON.stringify(params.system);
+            promptIndex += 1;
+          }
+
           params.messages.forEach((message, index) => {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+            const currentIndex = index + promptIndex;
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${currentIndex}.role`] =
               message.role;
             if (typeof message.content === "string") {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-                (message.content as string) || "";
+              attributes[
+                `${SpanAttributes.LLM_PROMPTS}.${currentIndex}.content`
+              ] = (message.content as string) || "";
             } else {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
-                JSON.stringify(message.content);
+              attributes[
+                `${SpanAttributes.LLM_PROMPTS}.${currentIndex}.content`
+              ] = JSON.stringify(message.content);
             }
           });
         } else {

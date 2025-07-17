@@ -297,4 +297,33 @@ describe("Test Anthropic instrumentation", async function () {
       chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
   }).timeout(30000);
+
+  it("should place system prompt first for messages", async () => {
+    const msg = await anthropic.messages.create({
+      max_tokens: 10,
+      model: "claude-3-opus-20240229",
+      system: "You are a helpful assistant",
+      messages: [
+        { role: "user", content: "Hi" },
+        { role: "assistant", content: "Hello" },
+      ],
+    });
+
+    assert.ok(msg);
+    const span = memoryExporter.getFinishedSpans().at(-1);
+
+    assert.ok(span);
+    assert.strictEqual(
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "system",
+    );
+    assert.strictEqual(
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "You are a helpful assistant",
+    );
+    assert.strictEqual(
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.1.role`],
+      "user",
+    );
+  }).timeout(30000);
 });
