@@ -1,7 +1,8 @@
 import { InitializeOptions } from "../interfaces";
 import fetch from "cross-fetch";
+import fetchRetryFactory from "fetch-retry";
 
-const fetchRetry = require("fetch-retry")(fetch);
+const fetchRetry = fetchRetryFactory(fetch);
 
 export const fetchPrompts = async (options: InitializeOptions) => {
   const { apiKey, baseUrl, traceloopSyncMaxRetries } = options;
