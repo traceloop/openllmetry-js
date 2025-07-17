@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.2](https://github.com/traceloop/openllmetry-js/compare/v0.14.1...v0.14.2) (2025-07-17)
+
+### Bug Fixes
+
+- change fetch-retry import to esm module import ([#611](https://github.com/traceloop/openllmetry-js/issues/611)) ([c3b4b22](https://github.com/traceloop/openllmetry-js/commit/c3b4b22a58b8290577e3d808fb088255df7f1364))
+
 ## [0.14.1](https://github.com/traceloop/openllmetry-js/compare/v0.14.0...v0.14.1) (2025-07-07)
 
 ### Bug Fixes
