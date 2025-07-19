@@ -35,8 +35,8 @@ import {
 import { AzureOpenAIInstrumentationConfig } from "./types";
 import type {
   ChatCompletions,
-  ChatRequestAssistantMessage,
   ChatRequestMessage,
+  ChatRequestAssistantMessage,
   ChatRequestSystemMessage,
   ChatRequestToolMessage,
   ChatRequestUserMessage,

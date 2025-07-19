@@ -255,13 +255,15 @@ export class PineconeInstrumentation extends InstrumentationBase {
                     ),
                     match.id,
                   );
-                  query_result_match_event.setAttribute(
-                    EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
-                      "{i}",
-                      i.toString(),
-                    ),
-                    match.values,
-                  );
+                  if (match.values) {
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.values,
+                    );
+                  }
                   query_result_match_event.addEvent(
                     `pinecone.query.result.${i}.metadata`,
                     match.metadata,

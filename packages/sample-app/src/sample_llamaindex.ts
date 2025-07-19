@@ -1,12 +1,7 @@
 import * as traceloop from "@traceloop/node-server-sdk";
-import {
-  OpenAIEmbedding,
-  SimpleDirectoryReader,
-  SimpleVectorStore,
-  VectorStoreIndex,
-  serviceContextFromDefaults,
-  storageContextFromDefaults,
-} from "llamaindex";
+import { VectorStoreIndex, Document, Settings } from "llamaindex";
+import { OpenAIEmbedding, OpenAI } from "@llamaindex/openai";
+import { readFileSync } from "fs";
 
 traceloop.initialize({
   appName: "sample_llamaindex",
@@ -14,23 +9,18 @@ traceloop.initialize({
   disableBatch: true,
 });
 
-const embedModel = new OpenAIEmbedding();
-
-const vectorStore = new SimpleVectorStore();
+Settings.embedModel = new OpenAIEmbedding();
+Settings.llm = new OpenAI();
 
 class SampleLlamaIndex {
   async query() {
-    const documents = await new SimpleDirectoryReader().loadData({
-      directoryPath: "data/paul_graham",
-    });
+    const text = readFileSync(
+      "data/paul_graham/paul_graham_essay.txt",
+      "utf-8",
+    );
+    const document = new Document({ text });
 
-    const serviceContext = serviceContextFromDefaults({ embedModel });
-    const storageContext = await storageContextFromDefaults({ vectorStore });
-
-    const index = await VectorStoreIndex.fromDocuments(documents, {
-      storageContext,
-      serviceContext,
-    });
+    const index = await VectorStoreIndex.fromDocuments([document]);
 
     const queryEngine = index.asQueryEngine();
 

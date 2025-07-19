@@ -409,7 +409,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
             text: "",
           },
         ],
-        object: "text_completion",
+        object: "text.completion",
         usage: {
           prompt_tokens: 0,
           completion_tokens: 0,
