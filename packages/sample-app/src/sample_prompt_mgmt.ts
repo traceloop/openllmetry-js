@@ -12,7 +12,7 @@ const main = async () => {
   await traceloop.waitForInitialization();
 
   const openai = new OpenAI();
-  const prompt = traceloop.getPrompt("sample_app_prompt", { var: "example" }); // NOTE: ensure prompt exists
+  const prompt = traceloop.getPrompt("vadyms_prompt", { person: "Vadym", var1: "example", var2: "example2" }); // NOTE: ensure prompt exists
   console.log("Fetched prompt: ", prompt);
 
   const chatCompletion = await openai.chat.completions.create(prompt);
