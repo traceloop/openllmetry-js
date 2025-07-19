@@ -51,14 +51,22 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
     this.patch(module);
   }
 
-  protected init(): InstrumentationModuleDefinition {
-    const module = new InstrumentationNodeModuleDefinition(
+  protected init(): InstrumentationModuleDefinition[] {
+    const llamaindexModule = new InstrumentationNodeModuleDefinition(
       "llamaindex",
       [">=0.1.0"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
-    return module;
+    
+    const openaiModule = new InstrumentationNodeModuleDefinition(
+      "@llamaindex/openai",
+      [">=0.1.0"],
+      this.patchOpenAI.bind(this),
+      this.unpatchOpenAI.bind(this),
+    );
+    
+    return [llamaindexModule, openaiModule];
   }
 
   private isLLM(llm: any): llm is LLM {
@@ -116,17 +124,8 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
       ),
     );
 
-    this._wrap(
-      moduleExports.OpenAIAgent.prototype,
-      "chat",
-      genericWrapper(
-        moduleExports.OpenAIAgent.name,
-        "agent",
-        TraceloopSpanKindValues.AGENT,
-        () => this.tracer,
-        shouldSendPrompts(this._config),
-      ),
-    );
+    // OpenAIAgent has been moved to @llamaindex/openai package in newer versions
+    // This instrumentation is handled separately
 
     for (const key in moduleExports) {
       const cls = (moduleExports as any)[key];
@@ -195,6 +194,38 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
       } else if (this.isRetriever(cls.prototype)) {
         this._unwrap(cls.prototype, "retrieve");
       }
+    }
+
+    return moduleExports;
+  }
+
+  private patchOpenAI(moduleExports: any, moduleVersion?: string) {
+    this._diag.debug(`Patching @llamaindex/openai@${moduleVersion}`);
+
+    // Instrument OpenAIAgent if it exists
+    if (moduleExports.OpenAIAgent && moduleExports.OpenAIAgent.prototype) {
+      this._wrap(
+        moduleExports.OpenAIAgent.prototype,
+        "chat",
+        genericWrapper(
+          moduleExports.OpenAIAgent.name,
+          "agent",
+          TraceloopSpanKindValues.AGENT,
+          () => this.tracer,
+          shouldSendPrompts(this._config),
+        ),
+      );
+    }
+
+    return moduleExports;
+  }
+
+  private unpatchOpenAI(moduleExports: any, moduleVersion?: string) {
+    this._diag.debug(`Unpatching @llamaindex/openai@${moduleVersion}`);
+
+    // Unwrap OpenAIAgent if it exists
+    if (moduleExports.OpenAIAgent && moduleExports.OpenAIAgent.prototype) {
+      this._unwrap(moduleExports.OpenAIAgent.prototype, "chat");
     }
 
     return moduleExports;
