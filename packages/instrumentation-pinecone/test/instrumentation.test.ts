@@ -20,10 +20,10 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { PineconeInstrumentation } from "../src/instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
@@ -37,7 +37,9 @@ Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test Pinecone instrumentation", function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+  });
   let pineconeModule: typeof pineconeModuleType;
   let instrumentation: PineconeInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -57,7 +59,7 @@ describe("Test Pinecone instrumentation", function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.PINECONE_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new PineconeInstrumentation();
     instrumentation.setTracerProvider(provider);
 

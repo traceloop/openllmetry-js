@@ -68,6 +68,7 @@
     "@google-cloud/aiplatform": "^4.4.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@pinecone-database/pinecone": "^6.1.1",
+    "@pollyjs/adapter-fetch": "^6.0.6",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
@@ -81,7 +82,7 @@
     "esbuild": "^0.25.7",
     "langchain": "^0.3.30",
     "llamaindex": "^0.11.19",
-    "openai": "^5.10.1",
+    "openai": "4.38.3",
     "ts-mocha": "^11.1.0"
   }
 }

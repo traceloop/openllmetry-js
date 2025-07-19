@@ -360,7 +360,6 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             message: {
               role: "assistant",
               content: "",
-              refusal: null,
               tool_calls: [],
             },
           },

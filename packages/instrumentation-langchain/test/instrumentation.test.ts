@@ -19,10 +19,10 @@ import * as assert from "assert";
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 
 import type * as ToolsModule from "langchain/tools";
 import type * as AgentsModule from "langchain/agents";
@@ -41,15 +41,19 @@ import { LangChainInstrumentation } from "../src/instrumentation";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 
 const memoryExporter = new InMemorySpanExporter();
 
 Polly.register(NodeHttpAdapter);
+Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test Langchain instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+  });
   let instrumentation: LangChainInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let langchainAgentsModule: typeof AgentsModule;
@@ -57,19 +61,28 @@ describe("Test Langchain instrumentation", async function () {
   let langchainToolsModule: typeof ToolsModule;
 
   setupPolly({
-    adapters: ["node-http"],
+    adapters: ["node-http", "fetch"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
+    recordFailedRequests: true,
+    mode: process.env.RECORD_MODE === "NEW" ? "record" : "replay",
     matchRequestsBy: {
       headers: false,
+      url: {
+        protocol: true,
+        hostname: true,
+        pathname: true,
+        query: false
+      }
     },
+    logging: true
   });
 
   before(() => {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.OPENAI_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new LangChainInstrumentation();
     instrumentation.setTracerProvider(provider);
 

@@ -18,10 +18,10 @@ import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { QdrantInstrumentation } from "../src/instrumentation";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 import type * as qdrant_types from "@qdrant/js-client-rest";
 import * as assert from "assert";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
@@ -32,13 +32,15 @@ const COLLECTION_NAME = uuidv4();
 const memoryExporter = new InMemorySpanExporter();
 
 describe("Test Qdrant instrumentation", function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+  });
   let instrumentation: QdrantInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let qdrantClient: qdrant_types.QdrantClient;
 
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new QdrantInstrumentation({ traceContent: true });
     instrumentation.setTracerProvider(provider);
 

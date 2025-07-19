@@ -47,6 +47,7 @@
   "devDependencies": {
     "@opentelemetry/context-async-hooks": "^2.0.1",
     "@opentelemetry/sdk-trace-base": "^2.0.1",
+    "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@pinecone-database/pinecone": "^6.1.1",
     "@pollyjs/adapter-fetch": "^6.0.7",
     "@pollyjs/core": "^6.0.6",

@@ -19,10 +19,10 @@ import * as assert from "assert";
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 
 import type * as TogetherAIModule from "together-ai";
 
@@ -39,7 +39,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test Together instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+  });
   let instrumentation: TogetherInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let together: TogetherAIModule.Together;
@@ -57,7 +59,7 @@ describe("Test Together instrumentation", async function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.TOGETHER_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new TogetherInstrumentation({ enrichTokens: true });
     instrumentation.setTracerProvider(provider);
 
