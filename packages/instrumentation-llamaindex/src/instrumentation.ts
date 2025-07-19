@@ -58,14 +58,14 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
-    
+
     const openaiModule = new InstrumentationNodeModuleDefinition(
       "@llamaindex/openai",
       [">=0.1.0"],
       this.patchOpenAI.bind(this),
       this.unpatchOpenAI.bind(this),
     );
-    
+
     return [llamaindexModule, openaiModule];
   }
 

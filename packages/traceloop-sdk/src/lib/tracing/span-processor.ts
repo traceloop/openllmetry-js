@@ -4,7 +4,6 @@ import {
   SpanProcessor,
   ReadableSpan,
 } from "@opentelemetry/sdk-trace-node";
-import { baggageUtils } from "@opentelemetry/core";
 import { Span, context } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
@@ -72,7 +71,7 @@ export const createSpanProcessor = (
   const headers =
     options.headers ||
     (process.env.TRACELOOP_HEADERS
-      ? baggageUtils.parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
+      ? parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
       : { Authorization: `Bearer ${options.apiKey}` });
 
   const traceExporter =
@@ -168,7 +167,10 @@ const onSpanEnd = (
   return (span: ReadableSpan): void => {
     if (
       instrumentationLibraries &&
-      !instrumentationLibraries.includes(span.instrumentationLibrary.name)
+      !instrumentationLibraries.includes(
+        (span as any).instrumentationScope?.name ||
+          (span as any).instrumentationLibrary?.name,
+      )
     ) {
       return;
     }

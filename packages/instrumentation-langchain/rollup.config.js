@@ -12,7 +12,10 @@ const bundle = (config) => ({
 
 exports.default = [
   bundle({
-    plugins: [typescript.default({ exclude: ["test/**/*", "tests/**/*"] }), json.default()],
+    plugins: [
+      typescript.default({ exclude: ["test/**/*", "tests/**/*"] }),
+      json.default(),
+    ],
     output: [
       {
         file: `${name}.js`,

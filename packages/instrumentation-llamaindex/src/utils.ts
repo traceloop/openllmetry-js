@@ -36,7 +36,9 @@ export function bindAsyncGenerator<T = unknown, TReturn = any, TNext = unknown>(
       return bindAsyncGenerator(ctx, generator[Symbol.asyncIterator]());
     },
 
-    [Symbol.asyncDispose]: generator[Symbol.asyncDispose]?.bind(generator) || (() => Promise.resolve()),
+    [Symbol.asyncDispose]:
+      generator[Symbol.asyncDispose]?.bind(generator) ||
+      (() => Promise.resolve()),
   };
 }
 
