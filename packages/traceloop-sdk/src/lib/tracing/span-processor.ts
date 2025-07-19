@@ -14,6 +14,7 @@ import {
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { transformAiSdkSpan } from "./ai-sdk-transformations";
+import { parseKeyPairsIntoRecord } from "./baggage-utils";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;

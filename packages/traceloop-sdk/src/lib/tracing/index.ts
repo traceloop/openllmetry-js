@@ -28,6 +28,7 @@ import {
   ALL_INSTRUMENTATION_LIBRARIES,
   createSpanProcessor,
 } from "./span-processor";
+import { parseKeyPairsIntoRecord } from "./baggage-utils";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SpanProcessor;
