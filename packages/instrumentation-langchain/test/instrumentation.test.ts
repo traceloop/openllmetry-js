@@ -112,14 +112,14 @@ describe("Test Langchain instrumentation", async function () {
     memoryExporter.reset();
     context.disable();
   });
-
+  
   it("should set attributes in span for tools instrumentation", async () => {
     const wikipediaQuery = new WikipediaQueryRun({
       topKResults: 3,
       maxDocContentLength: 100,
     });
 
-    const result = await wikipediaQuery.call("Langchain");
+    const result = await wikipediaQuery.invoke("Langchain");
 
     const spans = memoryExporter.getFinishedSpans();
 
