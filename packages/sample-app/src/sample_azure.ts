@@ -1,6 +1,9 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { AzureOpenAI } from "openai";
-import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+import {
+  DefaultAzureCredential,
+  getBearerTokenProvider,
+} from "@azure/identity";
 
 traceloop.initialize({
   appName: "sample_openai",
@@ -9,7 +12,10 @@ traceloop.initialize({
 });
 
 const scope = "https://cognitiveservices.azure.com/.default";
-const azureADTokenProvider = getBearerTokenProvider(new DefaultAzureCredential(), scope);
+const azureADTokenProvider = getBearerTokenProvider(
+  new DefaultAzureCredential(),
+  scope,
+);
 
 const client = new AzureOpenAI({
   endpoint: `https://${process.env.AZURE_RESOURCE_NAME}.openai.azure.com/`,
@@ -21,7 +27,9 @@ const client = new AzureOpenAI({
 async function chat() {
   return await traceloop.withWorkflow({ name: "sample_chat" }, async () => {
     const chatCompletion = await client.chat.completions.create({
-      messages: [{ role: "user", content: "Tell me a joke about OpenTelemetry" }],
+      messages: [
+        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+      ],
       model: process.env.AZURE_DEPLOYMENT_ID!, // deployment name
     });
 

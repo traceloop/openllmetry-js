@@ -11,7 +11,6 @@ import { _configuration } from "../configuration";
 import { CONTEXT_KEY_ALLOW_TRACE_CONTENT } from "@traceloop/ai-semantic-conventions";
 import { AnthropicInstrumentation } from "@traceloop/instrumentation-anthropic";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
-import { AzureOpenAIInstrumentation } from "@traceloop/instrumentation-azure";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
 import {
   AIPlatformInstrumentation,
@@ -34,7 +33,6 @@ let _sdk: NodeSDK;
 let _spanProcessor: SpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation | undefined;
 let anthropicInstrumentation: AnthropicInstrumentation | undefined;
-let azureOpenAIInstrumentation: AzureOpenAIInstrumentation | undefined;
 let cohereInstrumentation: CohereInstrumentation | undefined;
 let vertexaiInstrumentation: VertexAIInstrumentation | undefined;
 let aiplatformInstrumentation: AIPlatformInstrumentation | undefined;
@@ -61,11 +59,6 @@ export const initInstrumentations = () => {
 
   anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
   instrumentations.push(anthropicInstrumentation);
-
-  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation({
-    exceptionLogger,
-  });
-  instrumentations.push(azureOpenAIInstrumentation);
 
   cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
   instrumentations.push(cohereInstrumentation);
@@ -129,13 +122,6 @@ export const manuallyInitInstrumentations = (
     });
     instrumentations.push(anthropicInstrumentation);
     anthropicInstrumentation.manuallyInstrument(instrumentModules.anthropic);
-  }
-
-  if (instrumentModules?.azureOpenAI) {
-    const instrumentation = new AzureOpenAIInstrumentation({ exceptionLogger });
-    instrumentations.push(instrumentation as Instrumentation);
-    azureOpenAIInstrumentation = instrumentation;
-    instrumentation.manuallyInstrument(instrumentModules.azureOpenAI as any);
   }
 
   if (instrumentModules?.cohere) {
@@ -224,9 +210,6 @@ export const startTracing = (options: InitializeOptions) => {
   }
   if (!shouldSendTraces()) {
     openAIInstrumentation?.setConfig({
-      traceContent: false,
-    });
-    azureOpenAIInstrumentation?.setConfig({
       traceContent: false,
     });
     llamaIndexInstrumentation?.setConfig({

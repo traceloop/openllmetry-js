@@ -115,7 +115,6 @@ export const traceloopInstrumentationLibraries = [
   "@traceloop/instrumentation-langchain",
   "@traceloop/instrumentation-chroma",
   "@traceloop/instrumentation-anthropic",
-  "@traceloop/instrumentation-azure",
   "@traceloop/instrumentation-llamaindex",
   "@traceloop/instrumentation-vertexai",
   "@traceloop/instrumentation-bedrock",
