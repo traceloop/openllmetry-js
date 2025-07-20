@@ -1,7 +1,7 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { VectorStoreIndex, Document, Settings } from "llamaindex";
 import { OpenAIEmbedding, OpenAI } from "@llamaindex/openai";
-import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
 
 traceloop.initialize({
   appName: "sample_llamaindex",
@@ -14,7 +14,7 @@ Settings.llm = new OpenAI();
 
 class SampleLlamaIndex {
   async query() {
-    const text = readFileSync(
+    const text = await readFile(
       "data/paul_graham/paul_graham_essay.txt",
       "utf-8",
     );
