@@ -356,7 +356,7 @@ describe("Test Langchain instrumentation", async function () {
     assert.strictEqual(
       JSON.parse(wikipediaSpan.attributes["traceloop.entity.input"].toString())
         .args[0],
-      '"Current Prime Minister of Malaysia" site:wikipedia.org',
+      'Current Prime Minister of Malaysia',
     );
     assert.deepEqual(
       JSON.parse(
