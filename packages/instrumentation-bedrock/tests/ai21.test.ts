@@ -24,6 +24,7 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
 import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
@@ -75,6 +76,7 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
         ? {
             region: "us-east-1",
             credentials: { accessKeyId: "test", secretAccessKey: "test" },
+            requestHandler: new NodeHttpHandler(),
           }
         : {},
     );
