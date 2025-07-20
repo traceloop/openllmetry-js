@@ -53,10 +53,10 @@ describe("Test SDK Decorators", () => {
         protocol: true,
         hostname: true,
         pathname: true,
-        query: false
-      }
+        query: false,
+      },
     },
-    logging: true
+    logging: true,
   });
 
   before(async function () {
@@ -471,7 +471,7 @@ describe("Test SDK Decorators", () => {
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
       "joke_generator",
     );
-    // Check that completionSpan is a child of workflowSpan  
+    // Check that completionSpan is a child of workflowSpan
     // Note: parentSpanId property may not exist on ReadableSpan interface
     // assert.strictEqual(
     //   completionSpan.parentSpanId,

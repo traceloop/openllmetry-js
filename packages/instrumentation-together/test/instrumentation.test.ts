@@ -40,7 +40,7 @@ Polly.register(FSPersister);
 
 describe("Test Together instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: TogetherInstrumentation;
   let contextManager: AsyncHooksContextManager;

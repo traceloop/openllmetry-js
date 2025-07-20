@@ -42,7 +42,7 @@ Polly.register(FSPersister);
 
 describe("Test Anthropic instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: AnthropicInstrumentation;
   let contextManager: AsyncHooksContextManager;

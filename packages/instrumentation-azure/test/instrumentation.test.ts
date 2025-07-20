@@ -41,7 +41,7 @@ Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: AzureOpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;

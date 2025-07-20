@@ -51,7 +51,7 @@ Polly.register(FSPersister);
 
 describe("Test Langchain instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: LangChainInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -71,10 +71,10 @@ describe("Test Langchain instrumentation", async function () {
         protocol: true,
         hostname: true,
         pathname: true,
-        query: false
-      }
+        query: false,
+      },
     },
-    logging: true
+    logging: true,
   });
 
   before(() => {
@@ -136,7 +136,10 @@ describe("Test Langchain instrumentation", async function () {
     const llm = new ChatOpenAI({});
     const tools = [new Calculator()];
     const prompt = ChatPromptTemplate.fromMessages([
-      ["system", "You are a helpful assistant that can use tools to answer questions."],
+      [
+        "system",
+        "You are a helpful assistant that can use tools to answer questions.",
+      ],
       ["human", "{input}"],
       ["placeholder", "{agent_scratchpad}"],
     ]);

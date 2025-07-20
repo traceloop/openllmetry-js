@@ -40,7 +40,7 @@ Polly.register(FSPersister);
 
 describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: BedrockInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -59,10 +59,10 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
         protocol: true,
         hostname: true,
         pathname: true,
-        query: false
-      }
+        query: false,
+      },
     },
-    logging: true
+    logging: true,
   });
 
   before(async () => {

@@ -36,7 +36,7 @@ Polly.register(FSPersister);
 
 describe("Test LlamaIndex instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: LlamaIndexInstrumentation;
   let contextManager: AsyncHooksContextManager;

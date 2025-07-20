@@ -38,7 +38,7 @@ Polly.register(FSPersister);
 
 describe("Test Pinecone instrumentation", function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let pineconeModule: typeof pineconeModuleType;
   let instrumentation: PineconeInstrumentation;

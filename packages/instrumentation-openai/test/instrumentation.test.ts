@@ -42,7 +42,7 @@ Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: OpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -60,10 +60,10 @@ describe("Test OpenAI instrumentation", async function () {
         protocol: true,
         hostname: true,
         pathname: true,
-        query: false
-      }
+        query: false,
+      },
     },
-    logging: true
+    logging: true,
   });
 
   before(async () => {

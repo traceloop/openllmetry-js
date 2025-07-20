@@ -33,7 +33,7 @@ const memoryExporter = new InMemorySpanExporter();
 
 describe("Test Qdrant instrumentation", function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)]
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: QdrantInstrumentation;
   let contextManager: AsyncHooksContextManager;
