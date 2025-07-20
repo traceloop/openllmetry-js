@@ -112,7 +112,7 @@ describe("Test Langchain instrumentation", async function () {
     memoryExporter.reset();
     context.disable();
   });
-  
+
   it("should set attributes in span for tools instrumentation", async () => {
     const wikipediaQuery = new WikipediaQueryRun({
       topKResults: 3,
