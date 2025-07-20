@@ -107,7 +107,6 @@ describe("Test SDK Decorators", () => {
 
     await traceloop.forceFlush();
     const spans = memoryExporter.getFinishedSpans();
-    // console.log("DEBUG: Available spans:", spans.map(s => ({ name: s.name, attrs: Object.keys(s.attributes) })));
     const workflowSpan = spans.find(
       (span) => span.name === "sample_chat.workflow",
     );
