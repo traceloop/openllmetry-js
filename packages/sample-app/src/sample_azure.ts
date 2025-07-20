@@ -20,7 +20,7 @@ const azureADTokenProvider = getBearerTokenProvider(
 const client = new AzureOpenAI({
   endpoint: `https://${process.env.AZURE_RESOURCE_NAME}.openai.azure.com/`,
   deployment: process.env.AZURE_DEPLOYMENT_ID!,
-  apiVersion: "2024-02-01",
+  apiVersion: "2024-10-21",
   azureADTokenProvider,
 });
 
