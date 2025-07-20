@@ -471,7 +471,7 @@ describe("Test SDK Decorators", () => {
       "joke_generator",
     );
     assert.strictEqual(
-      (completionSpan as any).parentSpanId,
+      completionSpan.parentSpanContext?.spanId,
       workflowSpan.spanContext().spanId,
     );
 
