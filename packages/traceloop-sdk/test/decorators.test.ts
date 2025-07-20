@@ -471,12 +471,10 @@ describe("Test SDK Decorators", () => {
       workflowSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
       "joke_generator",
     );
-    // Check that completionSpan is a child of workflowSpan
-    // Note: parentSpanId property may not exist on ReadableSpan interface
-    // assert.strictEqual(
-    //   completionSpan.parentSpanId,
-    //   workflowSpan.spanContext().spanId,
-    // );
+    assert.strictEqual(
+      (completionSpan as any).parentSpanId,
+      workflowSpan.spanContext().spanId,
+    );
 
     assert.strictEqual(
       workflowSpan.attributes[
