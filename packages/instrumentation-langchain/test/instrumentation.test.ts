@@ -30,7 +30,6 @@ import type * as ChainsModule from "langchain/chains";
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { createOpenAIToolsAgent } from "langchain/agents";
 import { Calculator } from "@langchain/community/tools/calculator";
-import { pull } from "langchain/hub";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ChatOpenAI, OpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -136,9 +135,11 @@ describe("Test Langchain instrumentation", async function () {
   it("should set attributes in span for agent instrumentation", async function () {
     const llm = new ChatOpenAI({});
     const tools = [new Calculator()];
-    const prompt = await pull<ChatPromptTemplate>(
-      "hwchase17/openai-tools-agent",
-    );
+    const prompt = ChatPromptTemplate.fromMessages([
+      ["system", "You are a helpful assistant that can use tools to answer questions."],
+      ["human", "{input}"],
+      ["placeholder", "{agent_scratchpad}"],
+    ]);
     const agent = await createOpenAIToolsAgent({ llm, tools, prompt });
     const agentExecutor = new langchainAgentsModule.AgentExecutor({
       agent,
