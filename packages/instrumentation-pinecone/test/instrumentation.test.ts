@@ -118,7 +118,7 @@ describe("Test Pinecone instrumentation", function () {
 
       await waitForIndexReady();
 
-      const pc_index = pc.index(PINECONE_TEST_INDEX);
+      pc_index = pc.index(PINECONE_TEST_INDEX);
 
       await pc_index.namespace("ns1").upsert([
         {
