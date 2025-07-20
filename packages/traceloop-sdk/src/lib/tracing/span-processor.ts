@@ -167,10 +167,7 @@ const onSpanEnd = (
   return (span: ReadableSpan): void => {
     if (
       instrumentationLibraries &&
-      !instrumentationLibraries.includes(
-        (span as any).instrumentationScope?.name ||
-          (span as any).instrumentationLibrary?.name,
-      )
+      !instrumentationLibraries.includes(span.instrumentationScope?.name)
     ) {
       return;
     }
