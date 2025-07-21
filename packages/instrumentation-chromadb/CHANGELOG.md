@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.4](https://github.com/traceloop/openllmetry-js/compare/v0.14.3...v0.14.4) (2025-07-21)
+
+**Note:** Version bump only for package @traceloop/instrumentation-chromadb
+
 # [0.14.0](https://github.com/traceloop/openllmetry-js/compare/v0.13.5...v0.14.0) (2025-07-04)
 
 **Note:** Version bump only for package @traceloop/instrumentation-chromadb

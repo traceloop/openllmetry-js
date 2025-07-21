@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-langchain",
-  "version": "0.14.0",
+  "version": "0.14.4",
   "description": "OpenTelemetry instrumentation for LangchainJS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
