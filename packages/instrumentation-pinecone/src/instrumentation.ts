@@ -220,9 +220,52 @@ export class PineconeInstrumentation extends InstrumentationBase {
                 );
                 for (let i = 0; i < result_obj.matches.length; i++) {
                   const match = result_obj.matches[i];
-                  span.addEvent(`pinecone.query.result.${i}`);
+                  const query_result_match_event = span.addEvent(
+                    `pinecone.query.result.${i}`,
+                  );
+                  if (match.score !== undefined) {
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_SCORE.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.score,
+                    );
+                  }
+                  if (match.sparseValues !== undefined) {
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_SPARSE_INDICES.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.sparseValues?.indices,
+                    );
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_SPARSE_VALUES.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.sparseValues?.values,
+                    );
+                  }
+                  query_result_match_event.setAttribute(
+                    EventAttributes.VECTOR_DB_QUERY_RESULT_ID.replace(
+                      "{i}",
+                      i.toString(),
+                    ),
+                    match.id,
+                  );
+                  if (match.values !== undefined) {
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.values,
+                    );
+                  }
                   if (match.metadata) {
-                    span.addEvent(
+                    query_result_match_event.addEvent(
                       `pinecone.query.result.${i}.metadata`,
                       match.metadata,
                     );

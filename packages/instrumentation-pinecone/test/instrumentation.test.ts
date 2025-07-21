@@ -241,13 +241,15 @@ describe("Test Pinecone instrumentation", function () {
 
     const span = spans[0];
 
-    assert.strictEqual(span.events.length, 6);
+    assert.strictEqual(span.events.length, 8);
     assert.strictEqual(span.events[0].name, "pinecone.query.request");
     assert.strictEqual(span.events[1].name, "pinecone.query.result");
     assert.strictEqual(span.events[2].name, "pinecone.query.result.0");
-    assert.strictEqual(span.events[3].name, "pinecone.query.result.1");
-    assert.strictEqual(span.events[4].name, "pinecone.query.result.1.metadata");
-    assert.strictEqual(span.events[5].name, "pinecone.query.result.2");
+    assert.strictEqual(span.events[3].name, "pinecone.query.result.0.metadata");
+    assert.strictEqual(span.events[4].name, "pinecone.query.result.1");
+    assert.strictEqual(span.events[5].name, "pinecone.query.result.1.metadata");
+    assert.strictEqual(span.events[6].name, "pinecone.query.result.2");
+    assert.strictEqual(span.events[7].name, "pinecone.query.result.2.metadata");
   });
 
   it("should set attributes in span for DB deletes", async () => {
