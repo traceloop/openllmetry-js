@@ -19,10 +19,10 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { LlamaIndexInstrumentation } from "../src/instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 import type * as llamaindexImport from "llamaindex";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
@@ -35,7 +35,9 @@ Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
 describe("Test LlamaIndex instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: LlamaIndexInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let llamaindex: typeof llamaindexImport;
@@ -55,7 +57,7 @@ describe("Test LlamaIndex instrumentation", async function () {
       process.env.OPENAI_API_KEY = "test";
     }
 
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new LlamaIndexInstrumentation();
     instrumentation.setTracerProvider(provider);
     llamaindex = require("llamaindex");

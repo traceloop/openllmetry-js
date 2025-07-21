@@ -19,10 +19,10 @@ import * as assert from "assert";
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 
 import type * as OpenAIModule from "openai";
 
@@ -30,34 +30,47 @@ import { OpenAIInstrumentation } from "../src/instrumentation";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const memoryExporter = new InMemorySpanExporter();
 
 Polly.register(NodeHttpAdapter);
+Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: OpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let openai: OpenAIModule.OpenAI;
 
   setupPolly({
-    adapters: ["node-http"],
+    adapters: ["node-http", "fetch"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
+    recordFailedRequests: true,
+    mode: process.env.RECORD_MODE === "NEW" ? "record" : "replay",
     matchRequestsBy: {
       headers: false,
+      url: {
+        protocol: true,
+        hostname: true,
+        pathname: true,
+        query: false,
+      },
     },
+    logging: true,
   });
 
   before(async () => {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.OPENAI_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new OpenAIInstrumentation({ enrichTokens: true });
     instrumentation.setTracerProvider(provider);
 

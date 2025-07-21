@@ -4,7 +4,6 @@ import {
   SpanProcessor,
   ReadableSpan,
 } from "@opentelemetry/sdk-trace-node";
-import { baggageUtils } from "@opentelemetry/core";
 import { Span, context } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
@@ -15,6 +14,7 @@ import {
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { transformAiSdkSpan } from "./ai-sdk-transformations";
+import { parseKeyPairsIntoRecord } from "./baggage-utils";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
@@ -72,7 +72,7 @@ export const createSpanProcessor = (
   const headers =
     options.headers ||
     (process.env.TRACELOOP_HEADERS
-      ? baggageUtils.parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
+      ? parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
       : { Authorization: `Bearer ${options.apiKey}` });
 
   const traceExporter =
@@ -115,7 +115,6 @@ export const traceloopInstrumentationLibraries = [
   "@traceloop/instrumentation-langchain",
   "@traceloop/instrumentation-chroma",
   "@traceloop/instrumentation-anthropic",
-  "@traceloop/instrumentation-azure",
   "@traceloop/instrumentation-llamaindex",
   "@traceloop/instrumentation-vertexai",
   "@traceloop/instrumentation-bedrock",
@@ -168,7 +167,7 @@ const onSpanEnd = (
   return (span: ReadableSpan): void => {
     if (
       instrumentationLibraries &&
-      !instrumentationLibraries.includes(span.instrumentationLibrary.name)
+      !instrumentationLibraries.includes(span.instrumentationScope?.name)
     ) {
       return;
     }

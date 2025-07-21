@@ -7,11 +7,9 @@ import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
 import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
-import { SerpAPI } from "@langchain/community/tools/serpapi";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-import { pull } from "langchain/hub";
 
 traceloop.initialize({
   appName: "sample_langchain",
@@ -54,18 +52,31 @@ class SampleLangchain {
   @traceloop.workflow({ name: "sample_tools_example" })
   async toolsExample() {
     const llm = new ChatOpenAI({});
-    const tools = [new Calculator(), new SerpAPI()];
-    const prompt = await pull<ChatPromptTemplate>(
-      "hwchase17/openai-tools-agent",
-    );
-    const agent = await createOpenAIToolsAgent({ llm, tools, prompt });
+    const tools = [new Calculator()];
+
+    // Create a simple prompt template directly instead of using pull
+    const prompt = ChatPromptTemplate.fromMessages([
+      [
+        "system",
+        "You are a helpful assistant. Use the available tools when needed.",
+      ],
+      ["human", "{input}"],
+      ["placeholder", "{agent_scratchpad}"],
+    ]);
+
+    // Create agent with any type to bypass deep instantiation issue
+    const agent = await createOpenAIToolsAgent({
+      llm,
+      tools,
+      prompt,
+    } as any);
     const agentExecutor = new AgentExecutor({
       agent,
       tools,
     });
+
     const result = await agentExecutor.invoke({
-      input:
-        "By searching the Internet, find how many albums has Boldy James dropped since 2010 and how many albums has Nas dropped since 2010? Find who dropped more albums and show the difference in percent.",
+      input: "What is 25 * 4?",
     });
     return result;
   }
