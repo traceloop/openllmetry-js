@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build:all": "pnpm nx run-many -t build",
-    "build:effected": "pnpm nx affected -t build"
+    "build:affected": "pnpm nx affected -t build"
   },
   "private": true,
   "devDependencies": {
