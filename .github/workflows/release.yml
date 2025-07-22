@@ -15,13 +15,13 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.ref }}
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - uses: actions/setup-node@v3
         with:
           cache: "pnpm"
           node-version-file: ".nvmrc"
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - run: pnpm install --frozen-lockfile
       - name: Build
         run: pnpm nx run-many --target=build --parallel=3
