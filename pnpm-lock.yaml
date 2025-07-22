@@ -670,9 +670,24 @@ importers:
       '@langchain/community':
         specifier: ^0.3.49
         version: 0.3.49(f8be747b9aa9ec78f4a29ca30e10eb3c)
+      '@langchain/core':
+        specifier: ^0.3.58
+        version: 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.104.0(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76))
+      '@langchain/openai':
+        specifier: ^0.6.2
+        version: 0.6.2(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.104.0(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)
       '@llamaindex/openai':
         specifier: ^0.4.10
         version: 0.4.12(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
+      '@opentelemetry/api':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@opentelemetry/sdk-node':
+        specifier: ^0.203.0
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
+      '@opentelemetry/sdk-trace-base':
+        specifier: ^2.0.1
+        version: 2.0.1(@opentelemetry/api@1.9.0)
       '@pinecone-database/pinecone':
         specifier: ^6.1.1
         version: 6.1.1
@@ -775,6 +790,9 @@ importers:
       supports-color:
         specifier: ^10.0.0
         version: 10.0.0
+      together-ai:
+        specifier: ^0.20.0
+        version: 0.20.0(encoding@0.1.13)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -13705,7 +13723,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.10.0)
+      retry-axios: 2.6.0(axios@1.10.0(debug@4.4.1))
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -15579,7 +15597,7 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.10.0):
+  retry-axios@2.6.0(axios@1.10.0(debug@4.4.1)):
     dependencies:
       axios: 1.10.0(debug@4.4.1)
 

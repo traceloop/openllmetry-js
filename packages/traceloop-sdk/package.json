@@ -57,6 +57,7 @@
     "nunjucks": "^3.2.4",
     "posthog-node": "^5.5.1",
     "supports-color": "^10.0.0",
+    "together-ai": "^0.20.0",
     "uuid": "^11.1.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
