@@ -282,6 +282,9 @@ importers:
 
   packages/instrumentation-langchain:
     dependencies:
+      '@langchain/core':
+        specifier: ^0.3.58
+        version: 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.10.1(ws@8.18.3)(zod@3.25.76))
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
@@ -612,6 +615,9 @@ importers:
       '@traceloop/ai-semantic-conventions':
         specifier: ^0.14.0
         version: 0.14.0
+      google-gax:
+        specifier: ^4.0.0
+        version: 4.6.1(encoding@0.1.13)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -3647,6 +3653,9 @@ packages:
   '@types/lodash@4.17.20':
     resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
 
+  '@types/long@4.0.2':
+    resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
+
   '@types/minimatch@3.0.5':
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
 
@@ -5217,6 +5226,10 @@ packages:
     resolution: {integrity: sha512-Jb6Z0+nvECVz+2lzSMt9u98UsoakXxA2HGHMCxh+so3n90XgYWkq5dur19JAJV7ONiJY22yBTyJB1TSkvPq9Ng==}
     engines: {node: '>=14'}
 
+  google-gax@4.6.1:
+    resolution: {integrity: sha512-V6eky/xz2mcKfAd1Ioxyd6nmA61gao3n01C+YeuIwu3vzM9EDR6wcVzMSIbLMDXWeoi9SHYctXuKYC5uJUT3eQ==}
+    engines: {node: '>=14'}
+
   google-gax@5.0.1:
     resolution: {integrity: sha512-I8fTFXvIG8tYpiDxDXwCXoFsTVsvHJ2GA7DToH+eaRccU8r3nqPMFghVb2GdHSVcu4pq9ScRyB2S1BjO+vsa1Q==}
     engines: {node: '>=18'}
@@ -6733,6 +6746,10 @@ packages:
     resolution: {integrity: sha512-vGrhOavPSTz4QVNuBNdcNXePNdNMaO1xj9yBeH1ScQPjk/rhg9sSlCXPhMkFuaNNW/syTvYqsnbIJxMBfRbbag==}
     engines: {node: '>= 8'}
 
+  proto3-json-serializer@2.0.2:
+    resolution: {integrity: sha512-SAzp/O4Yh02jGdRc+uIrGoe87dkN/XtwxfZ4ZyafJHymd79ozp5VG5nyZ7ygqPM5+cpLDjjGnYFUkngonyDPOQ==}
+    engines: {node: '>=14.0.0'}
+
   proto3-json-serializer@3.0.1:
     resolution: {integrity: sha512-Rug90pDIefARAG9MgaFjd0yR/YP4bN3Fov00kckXMjTZa0x86c4WoWfCQFdSeWi9DvRXjhfLlPDIvODB5LOTfg==}
     engines: {node: '>=18'}
@@ -6936,6 +6953,10 @@ packages:
     engines: {node: '>=10.7.0'}
     peerDependencies:
       axios: '*'
+
+  retry-request@7.0.2:
+    resolution: {integrity: sha512-dUOvLMJ0/JJYEn8NrpOaGNE7X3vpI5XlZS/u0ANjqtcZVKnIxP7IgCFwrKTxENw29emmwug53awKtaMm4i9g5w==}
+    engines: {node: '>=14'}
 
   retry-request@8.0.0:
     resolution: {integrity: sha512-dJkZNmyV9C8WKUmbdj1xcvVlXBSvsUQCkg89TCK8rD72RdSn9A2jlXlS2VuYSTHoPJjJEfUHhjNYrlvuksF9cg==}
@@ -7253,6 +7274,10 @@ packages:
   teeny-request@10.1.0:
     resolution: {integrity: sha512-3ZnLvgWF29jikg1sAQ1g0o+lr5JX6sVgYvfUJazn7ZjJroDBUTWp44/+cFVX0bULjv4vci+rBD+oGVAkWqhUbw==}
     engines: {node: '>=18'}
+
+  teeny-request@9.0.0:
+    resolution: {integrity: sha512-resvxdc6Mgb7YEThw6G6bExlXKkv6+YbuzGg9xuXxSgxJF7Ozs+o8Y9+2R3sArdWdW8nOokoQb1yrpFB0pQK2g==}
+    engines: {node: '>=14'}
 
   temp-dir@1.0.0:
     resolution: {integrity: sha512-xZFXEGbG7SNC3itwBzI3RYjq/cEhBkx2hJuKGIUOcEULmkQExXiHat2z/qkISYsuR+IKumhEfKKbV5qXmhICFQ==}
@@ -11663,6 +11688,8 @@ snapshots:
 
   '@types/lodash@4.17.20': {}
 
+  '@types/long@4.0.2': {}
+
   '@types/minimatch@3.0.5': {}
 
   '@types/minimist@1.2.5': {}
@@ -13458,6 +13485,24 @@ snapshots:
       gcp-metadata: 6.1.1(encoding@0.1.13)(supports-color@10.0.0)
       gtoken: 7.1.0(encoding@0.1.13)(supports-color@10.0.0)
       jws: 4.0.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
+
+  google-gax@4.6.1(encoding@0.1.13):
+    dependencies:
+      '@grpc/grpc-js': 1.13.4
+      '@grpc/proto-loader': 0.7.15
+      '@types/long': 4.0.2
+      abort-controller: 3.0.0
+      duplexify: 4.1.3
+      google-auth-library: 9.15.1(encoding@0.1.13)(supports-color@10.0.0)
+      node-fetch: 2.7.0(encoding@0.1.13)
+      object-hash: 3.0.0
+      proto3-json-serializer: 2.0.2
+      protobufjs: 7.5.3
+      retry-request: 7.0.2(encoding@0.1.13)
+      uuid: 9.0.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -15304,6 +15349,10 @@ snapshots:
 
   propagate@2.0.1: {}
 
+  proto3-json-serializer@2.0.2:
+    dependencies:
+      protobufjs: 7.5.3
+
   proto3-json-serializer@3.0.1:
     dependencies:
       protobufjs: 7.5.3
@@ -15524,6 +15573,15 @@ snapshots:
   retry-axios@2.6.0(axios@1.10.0):
     dependencies:
       axios: 1.10.0(debug@4.4.1)
+
+  retry-request@7.0.2(encoding@0.1.13):
+    dependencies:
+      '@types/request': 2.48.12
+      extend: 3.0.2
+      teeny-request: 9.0.0(encoding@0.1.13)
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
 
   retry-request@8.0.0(supports-color@10.0.0):
     dependencies:
@@ -15880,6 +15938,17 @@ snapshots:
       node-fetch: 3.3.2
       stream-events: 1.0.5
     transitivePeerDependencies:
+      - supports-color
+
+  teeny-request@9.0.0(encoding@0.1.13):
+    dependencies:
+      http-proxy-agent: 5.0.0(supports-color@10.0.0)
+      https-proxy-agent: 5.0.1(supports-color@10.0.0)
+      node-fetch: 2.7.0(encoding@0.1.13)
+      stream-events: 1.0.5
+      uuid: 9.0.1
+    transitivePeerDependencies:
+      - encoding
       - supports-color
 
   temp-dir@1.0.0: {}
