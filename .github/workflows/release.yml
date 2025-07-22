@@ -17,11 +17,14 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          cache: "npm"
+          cache: "pnpm"
           node-version-file: ".nvmrc"
-      - run: npm ci
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - run: pnpm install --frozen-lockfile
       - name: Build
-        run: npx nx run-many --target=build --parallel=3
+        run: pnpm nx run-many --target=build --parallel=3
       - name: Git Identity
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -30,7 +33,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       - name: Create Version
-        run: npx lerna version --no-private --conventional-commits --yes
+        run: pnpm lerna version --no-private --conventional-commits --yes
       - name: Set Current Version
         run: |
           CURRENT_VERSION=$(node -p 'require("./lerna.json").version')
@@ -48,6 +51,6 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
       - name: Build for Release
-        run: npx nx run-many --target=build --parallel=3
+        run: pnpm nx run-many --target=build --parallel=3
       - name: Publish
-        run: npx lerna publish --no-private from-git --yes
+        run: pnpm lerna publish --no-private from-git --yes

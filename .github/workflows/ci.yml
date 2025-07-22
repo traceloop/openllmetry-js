@@ -18,12 +18,15 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
-          cache: "npm"
+          cache: "pnpm"
           node-version-file: ".nvmrc"
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - uses: nrwl/nx-set-shas@v3
-      - run: npm ci
-      - run: npx nx run-many --targets=lint
-      - run: npx prettier --check .
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm nx run-many --targets=lint
+      - run: pnpm prettier --check .
 
   build-and-test:
     name: Build and test
@@ -48,12 +51,15 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
-          cache: "npm"
+          cache: "pnpm"
           node-version-file: ".nvmrc"
 
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - uses: nrwl/nx-set-shas@v3
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
       - name: Build
-        run: npx nx affected --target=build --parallel=3
+        run: pnpm nx affected --target=build --parallel=3
       - name: Test
-        run: npx nx affected --target=test --parallel=3 --ci --code-coverage
+        run: pnpm nx affected --target=test --parallel=3 --ci --code-coverage
