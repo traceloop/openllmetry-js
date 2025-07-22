@@ -17,6 +17,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: pnpm/action-setup@v2
+        with:
+          version: 10
       - uses: actions/setup-node@v3
         with:
           cache: "pnpm"
@@ -48,6 +50,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: pnpm/action-setup@v2
+        with:
+          version: 10
       - uses: actions/setup-node@v3
         with:
           cache: "pnpm"

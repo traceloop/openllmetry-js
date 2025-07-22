@@ -16,6 +16,8 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: pnpm/action-setup@v2
+        with:
+          version: 10
       - uses: actions/setup-node@v3
         with:
           cache: "pnpm"
