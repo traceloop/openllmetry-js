@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "license": "Apache-2.0",
   "scripts": {
-    "build:all": "npx nx run-many -t build",
-    "build:effected": "npx nx affected -t build"
+    "build:all": "pnpm nx run-many -t build",
+    "build:affected": "pnpm nx affected -t build"
   },
   "private": true,
   "devDependencies": {
@@ -34,9 +34,6 @@
     "rollup-plugin-dts": "^6.2.1",
     "typescript": "^5.8.3"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"

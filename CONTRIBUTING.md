@@ -9,6 +9,6 @@ Please refer to our [Contributing Guide](https://traceloop.com/docs/openllmetry/
 To release a new version of the package, run (make sure you have access to the `@traceloop` npm organization):
 
 ```bash
-nx run-many --targets=build
-npx lerna publish --no-private
+pnpm nx run-many --targets=build
+pnpm lerna publish --no-private
 ```

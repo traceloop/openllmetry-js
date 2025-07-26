@@ -37,6 +37,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/core": "^2.0.1",
     "@opentelemetry/instrumentation": "^0.203.0",
     "@opentelemetry/semantic-conventions": "^1.36.0",
@@ -51,6 +52,7 @@
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
+    "@types/lodash": "^4.14.0",
     "@types/mocha": "^10.0.10",
     "llamaindex": "^0.11.19",
     "ts-mocha": "^11.1.0"
