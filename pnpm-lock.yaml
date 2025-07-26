@@ -724,9 +724,6 @@ importers:
 
   packages/traceloop-sdk:
     dependencies:
-      '@langchain/core':
-        specifier: ^0.3.58
-        version: 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
@@ -808,9 +805,6 @@ importers:
       supports-color:
         specifier: ^10.0.0
         version: 10.0.0
-      together-ai:
-        specifier: ^0.20.0
-        version: 0.20.0(encoding@0.1.13)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -830,6 +824,9 @@ importers:
       '@google-cloud/vertexai':
         specifier: ^1.10.0
         version: 1.10.0(encoding@0.1.13)(supports-color@10.0.0)
+      '@langchain/core':
+        specifier: ^0.3.58
+        version: 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
       '@pinecone-database/pinecone':
         specifier: ^6.1.1
         version: 6.1.1
@@ -878,6 +875,9 @@ importers:
       openai:
         specifier: 4.38.3
         version: 4.38.3(encoding@0.1.13)
+      together-ai:
+        specifier: ^0.20.0
+        version: 0.20.0(encoding@0.1.13)
       ts-mocha:
         specifier: ^11.1.0
         version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
