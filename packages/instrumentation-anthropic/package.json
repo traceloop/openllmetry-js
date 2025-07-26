@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-anthropic",
-  "version": "0.14.4",
+  "version": "0.14.5",
   "description": "Anthropic Instrumentaion",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
