@@ -24,7 +24,7 @@ let _client: TraceloopClient | undefined;
  * });
  * ```
  */
-export const initialize = (options: InitializeOptions) => {
+export const initialize = (options: InitializeOptions = {}) => {
   if (_configuration) {
     return;
   }
