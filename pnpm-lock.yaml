@@ -108,8 +108,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -157,8 +157,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -206,8 +206,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -252,8 +252,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -301,8 +301,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -359,8 +359,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -414,8 +414,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       js-tiktoken:
         specifier: ^1.0.20
         version: 1.0.20
@@ -469,8 +469,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -515,8 +515,8 @@ importers:
         specifier: ^0.203.0
         version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -567,8 +567,8 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       js-tiktoken:
         specifier: ^1.0.20
         version: 1.0.20
@@ -619,11 +619,11 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       google-gax:
         specifier: ^4.0.0
-        version: 4.6.1(encoding@0.1.13)(supports-color@10.0.0)
+        version: 4.6.1(encoding@0.1.13)
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -695,8 +695,8 @@ importers:
         specifier: ^6.1.1
         version: 6.1.1
       '@traceloop/node-server-sdk':
-        specifier: '*'
-        version: 0.14.4(@opentelemetry/api@1.9.0)(encoding@0.1.13)
+        specifier: workspace:*
+        version: link:../traceloop-sdk
       ai:
         specifier: ^4.3.19
         version: 4.3.19(react@19.1.0)(zod@3.25.76)
@@ -755,41 +755,41 @@ importers:
         specifier: ^1.36.0
         version: 1.36.0
       '@traceloop/ai-semantic-conventions':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: workspace:*
+        version: link:../ai-semantic-conventions
       '@traceloop/instrumentation-anthropic':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-anthropic
       '@traceloop/instrumentation-bedrock':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-bedrock
       '@traceloop/instrumentation-chromadb':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-chromadb
       '@traceloop/instrumentation-cohere':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-cohere
       '@traceloop/instrumentation-langchain':
-        specifier: ^0.14.5
-        version: 0.14.5(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-langchain
       '@traceloop/instrumentation-llamaindex':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-llamaindex
       '@traceloop/instrumentation-openai':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-openai
       '@traceloop/instrumentation-pinecone':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-pinecone
       '@traceloop/instrumentation-qdrant':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-qdrant
       '@traceloop/instrumentation-together':
-        specifier: ^0.14.5
-        version: 0.14.5(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-together
       '@traceloop/instrumentation-vertexai':
-        specifier: ^0.14.5
-        version: 0.14.5(encoding@0.1.13)(supports-color@10.0.0)
+        specifier: workspace:*
+        version: link:../instrumentation-vertexai
       '@types/nunjucks':
         specifier: ^3.2.6
         version: 3.2.6
@@ -3604,102 +3604,6 @@ packages:
   '@tootallnate/once@2.0.0':
     resolution: {integrity: sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==}
     engines: {node: '>= 10'}
-
-  '@traceloop/ai-semantic-conventions@0.14.0':
-    resolution: {integrity: sha512-0hpu19rwFNXeYp7B3s0s+9Jo4TqYiDvbQYpzIU5Xu0tx4HUhbocaJEVwWrLJMwFDx7PMPkMu2M1Vte09OtipWw==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-anthropic@0.14.4':
-    resolution: {integrity: sha512-aorD6MIy1SW1gX8FYj+m4XgXWyRAj7ECIfA3K1cH8p5fQsNREaKOfTrS0iQkq3oAYxTAGFu3FZZbtpqLZd+SBA==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-anthropic@0.14.5':
-    resolution: {integrity: sha512-fC1ZxRjQ3JNWIoxJrMKgln9aEWxeyQXdcB2bsQx8Z6N/IVtKeZd8TblNX1wKEsGlKTbBgo3m83Ukdi67XnCkag==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-bedrock@0.14.4':
-    resolution: {integrity: sha512-ZDvGkNmr2td/OWWUqSHZRf6RkYKSu5FXehkQqQkP6RliKbTNCGHzZFEVnZrlAb4e150EXFoTsISadfomfgzyRA==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-bedrock@0.14.5':
-    resolution: {integrity: sha512-Z41ZJ9eihvV6FqF0EC+u408TAkgGJPONHbw3iWa/UXm+CjbLPGX6FPQD8l82arnrlysCmrfFKmYmdxE43mNCKw==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-chromadb@0.14.4':
-    resolution: {integrity: sha512-CsMIAOTwUjTyEoa7N1jVDelCMl++yLp9xm0ag32xPGzoBnQW5xWOnj4ObzYIP2h8YIoupUw1F8hfa50muLMjBA==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-chromadb@0.14.5':
-    resolution: {integrity: sha512-sIga1Mc1h4l6jLS6ne7za0zm2UT26REXbjJfcstBzszWcq72j2uKBiYzZLcrpntA0AbVsKZsFqTDufD1anmmZg==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-cohere@0.14.4':
-    resolution: {integrity: sha512-b4PxpaICrbtyhrKmfv85MZ0VQE1HZHOpmFBFZQtw9epVcc889y6DcMC0KHRuSxVCISQM4CHhBWbwLgl0W3D0Ow==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-cohere@0.14.5':
-    resolution: {integrity: sha512-Qac0aiHnYtvbUVK3ksFioTlQgOXnXKJKDIk8DaZ1bvOiyFoVzO7BH8RxISRxf9d3nn0d7jGf1KI8sN0m25T74Q==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-langchain@0.14.4':
-    resolution: {integrity: sha512-lGQ28XjsTl2hLNriVNAC3+zZpDZEcWmqWYHKglGzqTSEPH7aKaH08cCpsALqo1jJQaGlAMylZX18JYLkSeWvpA==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-langchain@0.14.5':
-    resolution: {integrity: sha512-nwxZteikK/cx+CjwYSZigB2oFgEV7EjXO8Y9TCZnGZHjQCvkGBxyzT8ckWb/N9rKazyB7M5BzxleSSO9H8p/sQ==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-llamaindex@0.14.4':
-    resolution: {integrity: sha512-vCCC+Ke98XjErq+qe4ssXV8Y3hK895vlFUZTUL5yHgSt5y40ig3eSgtcZdIFLfJ2H0kyTY1Z8wkcegefr/UBgA==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-llamaindex@0.14.5':
-    resolution: {integrity: sha512-iBs7bn2tSP2dGNaOMl3Hn4AMRVHRxi3NfYrh1F/QfCRdZMXZZtwbAM6wTi+E+mDXICf4myd/p7reqQEAnfMPfw==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-openai@0.14.4':
-    resolution: {integrity: sha512-Jv98P3p2u0dz9c10zN+FRA0XENYNCAmMPXehT4aDeGl6p0x92QTD6KOR6fPDTDxepCrq0dy2UKlJJKk2Mmgj5Q==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-openai@0.14.5':
-    resolution: {integrity: sha512-fg/EpNos8k3F6KgHqobPJLZ8n1bM8UybUGLe9zXIvG7RoqcBMZjG0TT+T/qqjnEuBcgRZkDMVc+BE9EFNFCb3w==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-pinecone@0.14.4':
-    resolution: {integrity: sha512-bNBET/Ta3aD2Jlfus2QpX0/yQ9LZWTpqM7KHNmcyDfmUwk3xc3dReY5UYGklrwuFeNc5JJiUzxKnuBpLaLc4uw==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-pinecone@0.14.5':
-    resolution: {integrity: sha512-nSC9sX7Hys9sQEwuV3Pd/8g7cG/1N7+M+R3BXIj9MKLxC4Ke3WssmNJSua0CFJZ4BJsPA3Ah9+cfickgJI39Hg==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-qdrant@0.14.4':
-    resolution: {integrity: sha512-4Z1TjlFCJLB5x41LJePOekV/1OUsqXSwROo/oJCnM/w/dh36E9qbdlvsu9IIYXsNqCN7WFHsle9zIdk2tZ8t0g==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-qdrant@0.14.5':
-    resolution: {integrity: sha512-BNOFPtn8uDERL2adSYzliLGxAzbazSYbpmyRguZr7Pk/zHcXXfYvwpGlK5nx2aVqlHa2WRXoLMJjjV3PWunLPw==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-together@0.14.4':
-    resolution: {integrity: sha512-4OFQOEroJzjAFGn9Iejab9MHgkfXvlgbu0sSuKkF12BXvK5/djGqzdKJKTe2W6+kx87Pqf1qVrV+V2TF3c+JBw==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-together@0.14.5':
-    resolution: {integrity: sha512-PL4CUwjJX6tGnuq5KuK9nCEkU5o0KcYKI/PAdrnurr1BRijZdvW0ebuJzunaLtvlyntc1aRxVfB3MVSbakrQvg==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-vertexai@0.14.4':
-    resolution: {integrity: sha512-hYaiU3JKQ8ebM/CN/eAKBww8pvHTEdWJt890YSm272YpoikNF00tV+FplSM68/Bb4wW5aENTX9P5XaOESKGXvw==}
-    engines: {node: '>=14'}
-
-  '@traceloop/instrumentation-vertexai@0.14.5':
-    resolution: {integrity: sha512-m4d4/veqfZl0CmULzqXvGXTm3L/5ijZJBKVVz62qVMJX9IKCVvYu9KWj94VzT0zRZtzHzhNhIrcDLp7zBvflxA==}
-    engines: {node: '>=14'}
-
-  '@traceloop/node-server-sdk@0.14.4':
-    resolution: {integrity: sha512-MDsmln1qRx/+ZgxB/YSMeuEDlrf5uMEHBOhytk3jahrY/FZPaR33Q8cvUpl0Ts4nnVUtiswC5gHuxLHpwhjLig==}
-    engines: {node: '>=14'}
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -11584,290 +11488,6 @@ snapshots:
 
   '@tootallnate/once@2.0.0': {}
 
-  '@traceloop/ai-semantic-conventions@0.14.0':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-
-  '@traceloop/instrumentation-anthropic@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-anthropic@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-bedrock@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-bedrock@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-chromadb@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-chromadb@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-cohere@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-cohere@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-langchain@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-langchain@0.14.5(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))(supports-color@10.0.0)':
-    dependencies:
-      '@langchain/core': 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/exporter-trace-otlp-proto'
-      - '@opentelemetry/sdk-trace-base'
-      - openai
-      - supports-color
-
-  '@traceloop/instrumentation-llamaindex@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      lodash: 4.17.21
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-llamaindex@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      lodash: 4.17.21
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-openai@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      js-tiktoken: 1.0.20
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-openai@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      js-tiktoken: 1.0.20
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-pinecone@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-pinecone@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-qdrant@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-qdrant@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-together@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      js-tiktoken: 1.0.20
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-together@0.14.5(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      js-tiktoken: 1.0.20
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - supports-color
-
-  '@traceloop/instrumentation-vertexai@0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - supports-color
-
-  '@traceloop/instrumentation-vertexai@0.14.5(encoding@0.1.13)(supports-color@10.0.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      google-gax: 4.6.1(encoding@0.1.13)(supports-color@10.0.0)
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
-  '@traceloop/node-server-sdk@0.14.4(@opentelemetry/api@1.9.0)(encoding@0.1.13)':
-    dependencies:
-      '@opentelemetry/exporter-trace-otlp-proto': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-node': 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/ai-semantic-conventions': 0.14.0
-      '@traceloop/instrumentation-anthropic': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-bedrock': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-chromadb': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-cohere': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-langchain': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-llamaindex': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-openai': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-pinecone': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-qdrant': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-together': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@traceloop/instrumentation-vertexai': 0.14.4(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
-      '@types/nunjucks': 3.2.6
-      cross-fetch: 4.1.0(encoding@0.1.13)
-      fetch-retry: 6.0.0
-      nunjucks: 3.2.4
-      posthog-node: 5.6.0
-      supports-color: 10.0.0
-      uuid: 11.1.0
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-      - chokidar
-      - encoding
-
   '@tsconfig/node10@1.0.11': {}
 
   '@tsconfig/node12@1.0.11': {}
@@ -13700,7 +13320,7 @@ snapshots:
       - encoding
       - supports-color
 
-  google-gax@4.6.1(encoding@0.1.13)(supports-color@10.0.0):
+  google-gax@4.6.1(encoding@0.1.13):
     dependencies:
       '@grpc/grpc-js': 1.13.4
       '@grpc/proto-loader': 0.7.15
@@ -13712,7 +13332,7 @@ snapshots:
       object-hash: 3.0.0
       proto3-json-serializer: 2.0.2
       protobufjs: 7.5.3
-      retry-request: 7.0.2(encoding@0.1.13)(supports-color@10.0.0)
+      retry-request: 7.0.2(encoding@0.1.13)
       uuid: 9.0.1
     transitivePeerDependencies:
       - encoding
@@ -13907,7 +13527,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.10.0(debug@4.4.1))
+      retry-axios: 2.6.0(axios@1.10.0)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -15781,15 +15401,15 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.10.0(debug@4.4.1)):
+  retry-axios@2.6.0(axios@1.10.0):
     dependencies:
       axios: 1.10.0(debug@4.4.1)
 
-  retry-request@7.0.2(encoding@0.1.13)(supports-color@10.0.0):
+  retry-request@7.0.2(encoding@0.1.13):
     dependencies:
       '@types/request': 2.48.12
       extend: 3.0.2
-      teeny-request: 9.0.0(encoding@0.1.13)(supports-color@10.0.0)
+      teeny-request: 9.0.0(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -16151,7 +15771,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  teeny-request@9.0.0(encoding@0.1.13)(supports-color@10.0.0):
+  teeny-request@9.0.0(encoding@0.1.13):
     dependencies:
       http-proxy-agent: 5.0.0(supports-color@10.0.0)
       https-proxy-agent: 5.0.1(supports-color@10.0.0)
