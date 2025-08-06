@@ -4,8 +4,6 @@ const main = async () => {
   // Initialize with staging environment
   traceloop.initialize({
     appName: "test_dataset_api",
-    apiKey: "tl_9981e7218948437584e08e7b724304d8",
-    baseUrl: "https://api-staging.traceloop.com",
     disableBatch: true,
     traceloopSyncEnabled: true,
   });
