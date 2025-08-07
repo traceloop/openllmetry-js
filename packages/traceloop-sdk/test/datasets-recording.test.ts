@@ -72,9 +72,10 @@ describe("Dataset Integration Test", () => {
   it("should create and manage a dataset", async function () {
     this.timeout(10000); // 10 second timeout
     // Use a fixed name for recorded tests, dynamic only during recording
-    const datasetName = process.env.RECORD_MODE === "NEW" 
-      ? `integration-test-${new Date().toISOString().replace(/[:.]/g, "-")}` 
-      : "integration-test-2025-08-06T10-09-52-844Z";
+    const datasetName =
+      process.env.RECORD_MODE === "NEW"
+        ? `integration-test-${new Date().toISOString().replace(/[:.]/g, "-")}`
+        : "integration-test-2025-08-06T10-09-52-844Z";
 
     // Create dataset
     const dataset = await client.datasets.create({
