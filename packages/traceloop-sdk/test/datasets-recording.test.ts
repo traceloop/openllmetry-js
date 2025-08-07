@@ -20,11 +20,12 @@ describe("Dataset Integration Test", () => {
     adapters: ["node-http", "fetch"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
+    recordFailedRequests: true,
     matchRequestsBy: {
       method: true,
       headers: false,
       body: true,
-      order: false,
+      order: true,
       url: true,
     },
   });
@@ -75,7 +76,7 @@ describe("Dataset Integration Test", () => {
     const datasetName =
       process.env.RECORD_MODE === "NEW"
         ? `integration-test-${new Date().toISOString().replace(/[:.]/g, "-")}`
-        : "integration-test-2025-08-06T10-09-52-844Z";
+        : "integration-test-2025-08-07T08-56-39-202Z";
 
     // Create dataset
     const dataset = await client.datasets.create({
