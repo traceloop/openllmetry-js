@@ -25,25 +25,27 @@ const main = async () => {
     try {
       const datasetsList = await client.datasets.list(1, 10);
       console.log(`✅ Found ${datasetsList.total} datasets`);
-      
+
       if (datasetsList.datasets.length > 0) {
         console.log("📋 Existing datasets:");
         datasetsList.datasets.slice(0, 5).forEach((dataset, index) => {
           console.log(`   ${index + 1}. ${dataset.name} (ID: ${dataset.id})`);
-          console.log(`      Description: ${dataset.description || 'No description'}`);
-          console.log(`      Published: ${dataset.published ? 'Yes' : 'No'}\n`);
+          console.log(
+            `      Description: ${dataset.description || "No description"}`,
+          );
+          console.log(`      Published: ${dataset.published ? "Yes" : "No"}\n`);
         });
       }
     } catch (error) {
       console.log(`❌ List datasets failed: ${error.message}`);
     }
 
-    // Test 2: Create a new dataset  
+    // Test 2: Create a new dataset
     console.log("2️⃣ Testing dataset creation...");
     try {
       const testDataset = await client.datasets.create({
         name: `test-dataset-${Date.now()}`,
-        description: "Test dataset created from JavaScript SDK"
+        description: "Test dataset created from JavaScript SDK",
       });
       console.log(`✅ Created dataset: ${testDataset.name}`);
       console.log(`   ID: ${testDataset.id}`);
@@ -56,21 +58,21 @@ const main = async () => {
           name: "user_id",
           type: "string",
           required: true,
-          description: "User identifier"
+          description: "User identifier",
         });
 
         await testDataset.addColumn({
           name: "score",
           type: "number",
           required: false,
-          description: "User score"
+          description: "User score",
         });
 
         await testDataset.addColumn({
           name: "active",
-          type: "boolean", 
+          type: "boolean",
           required: false,
-          description: "User active status"
+          description: "User active status",
         });
 
         console.log("✅ Added 3 columns successfully\n");
@@ -79,11 +81,12 @@ const main = async () => {
         console.log("4️⃣ Testing column retrieval...");
         const columns = await testDataset.getColumns();
         console.log(`✅ Retrieved ${columns.length} columns:`);
-        columns.forEach(col => {
-          console.log(`   • ${col.name} (${col.type})${col.required ? ' [required]' : ''}`);
+        columns.forEach((col) => {
+          console.log(
+            `   • ${col.name} (${col.type})${col.required ? " [required]" : ""}`,
+          );
         });
         console.log();
-
       } catch (error) {
         console.log(`❌ Column operations failed: ${error.message}`);
       }
@@ -94,25 +97,24 @@ const main = async () => {
         const row1 = await testDataset.addRow({
           user_id: "user123",
           score: 85,
-          active: true
+          active: true,
         });
         console.log(`✅ Added row 1: ID ${row1.id}`);
 
         const row2 = await testDataset.addRow({
-          user_id: "user456", 
+          user_id: "user456",
           score: 92,
-          active: false
+          active: false,
         });
         console.log(`✅ Added row 2: ID ${row2.id}`);
 
         // Test batch row addition
         const batchRows = [
           { user_id: "user789", score: 78, active: true },
-          { user_id: "user101", score: 95, active: true }
+          { user_id: "user101", score: 95, active: true },
         ];
         const addedRows = await testDataset.addRows(batchRows);
         console.log(`✅ Added ${addedRows.length} rows in batch\n`);
-
       } catch (error) {
         console.log(`❌ Row addition failed: ${error.message}`);
       }
@@ -123,7 +125,9 @@ const main = async () => {
         const rows = await testDataset.getRows(10);
         console.log(`✅ Retrieved ${rows.length} rows:`);
         rows.forEach((row, index) => {
-          console.log(`   ${index + 1}. User: ${row.data.user_id}, Score: ${row.data.score}, Active: ${row.data.active}`);
+          console.log(
+            `   ${index + 1}. User: ${row.data.user_id}, Score: ${row.data.score}, Active: ${row.data.active}`,
+          );
         });
         console.log();
       } catch (error) {
@@ -167,7 +171,7 @@ user404,76,true`;
         const versions = await testDataset.getVersions();
         console.log(`✅ Dataset versions: ${versions.total}`);
         if (versions.versions.length > 0) {
-          versions.versions.forEach(version => {
+          versions.versions.forEach((version) => {
             console.log(`   • Version: ${version.version}`);
             console.log(`     Published by: ${version.publishedBy}`);
             console.log(`     Published at: ${version.publishedAt}`);
@@ -185,7 +189,7 @@ user404,76,true`;
       try {
         await testDataset.publish({
           version: "v1.0",
-          description: "Initial test version"
+          description: "Initial test version",
         });
         console.log(`✅ Dataset published successfully!`);
         console.log(`   Published status: ${testDataset.published}\n`);
@@ -193,11 +197,10 @@ user404,76,true`;
         // Check versions after publishing
         const versionsAfterPublish = await testDataset.getVersions();
         console.log(`📚 Versions after publish: ${versionsAfterPublish.total}`);
-        versionsAfterPublish.versions.forEach(version => {
+        versionsAfterPublish.versions.forEach((version) => {
           console.log(`   • ${version.version} (${version.publishedAt})`);
         });
         console.log();
-
       } catch (error) {
         console.log(`❌ Dataset publishing failed: ${error.message}`);
       }
@@ -230,12 +233,12 @@ user404,76,true`;
       }
 
       console.log("🎉 All tests completed!");
-      
     } catch (error) {
       console.log(`❌ Dataset creation failed: ${error.message}`);
-      console.log("This might indicate an issue with the Dataset API endpoints");
+      console.log(
+        "This might indicate an issue with the Dataset API endpoints",
+      );
     }
-
   } catch (error) {
     console.error("❌ Critical error:", error.message);
     if (error.stack) {
