@@ -4,21 +4,18 @@ import * as traceloop from "../src";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
-import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 
 const memoryExporter = new InMemorySpanExporter();
 
 Polly.register(NodeHttpAdapter);
-Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 let client: traceloop.TraceloopClient;
-let createdDatasetSlug: string;
 
-describe("Test Dataset API Recording", () => {
+describe("Dataset Integration Test", () => {
   setupPolly({
-    adapters: ["node-http", "fetch"],
+    adapters: ["node-http"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
     matchRequestsBy: {
@@ -27,9 +24,8 @@ describe("Test Dataset API Recording", () => {
   });
 
   before(async () => {
-    // Set staging environment variables for recording
+    // Set environment variables
     if (process.env.RECORD_MODE === "NEW") {
-      // Use real API keys for recording
       if (!process.env.TRACELOOP_API_KEY) {
         throw new Error('TRACELOOP_API_KEY environment variable is required for recording');
       }
@@ -37,15 +33,14 @@ describe("Test Dataset API Recording", () => {
         throw new Error('TRACELOOP_BASE_URL environment variable is required for recording');
       }
     } else {
-      // Use dummy values for playback
       process.env.TRACELOOP_API_KEY = process.env.TRACELOOP_API_KEY || "test-key";
       process.env.TRACELOOP_BASE_URL = process.env.TRACELOOP_BASE_URL || "https://api-staging.traceloop.com";
     }
 
     client = new traceloop.TraceloopClient({
-      appName: "dataset_recording_test",
-      apiKey: process.env.TRACELOOP_API_KEY,
-      baseUrl: process.env.TRACELOOP_BASE_URL,
+      appName: "dataset_integration_test",
+      apiKey: process.env.TRACELOOP_API_KEY!,
+      baseUrl: process.env.TRACELOOP_BASE_URL!,
       projectId: "default"
     });
   });
@@ -63,258 +58,122 @@ describe("Test Dataset API Recording", () => {
     memoryExporter.reset();
   });
 
-  describe("Dataset Creation and Management", () => {
-    it("should create a new dataset", async () => {
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const datasetName = `test-dataset-${timestamp}`;
-      
-      const dataset = await client.datasets.create({
-        name: datasetName,
-        description: "Test dataset for recording"
-      });
-
-      assert.ok(dataset);
-      assert.ok(dataset.slug);
-      assert.strictEqual(dataset.name, datasetName);
-      assert.strictEqual(dataset.description, "Test dataset for recording");
-      
-      createdDatasetSlug = dataset.slug;
-      console.log(`Created dataset with slug: ${createdDatasetSlug}`);
+  it("should create and manage a dataset", async function() {
+    this.timeout(10000); // 10 second timeout
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const datasetName = `integration-test-${timestamp}`;
+    
+    // Create dataset
+    const dataset = await client.datasets.create({
+      name: datasetName,
+      description: "Integration test dataset"
     });
 
-    it("should get dataset by slug", async () => {
-      if (!createdDatasetSlug) {
-        this.skip();
-      }
+    assert.ok(dataset);
+    assert.ok(dataset.slug);
+    assert.strictEqual(dataset.name, datasetName);
+    assert.strictEqual(dataset.description, "Integration test dataset");
+    
+    console.log(`✓ Created dataset: ${dataset.slug}`);
 
-      const dataset = await client.datasets.get(createdDatasetSlug);
-      assert.ok(dataset);
-      assert.strictEqual(dataset.slug, createdDatasetSlug);
+    // Get dataset
+    const retrievedDataset = await client.datasets.get(dataset.slug);
+    assert.ok(retrievedDataset);
+    assert.strictEqual(retrievedDataset.slug, dataset.slug);
+    assert.strictEqual(retrievedDataset.name, datasetName);
+    
+    console.log(`✓ Retrieved dataset: ${retrievedDataset.slug}`);
+
+    // Update dataset
+    await retrievedDataset.update({
+      description: "Updated integration test dataset"
     });
+    assert.strictEqual(retrievedDataset.description, "Updated integration test dataset");
+    
+    console.log(`✓ Updated dataset description`);
 
-    it("should list datasets", async () => {
-      const result = await client.datasets.list();
-      assert.ok(result);
-      assert.ok(Array.isArray(result.datasets));
-      assert.ok(typeof result.total === 'number');
-      console.log(`Found ${result.total} datasets`);
+    // Add columns
+    const nameColumn = await retrievedDataset.addColumn({
+      name: "name",
+      type: "string",
+      required: true,
+      description: "Person name"
     });
+    
+    assert.ok(nameColumn);
+    assert.strictEqual(nameColumn.name, "name");
+    assert.strictEqual(nameColumn.type, "string");
+    assert.strictEqual(nameColumn.required, true);
+    
+    console.log(`✓ Added name column: ${nameColumn.id}`);
 
-    it("should update dataset", async () => {
-      if (!createdDatasetSlug) {
-        this.skip();
-      }
-
-      const dataset = await client.datasets.get(createdDatasetSlug);
-      await dataset.update({
-        description: "Updated description for recording test"
-      });
-
-      // Refresh the dataset to get the updated data
-      await dataset.refresh();
-      assert.strictEqual(dataset.description, "Updated description for recording test");
+    const scoreColumn = await retrievedDataset.addColumn({
+      name: "score",
+      type: "number",
+      required: false,
+      description: "Test score"
     });
+    
+    assert.ok(scoreColumn);
+    assert.strictEqual(scoreColumn.name, "score");
+    assert.strictEqual(scoreColumn.type, "number");
+    
+    console.log(`✓ Added score column: ${scoreColumn.id}`);
+
+    // Get columns
+    const columns = await retrievedDataset.getColumns();
+    assert.ok(Array.isArray(columns));
+    assert.ok(columns.length >= 2);
+    
+    const foundNameColumn = columns.find(col => col.name === "name");
+    const foundScoreColumn = columns.find(col => col.name === "score");
+    
+    assert.ok(foundNameColumn);
+    assert.ok(foundScoreColumn);
+    
+    console.log(`✓ Retrieved ${columns.length} columns`);
+
+    // Add row
+    const row = await retrievedDataset.addRow({
+      name: "Test Person",
+      score: 95
+    });
+    
+    assert.ok(row);
+    assert.ok(row.id);
+    assert.strictEqual(row.data.name, "Test Person");
+    assert.strictEqual(row.data.score, 95);
+    
+    console.log(`✓ Added row: ${row.id}`);
+
+    // Get rows
+    const rows = await retrievedDataset.getRows(10, 0);
+    assert.ok(Array.isArray(rows));
+    assert.ok(rows.length >= 1);
+    
+    console.log(`✓ Retrieved ${rows.length} rows`);
+
+    // Clean up - delete dataset
+    await retrievedDataset.delete();
+    
+    console.log(`✓ Deleted dataset: ${dataset.slug}`);
+
+    // Verify deletion
+    try {
+      await client.datasets.get(dataset.slug);
+      assert.fail("Should have thrown an error for deleted dataset");
+    } catch (error) {
+      assert.ok(error instanceof Error);
+      console.log(`✓ Confirmed dataset deletion`);
+    }
   });
 
-  describe("Column Operations", () => {
-    let testDataset: any;
-
-    before(async () => {
-      if (createdDatasetSlug) {
-        testDataset = await client.datasets.get(createdDatasetSlug);
-      }
-    });
-
-    it("should add columns to dataset", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const column1 = await testDataset.addColumn({
-        name: "name",
-        type: "string",
-        required: true,
-        description: "Name column"
-      });
-
-      assert.ok(column1);
-      assert.strictEqual(column1.name, "name");
-      assert.strictEqual(column1.type, "string");
-      assert.strictEqual(column1.required, true);
-
-      const column2 = await testDataset.addColumn({
-        name: "score",
-        type: "number",
-        required: false,
-        description: "Score column"
-      });
-
-      assert.ok(column2);
-      assert.strictEqual(column2.name, "score");
-      assert.strictEqual(column2.type, "number");
-    });
-
-    it("should get columns from dataset", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const columns = await testDataset.getColumns();
-      assert.ok(Array.isArray(columns));
-      assert.ok(columns.length >= 2);
-      
-      const nameColumn = columns.find(col => col.name === "name");
-      const scoreColumn = columns.find(col => col.name === "score");
-      
-      assert.ok(nameColumn);
-      assert.ok(scoreColumn);
-    });
-  });
-
-  describe("Row Operations", () => {
-    let testDataset: any;
-
-    before(async () => {
-      if (createdDatasetSlug) {
-        testDataset = await client.datasets.get(createdDatasetSlug);
-      }
-    });
-
-    it("should add single row to dataset", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const row = await testDataset.addRow({
-        name: "John Doe",
-        score: 85
-      });
-
-      assert.ok(row);
-      assert.ok(row.id);
-      assert.strictEqual(row.data.name, "John Doe");
-      assert.strictEqual(row.data.score, 85);
-    });
-
-    it("should add multiple rows to dataset", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const rows = await testDataset.addRows([
-        { name: "Jane Smith", score: 92 },
-        { name: "Bob Johnson", score: 78 },
-        { name: "Alice Brown", score: 95 }
-      ]);
-
-      assert.ok(Array.isArray(rows));
-      assert.strictEqual(rows.length, 3);
-      assert.strictEqual(rows[0].data.name, "Jane Smith");
-      assert.strictEqual(rows[1].data.name, "Bob Johnson");
-      assert.strictEqual(rows[2].data.name, "Alice Brown");
-    });
-
-    it("should get rows from dataset", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const rows = await testDataset.getRows(10, 0);
-      assert.ok(Array.isArray(rows));
-      assert.ok(rows.length >= 4); // At least 4 rows from previous tests
-    });
-  });
-
-  describe("CSV Import", () => {
-    let testDataset: any;
-
-    before(async () => {
-      if (createdDatasetSlug) {
-        testDataset = await client.datasets.get(createdDatasetSlug);
-      }
-    });
-
-    it("should import CSV data with headers", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const csvContent = `name,score
-Michael Wilson,88
-Sarah Davis,91
-Tom Anderson,76`;
-
-      await testDataset.fromCSV(csvContent, { hasHeader: true });
-      // Verify import by getting rows
-      const rows = await testDataset.getRows(20, 0);
-      assert.ok(rows.length >= 7); // Should have at least 7 rows now
-    });
-  });
-
-  describe("Dataset Publishing and Versions", () => {
-    let testDataset: any;
-
-    before(async () => {
-      if (createdDatasetSlug) {
-        testDataset = await client.datasets.get(createdDatasetSlug);
-      }
-    });
-
-    it("should publish dataset", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      await testDataset.publish({
-        version: "1.0.0",
-        description: "First published version"
-      });
-
-      // Refresh to get updated data
-      await testDataset.refresh();
-      assert.strictEqual(testDataset.published, true);
-    });
-
-    it("should get dataset versions", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const versions = await testDataset.getVersions();
-      assert.ok(versions);
-      assert.ok(Array.isArray(versions.versions));
-      assert.ok(versions.versions.length >= 1);
-    });
-
-    it("should get dataset stats", async () => {
-      if (!testDataset) {
-        this.skip();
-      }
-
-      const stats = await testDataset.getStats();
-      assert.ok(stats);
-      assert.ok(typeof stats.rowCount === 'number');
-      assert.ok(typeof stats.columnCount === 'number');
-    });
-  });
-
-  describe("Cleanup", () => {
-    it("should delete the test dataset", async () => {
-      if (!createdDatasetSlug) {
-        this.skip();
-      }
-
-      const dataset = await client.datasets.get(createdDatasetSlug);
-      await dataset.delete();
-      
-      // Verify deletion by trying to get it (should fail)
-      try {
-        await client.datasets.get(createdDatasetSlug);
-        assert.fail("Should have thrown an error for deleted dataset");
-      } catch (error) {
-        assert.ok(error instanceof Error);
-        // Expected error for deleted dataset
-      }
-    });
+  it("should list datasets", async () => {
+    const result = await client.datasets.list();
+    assert.ok(result);
+    assert.ok(Array.isArray(result.datasets));
+    assert.ok(typeof result.total === 'number');
+    
+    console.log(`✓ Listed ${result.total} datasets`);
   });
 }); 

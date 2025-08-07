@@ -42,6 +42,16 @@ export class Datasets extends BaseDataset {
     const response = await this.client.get(`/v2/datasets?page=${page}&limit=${limit}`);
     const data: DatasetListResponse = await this.handleResponse(response);
     
+    // Handle null or undefined response
+    if (!data || !data.datasets) {
+      return {
+        datasets: [],
+        total: 0,
+        page: page,
+        limit: limit
+      };
+    }
+    
     // Convert dataset responses to Dataset instances
     const datasets = data.datasets.map(datasetData => new Dataset(this.client, datasetData));
     
@@ -57,7 +67,7 @@ export class Datasets extends BaseDataset {
     const response = await this.client.get(`/v2/datasets?name=${encodeURIComponent(name)}`);
     const data: DatasetListResponse = await this.handleResponse(response);
     
-    if (data.datasets.length === 0) {
+    if (!data || !data.datasets || data.datasets.length === 0) {
       return null;
     }
     

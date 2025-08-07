@@ -7,9 +7,19 @@ export abstract class BaseDataset {
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       try {
-        const errorData = await response.json();
-        if (errorData.message) {
-          errorMessage = errorData.message;
+        const errorText = await response.text();
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch {
+          // Not JSON, use the raw text
+          if (errorText) {
+            errorMessage = `${errorMessage} - ${errorText}`;
+          }
         }
       } catch {
         // If we can't parse the error response, use the default message
