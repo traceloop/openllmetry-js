@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-pinecone",
-  "version": "0.14.0",
+  "version": "0.14.6",
   "description": "OpenTelemetry instrumentation for pinecone vector DB",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,7 +10,7 @@
     "build": "rollup -c",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 20000"
+    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 120000"
   },
   "keywords": [
     "opentelemetry",
@@ -38,17 +38,23 @@
     "access": "public"
   },
   "dependencies": {
-    "@opentelemetry/core": "^1.29.0",
-    "@opentelemetry/instrumentation": "^0.56.0",
-    "@opentelemetry/semantic-conventions": "^1.28.0",
-    "@traceloop/ai-semantic-conventions": "^0.14.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/core": "^2.0.1",
+    "@opentelemetry/instrumentation": "^0.203.0",
+    "@opentelemetry/semantic-conventions": "^1.36.0",
+    "@traceloop/ai-semantic-conventions": "workspace:*",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@pinecone-database/pinecone": "^2.2.2",
-    "@pollyjs/adapter-fetch": "^6.0.6",
+    "@opentelemetry/context-async-hooks": "^2.0.1",
+    "@opentelemetry/sdk-trace-base": "^2.0.1",
+    "@opentelemetry/sdk-trace-node": "^2.0.1",
+    "@pinecone-database/pinecone": "^6.1.1",
+    "@pollyjs/adapter-fetch": "^6.0.7",
     "@pollyjs/core": "^6.0.6",
-    "@pollyjs/persister-fs": "^6.0.6"
+    "@pollyjs/persister-fs": "^6.0.6",
+    "@types/mocha": "^10.0.10",
+    "ts-mocha": "^11.1.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-pinecone",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5"

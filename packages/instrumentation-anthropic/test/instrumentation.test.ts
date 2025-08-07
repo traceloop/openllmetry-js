@@ -19,10 +19,10 @@ import * as assert from "assert";
 import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 
 import * as AnthropicModule from "@anthropic-ai/sdk";
 
@@ -41,7 +41,9 @@ Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test Anthropic instrumentation", async function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: AnthropicInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let anthropic: AnthropicModule.Anthropic;
@@ -59,7 +61,7 @@ describe("Test Anthropic instrumentation", async function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.ANTHROPIC_API_KEY = "test-key";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new AnthropicInstrumentation();
     instrumentation.setTracerProvider(provider);
 
@@ -295,6 +297,35 @@ describe("Test Anthropic instrumentation", async function () {
       +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]! +
         +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]!,
       chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+    );
+  }).timeout(30000);
+
+  it("should place system prompt first for messages", async () => {
+    const msg = await anthropic.messages.create({
+      max_tokens: 10,
+      model: "claude-3-opus-20240229",
+      system: "You are a helpful assistant",
+      messages: [
+        { role: "user", content: "Hi" },
+        { role: "assistant", content: "Hello" },
+      ],
+    });
+
+    assert.ok(msg);
+    const span = memoryExporter.getFinishedSpans().at(-1);
+
+    assert.ok(span);
+    assert.strictEqual(
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "system",
+    );
+    assert.strictEqual(
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "You are a helpful assistant",
+    );
+    assert.strictEqual(
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.1.role`],
+      "user",
     );
   }).timeout(30000);
 });

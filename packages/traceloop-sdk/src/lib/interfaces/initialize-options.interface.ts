@@ -2,7 +2,6 @@ import { SpanExporter, SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { TextMapPropagator, ContextManager } from "@opentelemetry/api";
 import type * as openai from "openai";
 import type * as anthropic from "@anthropic-ai/sdk";
-import type * as azure from "@azure/openai";
 import type * as cohere from "cohere-ai";
 import type * as bedrock from "@aws-sdk/client-bedrock-runtime";
 import type * as aiplatform from "@google-cloud/aiplatform";
@@ -94,7 +93,6 @@ export interface InitializeOptions {
   instrumentModules?: {
     openAI?: typeof openai.OpenAI;
     anthropic?: typeof anthropic;
-    azureOpenAI?: typeof azure;
     cohere?: typeof cohere;
     bedrock?: typeof bedrock;
     google_vertexai?: typeof vertexAI;

@@ -1,9 +1,8 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
-import { baggageUtils } from "@opentelemetry/core";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { Resource } from "@opentelemetry/resources";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
@@ -12,7 +11,6 @@ import { _configuration } from "../configuration";
 import { CONTEXT_KEY_ALLOW_TRACE_CONTENT } from "@traceloop/ai-semantic-conventions";
 import { AnthropicInstrumentation } from "@traceloop/instrumentation-anthropic";
 import { OpenAIInstrumentation } from "@traceloop/instrumentation-openai";
-import { AzureOpenAIInstrumentation } from "@traceloop/instrumentation-azure";
 import { LlamaIndexInstrumentation } from "@traceloop/instrumentation-llamaindex";
 import {
   AIPlatformInstrumentation,
@@ -29,12 +27,12 @@ import {
   ALL_INSTRUMENTATION_LIBRARIES,
   createSpanProcessor,
 } from "./span-processor";
+import { parseKeyPairsIntoRecord } from "./baggage-utils";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SpanProcessor;
 let openAIInstrumentation: OpenAIInstrumentation | undefined;
 let anthropicInstrumentation: AnthropicInstrumentation | undefined;
-let azureOpenAIInstrumentation: AzureOpenAIInstrumentation | undefined;
 let cohereInstrumentation: CohereInstrumentation | undefined;
 let vertexaiInstrumentation: VertexAIInstrumentation | undefined;
 let aiplatformInstrumentation: AIPlatformInstrumentation | undefined;
@@ -61,11 +59,6 @@ export const initInstrumentations = () => {
 
   anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
   instrumentations.push(anthropicInstrumentation);
-
-  azureOpenAIInstrumentation = new AzureOpenAIInstrumentation({
-    exceptionLogger,
-  });
-  instrumentations.push(azureOpenAIInstrumentation);
 
   cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
   instrumentations.push(cohereInstrumentation);
@@ -129,13 +122,6 @@ export const manuallyInitInstrumentations = (
     });
     instrumentations.push(anthropicInstrumentation);
     anthropicInstrumentation.manuallyInstrument(instrumentModules.anthropic);
-  }
-
-  if (instrumentModules?.azureOpenAI) {
-    const instrumentation = new AzureOpenAIInstrumentation({ exceptionLogger });
-    instrumentations.push(instrumentation as Instrumentation);
-    azureOpenAIInstrumentation = instrumentation;
-    instrumentation.manuallyInstrument(instrumentModules.azureOpenAI);
   }
 
   if (instrumentModules?.cohere) {
@@ -226,9 +212,6 @@ export const startTracing = (options: InitializeOptions) => {
     openAIInstrumentation?.setConfig({
       traceContent: false,
     });
-    azureOpenAIInstrumentation?.setConfig({
-      traceContent: false,
-    });
     llamaIndexInstrumentation?.setConfig({
       traceContent: false,
     });
@@ -255,7 +238,7 @@ export const startTracing = (options: InitializeOptions) => {
   const headers =
     options.headers ||
     (process.env.TRACELOOP_HEADERS
-      ? baggageUtils.parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
+      ? parseKeyPairsIntoRecord(process.env.TRACELOOP_HEADERS)
       : { Authorization: `Bearer ${options.apiKey}` });
 
   const traceExporter =
@@ -280,7 +263,7 @@ export const startTracing = (options: InitializeOptions) => {
   }
 
   _sdk = new NodeSDK({
-    resource: new Resource({
+    resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: options.appName || process.env.npm_package_name,
     }),
     spanProcessors,

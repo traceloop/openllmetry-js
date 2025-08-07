@@ -220,7 +220,7 @@ export class PineconeInstrumentation extends InstrumentationBase {
                 );
                 for (let i = 0; i < result_obj.matches.length; i++) {
                   const match = result_obj.matches[i];
-                  const query_result_match_event = query_result_event.addEvent(
+                  const query_result_match_event = span.addEvent(
                     `pinecone.query.result.${i}`,
                   );
                   if (match.score !== undefined) {
@@ -255,17 +255,21 @@ export class PineconeInstrumentation extends InstrumentationBase {
                     ),
                     match.id,
                   );
-                  query_result_match_event.setAttribute(
-                    EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
-                      "{i}",
-                      i.toString(),
-                    ),
-                    match.values,
-                  );
-                  query_result_match_event.addEvent(
-                    `pinecone.query.result.${i}.metadata`,
-                    match.metadata,
-                  );
+                  if (match.values !== undefined) {
+                    query_result_match_event.setAttribute(
+                      EventAttributes.VECTOR_DB_QUERY_RESULT_VALUES.replace(
+                        "{i}",
+                        i.toString(),
+                      ),
+                      match.values,
+                    );
+                  }
+                  if (match.metadata) {
+                    query_result_match_event.addEvent(
+                      `pinecone.query.result.${i}.metadata`,
+                      match.metadata,
+                    );
+                  }
                 }
               } catch (e) {
                 this._diag.debug(e);

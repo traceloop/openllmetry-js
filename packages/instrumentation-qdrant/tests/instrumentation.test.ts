@@ -18,27 +18,57 @@ import { context } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { QdrantInstrumentation } from "../src/instrumentation";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 import type * as qdrant_types from "@qdrant/js-client-rest";
 import * as assert from "assert";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { v4 as uuidv4 } from "uuid";
+import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
+import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FSPersister from "@pollyjs/persister-fs";
 
 const COLLECTION_NAME = uuidv4();
 
 const memoryExporter = new InMemorySpanExporter();
 
+Polly.register(NodeHttpAdapter);
+Polly.register(FSPersister);
+
 describe("Test Qdrant instrumentation", function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: QdrantInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let qdrantClient: qdrant_types.QdrantClient;
 
+  setupPolly({
+    adapters: ["node-http"],
+    persister: "fs",
+    recordIfMissing: false,
+    matchRequestsBy: {
+      method: true,
+      headers: false,
+      body: false,
+      order: false,
+      url: {
+        protocol: true,
+        username: false,
+        password: false,
+        hostname: true,
+        port: true,
+        pathname: true,
+        query: false,
+        hash: false,
+      },
+    },
+  });
+
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new QdrantInstrumentation({ traceContent: true });
     instrumentation.setTracerProvider(provider);
 
