@@ -147,13 +147,13 @@ const main = async () => {
         await dataset.addRow(interaction);
 
       } catch (error) {
-        console.log(`    ⚠️ Error with prompt ${i + 1}: ${error.message}`);
+        console.log(`    ⚠️ Error with prompt ${i + 1}: ${error instanceof Error ? error.message : String(error)}`);
         
         // Add error interaction data
         const errorInteraction = {
           user_id: userId,
           prompt: prompt,
-          response: `Error: ${error.message}`,
+          response: `Error: ${error instanceof Error ? error.message : String(error)}`,
           model: "gpt-3.5-turbo",
           tokens_used: 0,
           response_time_ms: Date.now() - startTime,
