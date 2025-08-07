@@ -4,22 +4,28 @@ import * as traceloop from "../src";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 
 const memoryExporter = new InMemorySpanExporter();
 
 Polly.register(NodeHttpAdapter);
+Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 let client: traceloop.TraceloopClient;
 
 describe("Dataset Integration Test", () => {
   setupPolly({
-    adapters: ["node-http"],
+    adapters: ["node-http", "fetch"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
     matchRequestsBy: {
+      method: true,
       headers: false,
+      body: true,
+      order: false,
+      url: true,
     },
   });
 
@@ -37,10 +43,9 @@ describe("Dataset Integration Test", () => {
         );
       }
     } else {
-      process.env.TRACELOOP_API_KEY =
-        process.env.TRACELOOP_API_KEY || "test-key";
-      process.env.TRACELOOP_BASE_URL =
-        process.env.TRACELOOP_BASE_URL || "https://api-staging.traceloop.com";
+      // Use dummy values when using recordings (not making live API calls)
+      process.env.TRACELOOP_API_KEY = "test-key";
+      process.env.TRACELOOP_BASE_URL = "https://api-staging.traceloop.com";
     }
 
     client = new traceloop.TraceloopClient({
@@ -66,8 +71,10 @@ describe("Dataset Integration Test", () => {
 
   it("should create and manage a dataset", async function () {
     this.timeout(10000); // 10 second timeout
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const datasetName = `integration-test-${timestamp}`;
+    // Use a fixed name for recorded tests, dynamic only during recording
+    const datasetName = process.env.RECORD_MODE === "NEW" 
+      ? `integration-test-${new Date().toISOString().replace(/[:.]/g, "-")}` 
+      : "integration-test-2025-08-06T10-09-52-844Z";
 
     // Create dataset
     const dataset = await client.datasets.create({
@@ -94,6 +101,8 @@ describe("Dataset Integration Test", () => {
     await retrievedDataset.update({
       description: "Updated integration test dataset",
     });
+    // After update, the description should be updated
+    // Note: The recorded response already shows the updated description
     assert.strictEqual(
       retrievedDataset.description,
       "Updated integration test dataset",
