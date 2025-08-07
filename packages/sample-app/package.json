@@ -28,6 +28,8 @@
     "run:pinecone": "npm run build && node dist/src/sample_pinecone.js",
     "run:langchain": "npm run build && node dist/src/sample_langchain.js",
     "run:sample_structured_output": "npm run build && node dist/src/sample_structured_output.js",
+    "run:dataset": "npm run build && node dist/src/sample_dataset.js",
+    "test:dataset": "npm run build && node dist/src/test_dataset_api.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
