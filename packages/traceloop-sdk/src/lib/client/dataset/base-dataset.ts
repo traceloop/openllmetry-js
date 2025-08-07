@@ -26,30 +26,34 @@ export abstract class BaseDataset {
       }
       throw new Error(errorMessage);
     }
-    
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
       return await response.json();
     }
-    
+
     return null;
   }
 
   protected validateDatasetId(id: string): void {
-    if (!id || typeof id !== 'string' || id.trim().length === 0) {
-      throw new Error('Dataset ID is required and must be a non-empty string');
+    if (!id || typeof id !== "string" || id.trim().length === 0) {
+      throw new Error("Dataset ID is required and must be a non-empty string");
     }
   }
 
   protected validateDatasetSlug(slug: string): void {
-    if (!slug || typeof slug !== 'string' || slug.trim().length === 0) {
-      throw new Error('Dataset slug is required and must be a non-empty string');
+    if (!slug || typeof slug !== "string" || slug.trim().length === 0) {
+      throw new Error(
+        "Dataset slug is required and must be a non-empty string",
+      );
     }
   }
 
   protected validateDatasetName(name: string): void {
-    if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      throw new Error('Dataset name is required and must be a non-empty string');
+    if (!name || typeof name !== "string" || name.trim().length === 0) {
+      throw new Error(
+        "Dataset name is required and must be a non-empty string",
+      );
     }
   }
 }

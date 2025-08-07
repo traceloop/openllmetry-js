@@ -35,7 +35,8 @@ export class TraceloopClient {
       options.baseUrl ||
       process.env.TRACELOOP_BASE_URL ||
       "https://api.traceloop.com";
-    this.projectId = options.projectId || process.env.TRACELOOP_PROJECT_ID || "default";
+    this.projectId =
+      options.projectId || process.env.TRACELOOP_PROJECT_ID || "default";
   }
 
   userFeedback = new UserFeedback(this);
@@ -47,8 +48,11 @@ export class TraceloopClient {
 
   buildDatasetPath(path: string): string {
     // Replace any path that starts with /v2/datasets with the correct project-based path
-    if (path.startsWith('/v2/datasets')) {
-      return path.replace('/v2/datasets', `/v2/projects/${this.projectId}/datasets`);
+    if (path.startsWith("/v2/datasets")) {
+      return path.replace(
+        "/v2/datasets",
+        `/v2/projects/${this.projectId}/datasets`,
+      );
     }
     return path;
   }

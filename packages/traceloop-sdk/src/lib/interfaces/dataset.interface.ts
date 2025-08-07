@@ -21,7 +21,7 @@ export interface DatasetResponse {
 
 export interface ColumnDefinition {
   name: string;
-  type: 'string' | 'number' | 'boolean' | 'date';
+  type: "string" | "number" | "boolean" | "date";
   required?: boolean;
   description?: string;
 }
@@ -36,7 +36,7 @@ export interface ColumnResponse extends ColumnDefinition {
 
 export interface ColumnUpdateOptions {
   name?: string;
-  type?: 'string' | 'number' | 'boolean' | 'date';
+  type?: "string" | "number" | "boolean" | "date";
   required?: boolean;
   description?: string;
 }

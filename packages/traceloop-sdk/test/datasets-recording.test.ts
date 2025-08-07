@@ -27,21 +27,27 @@ describe("Dataset Integration Test", () => {
     // Set environment variables
     if (process.env.RECORD_MODE === "NEW") {
       if (!process.env.TRACELOOP_API_KEY) {
-        throw new Error('TRACELOOP_API_KEY environment variable is required for recording');
+        throw new Error(
+          "TRACELOOP_API_KEY environment variable is required for recording",
+        );
       }
       if (!process.env.TRACELOOP_BASE_URL) {
-        throw new Error('TRACELOOP_BASE_URL environment variable is required for recording');
+        throw new Error(
+          "TRACELOOP_BASE_URL environment variable is required for recording",
+        );
       }
     } else {
-      process.env.TRACELOOP_API_KEY = process.env.TRACELOOP_API_KEY || "test-key";
-      process.env.TRACELOOP_BASE_URL = process.env.TRACELOOP_BASE_URL || "https://api-staging.traceloop.com";
+      process.env.TRACELOOP_API_KEY =
+        process.env.TRACELOOP_API_KEY || "test-key";
+      process.env.TRACELOOP_BASE_URL =
+        process.env.TRACELOOP_BASE_URL || "https://api-staging.traceloop.com";
     }
 
     client = new traceloop.TraceloopClient({
       appName: "dataset_integration_test",
       apiKey: process.env.TRACELOOP_API_KEY!,
       baseUrl: process.env.TRACELOOP_BASE_URL!,
-      projectId: "default"
+      projectId: "default",
     });
   });
 
@@ -58,22 +64,22 @@ describe("Dataset Integration Test", () => {
     memoryExporter.reset();
   });
 
-  it("should create and manage a dataset", async function() {
+  it("should create and manage a dataset", async function () {
     this.timeout(10000); // 10 second timeout
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const datasetName = `integration-test-${timestamp}`;
-    
+
     // Create dataset
     const dataset = await client.datasets.create({
       name: datasetName,
-      description: "Integration test dataset"
+      description: "Integration test dataset",
     });
 
     assert.ok(dataset);
     assert.ok(dataset.slug);
     assert.strictEqual(dataset.name, datasetName);
     assert.strictEqual(dataset.description, "Integration test dataset");
-    
+
     console.log(`✓ Created dataset: ${dataset.slug}`);
 
     // Get dataset
@@ -81,15 +87,18 @@ describe("Dataset Integration Test", () => {
     assert.ok(retrievedDataset);
     assert.strictEqual(retrievedDataset.slug, dataset.slug);
     assert.strictEqual(retrievedDataset.name, datasetName);
-    
+
     console.log(`✓ Retrieved dataset: ${retrievedDataset.slug}`);
 
     // Update dataset
     await retrievedDataset.update({
-      description: "Updated integration test dataset"
+      description: "Updated integration test dataset",
     });
-    assert.strictEqual(retrievedDataset.description, "Updated integration test dataset");
-    
+    assert.strictEqual(
+      retrievedDataset.description,
+      "Updated integration test dataset",
+    );
+
     console.log(`✓ Updated dataset description`);
 
     // Add columns
@@ -97,65 +106,65 @@ describe("Dataset Integration Test", () => {
       name: "name",
       type: "string",
       required: true,
-      description: "Person name"
+      description: "Person name",
     });
-    
+
     assert.ok(nameColumn);
     assert.strictEqual(nameColumn.name, "name");
     assert.strictEqual(nameColumn.type, "string");
     assert.strictEqual(nameColumn.required, true);
-    
+
     console.log(`✓ Added name column: ${nameColumn.id}`);
 
     const scoreColumn = await retrievedDataset.addColumn({
       name: "score",
       type: "number",
       required: false,
-      description: "Test score"
+      description: "Test score",
     });
-    
+
     assert.ok(scoreColumn);
     assert.strictEqual(scoreColumn.name, "score");
     assert.strictEqual(scoreColumn.type, "number");
-    
+
     console.log(`✓ Added score column: ${scoreColumn.id}`);
 
     // Get columns
     const columns = await retrievedDataset.getColumns();
     assert.ok(Array.isArray(columns));
     assert.ok(columns.length >= 2);
-    
-    const foundNameColumn = columns.find(col => col.name === "name");
-    const foundScoreColumn = columns.find(col => col.name === "score");
-    
+
+    const foundNameColumn = columns.find((col) => col.name === "name");
+    const foundScoreColumn = columns.find((col) => col.name === "score");
+
     assert.ok(foundNameColumn);
     assert.ok(foundScoreColumn);
-    
+
     console.log(`✓ Retrieved ${columns.length} columns`);
 
     // Add row
     const row = await retrievedDataset.addRow({
       name: "Test Person",
-      score: 95
+      score: 95,
     });
-    
+
     assert.ok(row);
     assert.ok(row.id);
     assert.strictEqual(row.data.name, "Test Person");
     assert.strictEqual(row.data.score, 95);
-    
+
     console.log(`✓ Added row: ${row.id}`);
 
     // Get rows
     const rows = await retrievedDataset.getRows(10, 0);
     assert.ok(Array.isArray(rows));
     assert.ok(rows.length >= 1);
-    
+
     console.log(`✓ Retrieved ${rows.length} rows`);
 
     // Clean up - delete dataset
     await retrievedDataset.delete();
-    
+
     console.log(`✓ Deleted dataset: ${dataset.slug}`);
 
     // Verify deletion
@@ -172,8 +181,8 @@ describe("Dataset Integration Test", () => {
     const result = await client.datasets.list();
     assert.ok(result);
     assert.ok(Array.isArray(result.datasets));
-    assert.ok(typeof result.total === 'number');
-    
+    assert.ok(typeof result.total === "number");
+
     console.log(`✓ Listed ${result.total} datasets`);
   });
-}); 
+});

@@ -1,9 +1,6 @@
 import { TraceloopClient } from "../traceloop-client";
 import { BaseDataset } from "./base-dataset";
-import {
-  ColumnResponse,
-  ColumnUpdateOptions
-} from "../../interfaces";
+import { ColumnResponse, ColumnUpdateOptions } from "../../interfaces";
 
 export class Column extends BaseDataset {
   private _data: ColumnResponse;
@@ -21,7 +18,7 @@ export class Column extends BaseDataset {
     return this._data.name;
   }
 
-  get type(): 'string' | 'number' | 'boolean' | 'date' {
+  get type(): "string" | "number" | "boolean" | "date" {
     return this._data.type;
   }
 
@@ -50,27 +47,39 @@ export class Column extends BaseDataset {
   }
 
   async refresh(): Promise<void> {
-    const response = await this.client.get(`/v2/datasets/${this.datasetSlug}/columns/${this.id}`);
+    const response = await this.client.get(
+      `/v2/datasets/${this.datasetSlug}/columns/${this.id}`,
+    );
     const data = await this.handleResponse(response);
     this._data = data;
   }
 
   async update(options: ColumnUpdateOptions): Promise<void> {
-    if (options.name && typeof options.name !== 'string') {
-      throw new Error('Column name must be a string');
+    if (options.name && typeof options.name !== "string") {
+      throw new Error("Column name must be a string");
     }
 
-    if (options.type && !['string', 'number', 'boolean', 'date'].includes(options.type)) {
-      throw new Error('Column type must be one of: string, number, boolean, date');
+    if (
+      options.type &&
+      !["string", "number", "boolean", "date"].includes(options.type)
+    ) {
+      throw new Error(
+        "Column type must be one of: string, number, boolean, date",
+      );
     }
 
-    const response = await this.client.put(`/v2/datasets/${this.datasetSlug}/columns/${this.id}`, options);
+    const response = await this.client.put(
+      `/v2/datasets/${this.datasetSlug}/columns/${this.id}`,
+      options,
+    );
     const data = await this.handleResponse(response);
     this._data = data;
   }
 
   async delete(): Promise<void> {
-    const response = await this.client.delete(`/v2/datasets/${this.datasetSlug}/columns/${this.id}`);
+    const response = await this.client.delete(
+      `/v2/datasets/${this.datasetSlug}/columns/${this.id}`,
+    );
     await this.handleResponse(response);
   }
 
@@ -84,14 +93,17 @@ export class Column extends BaseDataset {
     }
 
     switch (this.type) {
-      case 'string':
-        return typeof value === 'string';
-      case 'number':
-        return typeof value === 'number' && !isNaN(value) && isFinite(value);
-      case 'boolean':
-        return typeof value === 'boolean';
-      case 'date':
-        return value instanceof Date || (typeof value === 'string' && !isNaN(Date.parse(value)));
+      case "string":
+        return typeof value === "string";
+      case "number":
+        return typeof value === "number" && !isNaN(value) && isFinite(value);
+      case "boolean":
+        return typeof value === "boolean";
+      case "date":
+        return (
+          value instanceof Date ||
+          (typeof value === "string" && !isNaN(Date.parse(value)))
+        );
       default:
         return false;
     }
@@ -103,21 +115,21 @@ export class Column extends BaseDataset {
     }
 
     switch (this.type) {
-      case 'string':
+      case "string":
         return String(value);
-      case 'number': {
+      case "number": {
         const numValue = Number(value);
         return isNaN(numValue) ? null : numValue;
       }
-      case 'boolean':
-        if (typeof value === 'boolean') return value;
-        if (typeof value === 'string') {
+      case "boolean":
+        if (typeof value === "boolean") return value;
+        if (typeof value === "string") {
           const lower = value.toLowerCase();
-          if (lower === 'true' || lower === '1') return true;
-          if (lower === 'false' || lower === '0') return false;
+          if (lower === "true" || lower === "1") return true;
+          if (lower === "false" || lower === "0") return false;
         }
         return Boolean(value);
-      case 'date': {
+      case "date": {
         if (value instanceof Date) return value;
         const dateValue = new Date(value);
         return isNaN(dateValue.getTime()) ? null : dateValue;
