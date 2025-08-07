@@ -30,7 +30,7 @@ export class Datasets extends BaseDataset {
     return new Dataset(this.client, data);
   }
 
-  async list(page: number = 1, limit: number = 50): Promise<DatasetListResponse> {
+  async list(page = 1, limit = 50): Promise<DatasetListResponse> {
     if (page < 1) {
       throw new Error('Page must be greater than 0');
     }

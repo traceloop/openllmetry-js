@@ -105,9 +105,10 @@ export class Column extends BaseDataset {
     switch (this.type) {
       case 'string':
         return String(value);
-      case 'number':
+      case 'number': {
         const numValue = Number(value);
         return isNaN(numValue) ? null : numValue;
+      }
       case 'boolean':
         if (typeof value === 'boolean') return value;
         if (typeof value === 'string') {
@@ -116,10 +117,11 @@ export class Column extends BaseDataset {
           if (lower === 'false' || lower === '0') return false;
         }
         return Boolean(value);
-      case 'date':
+      case 'date': {
         if (value instanceof Date) return value;
         const dateValue = new Date(value);
         return isNaN(dateValue.getTime()) ? null : dateValue;
+      }
       default:
         return value;
     }

@@ -109,7 +109,7 @@ export class Row extends BaseDataset {
     return { ...this._data.data };
   }
 
-  toCSVRow(columns?: string[], delimiter: string = ','): string {
+  toCSVRow(columns?: string[], delimiter = ','): string {
     const columnsToUse = columns || this.getColumns();
     const values = columnsToUse.map(column => {
       const value = this._data.data[column];

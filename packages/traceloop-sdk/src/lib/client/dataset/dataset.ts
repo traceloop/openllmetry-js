@@ -115,7 +115,7 @@ export class Dataset extends BaseDataset {
     const dataWithColumns = data as any;
     if (dataWithColumns.columns) {
       const columnEntries = Object.entries(dataWithColumns.columns);
-      const newColumn = columnEntries.find(([id, col]: [string, any]) => col.name === column.name);
+      const newColumn = columnEntries.find(([, col]: [string, any]) => col.name === column.name);
       
       if (newColumn) {
         const [columnId, columnData] = newColumn;
@@ -248,7 +248,7 @@ export class Dataset extends BaseDataset {
     return result;
   }
 
-  async getRows(limit: number = 100, offset: number = 0): Promise<RowResponse[]> {
+  async getRows(limit = 100, offset = 0): Promise<RowResponse[]> {
     const response = await this.client.get(`/v2/datasets/${this.slug}/rows?limit=${limit}&offset=${offset}`);
     const data = await this.handleResponse(response);
     return data.rows || [];
