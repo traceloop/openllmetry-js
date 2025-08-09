@@ -28,6 +28,7 @@ import {
   createSpanProcessor,
 } from "./span-processor";
 import { parseKeyPairsIntoRecord } from "./baggage-utils";
+import { ImageUploader } from "../images";
 
 let _sdk: NodeSDK;
 let _spanProcessor: SpanProcessor;
@@ -46,14 +47,25 @@ let togetherInstrumentation: TogetherInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
-export const initInstrumentations = () => {
+export const initInstrumentations = (
+  apiKey?: string,
+  baseUrl?: string
+) => {
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
+  // Create image upload callback if we have credentials
+  let uploadBase64ImageCallback;
+  if (apiKey && baseUrl) {
+    const imageUploader = new ImageUploader(baseUrl, apiKey);
+    uploadBase64ImageCallback = imageUploader.uploadBase64Image.bind(imageUploader);
+  }
+
   openAIInstrumentation = new OpenAIInstrumentation({
     enrichTokens,
     exceptionLogger,
+    uploadBase64Image: uploadBase64ImageCallback,
   });
   instrumentations.push(openAIInstrumentation);
 
@@ -99,10 +111,19 @@ export const initInstrumentations = () => {
 
 export const manuallyInitInstrumentations = (
   instrumentModules: InitializeOptions["instrumentModules"],
+  apiKey?: string,
+  baseUrl?: string
 ) => {
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
+
+  // Create image upload callback if we have credentials
+  let uploadBase64ImageCallback;
+  if (apiKey && baseUrl) {
+    const imageUploader = new ImageUploader(baseUrl, apiKey);
+    uploadBase64ImageCallback = imageUploader.uploadBase64Image.bind(imageUploader);
+  }
 
   // Clear the instrumentations array that was initialized by default
   instrumentations.length = 0;
@@ -111,6 +132,7 @@ export const manuallyInitInstrumentations = (
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens,
       exceptionLogger,
+      uploadBase64Image: uploadBase64ImageCallback,
     });
     instrumentations.push(openAIInstrumentation);
     openAIInstrumentation.manuallyInstrument(instrumentModules.openAI);
@@ -205,8 +227,14 @@ export const manuallyInitInstrumentations = (
  * @throws {InitializationError} if the configuration is invalid or if failed to fetch feature data.
  */
 export const startTracing = (options: InitializeOptions) => {
+  const apiKey = options.apiKey || process.env.TRACELOOP_API_KEY;
+  const baseUrl = options.baseUrl || process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com";
+  
   if (Object.keys(options.instrumentModules || {}).length > 0) {
-    manuallyInitInstrumentations(options.instrumentModules);
+    manuallyInitInstrumentations(options.instrumentModules, apiKey, baseUrl);
+  } else {
+    // Initialize default instrumentations if no manual modules specified
+    initInstrumentations(apiKey, baseUrl);
   }
   if (!shouldSendTraces()) {
     openAIInstrumentation?.setConfig({
