@@ -1,5 +1,4 @@
 import type { ImageUploadCallback } from "./types";
-import type { ChatCompletionMessageParam } from "openai/resources";
 
 export interface MessageContent {
   type: string;
@@ -109,7 +108,7 @@ export function hasImagesInMessages(messages: any[]): boolean {
     }
     
     if (Array.isArray(message.content)) {
-      return message.content.some(content => 
+      return message.content.some((content: any) => 
         content.type === "image_url" && 
         content.image_url?.url?.startsWith("data:image/")
       );
