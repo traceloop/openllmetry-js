@@ -1,11 +1,21 @@
 /**
  * Simple image generation sample - matches the user's requested code
  * with Traceloop instrumentation automatically added
+ * 
+ * Setup:
+ * 1. Create a .env file in the sample-app directory with:
+ *    OPENAI_API_KEY=your_openai_key_here
+ *    TRACELOOP_API_KEY=your_traceloop_key_here
+ * 2. Run: node sample_app/simple_image_generation.mjs
  */
 
+import dotenv from "dotenv";
 import { initialize } from "@traceloop/node-server-sdk";
 import OpenAI from "openai";
 import fs from "fs";
+
+// Load environment variables
+dotenv.config();
 
 // Initialize Traceloop - this enables automatic instrumentation
 initialize({

@@ -6,17 +6,23 @@
  * 2. Generate images using OpenAI DALL-E API
  * 3. Automatic tracing and image upload to Traceloop backend
  * 
- * Prerequisites:
- * - Set OPENAI_API_KEY environment variable
- * - Set TRACELOOP_API_KEY environment variable (optional, for full functionality)
+ * Setup:
+ * 1. Create a .env file in the sample-app directory with:
+ *    OPENAI_API_KEY=your_openai_key_here
+ *    TRACELOOP_API_KEY=your_traceloop_key_here (optional, for full functionality)
+ * 2. Run: node sample_app/openai_image_generation_sample.mjs
  * 
- * Usage:
+ * Alternative: Set environment variables directly:
  * OPENAI_API_KEY=your_key TRACELOOP_API_KEY=your_key node openai_image_generation_sample.mjs
  */
 
+import dotenv from "dotenv";
 import { initialize } from "@traceloop/node-server-sdk";
 import OpenAI from "openai";
 import fs from "fs";
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Initialize Traceloop SDK with image support
 console.log("🚀 Initializing Traceloop SDK with image generation support...");

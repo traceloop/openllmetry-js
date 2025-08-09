@@ -28,6 +28,8 @@
     "run:pinecone": "npm run build && node dist/src/sample_pinecone.js",
     "run:langchain": "npm run build && node dist/src/sample_langchain.js",
     "run:sample_structured_output": "npm run build && node dist/src/sample_structured_output.js",
+    "run:image_generation": "node sample_app/simple_image_generation.mjs",
+    "run:image_generation_full": "node sample_app/openai_image_generation_sample.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -57,6 +59,7 @@
     "cheerio": "^1.1.0",
     "chromadb": "^3.0.9",
     "cohere-ai": "^7.17.1",
+    "dotenv": "^17.2.1",
     "hnswlib-node": "^3.0.0",
     "langchain": "^0.3.30",
     "llamaindex": "^0.11.19",
