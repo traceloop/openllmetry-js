@@ -12,38 +12,50 @@ import type {
  * Calculate completion tokens for image generation based on OpenAI's actual token costs
  * 
  * Token costs based on OpenAI documentation:
- * Quality    Square (1024×1024)    Portrait (1024×1536)    Landscape (1536×1024)
- * Low        272 tokens            408 tokens              400 tokens
- * Medium     1056 tokens           1584 tokens             1568 tokens  
- * High       4160 tokens           6240 tokens             6208 tokens
+ * For gpt-image-1:     Square (1024×1024)    Portrait (1024×1536)    Landscape (1536×1024)
+ * Low                  272 tokens            408 tokens              400 tokens
+ * Medium               1056 tokens           1584 tokens             1568 tokens  
+ * High                 4160 tokens           6240 tokens             6208 tokens
+ * 
+ * For DALL-E 3:
+ * Standard             1056 tokens           1584 tokens             1568 tokens  
+ * HD                   4160 tokens           6240 tokens             6208 tokens
  */
 function calculateImageGenerationTokens(params: any, imageCount: number): number {
   const size = params?.size || "1024x1024";
-  const quality = params?.quality || "standard"; // OpenAI defaults to "standard" which maps to "medium"
+  const quality = params?.quality || (params?.model === "gpt-image-1" ? "high" : "standard");
   
-  // Map quality to token costs
+  // Map quality to token costs (supports both gpt-image-1 and DALL-E 3 formats)
   const tokenCosts: Record<string, Record<string, number>> = {
-    "standard": { // Maps to "medium" quality
+    // gpt-image-1 quality values
+    "low": {
+      "1024x1024": 272,
+      "1024x1536": 408,
+      "1536x1024": 400,
+    },
+    "medium": {
       "1024x1024": 1056,
       "1024x1536": 1584,
       "1536x1024": 1568,
     },
-    "hd": { // Maps to "high" quality  
+    "high": {
+      "1024x1024": 4160,
+      "1024x1536": 6240,
+      "1536x1024": 6208,
+    },
+    // DALL-E 3 quality values (same costs as medium/high above)
+    "standard": {
+      "1024x1024": 1056,
+      "1024x1536": 1584,
+      "1536x1024": 1568,
+    },
+    "hd": {
       "1024x1024": 4160,
       "1024x1536": 6240,
       "1536x1024": 6208,
     }
   };
   
-  // For low quality (not supported by OpenAI API directly, but included for completeness)
-  if (quality === "low") {
-    const lowQualityCosts: Record<string, number> = {
-      "1024x1024": 272,
-      "1024x1536": 408, 
-      "1536x1024": 400,
-    };
-    return (lowQualityCosts[size] || 272) * imageCount;
-  }
   
   // Get tokens per image for the given quality and size
   const tokensPerImage = tokenCosts[quality]?.[size] || tokenCosts["standard"]["1024x1024"];
