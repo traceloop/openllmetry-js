@@ -90,17 +90,30 @@ async function processImageInRequest(
         filename = `input_image_${index}.png`;
       }
     } else if (image && typeof image === "object") {
-      // Handle File objects or other binary data
-      if (image.arrayBuffer && typeof image.arrayBuffer === "function") {
-        const arrayBuffer = await image.arrayBuffer();
-        const buffer = new Uint8Array(arrayBuffer);
-        // Convert buffer to base64 safely without stack overflow
-        let binary = '';
-        for (let i = 0; i < buffer.byteLength; i++) {
-          binary += String.fromCharCode(buffer[i]);
-        }
-        base64Data = btoa(binary);
-        filename = image.name || `input_image_${index}.png`;
+      // Handle Node.js Buffer objects and ReadStream
+      if (Buffer.isBuffer(image)) {
+        // Node.js Buffer
+        base64Data = image.toString("base64");
+        filename = `input_image_${index}.png`;
+      } else if (image.read && typeof image.read === "function") {
+        // Node.js ReadStream (from fs.createReadStream)
+        const chunks: Buffer[] = [];
+        return new Promise((resolve) => {
+          image.on("data", (chunk: Buffer) => chunks.push(chunk));
+          image.on("end", async () => {
+            try {
+              const buffer = Buffer.concat(chunks);
+              const base64Data = buffer.toString("base64");
+              const filename = image.path || `input_image_${index}.png`;
+              const url = await uploadCallback(traceId, spanId, filename, base64Data);
+              resolve(url);
+            } catch (error) {
+              console.error("Error processing stream image:", error);
+              resolve(null);
+            }
+          });
+          image.on("error", () => resolve(null));
+        });
       } else {
         return null;
       }
@@ -336,17 +349,11 @@ export async function setImageGenerationResponseAttributes(
         const traceId = span.spanContext().traceId;
         const spanId = span.spanContext().spanId;
         
-        // Fetch the image from OpenAI URL and convert to base64
+        // Fetch the image from OpenAI URL and convert to base64 (Node.js)
         const response = await fetch(firstImage.url);
         const arrayBuffer = await response.arrayBuffer();
-        const buffer = new Uint8Array(arrayBuffer);
-        
-        // Convert buffer to base64 safely
-        let binary = '';
-        for (let i = 0; i < buffer.byteLength; i++) {
-          binary += String.fromCharCode(buffer[i]);
-        }
-        const base64Data = btoa(binary);
+        const buffer = Buffer.from(arrayBuffer);
+        const base64Data = buffer.toString("base64");
         
         const uploadedUrl = await uploadCallback(
           traceId,
