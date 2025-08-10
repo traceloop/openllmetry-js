@@ -66,7 +66,6 @@ export const initInstrumentations = (
   // Create or update OpenAI instrumentation
   if (openAIInstrumentation) {
     // Update existing instrumentation with new callback
-    console.log("🔧 Updating existing OpenAI instrumentation with callback:", !!uploadBase64ImageCallback);
     openAIInstrumentation.setConfig({
       enrichTokens,
       exceptionLogger,
@@ -74,14 +73,12 @@ export const initInstrumentations = (
     });
   } else {
     // Create new instrumentation
-    console.log("🚨 Creating NEW OpenAI instrumentation with callback:", !!uploadBase64ImageCallback);
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens,
       exceptionLogger,
       uploadBase64Image: uploadBase64ImageCallback,
     });
     instrumentations.push(openAIInstrumentation);
-    console.log("📝 Added OpenAI instrumentation to array. Total instrumentations:", instrumentations.length);
   }
 
   if (!anthropicInstrumentation) {

@@ -115,7 +115,6 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
   private patch(moduleExports: typeof openai, moduleVersion?: string) {
     this._diag.debug(`Patching openai@${moduleVersion}`);
-    console.log("🚨 PATCH CALLED: OpenAI instrumentation patch() method executing");
 
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
