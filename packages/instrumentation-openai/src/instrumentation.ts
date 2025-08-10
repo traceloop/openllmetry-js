@@ -88,17 +88,17 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._wrap(
         module.Images.prototype,
         "generate",
-        wrapImageGeneration(this.tracer, this._config.uploadBase64Image),
+        wrapImageGeneration(this.tracer, this._config.uploadBase64Image, this._config),
       );
       this._wrap(
         module.Images.prototype,
         "edit",
-        wrapImageEdit(this.tracer, this._config.uploadBase64Image),
+        wrapImageEdit(this.tracer, this._config.uploadBase64Image, this._config),
       );
       this._wrap(
         module.Images.prototype,
         "createVariation",
-        wrapImageVariation(this.tracer, this._config.uploadBase64Image),
+        wrapImageVariation(this.tracer, this._config.uploadBase64Image, this._config),
       );
     }
   }
@@ -115,6 +115,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
   private patch(moduleExports: typeof openai, moduleVersion?: string) {
     this._diag.debug(`Patching openai@${moduleVersion}`);
+    console.log("🚨 PATCH CALLED: OpenAI instrumentation patch() method executing");
 
     // Old version of OpenAI API (v3.1.0)
     if ((moduleExports as any).OpenAIApi) {
@@ -141,20 +142,21 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       );
       
       // Image generation instrumentation
+      
       this._wrap(
         moduleExports.OpenAI.Images.prototype,
         "generate",
-        wrapImageGeneration(this.tracer, this._config.uploadBase64Image),
+        wrapImageGeneration(this.tracer, this._config.uploadBase64Image, this._config),
       );
       this._wrap(
         moduleExports.OpenAI.Images.prototype,
         "edit",
-        wrapImageEdit(this.tracer, this._config.uploadBase64Image),
+        wrapImageEdit(this.tracer, this._config.uploadBase64Image, this._config),
       );
       this._wrap(
         moduleExports.OpenAI.Images.prototype,
         "createVariation",
-        wrapImageVariation(this.tracer, this._config.uploadBase64Image),
+        wrapImageVariation(this.tracer, this._config.uploadBase64Image, this._config),
       );
     }
     return moduleExports;

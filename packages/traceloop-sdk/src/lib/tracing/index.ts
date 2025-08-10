@@ -51,6 +51,7 @@ export const initInstrumentations = (
   apiKey?: string,
   baseUrl?: string
 ) => {
+
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
@@ -62,15 +63,31 @@ export const initInstrumentations = (
     uploadBase64ImageCallback = imageUploader.uploadBase64Image.bind(imageUploader);
   }
 
-  openAIInstrumentation = new OpenAIInstrumentation({
-    enrichTokens,
-    exceptionLogger,
-    uploadBase64Image: uploadBase64ImageCallback,
-  });
-  instrumentations.push(openAIInstrumentation);
+  // Create or update OpenAI instrumentation
+  if (openAIInstrumentation) {
+    // Update existing instrumentation with new callback
+    console.log("🔧 Updating existing OpenAI instrumentation with callback:", !!uploadBase64ImageCallback);
+    openAIInstrumentation.setConfig({
+      enrichTokens,
+      exceptionLogger,
+      uploadBase64Image: uploadBase64ImageCallback,
+    });
+  } else {
+    // Create new instrumentation
+    console.log("🚨 Creating NEW OpenAI instrumentation with callback:", !!uploadBase64ImageCallback);
+    openAIInstrumentation = new OpenAIInstrumentation({
+      enrichTokens,
+      exceptionLogger,
+      uploadBase64Image: uploadBase64ImageCallback,
+    });
+    instrumentations.push(openAIInstrumentation);
+    console.log("📝 Added OpenAI instrumentation to array. Total instrumentations:", instrumentations.length);
+  }
 
-  anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
-  instrumentations.push(anthropicInstrumentation);
+  if (!anthropicInstrumentation) {
+    anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
+    instrumentations.push(anthropicInstrumentation);
+  }
 
   cohereInstrumentation = new CohereInstrumentation({ exceptionLogger });
   instrumentations.push(cohereInstrumentation);

@@ -24,32 +24,22 @@ TRACELOOP_API_KEY=your_traceloop_key_here
 
 ### 2. Run the Samples
 
-**Simple Image Generation** (minimal example):
+**Image Generation Sample** (with variations and error handling):
 ```bash
 cd packages/sample-app
 pnpm run:image_generation
 ```
 
-**Full Featured Sample** (with variations and error handling):
-```bash
-cd packages/sample-app
-pnpm run:image_generation_full
-```
-
 ## 📱 Available Samples
 
-### `simple_image_generation.mjs`
-- **Purpose**: Minimal example matching the basic OpenAI image generation API usage
-- **Features**: DALL-E 3 image generation with automatic instrumentation
-- **Output**: Saves generated image as `otter.png`
-
-### `openai_image_generation_sample.mjs` 
-- **Purpose**: Comprehensive example with full feature demonstration
+### `sample_openai_image_generation.ts`
+- **Purpose**: Comprehensive TypeScript example with full feature demonstration
 - **Features**: 
   - Image generation with DALL-E 3
   - Image variations
   - Error handling and validation
   - Detailed console output
+  - Proper TypeScript types and null safety
 - **Output**: Saves images as `otter.png` and `otter_variation.png`
 
 ## 🔍 What Gets Traced

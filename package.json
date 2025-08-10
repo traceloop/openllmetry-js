@@ -4,7 +4,11 @@
   "license": "Apache-2.0",
   "scripts": {
     "build:all": "pnpm nx run-many -t build",
-    "build:affected": "pnpm nx affected -t build"
+    "build:affected": "pnpm nx affected -t build",
+    "build:deps": "pnpm nx run-many --targets=build --projects=@traceloop/instrumentation-openai,@traceloop/node-server-sdk",
+    "dev:sample": "pnpm build:deps && pnpm --filter sample-app run:image_generation",
+    "dev:run": "node dev-run.js",
+    "postinstall": "pnpm build:deps"
   },
   "private": true,
   "devDependencies": {
