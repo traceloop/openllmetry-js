@@ -29,8 +29,8 @@
     "run:langchain": "npm run build && node dist/src/sample_langchain.js",
     "run:sample_structured_output": "npm run build && node dist/src/sample_structured_output.js",
     "run:image_generation": "npm run build && node dist/src/sample_openai_image_generation.js",
-    "test:edit": "npm run build && node dist/src/test_edit_only.js",
-    "test:generate": "npm run build && node dist/src/test_generate_only.js",
+    "run:sample_edit": "npm run build && node dist/src/test_edit_only.js",
+    "run:sample_generate": "npm run build && node dist/src/test_generate_only.js",
     "dev:image_generation": "pnpm --filter @traceloop/instrumentation-openai build && pnpm --filter @traceloop/node-server-sdk build && npm run build && node dist/src/sample_openai_image_generation.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
