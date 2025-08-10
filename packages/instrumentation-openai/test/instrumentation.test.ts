@@ -618,4 +618,136 @@ describe("Test OpenAI instrumentation", async function () {
       { location: "Chicago, IL" },
     );
   });
+
+  it("should set attributes in span for image generation", async () => {
+    const response = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt: "A test image",
+      n: 1,
+      size: "1024x1024",
+      quality: "high",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const imageSpan = spans.find((span) => span.name === "openai.images.generate");
+    assert.ok(imageSpan);
+
+    assert.strictEqual(imageSpan.attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+    assert.strictEqual(imageSpan.attributes["llm.request.type"], "image_generation");
+    assert.strictEqual(imageSpan.attributes[SpanAttributes.LLM_REQUEST_MODEL], "gpt-image-1");
+    assert.strictEqual(imageSpan.attributes["llm.request.image.size"], "1024x1024");
+    assert.strictEqual(imageSpan.attributes["llm.request.image.count"], 1);
+    assert.strictEqual(imageSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`], "A test image");
+    assert.strictEqual(imageSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`], "user");
+    
+    // Check token usage calculation (high quality 1024x1024 = 4160 tokens)
+    assert.strictEqual(imageSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS], 4160);
+    assert.strictEqual(imageSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 4160);
+    
+    // Check response content
+    assert.ok(imageSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]);
+    assert.strictEqual(imageSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`], "assistant");
+  });
+
+  it("should set attributes in span for image editing", async () => {
+    // Create a mock File-like object for the image parameter
+    const imageData = Buffer.from("fake image data");
+    const mockImageFile = new File([imageData], "test.png", { type: "image/png" });
+    
+    const response = await openai.images.edit({
+      image: mockImageFile,
+      prompt: "Add a red hat",
+      model: "gpt-image-1",
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const editSpan = spans.find((span) => span.name === "openai.images.edit");
+    assert.ok(editSpan);
+
+    assert.strictEqual(editSpan.attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+    assert.strictEqual(editSpan.attributes["llm.request.type"], "image_edit");
+    assert.strictEqual(editSpan.attributes[SpanAttributes.LLM_REQUEST_MODEL], "gpt-image-1");
+    assert.strictEqual(editSpan.attributes["llm.request.image.size"], "1024x1024");
+    assert.strictEqual(editSpan.attributes["llm.request.image.count"], 1);
+    assert.strictEqual(editSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`], "Add a red hat");
+    assert.strictEqual(editSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`], "user");
+    
+    // Check token usage calculation
+    assert.strictEqual(editSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS], 4160);
+    assert.ok(editSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include prompt tokens
+    
+    // Check response content
+    assert.ok(editSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]);
+    assert.strictEqual(editSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`], "assistant");
+  });
+
+  it("should set attributes in span for image variation", async () => {
+    // Create a mock File-like object for the image parameter
+    const imageData = Buffer.from("fake image data");
+    const mockImageFile = new File([imageData], "test.png", { type: "image/png" });
+    
+    const response = await openai.images.createVariation({
+      image: mockImageFile,
+      model: "gpt-image-1", 
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const variationSpan = spans.find((span) => span.name === "openai.images.createVariation");
+    assert.ok(variationSpan);
+
+    assert.strictEqual(variationSpan.attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+    assert.strictEqual(variationSpan.attributes["llm.request.type"], "image_variation");
+    assert.strictEqual(variationSpan.attributes[SpanAttributes.LLM_REQUEST_MODEL], "gpt-image-1");
+    assert.strictEqual(variationSpan.attributes["llm.request.image.size"], "1024x1024");
+    assert.strictEqual(variationSpan.attributes["llm.request.image.count"], 1);
+    
+    // Check token usage calculation
+    assert.strictEqual(variationSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS], 4160);
+    assert.ok(variationSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include estimated input tokens
+    
+    // Check response content
+    assert.ok(variationSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]);
+    assert.strictEqual(variationSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`], "assistant");
+  });
+
+  it("should calculate correct tokens for different quality levels", async () => {
+    // Test low quality
+    const lowResponse = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt: "Test low quality",
+      quality: "low",
+      size: "1024x1024",
+    });
+
+    // Test medium quality  
+    const mediumResponse = await openai.images.generate({
+      model: "gpt-image-1", 
+      prompt: "Test medium quality",
+      quality: "medium",
+      size: "1024x1024",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const lowSpan = spans.find((span) => 
+      span.name === "openai.images.generate" && 
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] === "Test low quality"
+    );
+    const mediumSpan = spans.find((span) => 
+      span.name === "openai.images.generate" && 
+      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] === "Test medium quality"
+    );
+
+    assert.ok(lowSpan);
+    assert.ok(mediumSpan);
+
+    // Low quality should be 272 tokens
+    assert.strictEqual(lowSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS], 272);
+    
+    // Medium quality should be 1056 tokens
+    assert.strictEqual(mediumSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS], 1056);
+  });
 });
