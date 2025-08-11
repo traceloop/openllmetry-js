@@ -84,22 +84,23 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         this.patchOpenAI("completion"),
       );
       
-      // Manual image generation instrumentation
-      this._wrap(
-        module.Images.prototype,
-        "generate",
-        wrapImageGeneration(this.tracer, this._config.uploadBase64Image, this._config),
-      );
-      this._wrap(
-        module.Images.prototype,
-        "edit",
-        wrapImageEdit(this.tracer, this._config.uploadBase64Image, this._config),
-      );
-      this._wrap(
-        module.Images.prototype,
-        "createVariation",
-        wrapImageVariation(this.tracer, this._config.uploadBase64Image, this._config),
-      );
+      if (module.Images) {
+        this._wrap(
+          module.Images.prototype,
+          "generate",
+          wrapImageGeneration(this.tracer, this._config.uploadBase64Image, this._config),
+        );
+        this._wrap(
+          module.Images.prototype,
+          "edit",
+          wrapImageEdit(this.tracer, this._config.uploadBase64Image, this._config),
+        );
+        this._wrap(
+          module.Images.prototype,
+          "createVariation",
+          wrapImageVariation(this.tracer, this._config.uploadBase64Image, this._config),
+        );
+      }
     }
   }
 
@@ -140,23 +141,23 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         this.patchOpenAI("completion"),
       );
       
-      // Image generation instrumentation
-      
-      this._wrap(
-        moduleExports.OpenAI.Images.prototype,
-        "generate",
-        wrapImageGeneration(this.tracer, this._config.uploadBase64Image, this._config),
-      );
-      this._wrap(
-        moduleExports.OpenAI.Images.prototype,
-        "edit",
-        wrapImageEdit(this.tracer, this._config.uploadBase64Image, this._config),
-      );
-      this._wrap(
-        moduleExports.OpenAI.Images.prototype,
-        "createVariation",
-        wrapImageVariation(this.tracer, this._config.uploadBase64Image, this._config),
-      );
+      if (moduleExports.OpenAI.Images) {
+        this._wrap(
+          moduleExports.OpenAI.Images.prototype,
+          "generate",
+          wrapImageGeneration(this.tracer, this._config.uploadBase64Image, this._config),
+        );
+        this._wrap(
+          moduleExports.OpenAI.Images.prototype,
+          "edit",
+          wrapImageEdit(this.tracer, this._config.uploadBase64Image, this._config),
+        );
+        this._wrap(
+          moduleExports.OpenAI.Images.prototype,
+          "createVariation",
+          wrapImageVariation(this.tracer, this._config.uploadBase64Image, this._config),
+        );
+      }
     }
     return moduleExports;
   }
@@ -178,10 +179,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
       this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
       
-      // Unwrap image generation methods
-      this._unwrap(moduleExports.OpenAI.Images.prototype, "generate");
-      this._unwrap(moduleExports.OpenAI.Images.prototype, "edit");
-      this._unwrap(moduleExports.OpenAI.Images.prototype, "createVariation");
+      if (moduleExports.OpenAI.Images) {
+        this._unwrap(moduleExports.OpenAI.Images.prototype, "generate");
+        this._unwrap(moduleExports.OpenAI.Images.prototype, "edit");
+        this._unwrap(moduleExports.OpenAI.Images.prototype, "createVariation");
+      }
     }
   }
 
@@ -309,6 +311,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         typeof params.extraAttributes === "object"
       ) {
         Object.keys(params.extraAttributes).forEach((key: string) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           attributes[key] = params.extraAttributes![key];
         });
       }

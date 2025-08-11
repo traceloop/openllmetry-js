@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { trace, Span, SpanKind, Attributes } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import type { ImageUploadCallback } from "./types";
@@ -23,7 +24,7 @@ import type {
  */
 function calculateImageGenerationTokens(params: any, imageCount: number): number {
   const size = params?.size || "1024x1024";
-  const quality = params?.quality || (params?.model === "gpt-image-1" ? "high" : "standard");
+  const quality = params?.quality || (params?.model === "gpt-image-1" ? "auto" : "standard");
   
   // Map quality to token costs (supports both gpt-image-1 and DALL-E 3 formats)
   const tokenCosts: Record<string, Record<string, number>> = {
@@ -43,6 +44,11 @@ function calculateImageGenerationTokens(params: any, imageCount: number): number
       "1024x1536": 6240,
       "1536x1024": 6208,
     },
+    "auto": {
+      "1024x1024": 1056,
+      "1024x1536": 1584,
+      "1536x1024": 1568,
+    },
     // DALL-E 3 quality values (same costs as medium/high above)
     "standard": {
       "1024x1024": 1056,
@@ -55,8 +61,6 @@ function calculateImageGenerationTokens(params: any, imageCount: number): number
       "1536x1024": 6208,
     }
   };
-  
-  
   // Get tokens per image for the given quality and size
   const tokensPerImage = tokenCosts[quality]?.[size] || tokenCosts["standard"]["1024x1024"];
   
@@ -64,11 +68,11 @@ function calculateImageGenerationTokens(params: any, imageCount: number): number
 }
 
 async function processImageInRequest(
-  image: any,
+    image: any,
   traceId: string,
   spanId: string,
   uploadCallback: ImageUploadCallback,
-  index: number = 0
+  index = 0
 ): Promise<string | null> {
   try {
     let base64Data: string;
@@ -77,26 +81,21 @@ async function processImageInRequest(
     if (typeof image === "string") {
       // Could be a file path, base64 string, or URL
       if (image.startsWith("data:image/")) {
-        // Data URL
         const commaIndex = image.indexOf(",");
         base64Data = image.substring(commaIndex + 1);
         filename = `input_image_${index}.png`;
       } else if (image.startsWith("http")) {
-        // URL - we can't process this directly
         return null;
       } else {
-        // Assume it's base64 or file path
         base64Data = image;
         filename = `input_image_${index}.png`;
       }
     } else if (image && typeof image === "object") {
       // Handle Node.js Buffer objects and ReadStream
       if (Buffer.isBuffer(image)) {
-        // Node.js Buffer
         base64Data = image.toString("base64");
         filename = `input_image_${index}.png`;
       } else if (image.read && typeof image.read === "function") {
-        // Node.js ReadStream (from fs.createReadStream)
         const chunks: Buffer[] = [];
         return new Promise((resolve) => {
           image.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -112,7 +111,10 @@ async function processImageInRequest(
               resolve(null);
             }
           });
-          image.on("error", () => resolve(null));
+          image.on("error", (error: Error) => {
+            console.error("Error reading image stream:", error);
+            resolve(null);
+          });
         });
       } else {
         return null;
@@ -155,7 +157,6 @@ export function setImageGenerationRequestAttributes(
     attributes["gen_ai.request.image.count"] = params.n;
   }
 
-  // Set prompt
   if (params.prompt) {
     attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
     attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
@@ -187,7 +188,6 @@ export async function setImageEditRequestAttributes(
     attributes["gen_ai.request.image.count"] = params.n;
   }
 
-  // Set prompt
   if (params.prompt) {
     attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
     attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
@@ -273,16 +273,11 @@ export async function setImageGenerationResponseAttributes(
   response: ImagesResponse,
   uploadCallback?: ImageUploadCallback,
   instrumentationConfig?: { enrichTokens?: boolean },
-  params?: any
+    params?: any
 ): Promise<void> {
   const attributes: Attributes = {};
 
-  // Capture response model if available (note: OpenAI Images API doesn't return model in response)
-  // The model information is captured in the request attributes
-
-  // Add usage information for image generation
   if (response.data && response.data.length > 0) {
-    // Calculate completion tokens based on OpenAI's actual token costs for image generation
     const completionTokens = calculateImageGenerationTokens(params, response.data.length);
     attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS] = completionTokens;
     
@@ -291,17 +286,12 @@ export async function setImageGenerationResponseAttributes(
       try {
         let estimatedPromptTokens = 0;
         
-        // For text prompts (image generation and editing)
         if (params?.prompt) {
-          // Simple token estimation: roughly 4 characters per token for English text
           estimatedPromptTokens += Math.ceil(params.prompt.length / 4);
         }
         
-        // For image inputs (editing and variations)
         if (params?.image) {
-          // For input images, use a base estimation (actual input image token cost varies by fidelity)
-          // OpenAI doesn't specify exact input image token costs, so we use a reasonable estimate
-          estimatedPromptTokens += 272; // Base cost similar to generating a low quality 1024x1024 image
+          estimatedPromptTokens += 272;
         }
         
         if (estimatedPromptTokens > 0) {
@@ -309,12 +299,10 @@ export async function setImageGenerationResponseAttributes(
         }
         
         attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS] = estimatedPromptTokens + completionTokens;
-      } catch (error) {
-        // If token calculation fails, continue without it
-        attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS] = response.data.length;
+      } catch {
+        attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS] = completionTokens;
       }
     } else {
-      // When enrichTokens is disabled, just set total = completion tokens
       attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS] = completionTokens;
     }
   }
@@ -322,7 +310,6 @@ export async function setImageGenerationResponseAttributes(
   if (response.data && response.data.length > 0) {
     const firstImage = response.data[0];
     
-    // Handle base64 response
     if (firstImage.b64_json && uploadCallback) {
       try {
         const traceId = span.spanContext().traceId;
@@ -343,13 +330,11 @@ export async function setImageGenerationResponseAttributes(
         console.error("Failed to upload generated image:", error);
       }
     }
-    // Handle URL response - fetch and upload to SDK
     else if (firstImage.url && uploadCallback) {
       try {
         const traceId = span.spanContext().traceId;
         const spanId = span.spanContext().spanId;
         
-        // Fetch the image from OpenAI URL and convert to base64 (Node.js)
         const response = await fetch(firstImage.url);
         const arrayBuffer = await response.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
@@ -368,14 +353,12 @@ export async function setImageGenerationResponseAttributes(
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
       } catch (error) {
         console.error("Failed to fetch and upload generated image:", error);
-        // Fallback to original URL if upload fails
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] = JSON.stringify([
           { type: "image_url", image_url: { url: firstImage.url } }
         ]);
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
       }
     }
-    // Handle URL response without upload callback
     else if (firstImage.url) {
       attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] = JSON.stringify([
         { type: "image_url", image_url: { url: firstImage.url } }
@@ -383,7 +366,6 @@ export async function setImageGenerationResponseAttributes(
       attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
     }
     
-    // Set revised prompt if available
     if (firstImage.revised_prompt) {
       attributes["gen_ai.response.revised_prompt"] = firstImage.revised_prompt;
     }
@@ -401,8 +383,8 @@ export function wrapImageGeneration(
   uploadCallback?: ImageUploadCallback,
   instrumentationConfig?: { enrichTokens?: boolean }
 ) {
-  return function (original: Function) {
-    return function (this: any, ...args: any[]) {
+    return function (original: (...args: any[]) => any) {
+        return function (this: any, ...args: any[]) {
       const params = args[0] as ImageGenerateParams;
       
       const span = tracer.startSpan("openai.images.generate", {
@@ -413,12 +395,10 @@ export function wrapImageGeneration(
         },
       });
 
-      
       const response = original.apply(this, args);
       
-      // Handle both promise and direct response
       if (response && typeof response.then === 'function') {
-        return response.then(async (result: any) => {
+                return response.then(async (result: any) => {
           try {
             setImageGenerationRequestAttributes(span, params);
             await setImageGenerationResponseAttributes(span, result, uploadCallback, instrumentationConfig, params);
@@ -437,7 +417,6 @@ export function wrapImageGeneration(
       } else {
         try {
           setImageGenerationRequestAttributes(span, params);
-          // For sync responses, we can't await the response processing
           return response;
         } catch (error) {
           span.recordException(error as Error);
@@ -455,8 +434,8 @@ export function wrapImageEdit(
   uploadCallback?: ImageUploadCallback,
   instrumentationConfig?: { enrichTokens?: boolean }
 ) {
-  return function (original: Function) {
-    return function (this: any, ...args: any[]) {
+    return function (original: (...args: any[]) => any) {
+        return function (this: any, ...args: any[]) {
       const params = args[0] as ImageEditParams;
       
       const span = tracer.startSpan("openai.images.edit", {
@@ -467,7 +446,6 @@ export function wrapImageEdit(
         },
       });
 
-      // Set request attributes asynchronously in parallel with the API call
       const setRequestAttributesPromise = setImageEditRequestAttributes(span, params, uploadCallback)
         .catch(error => {
           console.error("Error setting image edit request attributes:", error);
@@ -475,11 +453,9 @@ export function wrapImageEdit(
       
       const response = original.apply(this, args);
       
-      // Handle both promise and direct response
       if (response && typeof response.then === 'function') {
-        return response.then(async (result: any) => {
+                return response.then(async (result: any) => {
           try {
-            // Wait for request attributes to be set, then set response attributes
             await setRequestAttributesPromise;
             await setImageGenerationResponseAttributes(span, result, uploadCallback, instrumentationConfig, params);
             return result;
@@ -490,7 +466,6 @@ export function wrapImageEdit(
             span.end();
           }
         }).catch(async (error: Error) => {
-          // Wait for request attributes to be set even when there's an error
           await setRequestAttributesPromise;
           span.recordException(error);
           span.end();
@@ -498,7 +473,6 @@ export function wrapImageEdit(
         });
       } else {
         try {
-          // For sync responses, we can't await the request processing
           return response;
         } catch (error) {
           span.recordException(error as Error);
@@ -516,8 +490,8 @@ export function wrapImageVariation(
   uploadCallback?: ImageUploadCallback,
   instrumentationConfig?: { enrichTokens?: boolean }
 ) {
-  return function (original: Function) {
-    return function (this: any, ...args: any[]) {
+    return function (original: (...args: any[]) => any) {
+        return function (this: any, ...args: any[]) {
       const params = args[0] as ImageCreateVariationParams;
       
       const span = tracer.startSpan("openai.images.createVariation", {
@@ -528,12 +502,10 @@ export function wrapImageVariation(
         },
       });
 
-      
       const response = original.apply(this, args);
       
-      // Handle both promise and direct response
       if (response && typeof response.then === 'function') {
-        return response.then(async (result: any) => {
+                return response.then(async (result: any) => {
           try {
             await setImageVariationRequestAttributes(span, params, uploadCallback);
             await setImageGenerationResponseAttributes(span, result, uploadCallback, instrumentationConfig, params);
@@ -551,7 +523,6 @@ export function wrapImageVariation(
         });
       } else {
         try {
-          // For sync responses, we can't await the request processing
           return response;
         } catch (error) {
           span.recordException(error as Error);

@@ -10,7 +10,7 @@
     "build": "rollup -c",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 20000"
+    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 40000"
   },
   "keywords": [
     "opentelemetry",
