@@ -1,4 +1,5 @@
 import { TraceloopClient } from "../traceloop-client";
+import { transformApiResponse } from "../../utils/response-transformer";
 
 export abstract class BaseDataset {
   constructor(protected client: TraceloopClient) {}
@@ -29,7 +30,9 @@ export abstract class BaseDataset {
 
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
-      return await response.json();
+      const rawData = await response.json();
+      // Transform snake_case API response keys to camelCase for consistent SDK usage
+      return transformApiResponse(rawData);
     }
 
     return null;

@@ -10,8 +10,8 @@ export class Column extends BaseDataset {
     this._data = data;
   }
 
-  get id(): string {
-    return this._data.id;
+  get slug(): string {
+    return this._data.slug; // Changed from id to slug
   }
 
   get name(): string {
@@ -48,7 +48,7 @@ export class Column extends BaseDataset {
 
   async refresh(): Promise<void> {
     const response = await this.client.get(
-      `/v2/datasets/${this.datasetSlug}/columns/${this.id}`,
+      `/v2/datasets/${this.datasetSlug}/columns/${this.slug}`,
     );
     const data = await this.handleResponse(response);
     this._data = data;
@@ -69,7 +69,7 @@ export class Column extends BaseDataset {
     }
 
     const response = await this.client.put(
-      `/v2/datasets/${this.datasetSlug}/columns/${this.id}`,
+      `/v2/datasets/${this.datasetSlug}/columns/${this.slug}`,
       options,
     );
     const data = await this.handleResponse(response);
@@ -78,7 +78,7 @@ export class Column extends BaseDataset {
 
   async delete(): Promise<void> {
     const response = await this.client.delete(
-      `/v2/datasets/${this.datasetSlug}/columns/${this.id}`,
+      `/v2/datasets/${this.datasetSlug}/columns/${this.slug}`,
     );
     await this.handleResponse(response);
   }

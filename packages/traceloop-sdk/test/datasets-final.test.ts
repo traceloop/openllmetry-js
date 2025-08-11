@@ -52,18 +52,36 @@ describe("Dataset API Final Test", () => {
       slug: "test-slug",
       name: "test-name",
       description: "test-description",
-      created_at: "2025-01-01T00:00:00Z", // snake_case from API
-      updated_at: "2025-01-01T00:00:00Z", // snake_case from API
+      createdAt: "2025-01-01T00:00:00Z", // camelCase after transformation
+      updatedAt: "2025-01-01T00:00:00Z", // camelCase after transformation
       columns: {}, // API returns columns object
       rows: [], // API returns rows array
     };
 
     assert.ok(mockDatasetResponse.id);
     assert.ok(mockDatasetResponse.slug);
-    assert.ok(mockDatasetResponse.created_at);
-    assert.ok(mockDatasetResponse.updated_at);
+    assert.ok(mockDatasetResponse.createdAt);
+    assert.ok(mockDatasetResponse.updatedAt);
     assert.ok(typeof mockDatasetResponse.columns === "object");
     assert.ok(Array.isArray(mockDatasetResponse.rows));
-    console.log("✓ Dataset response interfaces support API format");
+    console.log("✓ Dataset response interfaces use consistent camelCase format");
+  });
+
+  it("should handle column interfaces with slug correctly", () => {
+    // Test that column interfaces use slug instead of id (PR #320)
+    const mockColumnResponse: traceloop.ColumnResponse = {
+      slug: "test-column-slug", // Changed from id to slug
+      name: "Test Column",
+      type: "string",
+      datasetId: "dataset-id",
+      datasetSlug: "dataset-slug",
+      createdAt: "2025-01-01T00:00:00Z",
+      updatedAt: "2025-01-01T00:00:00Z",
+    };
+
+    assert.strictEqual(mockColumnResponse.slug, "test-column-slug");
+    assert.strictEqual(mockColumnResponse.name, "Test Column");
+    assert.strictEqual(mockColumnResponse.type, "string");
+    console.log("✓ Column interfaces correctly use slug instead of id (PR #320)");
   });
 });

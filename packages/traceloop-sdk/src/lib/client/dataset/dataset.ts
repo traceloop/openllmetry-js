@@ -47,11 +47,11 @@ export class Dataset extends BaseDataset {
   }
 
   get createdAt(): string {
-    return this._data.createdAt || (this._data as any).created_at || "";
+    return this._data.createdAt || "";
   }
 
   get updatedAt(): string {
-    return this._data.updatedAt || (this._data as any).updated_at || "";
+    return this._data.updatedAt || "";
   }
 
   async refresh(): Promise<void> {
@@ -101,9 +101,29 @@ export class Dataset extends BaseDataset {
     const data = await this.handleResponse(response);
 
     // Check if the API returns the column directly
-    if (data && data.id) {
+    if (data && data.column) {
+      // According to PR #320, AddColumn returns a response with a column object
+      const columnData = data.column;
       return {
-        id: data.id,
+        slug: columnData.slug,
+        datasetId: this._data.id,
+        datasetSlug: this._data.slug,
+        name: columnData.name || column.name,
+        type: columnData.type || column.type,
+        required:
+          columnData.required !== undefined
+            ? columnData.required
+            : column.required || false,
+        description: columnData.description || column.description,
+        createdAt: columnData.createdAt || new Date().toISOString(),
+        updatedAt: columnData.updatedAt || new Date().toISOString(),
+      };
+    }
+
+    // Fallback: Check if the API returns the column directly (older format)
+    if (data && data.slug) {
+      return {
+        slug: data.slug,
         datasetId: this._data.id,
         datasetSlug: this._data.slug,
         name: data.name || column.name,
@@ -113,10 +133,8 @@ export class Dataset extends BaseDataset {
             ? data.required
             : column.required || false,
         description: data.description || column.description,
-        createdAt:
-          data.created_at || data.createdAt || new Date().toISOString(),
-        updatedAt:
-          data.updated_at || data.updatedAt || new Date().toISOString(),
+        createdAt: data.createdAt || new Date().toISOString(),
+        updatedAt: data.updatedAt || new Date().toISOString(),
       };
     }
 
@@ -133,10 +151,10 @@ export class Dataset extends BaseDataset {
       );
 
       if (newColumn) {
-        const [columnId, columnData] = newColumn;
+        const [columnSlug, columnData] = newColumn;
         const col = columnData as any;
         return {
-          id: columnId,
+          slug: columnSlug, // Changed from id to slug
           datasetId: this._data.id,
           datasetSlug: this._data.slug,
           name: col.name,
@@ -166,12 +184,12 @@ export class Dataset extends BaseDataset {
     }
 
     const columns: ColumnResponse[] = [];
-    for (const [columnId, columnData] of Object.entries(
+    for (const [columnSlug, columnData] of Object.entries(
       dataWithColumns.columns,
     )) {
       const col = columnData as any;
       columns.push({
-        id: columnId,
+        slug: columnSlug, // Changed from id to slug
         datasetId: this._data.id,
         datasetSlug: this._data.slug,
         name: col.name,
@@ -209,16 +227,16 @@ export class Dataset extends BaseDataset {
     const columnMap = new Map<string, string>();
 
     columns.forEach((col) => {
-      columnMap.set(col.name, col.id);
+      columnMap.set(col.name, col.slug); // Changed from col.id to col.slug
     });
 
-    // Transform rows to use column IDs instead of names
+    // Transform rows to use column slugs instead of names
     const transformedRows = rows.map((row) => {
       const transformedRow: { [key: string]: any } = {};
       Object.keys(row).forEach((columnName) => {
-        const columnId = columnMap.get(columnName);
-        if (columnId) {
-          transformedRow[columnId] = row[columnName];
+        const columnSlug = columnMap.get(columnName);
+        if (columnSlug) {
+          transformedRow[columnSlug] = row[columnName];
         }
       });
       return transformedRow;
@@ -241,8 +259,8 @@ export class Dataset extends BaseDataset {
         datasetId: this._data.id,
         datasetSlug: this._data.slug,
         data: this.transformValuesBackToNames(row.values, columnMap),
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
       }));
     }
 
@@ -250,21 +268,21 @@ export class Dataset extends BaseDataset {
   }
 
   private transformValuesBackToNames(
-    values: { [columnId: string]: any },
+    values: { [columnSlug: string]: any },
     columnMap: Map<string, string>,
   ): RowData {
     const result: RowData = {};
 
-    // Create reverse mapping from ID to name
+    // Create reverse mapping from slug to name
     const reverseMap = new Map<string, string>();
-    columnMap.forEach((id, name) => {
-      reverseMap.set(id, name);
+    columnMap.forEach((slug, name) => {
+      reverseMap.set(slug, name);
     });
 
-    Object.keys(values).forEach((columnId) => {
-      const columnName = reverseMap.get(columnId);
+    Object.keys(values).forEach((columnSlug) => {
+      const columnName = reverseMap.get(columnSlug);
       if (columnName) {
-        result[columnName] = values[columnId];
+        result[columnName] = values[columnSlug];
       }
     });
 

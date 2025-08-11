@@ -17,8 +17,6 @@ export interface DatasetResponse {
   published?: boolean;
   createdAt?: string;
   updatedAt?: string;
-  created_at?: string; // API sometimes returns snake_case
-  updated_at?: string; // API sometimes returns snake_case
   columns?: Record<string, any>; // API returns columns as object
   rows?: any[]; // API returns rows array
 }
@@ -26,12 +24,13 @@ export interface DatasetResponse {
 export interface ColumnDefinition {
   name: string;
   type: "string" | "number" | "boolean" | "date";
+  slug?: string; // Optional custom slug, auto-generated if omitted
   required?: boolean;
   description?: string;
 }
 
 export interface ColumnResponse extends ColumnDefinition {
-  id: string;
+  slug: string; // Changed from id to slug
   datasetId: string;
   datasetSlug: string;
   createdAt: string;
