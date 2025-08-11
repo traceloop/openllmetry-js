@@ -633,10 +633,10 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(imageSpan);
 
     assert.strictEqual(imageSpan.attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
-    assert.strictEqual(imageSpan.attributes["llm.request.type"], "image_generation");
+    assert.strictEqual(imageSpan.attributes["gen_ai.request.type"], "image_generation");
     assert.strictEqual(imageSpan.attributes[SpanAttributes.LLM_REQUEST_MODEL], "gpt-image-1");
-    assert.strictEqual(imageSpan.attributes["llm.request.image.size"], "1024x1024");
-    assert.strictEqual(imageSpan.attributes["llm.request.image.count"], 1);
+    assert.strictEqual(imageSpan.attributes["gen_ai.request.image.size"], "1024x1024");
+    assert.strictEqual(imageSpan.attributes["gen_ai.request.image.count"], 1);
     assert.strictEqual(imageSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`], "A test image");
     assert.strictEqual(imageSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`], "user");
     
@@ -667,10 +667,10 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(editSpan);
 
     assert.strictEqual(editSpan.attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
-    assert.strictEqual(editSpan.attributes["llm.request.type"], "image_edit");
+    assert.strictEqual(editSpan.attributes["gen_ai.request.type"], "image_edit");
     assert.strictEqual(editSpan.attributes[SpanAttributes.LLM_REQUEST_MODEL], "gpt-image-1");
-    assert.strictEqual(editSpan.attributes["llm.request.image.size"], "1024x1024");
-    assert.strictEqual(editSpan.attributes["llm.request.image.count"], 1);
+    assert.strictEqual(editSpan.attributes["gen_ai.request.image.size"], "1024x1024");
+    assert.strictEqual(editSpan.attributes["gen_ai.request.image.count"], 1);
     assert.strictEqual(editSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`], "Add a red hat");
     assert.strictEqual(editSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`], "user");
     
@@ -700,10 +700,10 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(variationSpan);
 
     assert.strictEqual(variationSpan.attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
-    assert.strictEqual(variationSpan.attributes["llm.request.type"], "image_variation");
+    assert.strictEqual(variationSpan.attributes["gen_ai.request.type"], "image_variation");
     assert.strictEqual(variationSpan.attributes[SpanAttributes.LLM_REQUEST_MODEL], "gpt-image-1");
-    assert.strictEqual(variationSpan.attributes["llm.request.image.size"], "1024x1024");
-    assert.strictEqual(variationSpan.attributes["llm.request.image.count"], 1);
+    assert.strictEqual(variationSpan.attributes["gen_ai.request.image.size"], "1024x1024");
+    assert.strictEqual(variationSpan.attributes["gen_ai.request.image.count"], 1);
     
     // Check token usage calculation
     assert.strictEqual(variationSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS], 4160);

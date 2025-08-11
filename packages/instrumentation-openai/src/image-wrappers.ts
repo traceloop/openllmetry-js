@@ -140,19 +140,19 @@ export function setImageGenerationRequestAttributes(
   }
   
   if (params.size) {
-    attributes["llm.request.image.size"] = params.size;
+    attributes["gen_ai.request.image.size"] = params.size;
   }
   
   if (params.quality) {
-    attributes["llm.request.image.quality"] = params.quality;
+    attributes["gen_ai.request.image.quality"] = params.quality;
   }
   
   if (params.style) {
-    attributes["llm.request.image.style"] = params.style;
+    attributes["gen_ai.request.image.style"] = params.style;
   }
   
   if (params.n) {
-    attributes["llm.request.image.count"] = params.n;
+    attributes["gen_ai.request.image.count"] = params.n;
   }
 
   // Set prompt
@@ -180,11 +180,11 @@ export async function setImageEditRequestAttributes(
   }
   
   if (params.size) {
-    attributes["llm.request.image.size"] = params.size;
+    attributes["gen_ai.request.image.size"] = params.size;
   }
   
   if (params.n) {
-    attributes["llm.request.image.count"] = params.n;
+    attributes["gen_ai.request.image.count"] = params.n;
   }
 
   // Set prompt
@@ -233,11 +233,11 @@ export async function setImageVariationRequestAttributes(
   }
   
   if (params.size) {
-    attributes["llm.request.image.size"] = params.size;
+    attributes["gen_ai.request.image.size"] = params.size;
   }
   
   if (params.n) {
-    attributes["llm.request.image.count"] = params.n;
+    attributes["gen_ai.request.image.count"] = params.n;
   }
 
   // Process input image if upload callback is available
@@ -385,7 +385,7 @@ export async function setImageGenerationResponseAttributes(
     
     // Set revised prompt if available
     if (firstImage.revised_prompt) {
-      attributes["llm.response.revised_prompt"] = firstImage.revised_prompt;
+      attributes["gen_ai.response.revised_prompt"] = firstImage.revised_prompt;
     }
   }
 
@@ -409,7 +409,7 @@ export function wrapImageGeneration(
         kind: SpanKind.CLIENT,
         attributes: {
           [SpanAttributes.LLM_SYSTEM]: "OpenAI",
-          [SpanAttributes.LLM_REQUEST_TYPE]: "image_generation",
+          "gen_ai.request.type": "image_generation",
         },
       });
 
@@ -463,7 +463,7 @@ export function wrapImageEdit(
         kind: SpanKind.CLIENT,
         attributes: {
           [SpanAttributes.LLM_SYSTEM]: "OpenAI",
-          [SpanAttributes.LLM_REQUEST_TYPE]: "image_edit",
+          "gen_ai.request.type": "image_edit",
         },
       });
 
@@ -524,7 +524,7 @@ export function wrapImageVariation(
         kind: SpanKind.CLIENT,
         attributes: {
           [SpanAttributes.LLM_SYSTEM]: "OpenAI",
-          [SpanAttributes.LLM_REQUEST_TYPE]: "image_variation",
+          "gen_ai.request.type": "image_variation",
         },
       });
 
