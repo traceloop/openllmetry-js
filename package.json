@@ -3,40 +3,37 @@
   "version": "0.0.1",
   "license": "Apache-2.0",
   "scripts": {
-    "build:all": "npx nx run-many -t build",
-    "build:effected": "npx nx affected -t build"
+    "build:all": "pnpm nx run-many -t build",
+    "build:affected": "pnpm nx affected -t build"
   },
   "private": true,
   "devDependencies": {
-    "@commitlint/cli": "^19.6.1",
-    "@commitlint/config-conventional": "^19.6.0",
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.17.0",
-    "@jscutlery/semver": "^5.5.1",
-    "@nx/eslint-plugin": "^20.2.2",
-    "@nx/js": "^20.2.2",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.31.0",
+    "@jscutlery/semver": "^5.7.1",
+    "@nx/eslint-plugin": "^21.3.0",
+    "@nx/js": "^21.3.0",
     "@nx/linter": "^19.8.4",
     "@rollup/plugin-json": "^6.1.0",
-    "@rollup/plugin-typescript": "^12.1.2",
-    "@typescript-eslint/eslint-plugin": "^8.18.1",
-    "@typescript-eslint/parser": "^8.18.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
     "cz-conventional-changelog": "^3.3.0",
-    "eslint": "^9.17.0",
+    "eslint": "^9.31.0",
     "eslint-plugin-header": "^3.1.1",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "globals": "^15.13.0",
+    "eslint-plugin-prettier": "^5.5.3",
+    "globals": "^16.3.0",
     "husky": "^9.1.7",
-    "lerna": "^8.1.9",
-    "nx": "^20.2.2",
-    "prettier": "^3.4.2",
-    "rollup": "^4.28.1",
-    "rollup-plugin-dts": "^6.1.1",
-    "typescript": "^5.7.2"
+    "lerna": "^8.2.3",
+    "nx": "^21.3.0",
+    "prettier": "^3.6.2",
+    "rollup": "^4.45.1",
+    "rollup-plugin-dts": "^6.2.1",
+    "typescript": "^5.8.3"
   },
-  "workspaces": [
-    "packages/*"
-  ],
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"

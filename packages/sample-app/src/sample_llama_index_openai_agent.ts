@@ -9,7 +9,6 @@ traceloop.initialize({
   disableBatch: true,
   instrumentModules: {
     llamaIndex: llamaindex,
-    openAI: OpenAI,
   },
 });
 

@@ -3,6 +3,31 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.14.6](https://github.com/traceloop/openllmetry-js/compare/v0.14.5...v0.14.6) (2025-07-28)
+
+### Bug Fixes
+
+- **build:** use local deps from workspace during build ([#620](https://github.com/traceloop/openllmetry-js/issues/620)) ([59012a0](https://github.com/traceloop/openllmetry-js/commit/59012a07b9dedb9a63c3791507c615782f0f5003))
+- **sdk:** allow empty initialize() ([#619](https://github.com/traceloop/openllmetry-js/issues/619)) ([5e12228](https://github.com/traceloop/openllmetry-js/commit/5e12228b083c864b2fbe916acbb97295374f945b))
+
+## [0.14.5](https://github.com/traceloop/openllmetry-js/compare/v0.14.4...v0.14.5) (2025-07-26)
+
+**Note:** Version bump only for package @traceloop/node-server-sdk
+
+## [0.14.4](https://github.com/traceloop/openllmetry-js/compare/v0.14.3...v0.14.4) (2025-07-21)
+
+**Note:** Version bump only for package @traceloop/node-server-sdk
+
+## [0.14.3](https://github.com/traceloop/openllmetry-js/compare/v0.14.2...v0.14.3) (2025-07-17)
+
+**Note:** Version bump only for package @traceloop/node-server-sdk
+
+## [0.14.2](https://github.com/traceloop/openllmetry-js/compare/v0.14.1...v0.14.2) (2025-07-17)
+
+### Bug Fixes
+
+- change fetch-retry import to esm module import ([#611](https://github.com/traceloop/openllmetry-js/issues/611)) ([c3b4b22](https://github.com/traceloop/openllmetry-js/commit/c3b4b22a58b8290577e3d808fb088255df7f1364))
+
 ## [0.14.1](https://github.com/traceloop/openllmetry-js/compare/v0.14.0...v0.14.1) (2025-07-07)
 
 ### Bug Fixes

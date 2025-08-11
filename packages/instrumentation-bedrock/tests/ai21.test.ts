@@ -19,38 +19,54 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { BedrockInstrumentation } from "../src/instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 
 const memoryExporter = new InMemorySpanExporter();
 
 Polly.register(NodeHttpAdapter);
+Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: BedrockInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let bedrock: typeof bedrockModule;
   let bedrockRuntimeClient: bedrockModule.BedrockRuntimeClient;
 
   setupPolly({
-    adapters: ["node-http"],
+    adapters: ["node-http", "fetch"],
     persister: "fs",
     recordIfMissing: process.env.RECORD_MODE === "NEW",
-    matchRequestsBy: { headers: false },
+    recordFailedRequests: true,
+    mode: process.env.RECORD_MODE === "NEW" ? "record" : "replay",
+    matchRequestsBy: {
+      headers: false,
+      url: {
+        protocol: true,
+        hostname: true,
+        pathname: true,
+        query: false,
+      },
+    },
+    logging: true,
   });
 
   before(async () => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new BedrockInstrumentation();
     instrumentation.setTracerProvider(provider);
     bedrock = await import("@aws-sdk/client-bedrock-runtime");
@@ -60,6 +76,7 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
         ? {
             region: "us-east-1",
             credentials: { accessKeyId: "test", secretAccessKey: "test" },
+            requestHandler: new NodeHttpHandler(),
           }
         : {},
     );

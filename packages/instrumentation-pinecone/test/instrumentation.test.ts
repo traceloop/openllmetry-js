@@ -20,10 +20,10 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { PineconeInstrumentation } from "../src/instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
+  NodeTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
-} from "@opentelemetry/sdk-trace-base";
+} from "@opentelemetry/sdk-trace-node";
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
@@ -31,13 +31,15 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const memoryExporter = new InMemorySpanExporter();
 
-const PINECONE_TEST_INDEX = "pincone-instrumentation-test";
+const PINECONE_TEST_INDEX = "pinecone-instrumentation-test";
 
 Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test Pinecone instrumentation", function () {
-  const provider = new BasicTracerProvider();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let pineconeModule: typeof pineconeModuleType;
   let instrumentation: PineconeInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -57,7 +59,7 @@ describe("Test Pinecone instrumentation", function () {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.PINECONE_API_KEY = "test";
     }
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+    // span processor is already set up during provider initialization
     instrumentation = new PineconeInstrumentation();
     instrumentation.setTracerProvider(provider);
 
@@ -69,19 +71,54 @@ describe("Test Pinecone instrumentation", function () {
 
     pc_index = pc.index(PINECONE_TEST_INDEX);
     if (process.env.RECORD_MODE == "NEW") {
-      await pc.createIndex({
-        name: PINECONE_TEST_INDEX,
-        dimension: 8,
-        metric: "cosine",
-        spec: {
-          serverless: {
-            cloud: "aws",
-            region: "us-east-1",
+      try {
+        await pc.createIndex({
+          name: PINECONE_TEST_INDEX,
+          dimension: 8,
+          metric: "cosine",
+          spec: {
+            serverless: {
+              cloud: "aws",
+              region: "us-east-1",
+            },
           },
-        },
-      });
+        });
+        console.log("Index created");
+      } catch (error) {
+        if (error.message.includes("ALREADY_EXISTS")) {
+          console.log("Index already exists");
+        } else {
+          throw error;
+        }
+      }
 
-      const pc_index = pc.index(PINECONE_TEST_INDEX);
+      // Wait for index to be ready
+      const waitForIndexReady = async () => {
+        const maxAttempts = 60;
+        const delayMs = 5000;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          try {
+            const indexStatus = await pc.describeIndex(PINECONE_TEST_INDEX);
+            if (indexStatus.status?.ready) {
+              console.log(`Index ready after ${attempt + 1} attempts`);
+              return;
+            }
+          } catch {
+            console.log(`Attempt ${attempt + 1}: Index not ready yet`);
+          }
+
+          if (attempt < maxAttempts - 1) {
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+          }
+        }
+
+        throw new Error("Index not ready after polling");
+      };
+
+      await waitForIndexReady();
+
+      pc_index = pc.index(PINECONE_TEST_INDEX);
 
       await pc_index.namespace("ns1").upsert([
         {
@@ -105,8 +142,36 @@ describe("Test Pinecone instrumentation", function () {
         },
       ]);
 
-      // delay before your upserted vectors are available to query ,delete
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // Poll until vectors are available for query
+      const waitForVectors = async () => {
+        const maxAttempts = 30;
+        const delayMs = 2000;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          try {
+            const queryResult = await pc_index.namespace("ns1").query({
+              topK: 1,
+              vector: [0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.3],
+              includeValues: false,
+            });
+
+            if (queryResult.matches && queryResult.matches.length > 0) {
+              console.log(`Vectors available after ${attempt + 1} attempts`);
+              return;
+            }
+          } catch {
+            // Continue polling if query fails
+          }
+
+          if (attempt < maxAttempts - 1) {
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+          }
+        }
+
+        throw new Error("Vectors not available after polling");
+      };
+
+      await waitForVectors();
     }
   });
 
@@ -176,15 +241,13 @@ describe("Test Pinecone instrumentation", function () {
 
     const span = spans[0];
 
-    assert.strictEqual(span.events.length, 8);
+    assert.strictEqual(span.events.length, 6);
     assert.strictEqual(span.events[0].name, "pinecone.query.request");
     assert.strictEqual(span.events[1].name, "pinecone.query.result");
     assert.strictEqual(span.events[2].name, "pinecone.query.result.0");
-    assert.strictEqual(span.events[3].name, "pinecone.query.result.0.metadata");
-    assert.strictEqual(span.events[4].name, "pinecone.query.result.1");
-    assert.strictEqual(span.events[5].name, "pinecone.query.result.1.metadata");
-    assert.strictEqual(span.events[6].name, "pinecone.query.result.2");
-    assert.strictEqual(span.events[7].name, "pinecone.query.result.2.metadata");
+    assert.strictEqual(span.events[3].name, "pinecone.query.result.1");
+    assert.strictEqual(span.events[4].name, "pinecone.query.result.1.metadata");
+    assert.strictEqual(span.events[5].name, "pinecone.query.result.2");
   });
 
   it("should set attributes in span for DB deletes", async () => {

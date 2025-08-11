@@ -360,7 +360,6 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             message: {
               role: "assistant",
               content: "",
-              refusal: null,
               tool_calls: [],
             },
           },
@@ -712,7 +711,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         completionLogprobs?.token_logprobs
       ) {
         completionLogprobs.tokens.forEach((token, index) => {
-          const logprob = completionLogprobs.token_logprobs?.at(index);
+          const logprob = completionLogprobs.token_logprobs?.[index];
           if (logprob) {
             result.push({
               token,
