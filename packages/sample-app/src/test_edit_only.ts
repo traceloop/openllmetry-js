@@ -29,23 +29,27 @@ const openai = new OpenAI({
 
 async function testEditOnly(): Promise<void> {
   console.log("\n🎨 Testing ONLY image editing...");
-  
+
   try {
     // Use the test image
     console.log("🔄 Using test_edit_image.png for editing test...");
-    
+
     let imageFile;
     try {
-      imageFile = await toFile(fs.createReadStream("test_edit_image.png"), "test_edit_image.png", {
-        type: "image/png",
-      });
+      imageFile = await toFile(
+        fs.createReadStream("test_edit_image.png"),
+        "test_edit_image.png",
+        {
+          type: "image/png",
+        },
+      );
       console.log("✅ Test image file created successfully");
     } catch (err) {
       console.error("❌ Error creating image file:", err);
       throw err;
     }
 
-    // This call will be instrumented by Traceloop  
+    // This call will be instrumented by Traceloop
     console.log("🔧 Calling OpenAI images.edit with gpt-image-1...");
     const editResult = await openai.images.edit({
       image: imageFile,
@@ -56,7 +60,7 @@ async function testEditOnly(): Promise<void> {
     });
 
     console.log("✅ Image edited successfully!");
-    
+
     if (editResult.data && editResult.data.length > 0) {
       console.log("🔗 Edit result URL:", editResult.data[0].url);
     }
@@ -65,7 +69,6 @@ async function testEditOnly(): Promise<void> {
     console.log("- Span: openai.images.edit");
     console.log("- Model: gpt-image-1");
     console.log("- Input image and edit prompt");
-
   } catch (error: any) {
     console.error("❌ Error testing image editing:", error.message);
     throw error;
@@ -76,14 +79,13 @@ async function testEditOnly(): Promise<void> {
 async function main(): Promise<void> {
   try {
     await testEditOnly();
-    
+
     console.log("\n🎉 Edit test completed!");
-    
   } catch (error: any) {
     console.error("💥 Test failed:", error.message);
     process.exit(1);
   }
-  
+
   // Give time for spans to be exported
   setTimeout(() => {
     console.log("\n⏱️ Allowing time for trace export...");

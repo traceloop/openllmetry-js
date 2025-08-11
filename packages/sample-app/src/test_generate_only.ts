@@ -29,12 +29,13 @@ const openai = new OpenAI({
 
 async function testGenerateOnly(): Promise<void> {
   console.log("\n🎨 Testing ONLY image generation...");
-  
-  const prompt = "A children's book drawing of a veterinarian using a stethoscope to listen to the heartbeat of a baby otter.";
-  
+
+  const prompt =
+    "A children's book drawing of a veterinarian using a stethoscope to listen to the heartbeat of a baby otter.";
+
   console.log("📝 Prompt:", prompt);
   console.log("🎨 Generating image with gpt-image-1...");
-  
+
   try {
     // This call will be instrumented by Traceloop
     const response = await openai.images.generate({
@@ -53,7 +54,7 @@ async function testGenerateOnly(): Promise<void> {
         const imageResponse = await fetch(firstImage.url);
         const imageBuffer = await imageResponse.arrayBuffer();
         const buffer = Buffer.from(imageBuffer);
-        
+
         fs.writeFileSync("otter_test.png", buffer);
         console.log("💾 Image saved as otter_test.png");
         console.log("🔗 Generated URL:", firstImage.url);
@@ -64,7 +65,6 @@ async function testGenerateOnly(): Promise<void> {
     console.log("- Span: openai.images.generate");
     console.log("- Model: gpt-image-1");
     console.log("- Prompt and generated image");
-
   } catch (error: any) {
     console.error("❌ Error generating image:", error.message);
     throw error;
@@ -75,14 +75,13 @@ async function testGenerateOnly(): Promise<void> {
 async function main(): Promise<void> {
   try {
     await testGenerateOnly();
-    
+
     console.log("\n🎉 Generate test completed!");
-    
   } catch (error: any) {
     console.error("💥 Test failed:", error.message);
     process.exit(1);
   }
-  
+
   // Give time for spans to be exported - increase timeout significantly
   setTimeout(() => {
     console.log("\n⏱️ Allowing time for trace export...");

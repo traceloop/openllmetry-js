@@ -19,7 +19,7 @@ export class ImageUploader {
     traceId: string,
     spanId: string,
     imageName: string,
-    base64ImageData: string
+    base64ImageData: string,
   ): Promise<string> {
     try {
       const imageUrl = await this.getImageUrl(traceId, spanId, imageName);
@@ -34,7 +34,7 @@ export class ImageUploader {
   private async getImageUrl(
     traceId: string,
     spanId: string,
-    imageName: string
+    imageName: string,
   ): Promise<string> {
     const response = await fetch(
       `${this.baseUrl}/v2/traces/${traceId}/spans/${spanId}/images`,
@@ -47,12 +47,12 @@ export class ImageUploader {
         body: JSON.stringify({
           image_name: imageName,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
       throw new Error(
-        `Failed to get image URL: ${response.status} ${response.statusText}`
+        `Failed to get image URL: ${response.status} ${response.statusText}`,
       );
     }
 
@@ -62,7 +62,7 @@ export class ImageUploader {
 
   private async uploadImageData(
     url: string,
-    base64ImageData: string
+    base64ImageData: string,
   ): Promise<void> {
     const payload: ImageUploadPayload = {
       image_data: base64ImageData,
@@ -80,7 +80,7 @@ export class ImageUploader {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Failed to upload image data: ${response.status} ${response.statusText}. ${errorText}`
+        `Failed to upload image data: ${response.status} ${response.statusText}. ${errorText}`,
       );
     }
   }

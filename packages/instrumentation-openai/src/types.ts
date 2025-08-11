@@ -4,7 +4,7 @@ export type ImageUploadCallback = (
   traceId: string,
   spanId: string,
   filename: string,
-  base64Data: string
+  base64Data: string,
 ) => Promise<string>;
 
 export interface OpenAIInstrumentationConfig extends InstrumentationConfig {

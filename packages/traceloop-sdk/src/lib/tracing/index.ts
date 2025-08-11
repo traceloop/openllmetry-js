@@ -47,11 +47,7 @@ let togetherInstrumentation: TogetherInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
-export const initInstrumentations = (
-  apiKey?: string,
-  baseUrl?: string
-) => {
-
+export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
@@ -60,7 +56,8 @@ export const initInstrumentations = (
   let uploadBase64ImageCallback;
   if (apiKey && baseUrl) {
     const imageUploader = new ImageUploader(baseUrl, apiKey);
-    uploadBase64ImageCallback = imageUploader.uploadBase64Image.bind(imageUploader);
+    uploadBase64ImageCallback =
+      imageUploader.uploadBase64Image.bind(imageUploader);
   }
 
   // Create or update OpenAI instrumentation
@@ -82,7 +79,9 @@ export const initInstrumentations = (
   }
 
   if (!anthropicInstrumentation) {
-    anthropicInstrumentation = new AnthropicInstrumentation({ exceptionLogger });
+    anthropicInstrumentation = new AnthropicInstrumentation({
+      exceptionLogger,
+    });
     instrumentations.push(anthropicInstrumentation);
   }
 
@@ -126,7 +125,7 @@ export const initInstrumentations = (
 export const manuallyInitInstrumentations = (
   instrumentModules: InitializeOptions["instrumentModules"],
   apiKey?: string,
-  baseUrl?: string
+  baseUrl?: string,
 ) => {
   const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
   const enrichTokens =
@@ -136,7 +135,8 @@ export const manuallyInitInstrumentations = (
   let uploadBase64ImageCallback;
   if (apiKey && baseUrl) {
     const imageUploader = new ImageUploader(baseUrl, apiKey);
-    uploadBase64ImageCallback = imageUploader.uploadBase64Image.bind(imageUploader);
+    uploadBase64ImageCallback =
+      imageUploader.uploadBase64Image.bind(imageUploader);
   }
 
   // Clear the instrumentations array that was initialized by default
@@ -242,8 +242,11 @@ export const manuallyInitInstrumentations = (
  */
 export const startTracing = (options: InitializeOptions) => {
   const apiKey = options.apiKey || process.env.TRACELOOP_API_KEY;
-  const baseUrl = options.baseUrl || process.env.TRACELOOP_BASE_URL || "https://api.traceloop.com";
-  
+  const baseUrl =
+    options.baseUrl ||
+    process.env.TRACELOOP_BASE_URL ||
+    "https://api.traceloop.com";
+
   if (Object.keys(options.instrumentModules || {}).length > 0) {
     manuallyInitInstrumentations(options.instrumentModules, apiKey, baseUrl);
   } else {
