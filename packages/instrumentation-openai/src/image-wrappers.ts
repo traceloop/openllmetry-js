@@ -55,7 +55,8 @@ function calculateImageGenerationTokens(
         "1792x1024": 6208,
       },
     };
-    tokensPerImage = dalle3Costs[quality]?.[size] || dalle3Costs["standard"]["1024x1024"];
+    tokensPerImage =
+      dalle3Costs[quality]?.[size] || dalle3Costs["standard"]["1024x1024"];
   } else {
     // Default fallback for unknown models
     tokensPerImage = 1056;
