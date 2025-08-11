@@ -100,9 +100,11 @@ export class Dataset extends BaseDataset {
     );
     const data = await this.handleResponse(response);
 
-    // Check if the API returns the column directly
+    // Based on PR #320, the AddColumn response format should be:
+    // { "column": { "slug": "column-slug", "name": "Column Name", "type": "string" } }
+    
+    // Check if the API returns the column in a wrapper object (primary format)
     if (data && data.column) {
-      // According to PR #320, AddColumn returns a response with a column object
       const columnData = data.column;
       return {
         slug: columnData.slug,
@@ -120,7 +122,22 @@ export class Dataset extends BaseDataset {
       };
     }
 
-    // Fallback: Check if the API returns the column directly (older format)
+    // Check if the API returns just the slug (as per PR #320 - simplified response)
+    if (typeof data === "string") {
+      return {
+        slug: data,
+        datasetId: this._data.id,
+        datasetSlug: this._data.slug,
+        name: column.name,
+        type: column.type,
+        required: column.required || false,
+        description: column.description,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    // Check if the API returns the column fields directly (alternative format)
     if (data && data.slug) {
       return {
         slug: data.slug,
@@ -294,7 +311,17 @@ export class Dataset extends BaseDataset {
       `/v2/datasets/${this.slug}/rows?limit=${limit}&offset=${offset}`,
     );
     const data = await this.handleResponse(response);
-    return data.rows || [];
+    
+    // Transform the raw rows to include datasetSlug and proper structure
+    const rows = data.rows || [];
+    return rows.map((row: any) => ({
+      id: row.id,
+      datasetId: this._data.id,
+      datasetSlug: this._data.slug,
+      data: row.values || row.data || {},
+      createdAt: row.createdAt || row.created_at || "",
+      updatedAt: row.updatedAt || row.updated_at || "",
+    }));
   }
 
   async fromCSV(

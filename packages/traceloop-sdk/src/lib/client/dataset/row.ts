@@ -76,12 +76,18 @@ export class Row extends BaseDataset {
     const response = await this.client.put(
       `/v2/datasets/${this.datasetSlug}/rows/${this.id}`,
       {
-        data: updatedData,
+        Values: updatedData,
       },
     );
 
     const result = await this.handleResponse(response);
-    this._data = result;
+    // If the API returns null/empty, keep our existing data and refresh
+    if (result && result.id) {
+      this._data = result;
+    } else {
+      // API returned empty, refresh from server
+      await this.refresh();
+    }
   }
 
   async partialUpdate(updates: Partial<RowData>): Promise<void> {
@@ -99,12 +105,18 @@ export class Row extends BaseDataset {
     const response = await this.client.put(
       `/v2/datasets/${this.datasetSlug}/rows/${this.id}`,
       {
-        data: updates,
+        Values: updates,
       },
     );
 
     const result = await this.handleResponse(response);
-    this._data = result;
+    // If the API returns null/empty, keep our existing data and refresh
+    if (result && result.id) {
+      this._data = result;
+    } else {
+      // API returned empty, refresh from server
+      await this.refresh();
+    }
   }
 
   async delete(): Promise<void> {
