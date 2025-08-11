@@ -46,20 +46,8 @@ export class TraceloopClient {
     return this.projectId;
   }
 
-  buildDatasetPath(path: string): string {
-    // Replace any path that starts with /v2/datasets with the correct project-based path
-    if (path.startsWith("/v2/datasets")) {
-      return path.replace(
-        "/v2/datasets",
-        `/v2/projects/${this.projectId}/datasets`,
-      );
-    }
-    return path;
-  }
-
   async post(path: string, body: Record<string, unknown> | any) {
-    const finalPath = this.buildDatasetPath(path);
-    return await fetch(`${this.baseUrl}${finalPath}`, {
+    return await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -71,8 +59,7 @@ export class TraceloopClient {
   }
 
   async get(path: string) {
-    const finalPath = this.buildDatasetPath(path);
-    return await fetch(`${this.baseUrl}${finalPath}`, {
+    return await fetch(`${this.baseUrl}${path}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
@@ -82,8 +69,7 @@ export class TraceloopClient {
   }
 
   async put(path: string, body: Record<string, unknown> | any) {
-    const finalPath = this.buildDatasetPath(path);
-    return await fetch(`${this.baseUrl}${finalPath}`, {
+    return await fetch(`${this.baseUrl}${path}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -95,8 +81,7 @@ export class TraceloopClient {
   }
 
   async delete(path: string) {
-    const finalPath = this.buildDatasetPath(path);
-    return await fetch(`${this.baseUrl}${finalPath}`, {
+    return await fetch(`${this.baseUrl}${path}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,

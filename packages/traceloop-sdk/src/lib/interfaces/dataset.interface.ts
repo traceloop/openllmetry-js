@@ -15,8 +15,12 @@ export interface DatasetResponse {
   description?: string;
   version?: number;
   published?: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  created_at?: string;  // API sometimes returns snake_case
+  updated_at?: string;  // API sometimes returns snake_case
+  columns?: Record<string, any>;  // API returns columns as object
+  rows?: any[];  // API returns rows array
 }
 
 export interface ColumnDefinition {
