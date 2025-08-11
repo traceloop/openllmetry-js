@@ -27,9 +27,13 @@ describe("Dataset API Recording Tests", () => {
       headers: false,
       body: false,  // Ignore body differences (dataset names with timestamps)
       order: false, // Don't enforce request order
-      url: (url: URL) => {
-        // Match only by pathname, ignore query parameters
-        return url.pathname;
+      url: {
+        protocol: true,
+        hostname: true,
+        port: true,
+        pathname: true,
+        query: false,  // Ignore query parameters completely
+        hash: false,
       },
     },
   });
