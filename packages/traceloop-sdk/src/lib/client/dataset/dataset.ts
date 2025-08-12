@@ -47,11 +47,11 @@ export class Dataset extends BaseDataset {
   }
 
   get createdAt(): string {
-    return this._data.createdAt || "";
+    return this._data.created_at || "";
   }
 
   get updatedAt(): string {
-    return this._data.updatedAt || "";
+    return this._data.updated_at || "";
   }
 
   async refresh(): Promise<void> {
@@ -71,7 +71,7 @@ export class Dataset extends BaseDataset {
     );
     await this.handleResponse(response);
 
-    // API returns empty response for updates, so always refresh to get updated data
+
     await this.refresh();
   }
 
@@ -100,10 +100,7 @@ export class Dataset extends BaseDataset {
     );
     const data = await this.handleResponse(response);
 
-    // Based on PR #320, the AddColumn response format should be:
-    // { "column": { "slug": "column-slug", "name": "Column Name", "type": "string" } }
-    
-    // Check if the API returns the column in a wrapper object (primary format)
+
     if (data && data.column) {
       const columnData = data.column;
       return {
@@ -117,12 +114,12 @@ export class Dataset extends BaseDataset {
             ? columnData.required
             : column.required || false,
         description: columnData.description || column.description,
-        createdAt: columnData.createdAt || new Date().toISOString(),
-        updatedAt: columnData.updatedAt || new Date().toISOString(),
+        created_at: columnData.created_at || new Date().toISOString(),
+        updated_at: columnData.updated_at || new Date().toISOString(),
       };
     }
 
-    // Check if the API returns just the slug (as per PR #320 - simplified response)
+
     if (typeof data === "string") {
       return {
         slug: data,
@@ -132,12 +129,12 @@ export class Dataset extends BaseDataset {
         type: column.type,
         required: column.required || false,
         description: column.description,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     }
 
-    // Check if the API returns the column fields directly (alternative format)
+
     if (data && data.slug) {
       return {
         slug: data.slug,
@@ -150,16 +147,12 @@ export class Dataset extends BaseDataset {
             ? data.required
             : column.required || false,
         description: data.description || column.description,
-        createdAt: data.createdAt || new Date().toISOString(),
-        updatedAt: data.updatedAt || new Date().toISOString(),
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString(),
       };
     }
 
-    // API returns the full dataset, so we need to extract the new column
-    // Update our internal data with the response
     this._data = data;
-
-    // Find the newly created column (it will be in the columns object)
     const dataWithColumns = data as any;
     if (dataWithColumns.columns) {
       const columnEntries = Object.entries(dataWithColumns.columns);
@@ -171,7 +164,7 @@ export class Dataset extends BaseDataset {
         const [columnSlug, columnData] = newColumn;
         const col = columnData as any;
         return {
-          slug: columnSlug, // Changed from id to slug
+          slug: columnSlug,
           datasetId: this._data.id,
           datasetSlug: this._data.slug,
           name: col.name,
@@ -181,8 +174,8 @@ export class Dataset extends BaseDataset {
               ? col.required
               : column.required || false,
           description: col.description,
-          createdAt: this.createdAt,
-          updatedAt: this.updatedAt,
+          created_at: this.createdAt,
+          updated_at: this.updatedAt,
         };
       }
     }
@@ -191,10 +184,7 @@ export class Dataset extends BaseDataset {
   }
 
   async getColumns(): Promise<ColumnResponse[]> {
-    // Refresh dataset to get latest column data
     await this.refresh();
-
-    // Extract columns from the dataset's columns object
     const dataWithColumns = this._data as any;
     if (!dataWithColumns.columns) {
       return [];
@@ -206,15 +196,15 @@ export class Dataset extends BaseDataset {
     )) {
       const col = columnData as any;
       columns.push({
-        slug: columnSlug, // Changed from id to slug
+        slug: columnSlug,
         datasetId: this._data.id,
         datasetSlug: this._data.slug,
         name: col.name,
         type: col.type,
         required: col.required === true,
         description: col.description,
-        createdAt: this.createdAt,
-        updatedAt: this.updatedAt,
+        created_at: this.createdAt,
+        updated_at: this.updatedAt,
       });
     }
 
@@ -226,7 +216,7 @@ export class Dataset extends BaseDataset {
       throw new Error("Row data must be a valid object");
     }
 
-    // Use the batch endpoint for single rows too
+
     const rows = await this.addRows([rowData]);
     if (rows.length === 0) {
       throw new Error("Failed to add row");
@@ -239,15 +229,12 @@ export class Dataset extends BaseDataset {
       throw new Error("Rows must be an array");
     }
 
-    // Get column mappings
     const columns = await this.getColumns();
     const columnMap = new Map<string, string>();
 
     columns.forEach((col) => {
-      columnMap.set(col.name, col.slug); // Changed from col.id to col.slug
+      columnMap.set(col.name, col.slug);
     });
-
-    // Transform rows to use column slugs instead of names
     const transformedRows = rows.map((row) => {
       const transformedRow: { [key: string]: any } = {};
       Object.keys(row).forEach((columnName) => {
@@ -269,15 +256,15 @@ export class Dataset extends BaseDataset {
     );
     const result = await this.handleResponse(response);
 
-    // Transform the response back to the expected format
+
     if (result.rows) {
       return result.rows.map((row: any) => ({
         id: row.id,
         datasetId: this._data.id,
         datasetSlug: this._data.slug,
         data: this.transformValuesBackToNames(row.values, columnMap),
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
       }));
     }
 
@@ -290,7 +277,7 @@ export class Dataset extends BaseDataset {
   ): RowData {
     const result: RowData = {};
 
-    // Create reverse mapping from slug to name
+
     const reverseMap = new Map<string, string>();
     columnMap.forEach((slug, name) => {
       reverseMap.set(slug, name);
@@ -312,15 +299,15 @@ export class Dataset extends BaseDataset {
     );
     const data = await this.handleResponse(response);
     
-    // Transform the raw rows to include datasetSlug and proper structure
+
     const rows = data.rows || [];
     return rows.map((row: any) => ({
       id: row.id,
       datasetId: this._data.id,
       datasetSlug: this._data.slug,
       data: row.values || row.data || {},
-      createdAt: row.createdAt || row.created_at || "",
-      updatedAt: row.updatedAt || row.updated_at || "",
+      created_at: row.created_at || "",
+      updated_at: row.updated_at || "",
     }));
   }
 
@@ -340,7 +327,7 @@ export class Dataset extends BaseDataset {
       throw new Error("No data found in CSV");
     }
 
-    // Add rows in batches for better performance
+
     const batchSize = 100;
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
@@ -384,7 +371,7 @@ export class Dataset extends BaseDataset {
     if (hasHeader) {
       headers.push(...this.parseCSVLine(lines[0], delimiter));
     } else {
-      // Generate default headers if no header row
+
       const firstRow = this.parseCSVLine(lines[0], delimiter);
       for (let i = 0; i < firstRow.length; i++) {
         headers.push(`column_${i + 1}`);

@@ -11,7 +11,7 @@ export class Column extends BaseDataset {
   }
 
   get slug(): string {
-    return this._data.slug; // Changed from id to slug
+    return this._data.slug;
   }
 
   get name(): string {
@@ -39,11 +39,11 @@ export class Column extends BaseDataset {
   }
 
   get createdAt(): string {
-    return this._data.createdAt;
+    return this._data.created_at;
   }
 
   get updatedAt(): string {
-    return this._data.updatedAt;
+    return this._data.updated_at;
   }
 
   async refresh(): Promise<void> {

@@ -44,7 +44,7 @@ export class Datasets extends BaseDataset {
     );
     const data: DatasetListResponse = await this.handleResponse(response);
 
-    // Handle null or undefined response
+
     if (!data || !data.datasets) {
       return {
         datasets: [],
@@ -54,7 +54,7 @@ export class Datasets extends BaseDataset {
       };
     }
 
-    // Convert dataset responses to Dataset instances
+
     const datasets = data.datasets.map(
       (datasetData) => new Dataset(this.client, datasetData),
     );

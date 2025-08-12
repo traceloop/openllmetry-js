@@ -17,13 +17,13 @@ export abstract class BaseDataset {
             errorMessage = errorData.error;
           }
         } catch {
-          // Not JSON, use the raw text
+
           if (errorText) {
             errorMessage = `${errorMessage} - ${errorText}`;
           }
         }
       } catch {
-        // If we can't parse the error response, use the default message
+        // Silently ignore parsing errors
       }
       throw new Error(errorMessage);
     }
@@ -31,7 +31,7 @@ export abstract class BaseDataset {
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const rawData = await response.json();
-      // Transform snake_case API response keys to camelCase for consistent SDK usage
+
       return transformApiResponse(rawData);
     }
 

@@ -21,7 +21,6 @@ export class TraceloopClient {
   public appName: string;
   private baseUrl: string;
   private apiKey: string;
-  private projectId: string;
 
   /**
    * Creates a new instance of the TraceloopClient.
@@ -35,16 +34,11 @@ export class TraceloopClient {
       options.baseUrl ||
       process.env.TRACELOOP_BASE_URL ||
       "https://api.traceloop.com";
-    this.projectId =
-      options.projectId || process.env.TRACELOOP_PROJECT_ID || "default";
   }
 
   userFeedback = new UserFeedback(this);
   datasets = new Datasets(this);
 
-  getProjectId(): string {
-    return this.projectId;
-  }
 
   async post(path: string, body: Record<string, unknown> | any) {
     return await fetch(`${this.baseUrl}${path}`, {

@@ -15,26 +15,26 @@ export interface DatasetResponse {
   description?: string;
   version?: number;
   published?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  columns?: Record<string, any>; // API returns columns as object
-  rows?: any[]; // API returns rows array
+  created_at?: string;
+  updated_at?: string;
+  columns?: Record<string, any>;
+  rows?: any[];
 }
 
 export interface ColumnDefinition {
   name: string;
   type: "string" | "number" | "boolean" | "date";
-  slug?: string; // Optional custom slug, auto-generated if omitted
+  slug?: string;
   required?: boolean;
   description?: string;
 }
 
 export interface ColumnResponse extends ColumnDefinition {
-  slug: string; // Changed from id to slug
+  slug: string;
   datasetId: string;
   datasetSlug: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ColumnUpdateOptions {
@@ -53,8 +53,8 @@ export interface RowResponse {
   datasetId: string;
   datasetSlug: string;
   data: RowData;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RowUpdateOptions {

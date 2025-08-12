@@ -27,11 +27,11 @@ export class Row extends BaseDataset {
   }
 
   get createdAt(): string {
-    return this._data.createdAt;
+    return this._data.created_at;
   }
 
   get updatedAt(): string {
-    return this._data.updatedAt;
+    return this._data.updated_at;
   }
 
   getValue(columnName: string): string | number | boolean | Date | null {
@@ -70,7 +70,7 @@ export class Row extends BaseDataset {
       throw new Error("Update data must be a valid object");
     }
 
-    // Merge the updates with existing data
+
     const updatedData = { ...this._data.data, ...options.data };
 
     const response = await this.client.put(
@@ -81,11 +81,11 @@ export class Row extends BaseDataset {
     );
 
     const result = await this.handleResponse(response);
-    // If the API returns null/empty, keep our existing data and refresh
+
     if (result && result.id) {
       this._data = result;
     } else {
-      // API returned empty, refresh from server
+
       await this.refresh();
     }
   }
@@ -95,7 +95,7 @@ export class Row extends BaseDataset {
       throw new Error("Updates must be a valid object");
     }
 
-    // Only update specified fields
+
     Object.keys(updates).forEach((key) => {
       if (updates[key] !== undefined) {
         this._data.data[key] = updates[key];
@@ -110,11 +110,11 @@ export class Row extends BaseDataset {
     );
 
     const result = await this.handleResponse(response);
-    // If the API returns null/empty, keep our existing data and refresh
+
     if (result && result.id) {
       this._data = result;
     } else {
-      // API returned empty, refresh from server
+
       await this.refresh();
     }
   }
@@ -139,7 +139,7 @@ export class Row extends BaseDataset {
       }
 
       const stringValue = String(value);
-      // Escape quotes and wrap in quotes if contains delimiter or quotes
+
       if (
         stringValue.includes(delimiter) ||
         stringValue.includes('"') ||
