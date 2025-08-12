@@ -1,8 +1,8 @@
 import { TraceloopClient } from "../traceloop-client";
-import { BaseDataset } from "./base-dataset";
+import { BaseDatasetEntity } from "./base-dataset";
 import { RowResponse, RowData, RowUpdateOptions } from "../../interfaces";
 
-export class Row extends BaseDataset {
+export class Row extends BaseDatasetEntity {
   private _data: RowResponse;
 
   constructor(client: TraceloopClient, data: RowResponse) {
@@ -47,13 +47,6 @@ export class Row extends BaseDataset {
     return Object.keys(this._data.data);
   }
 
-  async refresh(): Promise<void> {
-    const response = await this.client.get(
-      `/v2/datasets/${this.datasetSlug}/rows/${this.id}`,
-    );
-    const data = await this.handleResponse(response);
-    this._data = data;
-  }
 
   async update(options: RowUpdateOptions): Promise<void> {
     if (!options.data || typeof options.data !== "object") {
@@ -73,8 +66,6 @@ export class Row extends BaseDataset {
 
     if (result && result.id) {
       this._data = result;
-    } else {
-      await this.refresh();
     }
   }
 
@@ -94,8 +85,6 @@ export class Row extends BaseDataset {
 
     if (result && result.id) {
       this._data = result;
-    } else {
-      await this.refresh();
     }
   }
 

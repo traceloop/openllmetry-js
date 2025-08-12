@@ -1,7 +1,7 @@
 import { TraceloopClient } from "../traceloop-client";
 import { transformApiResponse } from "../../utils/response-transformer";
 
-export abstract class BaseDataset {
+export abstract class BaseDatasetEntity {
   constructor(protected client: TraceloopClient) {}
 
   protected async handleResponse(response: Response) {

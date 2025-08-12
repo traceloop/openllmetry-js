@@ -1,5 +1,5 @@
 import { TraceloopClient } from "../traceloop-client";
-import { BaseDataset } from "./base-dataset";
+import { BaseDatasetEntity } from "./base-dataset";
 import { Row } from "./row";
 import { Column } from "./column";
 import {
@@ -15,7 +15,7 @@ import {
   DatasetVersion,
 } from "../../interfaces";
 
-export class Dataset extends BaseDataset {
+export class Dataset extends BaseDatasetEntity {
   private _data: DatasetResponse;
 
   constructor(client: TraceloopClient, data: DatasetResponse) {
@@ -71,8 +71,6 @@ export class Dataset extends BaseDataset {
       options,
     );
     await this.handleResponse(response);
-
-    await this.refresh();
   }
 
   async delete(): Promise<void> {
@@ -114,7 +112,7 @@ export class Dataset extends BaseDataset {
       const columnResponse: ColumnResponse = {
         slug: data.slug,
         datasetId: this._data.id,
-        datasetSlug: this._data.slug,
+        datasetSlug: this.slug,
         name: data.name,
         type: data.type,
         required: data.required,
@@ -130,8 +128,8 @@ export class Dataset extends BaseDataset {
   }
 
   async getColumns(): Promise<Column[]> {
-    await this.refresh();
-    const dataWithColumns = this._data as any;
+    const response = await this.client.get(`/v2/datasets/${this.slug}`);
+    const dataWithColumns = await this.handleResponse(response);
     if (!dataWithColumns.columns) {
       return [];
     }
@@ -143,14 +141,14 @@ export class Dataset extends BaseDataset {
       const col = columnData as any;
       const columnResponse: ColumnResponse = {
         slug: columnSlug,
-        datasetId: this._data.id,
-        datasetSlug: this._data.slug,
+        datasetId: dataWithColumns.id,
+        datasetSlug: this.slug,
         name: col.name,
         type: col.type,
         required: col.required === true,
         description: col.description,
-        created_at: this.createdAt,
-        updated_at: this.updatedAt,
+        created_at: dataWithColumns.created_at || this.createdAt,
+        updated_at: dataWithColumns.updated_at || this.updatedAt,
       };
       columns.push(new Column(this.client, columnResponse));
     }
@@ -207,7 +205,7 @@ export class Dataset extends BaseDataset {
         const rowResponse: RowResponse = {
           id: row.id,
           datasetId: this._data.id,
-          datasetSlug: this._data.slug,
+          datasetSlug: this.slug,
           data: this.transformValuesBackToNames(row.values, columnMap),
           created_at: row.created_at,
           updated_at: row.updated_at,
@@ -251,7 +249,7 @@ export class Dataset extends BaseDataset {
       const rowResponse: RowResponse = {
         id: row.id,
         datasetId: this._data.id,
-        datasetSlug: this._data.slug,
+        datasetSlug: this.slug,
         data: row.values || row.data || {},
         created_at: row.created_at,
         updated_at: row.updated_at,

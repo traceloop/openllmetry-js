@@ -1,8 +1,8 @@
 import { TraceloopClient } from "../traceloop-client";
-import { BaseDataset } from "./base-dataset";
+import { BaseDatasetEntity } from "./base-dataset";
 import { ColumnResponse, ColumnUpdateOptions } from "../../interfaces";
 
-export class Column extends BaseDataset {
+export class Column extends BaseDatasetEntity {
   private _data: ColumnResponse;
 
   constructor(client: TraceloopClient, data: ColumnResponse) {
@@ -46,13 +46,6 @@ export class Column extends BaseDataset {
     return this._data.updated_at;
   }
 
-  async refresh(): Promise<void> {
-    const response = await this.client.get(
-      `/v2/datasets/${this.datasetSlug}/columns/${this.slug}`,
-    );
-    const data = await this.handleResponse(response);
-    this._data = data;
-  }
 
   async update(options: ColumnUpdateOptions): Promise<void> {
     if (options.name && typeof options.name !== "string") {
@@ -71,7 +64,19 @@ export class Column extends BaseDataset {
       options,
     );
     const data = await this.handleResponse(response);
-    this._data = data;
+    
+    // API returns dataset data, extract column info if available
+    if (data.columns && data.columns[this.slug]) {
+      const columnData = data.columns[this.slug];
+      // Update only the fields that changed, preserve datasetSlug and other metadata
+      this._data = {
+        ...this._data,
+        name: columnData.name || this._data.name,
+        type: columnData.type || this._data.type,
+        description: columnData.description || this._data.description,
+        updated_at: data.updated_at || this._data.updated_at,
+      };
+    }
   }
 
   async delete(): Promise<void> {
@@ -97,11 +102,6 @@ export class Column extends BaseDataset {
         return typeof value === "number" && !isNaN(value) && isFinite(value);
       case "boolean":
         return typeof value === "boolean";
-      case "date":
-        return (
-          value instanceof Date ||
-          (typeof value === "string" && !isNaN(Date.parse(value)))
-        );
       default:
         return false;
     }

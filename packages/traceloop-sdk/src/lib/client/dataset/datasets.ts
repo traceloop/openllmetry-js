@@ -1,5 +1,5 @@
 import { TraceloopClient } from "../traceloop-client";
-import { BaseDataset } from "./base-dataset";
+import { BaseDatasetEntity } from "./base-dataset";
 import { Dataset } from "./dataset";
 import {
   DatasetCreateOptions,
@@ -7,7 +7,7 @@ import {
   DatasetListResponse,
 } from "../../interfaces";
 
-export class Datasets extends BaseDataset {
+export class Datasets extends BaseDatasetEntity {
   constructor(client: TraceloopClient) {
     super(client);
   }
