@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.15.0](https://github.com/traceloop/openllmetry-js/compare/v0.14.6...v0.15.0) (2025-08-11)
+
+**Note:** Version bump only for package @traceloop/ai-semantic-conventions
+
 # [0.14.0](https://github.com/traceloop/openllmetry-js/compare/v0.13.5...v0.14.0) (2025-07-04)
 
 **Note:** Version bump only for package @traceloop/ai-semantic-conventions
