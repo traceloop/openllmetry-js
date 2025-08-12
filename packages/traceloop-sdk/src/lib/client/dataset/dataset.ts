@@ -98,84 +98,21 @@ export class Dataset extends BaseDataset {
     );
     const data = await this.handleResponse(response);
 
-    if (data && data.column) {
-      const columnData = data.column;
-      return {
-        slug: columnData.slug,
-        datasetId: this._data.id,
-        datasetSlug: this._data.slug,
-        name: columnData.name || column.name,
-        type: columnData.type || column.type,
-        required:
-          columnData.required !== undefined
-            ? columnData.required
-            : column.required || false,
-        description: columnData.description || column.description,
-        created_at: columnData.created_at || new Date().toISOString(),
-        updated_at: columnData.updated_at || new Date().toISOString(),
-      };
+    if (!data || !data.slug) {
+      throw new Error("Failed to create column: Invalid API response");
     }
 
-    if (typeof data === "string") {
-      return {
-        slug: data,
-        datasetId: this._data.id,
-        datasetSlug: this._data.slug,
-        name: column.name,
-        type: column.type,
-        required: column.required || false,
-        description: column.description,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    }
-
-    if (data && data.slug) {
-      return {
-        slug: data.slug,
-        datasetId: this._data.id,
-        datasetSlug: this._data.slug,
-        name: data.name || column.name,
-        type: data.type || column.type,
-        required:
-          data.required !== undefined
-            ? data.required
-            : column.required || false,
-        description: data.description || column.description,
-        created_at: data.created_at || new Date().toISOString(),
-        updated_at: data.updated_at || new Date().toISOString(),
-      };
-    }
-
-    this._data = data;
-    const dataWithColumns = data as any;
-    if (dataWithColumns.columns) {
-      const columnEntries = Object.entries(dataWithColumns.columns);
-      const newColumn = columnEntries.find(
-        ([, col]: [string, any]) => col.name === column.name,
-      );
-
-      if (newColumn) {
-        const [columnSlug, columnData] = newColumn;
-        const col = columnData as any;
-        return {
-          slug: columnSlug,
-          datasetId: this._data.id,
-          datasetSlug: this._data.slug,
-          name: col.name,
-          type: col.type,
-          required:
-            col.required !== undefined
-              ? col.required
-              : column.required || false,
-          description: col.description,
-          created_at: this.createdAt,
-          updated_at: this.updatedAt,
-        };
-      }
-    }
-
-    throw new Error("Failed to create column or extract column from response");
+    return {
+      slug: data.slug,
+      datasetId: this._data.id,
+      datasetSlug: this._data.slug,
+      name: data.name,
+      type: data.type,
+      required: data.required,
+      description: data.description,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+    };
   }
 
   async getColumns(): Promise<ColumnResponse[]> {
@@ -297,8 +234,8 @@ export class Dataset extends BaseDataset {
       datasetId: this._data.id,
       datasetSlug: this._data.slug,
       data: row.values || row.data || {},
-      created_at: row.created_at || "",
-      updated_at: row.updated_at || "",
+      created_at: row.created_at,
+      updated_at: row.updated_at,
     }));
   }
 

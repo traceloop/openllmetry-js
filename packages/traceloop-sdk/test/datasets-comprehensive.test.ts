@@ -107,27 +107,6 @@ describe("Dataset API Comprehensive Tests", () => {
       console.log(`✓ Retrieved dataset by slug: ${dataset.slug}`);
     });
 
-    it("should find dataset by name", async function () {
-      if (!createdDatasetSlug) {
-        this.skip();
-        return;
-      }
-
-      // Use the actual dataset name we created
-      const dataset = await client.datasets.get(createdDatasetSlug);
-      const foundDataset = await client.datasets.findByName(dataset.name);
-
-      if (foundDataset) {
-        // The findByName might return any dataset with that name, not necessarily ours
-        // Just verify that we got a dataset back and it has the expected structure
-        assert.ok(foundDataset.name);
-        assert.ok(foundDataset.slug);
-        console.log(`✓ Found dataset by name search: ${foundDataset.name}`);
-      } else {
-        console.log("✓ Dataset not found by name (findByName may be limited)");
-      }
-    });
-
     it("should update dataset", async function () {
       if (!createdDatasetSlug) {
         this.skip();

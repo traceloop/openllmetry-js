@@ -38,7 +38,8 @@ describe("Dataset API Test Suite", () => {
       assert.ok(typeof client.datasets.create === "function");
       assert.ok(typeof client.datasets.get === "function");
       assert.ok(typeof client.datasets.list === "function");
-      assert.ok(typeof client.datasets.findByName === "function");
+      assert.ok(typeof client.datasets.delete === "function");
+      assert.ok(typeof client.datasets.getVersionCSV === "function");
       console.log("✓ All dataset methods are available");
     });
   });

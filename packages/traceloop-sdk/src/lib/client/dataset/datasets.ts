@@ -51,25 +51,27 @@ export class Datasets extends BaseDataset {
     };
   }
 
-  async findByName(name: string): Promise<Dataset | null> {
-    this.validateDatasetName(name);
-
-    const response = await this.client.get(
-      `/v2/datasets?name=${encodeURIComponent(name)}`,
-    );
-    const data: DatasetListResponse = await this.handleResponse(response);
-
-    if (!data || !data.datasets || data.datasets.length === 0) {
-      return null;
-    }
-
-    return new Dataset(this.client, data.datasets[0]);
-  }
-
   async delete(slug: string): Promise<void> {
     this.validateDatasetSlug(slug);
 
     const response = await this.client.delete(`/v2/datasets/${slug}`);
     await this.handleResponse(response);
+  }
+
+  async getVersionCSV(slug: string, version: string): Promise<string> {
+    this.validateDatasetSlug(slug);
+
+    if (!version || typeof version !== "string") {
+      throw new Error("Version must be a non-empty string");
+    }
+
+    const response = await this.client.get(`/v2/datasets/${slug}/versions/${version}`);
+    const csvData = await this.handleResponse(response);
+
+    if (typeof csvData !== "string") {
+      throw new Error("Expected CSV data as string from API");
+    }
+
+    return csvData;
   }
 }
