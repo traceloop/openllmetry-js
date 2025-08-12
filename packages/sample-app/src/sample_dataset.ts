@@ -10,7 +10,13 @@ const main = async () => {
     traceloopSyncEnabled: true,
   });
 
-  await traceloop.waitForInitialization();
+  try {
+    await traceloop.waitForInitialization();
+  } catch (error) {
+    console.error("Failed to initialize Traceloop SDK:", error instanceof Error ? error.message : String(error));
+    console.error("Initialization error details:", error);
+    process.exit(1);
+  }
 
   const client = traceloop.getClient();
   if (!client) {
