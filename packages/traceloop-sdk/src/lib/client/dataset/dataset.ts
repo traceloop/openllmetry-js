@@ -7,7 +7,6 @@ import {
   RowData,
   DatasetPublishOptions,
   CSVImportOptions,
-  DatasetStats,
   ColumnResponse,
   RowResponse,
   DatasetVersionsResponse,
@@ -324,11 +323,6 @@ export class Dataset extends BaseDataset {
       const batch = rows.slice(i, i + batchSize);
       await this.addRows(batch);
     }
-  }
-
-  async getStats(): Promise<DatasetStats> {
-    const response = await this.client.get(`/v2/datasets/${this.slug}/stats`);
-    return await this.handleResponse(response);
   }
 
   async getVersions(): Promise<DatasetVersionsResponse> {

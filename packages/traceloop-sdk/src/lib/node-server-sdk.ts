@@ -15,7 +15,6 @@ export {
   DatasetListResponse,
   DatasetPublishOptions,
   CSVImportOptions,
-  DatasetStats,
   DatasetVersion,
   DatasetVersionsResponse,
 } from "./interfaces";

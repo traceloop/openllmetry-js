@@ -632,26 +632,6 @@ describe("Dataset API Comprehensive Tests", () => {
       }
     });
 
-    it("should get dataset statistics", async function () {
-      if (!createdDatasetSlug) {
-        this.skip();
-        return;
-      }
-
-      const dataset = await client.datasets.get(createdDatasetSlug);
-
-      try {
-        const stats = await dataset.getStats();
-
-        assert.ok(typeof stats.rowCount === "number");
-        assert.ok(typeof stats.columnCount === "number");
-        console.log("✓ Retrieved dataset statistics");
-      } catch (error) {
-        // Stats endpoint might not be implemented yet
-        console.log("✓ Dataset stats method exists (endpoint may be pending)");
-      }
-    });
-
     it("should publish dataset", async function () {
       if (!createdDatasetSlug) {
         this.skip();

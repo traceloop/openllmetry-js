@@ -79,13 +79,6 @@ export interface CSVImportOptions {
   encoding?: string;
 }
 
-export interface DatasetStats {
-  rowCount: number;
-  columnCount: number;
-  size: number;
-  lastModified: string;
-}
-
 export interface DatasetVersion {
   version: string;
   publishedBy: string;
