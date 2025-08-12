@@ -35,61 +35,56 @@ const main = async () => {
     // 2. Define the schema by adding columns
     console.log("🏗️ Adding columns to define schema...");
 
-    await dataset.addColumn({
-      name: "user_id",
-      type: "string",
-      required: true,
-      description: "Unique identifier for the user",
-    });
-
-    await dataset.addColumn({
-      name: "prompt",
-      type: "string",
-      required: true,
-      description: "The user's input prompt",
-    });
-
-    await dataset.addColumn({
-      name: "response",
-      type: "string",
-      required: true,
-      description: "The AI model's response",
-    });
-
-    await dataset.addColumn({
-      name: "model",
-      type: "string",
-      required: true,
-      description: "The AI model used (e.g., gpt-4)",
-    });
-
-    await dataset.addColumn({
-      name: "tokens_used",
-      type: "number",
-      required: false,
-      description: "Total tokens consumed",
-    });
-
-    await dataset.addColumn({
-      name: "response_time_ms",
-      type: "number",
-      required: false,
-      description: "Response time in milliseconds",
-    });
-
-    await dataset.addColumn({
-      name: "satisfaction_score",
-      type: "number",
-      required: false,
-      description: "User satisfaction rating (1-5)",
-    });
-
-    await dataset.addColumn({
-      name: "timestamp",
-      type: "string",
-      required: true,
-      description: "When the interaction occurred",
-    });
+    await dataset.addColumn([
+      {
+        name: "user_id",
+        type: "string",
+        required: true,
+        description: "Unique identifier for the user",
+      },
+      {
+        name: "prompt",
+        type: "string",
+        required: true,
+        description: "The user's input prompt",
+      },
+      {
+        name: "response",
+        type: "string",
+        required: true,
+        description: "The AI model's response",
+      },
+      {
+        name: "model",
+        type: "string",
+        required: true,
+        description: "The AI model used (e.g., gpt-4)",
+      },
+      {
+        name: "tokens_used",
+        type: "number",
+        required: false,
+        description: "Total tokens consumed",
+      },
+      {
+        name: "response_time_ms",
+        type: "number",
+        required: false,
+        description: "Response time in milliseconds",
+      },
+      {
+        name: "satisfaction_score",
+        type: "number",
+        required: false,
+        description: "User satisfaction rating (1-5)",
+      },
+      {
+        name: "timestamp",
+        type: "string",
+        required: true,
+        description: "When the interaction occurred",
+      },
+    ]);
 
     console.log("✅ Schema defined with 8 columns\n");
 
@@ -182,23 +177,23 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
     await dataset.fromCSV(csvData, { hasHeader: true });
     console.log("✅ Imported 3 additional records from CSV\n");
 
-    // 5. Get dataset statistics
-    console.log("📈 Getting dataset statistics...");
-    const stats = await dataset.getStats();
-    console.log(`  • Total rows: ${stats.rowCount}`);
-    console.log(`  • Total columns: ${stats.columnCount}`);
-    console.log(`  • Dataset size: ${stats.size} bytes`);
-    console.log(`  • Last modified: ${stats.lastModified}\n`);
+    // 5. Get dataset info
+    console.log("📈 Getting dataset information...");
+    const rows = await dataset.getRows(); // Get all rows
+    const columns = await dataset.getColumns(); // Get all columns
+    console.log(`  • Total rows: ${rows.length}`);
+    console.log(`  • Total columns: ${columns.length}`);
+    console.log(`  • Last updated: ${dataset.updatedAt}\n`);
 
     // 6. Retrieve and analyze some data
     console.log("🔍 Analyzing collected data...");
-    const rows = await dataset.getRows(10); // Get first 10 rows
+    const analysisRows = rows.slice(0, 10); // Get first 10 rows for analysis
 
-    if (rows.length > 0) {
-      console.log(`  • Retrieved ${rows.length} rows`);
+    if (analysisRows.length > 0) {
+      console.log(`  • Retrieved ${analysisRows.length} rows for analysis`);
 
       // Calculate average satisfaction score
-      const satisfactionScores = rows
+      const satisfactionScores = analysisRows
         .map((row) => row.data.satisfaction_score as number)
         .filter((score) => score != null);
 
@@ -212,7 +207,7 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
       }
 
       // Calculate average response time
-      const responseTimes = rows
+      const responseTimes = analysisRows
         .map((row) => row.data.response_time_ms as number)
         .filter((time) => time != null);
 
@@ -226,7 +221,7 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
 
       // Show sample interactions
       console.log("\n📋 Sample interactions:");
-      rows.slice(0, 3).forEach((row, index) => {
+      analysisRows.slice(0, 3).forEach((row, index) => {
         console.log(`  ${index + 1}. User: "${row.data.prompt}"`);
         console.log(
           `     Response: "${String(row.data.response).substring(0, 80)}..."`,
@@ -284,15 +279,15 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
       console.log(`       Published: ${ds.published ? "Yes" : "No"}\n`);
     });
 
-    // 10. Demonstrate search functionality
-    console.log("🔎 Testing search functionality...");
-    const foundDataset = await client.datasets.findByName(dataset.name);
-    if (foundDataset) {
+    // 10. Demonstrate dataset retrieval
+    console.log("🔎 Testing dataset retrieval...");
+    const retrievedDataset = await client.datasets.get(dataset.slug);
+    if (retrievedDataset) {
       console.log(
-        `✅ Found dataset by name: ${foundDataset.name} (ID: ${foundDataset.id})`,
+        `✅ Retrieved dataset by slug: ${retrievedDataset.name} (ID: ${retrievedDataset.id})`,
       );
     } else {
-      console.log("❌ Could not find dataset by name");
+      console.log("❌ Could not retrieve dataset");
     }
 
     console.log("\n🎉 Dataset API demonstration completed successfully!");
@@ -308,7 +303,7 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
     console.log(`   • Name: ${dataset.name}`);
     console.log(`   • ID: ${dataset.id}`);
     console.log(`   • Published: ${dataset.published ? "Yes" : "No"}`);
-    console.log(`   • Total interactions recorded: ${stats.rowCount}`);
+    console.log(`   • Total interactions recorded: ${rows.length}`);
   } catch (error) {
     console.error("❌ Error in dataset operations:", error.message);
     if (error.stack) {

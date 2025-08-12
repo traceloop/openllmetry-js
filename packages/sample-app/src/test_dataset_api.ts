@@ -54,26 +54,26 @@ const main = async () => {
       // Test 3: Add columns
       console.log("3️⃣ Testing column addition...");
       try {
-        await testDataset.addColumn({
-          name: "user_id",
-          type: "string",
-          required: true,
-          description: "User identifier",
-        });
-
-        await testDataset.addColumn({
-          name: "score",
-          type: "number",
-          required: false,
-          description: "User score",
-        });
-
-        await testDataset.addColumn({
-          name: "active",
-          type: "boolean",
-          required: false,
-          description: "User active status",
-        });
+        await testDataset.addColumn([
+          {
+            name: "user_id",
+            type: "string",
+            required: true,
+            description: "User identifier",
+          },
+          {
+            name: "score",
+            type: "number",
+            required: false,
+            description: "User score",
+          },
+          {
+            name: "active",
+            type: "boolean",
+            required: false,
+            description: "User active status",
+          },
+        ]);
 
         console.log("✅ Added 3 columns successfully\n");
 
@@ -152,17 +152,17 @@ user404,76,true`;
         console.log(`❌ CSV import failed: ${error.message}`);
       }
 
-      // Test 8: Dataset statistics
-      console.log("8️⃣ Testing dataset statistics...");
+      // Test 8: Dataset information
+      console.log("8️⃣ Testing dataset information...");
       try {
-        const stats = await testDataset.getStats();
-        console.log("✅ Dataset statistics:");
-        console.log(`   • Rows: ${stats.rowCount}`);
-        console.log(`   • Columns: ${stats.columnCount}`);
-        console.log(`   • Size: ${stats.size} bytes`);
-        console.log(`   • Last modified: ${stats.lastModified}\n`);
+        const rows = await testDataset.getRows();
+        const columns = await testDataset.getColumns();
+        console.log("✅ Dataset information:");
+        console.log(`   • Rows: ${rows.length}`);
+        console.log(`   • Columns: ${columns.length}`);
+        console.log(`   • Last updated: ${testDataset.updatedAt}\n`);
       } catch (error) {
-        console.log(`❌ Statistics retrieval failed: ${error.message}`);
+        console.log(`❌ Information retrieval failed: ${error.message}`);
       }
 
       // Test 9: Dataset versions
@@ -205,31 +205,26 @@ user404,76,true`;
         console.log(`❌ Dataset publishing failed: ${error.message}`);
       }
 
-      // Test 11: Dataset retrieval by ID
-      console.log("1️⃣1️⃣ Testing dataset retrieval by ID...");
+      // Test 11: Dataset retrieval by slug
+      console.log("1️⃣1️⃣ Testing dataset retrieval by slug...");
       try {
-        const retrievedDataset = await client.datasets.get(testDataset.id);
-        console.log(`✅ Retrieved dataset by ID:`);
+        const retrievedDataset = await client.datasets.get(testDataset.slug);
+        console.log(`✅ Retrieved dataset by slug:`);
         console.log(`   Name: ${retrievedDataset.name}`);
         console.log(`   ID: ${retrievedDataset.id}`);
+        console.log(`   Slug: ${retrievedDataset.slug}`);
         console.log(`   Published: ${retrievedDataset.published}\n`);
       } catch (error) {
-        console.log(`❌ Dataset retrieval by ID failed: ${error.message}`);
+        console.log(`❌ Dataset retrieval by slug failed: ${error.message}`);
       }
 
-      // Test 12: Dataset search by name
-      console.log("1️⃣2️⃣ Testing dataset search by name...");
+      // Test 12: Dataset deletion test
+      console.log("1️⃣2️⃣ Testing dataset deletion...");
       try {
-        const foundDataset = await client.datasets.findByName(testDataset.name);
-        if (foundDataset) {
-          console.log(`✅ Found dataset by name:`);
-          console.log(`   Name: ${foundDataset.name}`);
-          console.log(`   ID: ${foundDataset.id}\n`);
-        } else {
-          console.log(`❌ Dataset not found by name\n`);
-        }
+        await client.datasets.delete(testDataset.slug);
+        console.log(`✅ Dataset deleted successfully\n`);
       } catch (error) {
-        console.log(`❌ Dataset search by name failed: ${error.message}`);
+        console.log(`❌ Dataset deletion failed: ${error.message}`);
       }
 
       console.log("🎉 All tests completed!");
