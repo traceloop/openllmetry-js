@@ -774,10 +774,12 @@ describe("Dataset API Comprehensive Tests", () => {
       });
 
       try {
-        await tempDataset.addColumn([{
-          name: "", // Invalid empty name
-          type: "string",
-        }]);
+        await tempDataset.addColumn([
+          {
+            name: "", // Invalid empty name
+            type: "string",
+          },
+        ]);
         assert.fail("Should have thrown an error");
       } catch (error) {
         assert.ok(error instanceof Error);

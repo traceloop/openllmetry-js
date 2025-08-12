@@ -93,7 +93,7 @@ export class Dataset extends BaseDataset {
     }
 
     const results: ColumnResponse[] = [];
-    
+
     for (const column of columns) {
       if (!column.name || typeof column.name !== "string") {
         throw new Error("Column name is required and must be a string");

@@ -65,7 +65,9 @@ export class Datasets extends BaseDataset {
       throw new Error("Version must be a non-empty string");
     }
 
-    const response = await this.client.get(`/v2/datasets/${slug}/versions/${version}`);
+    const response = await this.client.get(
+      `/v2/datasets/${slug}/versions/${version}`,
+    );
     const csvData = await this.handleResponse(response);
 
     if (typeof csvData !== "string") {
