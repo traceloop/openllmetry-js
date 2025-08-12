@@ -266,7 +266,7 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
 
     // 9. List all datasets (to show our new one)
     console.log("📑 Listing all datasets...");
-    const datasetsList = await client.datasets.list(1, 5); // First 5 datasets
+    const datasetsList = await client.datasets.list(); // Get all datasets
     console.log(`  • Found ${datasetsList.total} total datasets`);
     console.log("  • Recent datasets:");
 

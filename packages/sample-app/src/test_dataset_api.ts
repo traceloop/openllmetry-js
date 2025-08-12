@@ -23,7 +23,7 @@ const main = async () => {
     // Test 1: List existing datasets
     console.log("1️⃣ Testing dataset list...");
     try {
-      const datasetsList = await client.datasets.list(1, 10);
+      const datasetsList = await client.datasets.list();
       console.log(`✅ Found ${datasetsList.total} datasets`);
 
       if (datasetsList.datasets.length > 0) {
