@@ -61,11 +61,9 @@ export class Column extends BaseDataset {
 
     if (
       options.type &&
-      !["string", "number", "boolean", "date"].includes(options.type)
+      !["string", "number", "boolean"].includes(options.type)
     ) {
-      throw new Error(
-        "Column type must be one of: string, number, boolean, date",
-      );
+      throw new Error("Column type must be one of: string, number, boolean");
     }
 
     const response = await this.client.put(

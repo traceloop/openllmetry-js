@@ -86,7 +86,7 @@ describe("Dataset API Comprehensive Tests", () => {
     });
 
     it("should list all datasets", async function () {
-      const result = await client.datasets.list(1, 10);
+      const result = await client.datasets.list();
 
       assert.ok(result);
       assert.ok(Array.isArray(result.datasets));

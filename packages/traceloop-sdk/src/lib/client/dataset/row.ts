@@ -40,7 +40,7 @@ export class Row extends BaseDataset {
 
   setValue(
     columnName: string,
-    value: string | number | boolean | Date | null,
+    value: string | number | boolean | null,
   ): void {
     if (!columnName || typeof columnName !== "string") {
       throw new Error("Column name must be a non-empty string");
@@ -92,12 +92,6 @@ export class Row extends BaseDataset {
     if (!updates || typeof updates !== "object") {
       throw new Error("Updates must be a valid object");
     }
-
-    Object.keys(updates).forEach((key) => {
-      if (updates[key] !== undefined) {
-        this._data.data[key] = updates[key];
-      }
-    });
 
     const response = await this.client.put(
       `/v2/datasets/${this.datasetSlug}/rows/${this.id}`,

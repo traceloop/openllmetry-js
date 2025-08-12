@@ -1,5 +1,6 @@
 export interface DatasetCreateOptions {
   name: string;
+  slug?: string;
   description?: string;
 }
 
@@ -45,7 +46,7 @@ export interface ColumnUpdateOptions {
 }
 
 export interface RowData {
-  [key: string]: string | number | boolean | Date | null;
+  [key: string]: string | number | boolean | null;
 }
 
 export interface RowResponse {

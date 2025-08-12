@@ -30,26 +30,14 @@ export class Datasets extends BaseDataset {
     return new Dataset(this.client, data);
   }
 
-  async list(page = 1, limit = 50): Promise<DatasetListResponse> {
-    if (page < 1) {
-      throw new Error("Page must be greater than 0");
-    }
-
-    if (limit < 1 || limit > 100) {
-      throw new Error("Limit must be between 1 and 100");
-    }
-
-    const response = await this.client.get(
-      `/v2/datasets?page=${page}&limit=${limit}`,
-    );
+  async list(): Promise<DatasetListResponse> {
+    const response = await this.client.get(`/v2/datasets`);
     const data: DatasetListResponse = await this.handleResponse(response);
 
     if (!data || !data.datasets) {
       return {
         datasets: [],
         total: 0,
-        page: page,
-        limit: limit,
       };
     }
 
