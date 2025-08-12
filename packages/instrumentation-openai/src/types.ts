@@ -1,5 +1,7 @@
 import { InstrumentationConfig } from "@opentelemetry/instrumentation";
 
+export type OpenAIVersion = "v3" | "v4" | "v5";
+
 export type ImageUploadCallback = (
   traceId: string,
   spanId: string,

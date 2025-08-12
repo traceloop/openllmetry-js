@@ -25,7 +25,7 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import { OpenAIInstrumentationConfig } from "./types";
+import { OpenAIVersion, OpenAIInstrumentationConfig } from "./types";
 import type {
   ChatCompletion,
   ChatCompletionChunk,
@@ -119,7 +119,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "openai",
-      [">=3.1.0 <5"],
+      [">=3.1.0 <6"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
@@ -213,7 +213,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
   private patchOpenAI(
     type: "chat" | "completion",
-    version: "v3" | "v4" = "v4",
+    version: OpenAIVersion = "v4",
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const plugin = this;
@@ -602,7 +602,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
   private _wrapPromise<T>(
     type: "chat" | "completion",
-    version: "v3" | "v4",
+    version: OpenAIVersion,
     span: Span,
     promise: APIPromise<T>,
   ): APIPromise<T> {
