@@ -4,7 +4,7 @@ import { ColumnResponse, ColumnUpdateOptions } from "../../interfaces";
 
 export class Column extends BaseDatasetEntity {
   private _data: ColumnResponse;
-  private _deleted: boolean = false;
+  private _deleted = false;
 
   constructor(client: TraceloopClient, data: ColumnResponse) {
     super(client);

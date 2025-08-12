@@ -4,7 +4,7 @@ import { RowResponse, RowData, RowUpdateOptions } from "../../interfaces";
 
 export class Row extends BaseDatasetEntity {
   private _data: RowResponse;
-  private _deleted: boolean = false;
+  private _deleted = false;
 
   constructor(client: TraceloopClient, data: RowResponse) {
     super(client);

@@ -17,7 +17,7 @@ import {
 
 export class Dataset extends BaseDatasetEntity {
   private _data: DatasetResponse;
-  private _deleted: boolean = false;
+  private _deleted = false;
 
   constructor(client: TraceloopClient, data: DatasetResponse) {
     super(client);
