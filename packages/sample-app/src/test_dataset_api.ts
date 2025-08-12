@@ -54,34 +54,35 @@ const main = async () => {
       // Test 3: Add columns
       console.log("3️⃣ Testing column addition...");
       try {
-        await testDataset.addColumn([
+        const columnsToAdd = [
           {
             name: "user_id",
-            type: "string",
+            type: "string" as const,
             required: true,
             description: "User identifier",
           },
           {
             name: "score",
-            type: "number",
+            type: "number" as const,
             required: false,
             description: "User score",
           },
           {
             name: "active",
-            type: "boolean",
+            type: "boolean" as const,
             required: false,
             description: "User active status",
           },
-        ]);
+        ];
+        await testDataset.addColumn(columnsToAdd);
 
         console.log("✅ Added 3 columns successfully\n");
 
         // Test 4: Get columns
         console.log("4️⃣ Testing column retrieval...");
-        const columns = await testDataset.getColumns();
-        console.log(`✅ Retrieved ${columns.length} columns:`);
-        columns.forEach((col) => {
+        const allColumns = await testDataset.getColumns();
+        console.log(`✅ Retrieved ${allColumns.length} columns:`);
+        allColumns.forEach((col) => {
           console.log(
             `   • ${col.name} (${col.type})${col.required ? " [required]" : ""}`,
           );
@@ -156,10 +157,10 @@ user404,76,true`;
       console.log("8️⃣ Testing dataset information...");
       try {
         const rows = await testDataset.getRows();
-        const columns = await testDataset.getColumns();
+        const datasetColumns = await testDataset.getColumns();
         console.log("✅ Dataset information:");
         console.log(`   • Rows: ${rows.length}`);
-        console.log(`   • Columns: ${columns.length}`);
+        console.log(`   • Columns: ${datasetColumns.length}`);
         console.log(`   • Last updated: ${testDataset.updatedAt}\n`);
       } catch (error) {
         console.log(`❌ Information retrieval failed: ${error.message}`);
@@ -221,7 +222,7 @@ user404,76,true`;
       // Test 12: Dataset deletion test
       console.log("1️⃣2️⃣ Testing dataset deletion...");
       try {
-        await client.datasets.delete(testDataset.slug);
+        await testDataset.delete();
         console.log(`✅ Dataset deleted successfully\n`);
       } catch (error) {
         console.log(`❌ Dataset deletion failed: ${error.message}`);

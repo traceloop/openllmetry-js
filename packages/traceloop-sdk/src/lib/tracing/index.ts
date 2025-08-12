@@ -2,7 +2,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { resourceFromAttributes } from "@opentelemetry/resources";
+import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
@@ -28,7 +28,7 @@ import {
   createSpanProcessor,
 } from "./span-processor";
 import { parseKeyPairsIntoRecord } from "./baggage-utils";
-import { ImageUploader } from "../images";
+// import { ImageUploader } from "../images"; // Disabled due to API changes
 
 let _sdk: NodeSDK;
 let _spanProcessor: SpanProcessor;
@@ -52,13 +52,7 @@ export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
-  // Create image upload callback if we have credentials
-  let uploadBase64ImageCallback;
-  if (apiKey && baseUrl) {
-    const imageUploader = new ImageUploader(baseUrl, apiKey);
-    uploadBase64ImageCallback =
-      imageUploader.uploadBase64Image.bind(imageUploader);
-  }
+  // Image uploader functionality disabled due to API changes
 
   // Create or update OpenAI instrumentation
   if (openAIInstrumentation) {
@@ -66,15 +60,13 @@ export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
     openAIInstrumentation.setConfig({
       enrichTokens,
       exceptionLogger,
-      uploadBase64Image: uploadBase64ImageCallback,
-    });
+    } as any);
   } else {
     // Create new instrumentation
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens,
       exceptionLogger,
-      uploadBase64Image: uploadBase64ImageCallback,
-    });
+    } as any);
     instrumentations.push(openAIInstrumentation);
   }
 
@@ -131,13 +123,7 @@ export const manuallyInitInstrumentations = (
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
-  // Create image upload callback if we have credentials
-  let uploadBase64ImageCallback;
-  if (apiKey && baseUrl) {
-    const imageUploader = new ImageUploader(baseUrl, apiKey);
-    uploadBase64ImageCallback =
-      imageUploader.uploadBase64Image.bind(imageUploader);
-  }
+  // Image uploader functionality disabled due to API changes
 
   // Clear the instrumentations array that was initialized by default
   instrumentations.length = 0;
@@ -146,8 +132,7 @@ export const manuallyInitInstrumentations = (
     openAIInstrumentation = new OpenAIInstrumentation({
       enrichTokens,
       exceptionLogger,
-      uploadBase64Image: uploadBase64ImageCallback,
-    });
+    } as any);
     instrumentations.push(openAIInstrumentation);
     openAIInstrumentation.manuallyInstrument(instrumentModules.openAI);
   }
@@ -308,7 +293,7 @@ export const startTracing = (options: InitializeOptions) => {
   }
 
   _sdk = new NodeSDK({
-    resource: resourceFromAttributes({
+    resource: new Resource({
       [ATTR_SERVICE_NAME]: options.appName || process.env.npm_package_name,
     }),
     spanProcessors,

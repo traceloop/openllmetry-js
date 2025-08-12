@@ -35,56 +35,57 @@ const main = async () => {
     // 2. Define the schema by adding columns
     console.log("🏗️ Adding columns to define schema...");
 
-    await dataset.addColumn([
+    const columnsToAdd = [
       {
         name: "user_id",
-        type: "string",
+        type: "string" as const,
         required: true,
         description: "Unique identifier for the user",
       },
       {
         name: "prompt",
-        type: "string",
+        type: "string" as const,
         required: true,
         description: "The user's input prompt",
       },
       {
         name: "response",
-        type: "string",
+        type: "string" as const,
         required: true,
         description: "The AI model's response",
       },
       {
         name: "model",
-        type: "string",
+        type: "string" as const,
         required: true,
         description: "The AI model used (e.g., gpt-4)",
       },
       {
         name: "tokens_used",
-        type: "number",
+        type: "number" as const,
         required: false,
         description: "Total tokens consumed",
       },
       {
         name: "response_time_ms",
-        type: "number",
+        type: "number" as const,
         required: false,
         description: "Response time in milliseconds",
       },
       {
         name: "satisfaction_score",
-        type: "number",
+        type: "number" as const,
         required: false,
         description: "User satisfaction rating (1-5)",
       },
       {
         name: "timestamp",
-        type: "string",
+        type: "string" as const,
         required: true,
         description: "When the interaction occurred",
       },
-    ]);
+    ];
+    await dataset.addColumn(columnsToAdd);
 
     console.log("✅ Schema defined with 8 columns\n");
 
@@ -180,9 +181,9 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
     // 5. Get dataset info
     console.log("📈 Getting dataset information...");
     const rows = await dataset.getRows(); // Get all rows
-    const columns = await dataset.getColumns(); // Get all columns
+    const allColumns = await dataset.getColumns(); // Get all columns
     console.log(`  • Total rows: ${rows.length}`);
-    console.log(`  • Total columns: ${columns.length}`);
+    console.log(`  • Total columns: ${allColumns.length}`);
     console.log(`  • Last updated: ${dataset.updatedAt}\n`);
 
     // 6. Retrieve and analyze some data
