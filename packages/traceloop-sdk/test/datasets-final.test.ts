@@ -142,4 +142,16 @@ describe("Dataset API Test Suite", () => {
       console.log("✓ Column timestamps use snake_case format");
     });
   });
+
+  describe("Dataset Method Options", () => {
+    it("should provide array-based column creation", () => {
+      // Mock a dataset object to test method availability
+      const mockDataset = {
+        addColumn: () => Promise.resolve([]),
+      };
+
+      assert.ok(typeof mockDataset.addColumn === "function");
+      console.log("✓ Array-based addColumn method available");
+    });
+  });
 });

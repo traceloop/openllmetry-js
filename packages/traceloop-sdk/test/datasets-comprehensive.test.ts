@@ -162,26 +162,31 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
 
-      // Add first column
-      const column1 = await dataset.addColumn({
-        name: "name",
-        type: "string",
-        description: "Name field",
-      });
+      // Add multiple columns at once
+      const columns = await dataset.addColumn([
+        {
+          name: "name",
+          type: "string",
+          description: "Name field",
+        },
+        {
+          name: "Score",
+          type: "number",
+          slug: "custom-score-slug",
+          description: "Score field with custom slug",
+        },
+      ]);
+
+      assert.ok(Array.isArray(columns));
+      assert.strictEqual(columns.length, 2);
+
+      const [column1, column2] = columns;
 
       assert.ok(column1);
       assert.ok(column1.slug);
       assert.strictEqual(column1.name, "name");
       assert.strictEqual(column1.type, "string");
       createdColumnSlug = column1.slug;
-
-      // Add second column with custom slug
-      const column2 = await dataset.addColumn({
-        name: "Score",
-        type: "number",
-        slug: "custom-score-slug",
-        description: "Score field with custom slug",
-      });
 
       assert.ok(column2);
       // Check that column was created successfully
@@ -769,10 +774,10 @@ describe("Dataset API Comprehensive Tests", () => {
       });
 
       try {
-        await tempDataset.addColumn({
+        await tempDataset.addColumn([{
           name: "", // Invalid empty name
           type: "string",
-        });
+        }]);
         assert.fail("Should have thrown an error");
       } catch (error) {
         assert.ok(error instanceof Error);

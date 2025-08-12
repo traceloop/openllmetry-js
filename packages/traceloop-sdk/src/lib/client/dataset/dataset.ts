@@ -87,32 +87,44 @@ export class Dataset extends BaseDataset {
     this._data = data;
   }
 
-  async addColumn(column: ColumnDefinition): Promise<ColumnResponse> {
-    if (!column.name || typeof column.name !== "string") {
-      throw new Error("Column name is required and must be a string");
+  async addColumn(columns: ColumnDefinition[]): Promise<ColumnResponse[]> {
+    if (!Array.isArray(columns) || columns.length === 0) {
+      throw new Error("Columns must be a non-empty array");
     }
 
-    const response = await this.client.post(
-      `/v2/datasets/${this.slug}/columns`,
-      column,
-    );
-    const data = await this.handleResponse(response);
+    const results: ColumnResponse[] = [];
+    
+    for (const column of columns) {
+      if (!column.name || typeof column.name !== "string") {
+        throw new Error("Column name is required and must be a string");
+      }
 
-    if (!data || !data.slug) {
-      throw new Error("Failed to create column: Invalid API response");
+      const response = await this.client.post(
+        `/v2/datasets/${this.slug}/columns`,
+        column,
+      );
+      const data = await this.handleResponse(response);
+
+      if (!data || !data.slug) {
+        throw new Error("Failed to create column: Invalid API response");
+      }
+
+      const columnResponse: ColumnResponse = {
+        slug: data.slug,
+        datasetId: this._data.id,
+        datasetSlug: this._data.slug,
+        name: data.name,
+        type: data.type,
+        required: data.required,
+        description: data.description,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+      };
+
+      results.push(columnResponse);
     }
 
-    return {
-      slug: data.slug,
-      datasetId: this._data.id,
-      datasetSlug: this._data.slug,
-      name: data.name,
-      type: data.type,
-      required: data.required,
-      description: data.description,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-    };
+    return results;
   }
 
   async getColumns(): Promise<ColumnResponse[]> {
