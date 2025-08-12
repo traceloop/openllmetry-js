@@ -762,8 +762,7 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       try {
-        const dataset = await client.datasets.get(createdDatasetSlug);
-        await dataset.delete();
+        await client.datasets.delete(createdDatasetSlug);
 
         console.log("✓ Deleted dataset successfully");
       } catch (error) {
@@ -802,7 +801,7 @@ describe("Dataset API Comprehensive Tests", () => {
       } finally {
         // Clean up
         try {
-          await tempDataset.delete();
+          await client.datasets.delete(tempDataset.slug);
         } catch {
           // Ignore cleanup errors
         }
@@ -826,7 +825,7 @@ describe("Dataset API Comprehensive Tests", () => {
       } finally {
         // Clean up
         try {
-          await tempDataset.delete();
+          await client.datasets.delete(tempDataset.slug);
         } catch {
           // Ignore cleanup errors
         }

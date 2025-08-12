@@ -65,4 +65,11 @@ export class Datasets extends BaseDataset {
 
     return new Dataset(this.client, data.datasets[0]);
   }
+
+  async delete(slug: string): Promise<void> {
+    this.validateDatasetSlug(slug);
+
+    const response = await this.client.delete(`/v2/datasets/${slug}`);
+    await this.handleResponse(response);
+  }
 }
