@@ -19,7 +19,7 @@ export interface DatasetResponse {
   created_at?: string;
   updated_at?: string;
   columns?: Record<string, any>;
-  rows?: any[];
+  rows?: RowResponse[];
 }
 
 export interface ColumnDefinition {

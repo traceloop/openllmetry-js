@@ -4,6 +4,7 @@ import { RowResponse, RowData, RowUpdateOptions } from "../../interfaces";
 
 export class Row extends BaseDatasetEntity {
   private _data: RowResponse;
+  private _deleted: boolean = false;
 
   constructor(client: TraceloopClient, data: RowResponse) {
     super(client);
@@ -34,6 +35,10 @@ export class Row extends BaseDatasetEntity {
     return this._data.updated_at;
   }
 
+  get deleted(): boolean {
+    return this._deleted;
+  }
+
   getValue(columnName: string): string | number | boolean | Date | null {
     const value = this._data.data[columnName];
     return value !== undefined ? value : null;
@@ -49,6 +54,10 @@ export class Row extends BaseDatasetEntity {
 
 
   async update(options: RowUpdateOptions): Promise<void> {
+    if (this._deleted) {
+      throw new Error("Cannot update a deleted row");
+    }
+    
     if (!options.data || typeof options.data !== "object") {
       throw new Error("Update data must be a valid object");
     }
@@ -70,6 +79,10 @@ export class Row extends BaseDatasetEntity {
   }
 
   async partialUpdate(updates: Partial<RowData>): Promise<void> {
+    if (this._deleted) {
+      throw new Error("Cannot update a deleted row");
+    }
+    
     if (!updates || typeof updates !== "object") {
       throw new Error("Updates must be a valid object");
     }
@@ -89,10 +102,15 @@ export class Row extends BaseDatasetEntity {
   }
 
   async delete(): Promise<void> {
+    if (this._deleted) {
+      throw new Error("Row is already deleted");
+    }
+    
     const response = await this.client.delete(
       `/v2/datasets/${this.datasetSlug}/rows/${this.id}`,
     );
     await this.handleResponse(response);
+    this._deleted = true;
   }
 
   toJSON(): RowData {

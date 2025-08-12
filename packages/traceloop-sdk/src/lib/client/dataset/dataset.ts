@@ -17,6 +17,7 @@ import {
 
 export class Dataset extends BaseDatasetEntity {
   private _data: DatasetResponse;
+  private _deleted: boolean = false;
 
   constructor(client: TraceloopClient, data: DatasetResponse) {
     super(client);
@@ -55,13 +56,16 @@ export class Dataset extends BaseDatasetEntity {
     return this._data.updated_at || "";
   }
 
-  async refresh(): Promise<void> {
-    const response = await this.client.get(`/v2/datasets/${this.slug}`);
-    const data = await this.handleResponse(response);
-    this._data = data;
+  get deleted(): boolean {
+    return this._deleted;
   }
 
+
   async update(options: DatasetUpdateOptions): Promise<void> {
+    if (this._deleted) {
+      throw new Error("Cannot update a deleted dataset");
+    }
+    
     if (options.name) {
       this.validateDatasetName(options.name);
     }
@@ -74,11 +78,20 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async delete(): Promise<void> {
+    if (this._deleted) {
+      throw new Error("Dataset is already deleted");
+    }
+    
     const response = await this.client.delete(`/v2/datasets/${this.slug}`);
     await this.handleResponse(response);
+    this._deleted = true;
   }
 
   async publish(options: DatasetPublishOptions = {}): Promise<void> {
+    if (this._deleted) {
+      throw new Error("Cannot publish a deleted dataset");
+    }
+    
     const response = await this.client.post(
       `/v2/datasets/${this.slug}/publish`,
       options,
@@ -88,6 +101,10 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async addColumn(columns: ColumnDefinition[]): Promise<Column[]> {
+    if (this._deleted) {
+      throw new Error("Cannot add columns to a deleted dataset");
+    }
+    
     if (!Array.isArray(columns) || columns.length === 0) {
       throw new Error("Columns must be a non-empty array");
     }
@@ -128,6 +145,10 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async getColumns(): Promise<Column[]> {
+    if (this._deleted) {
+      throw new Error("Cannot get columns from a deleted dataset");
+    }
+    
     const response = await this.client.get(`/v2/datasets/${this.slug}`);
     const dataWithColumns = await this.handleResponse(response);
     if (!dataWithColumns.columns) {
@@ -157,6 +178,10 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async addRow(rowData: RowData): Promise<Row> {
+    if (this._deleted) {
+      throw new Error("Cannot add row to a deleted dataset");
+    }
+    
     if (!rowData || typeof rowData !== "object") {
       throw new Error("Row data must be a valid object");
     }
@@ -169,6 +194,10 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async addRows(rows: RowData[]): Promise<Row[]> {
+    if (this._deleted) {
+      throw new Error("Cannot add rows to a deleted dataset");
+    }
+    
     if (!Array.isArray(rows)) {
       throw new Error("Rows must be an array");
     }
@@ -239,6 +268,10 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async getRows(limit = 100, offset = 0): Promise<Row[]> {
+    if (this._deleted) {
+      throw new Error("Cannot get rows from a deleted dataset");
+    }
+    
     const response = await this.client.get(
       `/v2/datasets/${this.slug}/rows?limit=${limit}&offset=${offset}`,
     );
@@ -262,6 +295,10 @@ export class Dataset extends BaseDatasetEntity {
     csvContent: string,
     options: CSVImportOptions = {},
   ): Promise<void> {
+    if (this._deleted) {
+      throw new Error("Cannot import CSV to a deleted dataset");
+    }
+    
     const { hasHeader = true, delimiter = "," } = options;
 
     if (!csvContent || typeof csvContent !== "string") {
@@ -282,6 +319,10 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async getVersions(): Promise<DatasetVersionsResponse> {
+    if (this._deleted) {
+      throw new Error("Cannot get versions of a deleted dataset");
+    }
+    
     const response = await this.client.get(
       `/v2/datasets/${this.slug}/versions`,
     );
@@ -289,6 +330,10 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   async getVersion(version: string): Promise<DatasetVersion | null> {
+    if (this._deleted) {
+      throw new Error("Cannot get version of a deleted dataset");
+    }
+    
     const versionsData = await this.getVersions();
     return versionsData.versions.find((v) => v.version === version) || null;
   }
