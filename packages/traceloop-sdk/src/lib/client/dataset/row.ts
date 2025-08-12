@@ -35,7 +35,8 @@ export class Row extends BaseDataset {
   }
 
   getValue(columnName: string): string | number | boolean | Date | null {
-    return this._data.data[columnName] || null;
+    const value = this._data.data[columnName];
+    return value !== undefined ? value : null;
   }
 
   hasColumn(columnName: string): boolean {

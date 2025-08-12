@@ -40,6 +40,21 @@ export abstract class BaseDataset {
       return transformApiResponse(rawData);
     }
 
+    // Handle non-JSON responses (text/*, text/csv, etc.)
+    if (!response.bodyUsed) {
+      try {
+        const textContent = await response.text();
+        if (textContent) {
+          return {
+            contentType: contentType || "unknown",
+            body: textContent,
+          };
+        }
+      } catch {
+        // Fall through to return null for errors
+      }
+    }
+
     return null;
   }
 
