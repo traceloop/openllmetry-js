@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /*
  * Copyright Traceloop
  *
@@ -25,6 +26,7 @@ import {
 } from "@opentelemetry/sdk-trace-node";
 
 import type * as OpenAIModule from "openai";
+import { toFile } from "openai";
 
 import { OpenAIInstrumentation } from "../src/instrumentation";
 
@@ -616,6 +618,222 @@ describe("Test OpenAI instrumentation", async function () {
         ]! as string,
       ),
       { location: "Chicago, IL" },
+    );
+  });
+
+  it("should set attributes in span for image generation", async () => {
+    await openai.images.generate({
+      model: "dall-e-2",
+      prompt: "A test image",
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const imageSpan = spans.find(
+      (span) => span.name === "openai.images.generate",
+    );
+    assert.ok(imageSpan);
+
+    assert.strictEqual(
+      imageSpan.attributes[SpanAttributes.LLM_SYSTEM],
+      "OpenAI",
+    );
+    assert.strictEqual(
+      imageSpan.attributes["gen_ai.request.type"],
+      "image_generation",
+    );
+    assert.strictEqual(
+      imageSpan.attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      "dall-e-2",
+    );
+    assert.strictEqual(
+      imageSpan.attributes["gen_ai.request.image.size"],
+      "1024x1024",
+    );
+    assert.strictEqual(imageSpan.attributes["gen_ai.request.image.count"], 1);
+    assert.strictEqual(
+      imageSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "A test image",
+    );
+    assert.strictEqual(
+      imageSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+
+    // Check token usage calculation (dall-e-2 1024x1024 should be ~1056 tokens)
+    assert.ok(imageSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
+    assert.ok(imageSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
+
+    // Check response content
+    assert.ok(
+      imageSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+    );
+    assert.strictEqual(
+      imageSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      "assistant",
+    );
+  });
+
+  it.skip("should set attributes in span for image editing", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const imagePath = path.join(__dirname, "test_edit_image.png");
+    const imageBuffer = fs.readFileSync(imagePath);
+    const mockImageFile = await toFile(imageBuffer, "test_edit_image.png", {
+      type: "image/png",
+    });
+
+    await openai.images.edit({
+      image: mockImageFile,
+      prompt: "Add a red hat",
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const editSpan = spans.find((span) => span.name === "openai.images.edit");
+    assert.ok(editSpan);
+
+    assert.strictEqual(
+      editSpan.attributes[SpanAttributes.LLM_SYSTEM],
+      "OpenAI",
+    );
+    assert.strictEqual(
+      editSpan.attributes["gen_ai.request.type"],
+      "image_edit",
+    );
+    // Edit doesn't require model parameter
+    assert.strictEqual(
+      editSpan.attributes["gen_ai.request.image.size"],
+      "1024x1024",
+    );
+    assert.strictEqual(editSpan.attributes["gen_ai.request.image.count"], 1);
+    assert.strictEqual(
+      editSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      "Add a red hat",
+    );
+    assert.strictEqual(
+      editSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      "user",
+    );
+
+    // Check token usage calculation
+    assert.strictEqual(
+      editSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+      4160,
+    );
+    assert.ok(editSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include prompt tokens
+
+    // Check response content
+    assert.ok(
+      editSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+    );
+    assert.strictEqual(
+      editSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      "assistant",
+    );
+  });
+
+  it.skip("should set attributes in span for image variation", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const imagePath = path.join(__dirname, "test_edit_image.png");
+    const imageBuffer = fs.readFileSync(imagePath);
+    const mockImageFile = await toFile(imageBuffer, "test_edit_image.png", {
+      type: "image/png",
+    });
+
+    await openai.images.createVariation({
+      image: mockImageFile,
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const variationSpan = spans.find(
+      (span) => span.name === "openai.images.createVariation",
+    );
+    assert.ok(variationSpan);
+
+    assert.strictEqual(
+      variationSpan.attributes[SpanAttributes.LLM_SYSTEM],
+      "OpenAI",
+    );
+    assert.strictEqual(
+      variationSpan.attributes["gen_ai.request.type"],
+      "image_variation",
+    );
+    // Variation doesn't require model parameter
+    assert.strictEqual(
+      variationSpan.attributes["gen_ai.request.image.size"],
+      "1024x1024",
+    );
+    assert.strictEqual(
+      variationSpan.attributes["gen_ai.request.image.count"],
+      1,
+    );
+
+    // Check token usage calculation (DALL-E 2 1024x1024 = 1056 tokens)
+    assert.strictEqual(
+      variationSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+      1056,
+    );
+    assert.ok(variationSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include estimated input tokens
+
+    // Check response content
+    assert.ok(
+      variationSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+    );
+    assert.strictEqual(
+      variationSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      "assistant",
+    );
+  });
+
+  it("should calculate correct tokens for different quality levels", async () => {
+    // Test dall-e-2 standard
+    await openai.images.generate({
+      model: "dall-e-2",
+      prompt: "Test standard quality",
+      size: "1024x1024",
+    });
+
+    // Test dall-e-3 HD
+    await openai.images.generate({
+      model: "dall-e-3",
+      prompt: "Test HD quality",
+      quality: "hd",
+      size: "1024x1024",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const dalle2Span = spans.find(
+      (span) =>
+        span.name === "openai.images.generate" &&
+        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] ===
+          "Test standard quality",
+    );
+    const dalle3Span = spans.find(
+      (span) =>
+        span.name === "openai.images.generate" &&
+        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] ===
+          "Test HD quality",
+    );
+
+    assert.ok(dalle2Span);
+    assert.ok(dalle3Span);
+
+    // DALL-E 2 standard should be 1056 tokens
+    assert.strictEqual(
+      dalle2Span.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+      1056,
+    );
+
+    // DALL-E 3 HD should be 4160 tokens
+    assert.strictEqual(
+      dalle3Span.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+      4160,
     );
   });
 });

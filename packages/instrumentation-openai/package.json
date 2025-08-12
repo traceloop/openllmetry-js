@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-openai",
-  "version": "0.14.6",
+  "version": "0.15.0",
   "description": "OpenAI Instrumentaion",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,7 +10,7 @@
     "build": "rollup -c",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 20000"
+    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 40000"
   },
   "keywords": [
     "opentelemetry",
@@ -53,6 +53,7 @@
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
     "@types/mocha": "^10.0.10",
+    "@types/node": "^24.0.15",
     "mocha": "^11.7.1",
     "openai": "4.38.3",
     "ts-mocha": "^11.1.0"

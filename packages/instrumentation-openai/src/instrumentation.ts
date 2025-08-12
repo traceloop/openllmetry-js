@@ -40,6 +40,11 @@ import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
 import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 import { APIPromise } from "openai/core";
+import {
+  wrapImageGeneration,
+  wrapImageEdit,
+  wrapImageVariation,
+} from "./image-wrappers";
 
 export class OpenAIInstrumentation extends InstrumentationBase {
   declare protected _config: OpenAIInstrumentationConfig;
@@ -78,6 +83,36 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         "create",
         this.patchOpenAI("completion"),
       );
+
+      if (module.Images) {
+        this._wrap(
+          module.Images.prototype,
+          "generate",
+          wrapImageGeneration(
+            this.tracer,
+            this._config.uploadBase64Image,
+            this._config,
+          ),
+        );
+        this._wrap(
+          module.Images.prototype,
+          "edit",
+          wrapImageEdit(
+            this.tracer,
+            this._config.uploadBase64Image,
+            this._config,
+          ),
+        );
+        this._wrap(
+          module.Images.prototype,
+          "createVariation",
+          wrapImageVariation(
+            this.tracer,
+            this._config.uploadBase64Image,
+            this._config,
+          ),
+        );
+      }
     }
   }
 
@@ -117,6 +152,36 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         "create",
         this.patchOpenAI("completion"),
       );
+
+      if (moduleExports.OpenAI.Images) {
+        this._wrap(
+          moduleExports.OpenAI.Images.prototype,
+          "generate",
+          wrapImageGeneration(
+            this.tracer,
+            this._config.uploadBase64Image,
+            this._config,
+          ),
+        );
+        this._wrap(
+          moduleExports.OpenAI.Images.prototype,
+          "edit",
+          wrapImageEdit(
+            this.tracer,
+            this._config.uploadBase64Image,
+            this._config,
+          ),
+        );
+        this._wrap(
+          moduleExports.OpenAI.Images.prototype,
+          "createVariation",
+          wrapImageVariation(
+            this.tracer,
+            this._config.uploadBase64Image,
+            this._config,
+          ),
+        );
+      }
     }
     return moduleExports;
   }
@@ -137,6 +202,12 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     } else {
       this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
       this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
+
+      if (moduleExports.OpenAI.Images) {
+        this._unwrap(moduleExports.OpenAI.Images.prototype, "generate");
+        this._unwrap(moduleExports.OpenAI.Images.prototype, "edit");
+        this._unwrap(moduleExports.OpenAI.Images.prototype, "createVariation");
+      }
     }
   }
 
@@ -264,6 +335,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         typeof params.extraAttributes === "object"
       ) {
         Object.keys(params.extraAttributes).forEach((key: string) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           attributes[key] = params.extraAttributes![key];
         });
       }
