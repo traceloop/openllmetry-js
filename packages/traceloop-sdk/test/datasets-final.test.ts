@@ -65,7 +65,9 @@ describe("Dataset API Final Test", () => {
     assert.ok(mockDatasetResponse.updated_at);
     assert.ok(typeof mockDatasetResponse.columns === "object");
     assert.ok(Array.isArray(mockDatasetResponse.rows));
-    console.log("✓ Dataset response interfaces use consistent snake_case format");
+    console.log(
+      "✓ Dataset response interfaces use consistent snake_case format",
+    );
   });
 
   it("should handle column interfaces with slug correctly", () => {
@@ -83,6 +85,8 @@ describe("Dataset API Final Test", () => {
     assert.strictEqual(mockColumnResponse.slug, "test-column-slug");
     assert.strictEqual(mockColumnResponse.name, "Test Column");
     assert.strictEqual(mockColumnResponse.type, "string");
-    console.log("✓ Column interfaces correctly use slug instead of id (PR #320)");
+    console.log(
+      "✓ Column interfaces correctly use slug instead of id (PR #320)",
+    );
   });
 });

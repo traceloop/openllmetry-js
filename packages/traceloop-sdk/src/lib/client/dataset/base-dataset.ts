@@ -17,7 +17,6 @@ export abstract class BaseDataset {
             errorMessage = errorData.error;
           }
         } catch {
-
           if (errorText) {
             errorMessage = `${errorMessage} - ${errorText}`;
           }

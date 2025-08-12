@@ -39,7 +39,6 @@ export class TraceloopClient {
   userFeedback = new UserFeedback(this);
   datasets = new Datasets(this);
 
-
   async post(path: string, body: Record<string, unknown> | any) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "POST",

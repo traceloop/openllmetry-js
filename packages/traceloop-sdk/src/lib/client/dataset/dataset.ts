@@ -71,7 +71,6 @@ export class Dataset extends BaseDataset {
     );
     await this.handleResponse(response);
 
-
     await this.refresh();
   }
 
@@ -100,7 +99,6 @@ export class Dataset extends BaseDataset {
     );
     const data = await this.handleResponse(response);
 
-
     if (data && data.column) {
       const columnData = data.column;
       return {
@@ -119,7 +117,6 @@ export class Dataset extends BaseDataset {
       };
     }
 
-
     if (typeof data === "string") {
       return {
         slug: data,
@@ -133,7 +130,6 @@ export class Dataset extends BaseDataset {
         updated_at: new Date().toISOString(),
       };
     }
-
 
     if (data && data.slug) {
       return {
@@ -216,7 +212,6 @@ export class Dataset extends BaseDataset {
       throw new Error("Row data must be a valid object");
     }
 
-
     const rows = await this.addRows([rowData]);
     if (rows.length === 0) {
       throw new Error("Failed to add row");
@@ -256,7 +251,6 @@ export class Dataset extends BaseDataset {
     );
     const result = await this.handleResponse(response);
 
-
     if (result.rows) {
       return result.rows.map((row: any) => ({
         id: row.id,
@@ -276,7 +270,6 @@ export class Dataset extends BaseDataset {
     columnMap: Map<string, string>,
   ): RowData {
     const result: RowData = {};
-
 
     const reverseMap = new Map<string, string>();
     columnMap.forEach((slug, name) => {
@@ -298,7 +291,6 @@ export class Dataset extends BaseDataset {
       `/v2/datasets/${this.slug}/rows?limit=${limit}&offset=${offset}`,
     );
     const data = await this.handleResponse(response);
-    
 
     const rows = data.rows || [];
     return rows.map((row: any) => ({
@@ -326,7 +318,6 @@ export class Dataset extends BaseDataset {
     if (rows.length === 0) {
       throw new Error("No data found in CSV");
     }
-
 
     const batchSize = 100;
     for (let i = 0; i < rows.length; i += batchSize) {
@@ -371,7 +362,6 @@ export class Dataset extends BaseDataset {
     if (hasHeader) {
       headers.push(...this.parseCSVLine(lines[0], delimiter));
     } else {
-
       const firstRow = this.parseCSVLine(lines[0], delimiter);
       for (let i = 0; i < firstRow.length; i++) {
         headers.push(`column_${i + 1}`);

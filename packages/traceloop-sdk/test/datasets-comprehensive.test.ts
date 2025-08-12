@@ -43,12 +43,14 @@ describe("Dataset API Comprehensive Tests", () => {
       },
     });
 
-    const apiKey = process.env.RECORD_MODE === "NEW" 
-      ? process.env.TRACELOOP_API_KEY!
-      : "test-key";
-    const baseUrl = process.env.RECORD_MODE === "NEW"
-      ? process.env.TRACELOOP_BASE_URL!
-      : "https://api-staging.traceloop.com";
+    const apiKey =
+      process.env.RECORD_MODE === "NEW"
+        ? process.env.TRACELOOP_API_KEY!
+        : "test-key";
+    const baseUrl =
+      process.env.RECORD_MODE === "NEW"
+        ? process.env.TRACELOOP_BASE_URL!
+        : "https://api-staging.traceloop.com";
 
     client = new traceloop.TraceloopClient({
       appName: "comprehensive_dataset_test",
@@ -66,9 +68,10 @@ describe("Dataset API Comprehensive Tests", () => {
   describe("Dataset Management", () => {
     it("should create a new dataset", async function () {
       const datasetOptions = {
-        name: process.env.RECORD_MODE === "NEW" 
-          ? `test-dataset-comprehensive-${Date.now()}`
-          : "test-dataset-comprehensive-example",
+        name:
+          process.env.RECORD_MODE === "NEW"
+            ? `test-dataset-comprehensive-${Date.now()}`
+            : "test-dataset-comprehensive-example",
         description: "Comprehensive test dataset",
       };
 
@@ -84,7 +87,7 @@ describe("Dataset API Comprehensive Tests", () => {
 
     it("should list all datasets", async function () {
       const result = await client.datasets.list(1, 10);
-      
+
       assert.ok(result);
       assert.ok(Array.isArray(result.datasets));
       assert.ok(typeof result.total === "number" || result.total === undefined);
@@ -100,7 +103,7 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       assert.ok(dataset);
       assert.strictEqual(dataset.slug, createdDatasetSlug);
       console.log(`✓ Retrieved dataset by slug: ${dataset.slug}`);
@@ -115,7 +118,7 @@ describe("Dataset API Comprehensive Tests", () => {
       // Use the actual dataset name we created
       const dataset = await client.datasets.get(createdDatasetSlug);
       const foundDataset = await client.datasets.findByName(dataset.name);
-      
+
       if (foundDataset) {
         // The findByName might return any dataset with that name, not necessarily ours
         // Just verify that we got a dataset back and it has the expected structure
@@ -145,13 +148,16 @@ describe("Dataset API Comprehensive Tests", () => {
       // Verify the update - check that at least one field changed or the update was accepted
       await dataset.refresh();
       const nameUpdated = dataset.name === "Updated Comprehensive Test Dataset";
-      const descriptionUpdated = dataset.description === "Updated description for comprehensive testing";
-      
+      const descriptionUpdated =
+        dataset.description === "Updated description for comprehensive testing";
+
       if (nameUpdated || descriptionUpdated) {
         console.log("✓ Updated dataset successfully");
       } else {
         // Update might not be reflected immediately or API might have different behavior
-        console.log(`✓ Dataset update completed (name: ${dataset.name}, description: ${dataset.description})`);
+        console.log(
+          `✓ Dataset update completed (name: ${dataset.name}, description: ${dataset.description})`,
+        );
       }
     });
 
@@ -163,7 +169,7 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const originalName = dataset.name;
-      
+
       await dataset.refresh();
       assert.strictEqual(dataset.name, originalName);
       console.log("✓ Refreshed dataset data successfully");
@@ -178,20 +184,20 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       // Add first column
       const column1 = await dataset.addColumn({
         name: "name",
         type: "string",
         description: "Name field",
       });
-      
+
       assert.ok(column1);
       assert.ok(column1.slug);
       assert.strictEqual(column1.name, "name");
       assert.strictEqual(column1.type, "string");
       createdColumnSlug = column1.slug;
-      
+
       // Add second column with custom slug
       const column2 = await dataset.addColumn({
         name: "Score",
@@ -199,15 +205,17 @@ describe("Dataset API Comprehensive Tests", () => {
         slug: "custom-score-slug",
         description: "Score field with custom slug",
       });
-      
+
       assert.ok(column2);
       // Check that column was created successfully
       assert.ok(column2.slug);
       assert.ok(column2.name);
       assert.ok(column2.type);
       console.log(`✓ Second column created with custom slug: ${column2.slug}`);
-      
-      console.log(`✓ Added columns with slugs: ${column1.slug}, ${column2.slug}`);
+
+      console.log(
+        `✓ Added columns with slugs: ${column1.slug}, ${column2.slug}`,
+      );
     });
 
     it("should get all columns from dataset", async function () {
@@ -218,17 +226,17 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const columns = await dataset.getColumns();
-      
+
       assert.ok(Array.isArray(columns));
       console.log(`✓ Retrieved ${columns.length} columns from dataset`);
-      
+
       // Check that columns have slug property
       columns.forEach((column) => {
         assert.ok(column.slug);
         assert.ok(column.name);
         assert.ok(column.type);
       });
-      
+
       console.log(`✓ Retrieved ${columns.length} columns from dataset`);
     });
 
@@ -241,8 +249,8 @@ describe("Dataset API Comprehensive Tests", () => {
       try {
         const dataset = await client.datasets.get(createdDatasetSlug);
         const columns = await dataset.getColumns();
-        const column = columns.find(c => c.slug === createdColumnSlug);
-        
+        const column = columns.find((c) => c.slug === createdColumnSlug);
+
         if (!column) {
           this.skip();
           return;
@@ -260,7 +268,9 @@ describe("Dataset API Comprehensive Tests", () => {
         console.log("✓ Updated column successfully");
       } catch (error) {
         // Column update endpoint might not be implemented yet
-        console.log("✓ Column update test completed (endpoint may not be available)");
+        console.log(
+          "✓ Column update test completed (endpoint may not be available)",
+        );
       }
     });
 
@@ -272,14 +282,14 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const columns = await dataset.getColumns();
-      
+
       if (columns.length === 0) {
         this.skip();
         return;
       }
 
       const column = new traceloop.Column(client, columns[0]);
-      
+
       // Test validation based on column type
       if (column.type === "string") {
         assert.ok(column.validateValue("test string"));
@@ -288,7 +298,7 @@ describe("Dataset API Comprehensive Tests", () => {
         assert.ok(column.validateValue(123));
         assert.ok(!column.validateValue("not a number"));
       }
-      
+
       console.log("✓ Column validation working correctly");
     });
 
@@ -300,21 +310,21 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const columns = await dataset.getColumns();
-      
+
       if (columns.length === 0) {
         this.skip();
         return;
       }
 
       const column = new traceloop.Column(client, columns[0]);
-      
+
       // Test value conversion based on column type
       if (column.type === "string") {
         assert.strictEqual(column.convertValue(123), "123");
       } else if (column.type === "number") {
         assert.strictEqual(column.convertValue("123"), 123);
       }
-      
+
       console.log("✓ Column value conversion working correctly");
     });
   });
@@ -327,7 +337,7 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       // Ensure we have columns first
       const columns = await dataset.getColumns();
       if (columns.length === 0) {
@@ -348,7 +358,7 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const row = await dataset.addRow(rowData);
       createdRowId = row.id;
-      
+
       assert.ok(row);
       assert.ok(row.id);
       assert.ok(row.data);
@@ -362,7 +372,7 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       // Ensure we have columns first
       const columns = await dataset.getColumns();
       if (columns.length === 0) {
@@ -386,14 +396,14 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const rows = await dataset.addRows(rowsData);
-      
+
       assert.ok(Array.isArray(rows));
       assert.strictEqual(rows.length, 3);
       rows.forEach((row) => {
         assert.ok(row.id);
         assert.ok(row.data);
       });
-      
+
       console.log(`✓ Added ${rows.length} rows to dataset`);
     });
 
@@ -405,17 +415,20 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const rows = await dataset.getRows(10, 0);
-      
+
       assert.ok(Array.isArray(rows));
       if (rows.length > 0) {
         rows.forEach((row, index) => {
           assert.ok(row.id, `Row ${index} should have an id`);
           // row should have basic structure
-          assert.ok(typeof row === 'object', `Row ${index} should be an object`);
+          assert.ok(
+            typeof row === "object",
+            `Row ${index} should be an object`,
+          );
           assert.ok(row.datasetSlug, `Row ${index} should have a datasetSlug`);
         });
       }
-      
+
       console.log(`✓ Retrieved ${rows.length} rows from dataset`);
     });
 
@@ -428,8 +441,8 @@ describe("Dataset API Comprehensive Tests", () => {
       try {
         const dataset = await client.datasets.get(createdDatasetSlug);
         const rows = await dataset.getRows();
-        const row = rows.find(r => r.id === createdRowId);
-        
+        const row = rows.find((r) => r.id === createdRowId);
+
         if (!row) {
           this.skip();
           return;
@@ -437,20 +450,22 @@ describe("Dataset API Comprehensive Tests", () => {
 
         const rowObj = new traceloop.Row(client, row);
         const originalData = { ...row.data };
-        
+
         // Update first available field
         const firstKey = Object.keys(originalData)[0];
         if (firstKey) {
           const updateData = { [firstKey]: "Updated Value" };
           await rowObj.update({ data: updateData });
-          
+
           await rowObj.refresh();
           assert.notStrictEqual(rowObj.data[firstKey], originalData[firstKey]);
           console.log("✓ Updated row data successfully");
         }
       } catch (error) {
         // Row update endpoint might not be implemented yet
-        console.log("✓ Row update test completed (endpoint may not be available)");
+        console.log(
+          "✓ Row update test completed (endpoint may not be available)",
+        );
       }
     });
 
@@ -463,8 +478,8 @@ describe("Dataset API Comprehensive Tests", () => {
       try {
         const dataset = await client.datasets.get(createdDatasetSlug);
         const rows = await dataset.getRows();
-        const row = rows.find(r => r.id === createdRowId);
-        
+        const row = rows.find((r) => r.id === createdRowId);
+
         if (!row || !row.data || Object.keys(row.data).length === 0) {
           this.skip();
           return;
@@ -472,10 +487,10 @@ describe("Dataset API Comprehensive Tests", () => {
 
         const rowObj = new traceloop.Row(client, row);
         const firstKey = Object.keys(row.data)[0];
-        
+
         if (firstKey) {
           await rowObj.partialUpdate({ [firstKey]: "Partial Update Value" });
-          
+
           await rowObj.refresh();
           assert.strictEqual(rowObj.data[firstKey], "Partial Update Value");
           console.log("✓ Partial updated row data successfully");
@@ -484,7 +499,9 @@ describe("Dataset API Comprehensive Tests", () => {
         }
       } catch (error) {
         // Row update endpoint might not be implemented yet
-        console.log("✓ Partial row update test completed (endpoint may not be available)");
+        console.log(
+          "✓ Partial row update test completed (endpoint may not be available)",
+        );
       }
     });
 
@@ -497,7 +514,7 @@ describe("Dataset API Comprehensive Tests", () => {
       try {
         const dataset = await client.datasets.get(createdDatasetSlug);
         const rows = await dataset.getRows();
-        
+
         if (rows.length === 0) {
           this.skip();
           return;
@@ -505,13 +522,15 @@ describe("Dataset API Comprehensive Tests", () => {
 
         const rowObj = new traceloop.Row(client, rows[0]);
         const originalData = { ...rowObj.data };
-        
+
         await rowObj.refresh();
         assert.deepStrictEqual(rowObj.data, originalData);
         console.log("✓ Refreshed row data successfully");
       } catch (error) {
         // Row refresh might not be implemented or dataset might be deleted
-        console.log("✓ Row refresh test completed (endpoint may not be available)");
+        console.log(
+          "✓ Row refresh test completed (endpoint may not be available)",
+        );
       }
     });
 
@@ -523,7 +542,7 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const rows = await dataset.getRows();
-      
+
       if (rows.length === 0) {
         this.skip();
         return;
@@ -531,7 +550,7 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const rowObj = new traceloop.Row(client, rows[0]);
       const validation = rowObj.validate();
-      
+
       assert.ok(typeof validation.valid === "boolean");
       assert.ok(Array.isArray(validation.errors));
       console.log("✓ Row validation working correctly");
@@ -545,14 +564,14 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const rows = await dataset.getRows();
-      
+
       if (rows.length === 0) {
         this.skip();
         return;
       }
 
       const rowObj = new traceloop.Row(client, rows[0]);
-      
+
       if (typeof rowObj.toCSVRow === "function") {
         const csvString = rowObj.toCSVRow();
         assert.ok(typeof csvString === "string");
@@ -571,7 +590,7 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const rows = await dataset.getRows();
-      
+
       if (rows.length === 0) {
         this.skip();
         return;
@@ -579,7 +598,7 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const rowObj = new traceloop.Row(client, rows[0]);
       const clonedRow = rowObj.clone();
-      
+
       assert.ok(clonedRow);
       assert.strictEqual(clonedRow.id, rowObj.id);
       assert.deepStrictEqual(clonedRow.data, rowObj.data);
@@ -596,18 +615,20 @@ describe("Dataset API Comprehensive Tests", () => {
 
       const dataset = await client.datasets.get(createdDatasetSlug);
       const csvData = "name,score\nJohn,85\nJane,92\nBob,78";
-      
+
       try {
         const result = await dataset.fromCSV(csvData, {
           hasHeader: true,
           delimiter: ",",
         });
-        
+
         assert.ok(Array.isArray(result));
         console.log(`✓ Imported CSV data with ${result.length} rows`);
       } catch (error) {
         // CSV import might not be fully implemented yet
-        console.log("✓ CSV import method exists (implementation may be pending)");
+        console.log(
+          "✓ CSV import method exists (implementation may be pending)",
+        );
       }
     });
 
@@ -618,10 +639,10 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       try {
         const stats = await dataset.getStats();
-        
+
         assert.ok(typeof stats.rowCount === "number");
         assert.ok(typeof stats.columnCount === "number");
         console.log("✓ Retrieved dataset statistics");
@@ -638,17 +659,19 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       try {
         await dataset.publish({
           version: "1.0.0",
           description: "First published version",
         });
-        
+
         console.log("✓ Published dataset successfully");
       } catch (error) {
         // Publish endpoint might not be implemented yet
-        console.log("✓ Dataset publish method exists (endpoint may be pending)");
+        console.log(
+          "✓ Dataset publish method exists (endpoint may be pending)",
+        );
       }
     });
 
@@ -659,16 +682,18 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       try {
         const versions = await dataset.getVersions();
-        
+
         assert.ok(versions.datasetSlug);
         assert.ok(Array.isArray(versions.versions));
         console.log("✓ Retrieved dataset versions");
       } catch (error) {
         // Versions endpoint might not be implemented yet
-        console.log("✓ Dataset versions method exists (endpoint may be pending)");
+        console.log(
+          "✓ Dataset versions method exists (endpoint may be pending)",
+        );
       }
     });
 
@@ -679,10 +704,10 @@ describe("Dataset API Comprehensive Tests", () => {
       }
 
       const dataset = await client.datasets.get(createdDatasetSlug);
-      
+
       try {
         const version = await dataset.getVersion("1.0.0");
-        
+
         if (version) {
           assert.ok(version.version);
           assert.ok(version.publishedAt);
@@ -690,7 +715,9 @@ describe("Dataset API Comprehensive Tests", () => {
         console.log("✓ Retrieved specific dataset version");
       } catch (error) {
         // Version endpoint might not be implemented yet
-        console.log("✓ Dataset version method exists (endpoint may be pending)");
+        console.log(
+          "✓ Dataset version method exists (endpoint may be pending)",
+        );
       }
     });
   });
@@ -705,8 +732,8 @@ describe("Dataset API Comprehensive Tests", () => {
       try {
         const dataset = await client.datasets.get(createdDatasetSlug);
         const columns = await dataset.getColumns();
-        const column = columns.find(c => c.slug === createdColumnSlug);
-        
+        const column = columns.find((c) => c.slug === createdColumnSlug);
+
         if (!column) {
           this.skip();
           return;
@@ -714,10 +741,12 @@ describe("Dataset API Comprehensive Tests", () => {
 
         const columnObj = new traceloop.Column(client, column);
         await columnObj.delete();
-        
+
         console.log("✓ Deleted column successfully");
       } catch (error) {
-        console.log("✓ Column deletion completed (dataset may already be deleted)");
+        console.log(
+          "✓ Column deletion completed (dataset may already be deleted)",
+        );
       }
     });
 
@@ -730,8 +759,8 @@ describe("Dataset API Comprehensive Tests", () => {
       try {
         const dataset = await client.datasets.get(createdDatasetSlug);
         const rows = await dataset.getRows();
-        const row = rows.find(r => r.id === createdRowId);
-        
+        const row = rows.find((r) => r.id === createdRowId);
+
         if (!row) {
           this.skip();
           return;
@@ -739,10 +768,12 @@ describe("Dataset API Comprehensive Tests", () => {
 
         const rowObj = new traceloop.Row(client, row);
         await rowObj.delete();
-        
+
         console.log("✓ Deleted row successfully");
       } catch (error) {
-        console.log("✓ Row deletion completed (dataset may already be deleted)");
+        console.log(
+          "✓ Row deletion completed (dataset may already be deleted)",
+        );
       }
     });
 
@@ -755,7 +786,7 @@ describe("Dataset API Comprehensive Tests", () => {
       try {
         const dataset = await client.datasets.get(createdDatasetSlug);
         await dataset.delete();
-        
+
         console.log("✓ Deleted dataset successfully");
       } catch (error) {
         console.log("✓ Dataset deletion completed (may already be deleted)");
@@ -780,7 +811,7 @@ describe("Dataset API Comprehensive Tests", () => {
         name: `error-test-${Date.now()}`,
         description: "Temporary dataset for error testing",
       });
-      
+
       try {
         await tempDataset.addColumn({
           name: "", // Invalid empty name
@@ -806,7 +837,7 @@ describe("Dataset API Comprehensive Tests", () => {
         name: `error-test-${Date.now()}`,
         description: "Temporary dataset for error testing",
       });
-      
+
       try {
         await tempDataset.addRow({}); // Empty row data
         // This might not fail depending on API implementation

@@ -27,12 +27,12 @@ export function transformResponseKeys(obj: any): any {
 
   if (typeof obj === "object" && obj.constructor === Object) {
     const transformed: Record<string, any> = {};
-    
+
     for (const [key, value] of Object.entries(obj)) {
       const camelKey = snakeToCamel(key);
       transformed[camelKey] = transformResponseKeys(value);
     }
-    
+
     return transformed;
   }
 
@@ -43,7 +43,7 @@ export function transformResponseKeys(obj: any): any {
  * Transforms API response data by converting snake_case keys to camelCase
  * This function is designed to be used in the BaseDataset.handleResponse() method
  * to ensure consistent camelCase format throughout the SDK
- * 
+ *
  * @param data The raw API response data
  * @returns The transformed data with camelCase keys
  */

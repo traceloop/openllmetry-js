@@ -70,7 +70,6 @@ export class Row extends BaseDataset {
       throw new Error("Update data must be a valid object");
     }
 
-
     const updatedData = { ...this._data.data, ...options.data };
 
     const response = await this.client.put(
@@ -85,7 +84,6 @@ export class Row extends BaseDataset {
     if (result && result.id) {
       this._data = result;
     } else {
-
       await this.refresh();
     }
   }
@@ -94,7 +92,6 @@ export class Row extends BaseDataset {
     if (!updates || typeof updates !== "object") {
       throw new Error("Updates must be a valid object");
     }
-
 
     Object.keys(updates).forEach((key) => {
       if (updates[key] !== undefined) {
@@ -114,7 +111,6 @@ export class Row extends BaseDataset {
     if (result && result.id) {
       this._data = result;
     } else {
-
       await this.refresh();
     }
   }

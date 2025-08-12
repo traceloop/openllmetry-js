@@ -44,7 +44,6 @@ export class Datasets extends BaseDataset {
     );
     const data: DatasetListResponse = await this.handleResponse(response);
 
-
     if (!data || !data.datasets) {
       return {
         datasets: [],
@@ -53,7 +52,6 @@ export class Datasets extends BaseDataset {
         limit: limit,
       };
     }
-
 
     const datasets = data.datasets.map(
       (datasetData) => new Dataset(this.client, datasetData),
