@@ -249,10 +249,26 @@ describe("Dataset API Comprehensive Tests", () => {
         assert.strictEqual(columnObj.name, "Updated Name");
         console.log("✓ Updated column successfully");
       } catch (error) {
-        // Column update endpoint might not be implemented yet
-        console.log(
-          "✓ Column update test completed (endpoint may not be available)",
-        );
+        // Check if this is an expected unimplemented endpoint error
+        const isUnimplementedError =
+          (error instanceof Error && error.message.includes("501")) ||
+          (error instanceof Error &&
+            error.message.includes("Not Implemented")) ||
+          (error instanceof Error && error.message.includes("HTTP 501")) ||
+          error.response?.status === 501;
+
+        if (isUnimplementedError) {
+          console.log(
+            "✓ Column update test completed (endpoint not implemented - expected)",
+            error instanceof Error ? error.message : String(error),
+          );
+        } else {
+          // Unexpected error - fail the test
+          console.error("✗ Unexpected error in column update test:", error);
+          assert.fail(
+            `Column update failed with unexpected error: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
       }
     });
 

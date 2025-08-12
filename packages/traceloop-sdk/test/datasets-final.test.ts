@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import * as traceloop from "../src";
+import { transformApiResponse } from "../src/lib/utils/response-transformer";
 
 describe("Dataset API Test Suite", () => {
   let client: traceloop.TraceloopClient;
@@ -56,8 +57,8 @@ describe("Dataset API Test Suite", () => {
       console.log("✓ Dataset creation options are properly structured");
     });
 
-    it("should handle dataset response with snake_case fields", () => {
-      // Test that our interfaces use snake_case as per API format
+    it("should handle dataset response with snake_case fields and transform to camelCase", () => {
+      // Test that the transformer converts snake_case API response to camelCase
       const mockDatasetResponse = {
         id: "test-id",
         slug: "test-slug",
@@ -69,11 +70,32 @@ describe("Dataset API Test Suite", () => {
         rows: [],
       };
 
+      // Verify original snake_case fields
       assert.ok(mockDatasetResponse.id);
       assert.ok(mockDatasetResponse.slug);
       assert.ok(mockDatasetResponse.created_at);
       assert.ok(mockDatasetResponse.updated_at);
-      console.log("✓ Dataset response uses consistent snake_case format");
+
+      // Transform using the SDK transformer
+      const transformedResponse = transformApiResponse(mockDatasetResponse);
+
+      // Verify transformed camelCase fields
+      assert.strictEqual(transformedResponse.id, "test-id");
+      assert.strictEqual(transformedResponse.slug, "test-slug");
+      assert.strictEqual(transformedResponse.name, "test-name");
+      assert.strictEqual(transformedResponse.description, "test-description");
+      assert.strictEqual(transformedResponse.createdAt, "2025-01-01T00:00:00Z");
+      assert.strictEqual(transformedResponse.updatedAt, "2025-01-01T00:00:00Z");
+      assert.deepStrictEqual(transformedResponse.columns, {});
+      assert.deepStrictEqual(transformedResponse.rows, []);
+
+      // Verify snake_case fields are no longer present
+      assert.strictEqual(transformedResponse.created_at, undefined);
+      assert.strictEqual(transformedResponse.updated_at, undefined);
+
+      console.log(
+        "✓ Dataset response transformer converts snake_case to camelCase correctly",
+      );
     });
 
     it("should handle dataset response structure correctly", () => {

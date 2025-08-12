@@ -7,23 +7,29 @@ export abstract class BaseDataset {
   protected async handleResponse(response: Response) {
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      try {
-        const errorText = await response.text();
+
+      if (!response.bodyUsed) {
         try {
-          const errorData = JSON.parse(errorText);
-          if (errorData.message) {
-            errorMessage = errorData.message;
-          } else if (errorData.error) {
-            errorMessage = errorData.error;
+          const errorText = await response.text();
+          try {
+            const errorData = JSON.parse(errorText);
+            if (errorData.message) {
+              errorMessage = errorData.message;
+            } else if (errorData.error) {
+              errorMessage = errorData.error;
+            }
+          } catch {
+            if (errorText) {
+              errorMessage = `${errorMessage} - ${errorText}`;
+            }
           }
         } catch {
-          if (errorText) {
-            errorMessage = `${errorMessage} - ${errorText}`;
-          }
+          errorMessage = `${errorMessage} (body unavailable)`;
         }
-      } catch {
-        // Silently ignore parsing errors
+      } else {
+        errorMessage = `${errorMessage} (body already consumed)`;
       }
+
       throw new Error(errorMessage);
     }
 

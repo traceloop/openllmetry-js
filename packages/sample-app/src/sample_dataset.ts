@@ -13,7 +13,10 @@ const main = async () => {
   try {
     await traceloop.waitForInitialization();
   } catch (error) {
-    console.error("Failed to initialize Traceloop SDK:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "Failed to initialize Traceloop SDK:",
+      error instanceof Error ? error.message : String(error),
+    );
     console.error("Initialization error details:", error);
     process.exit(1);
   }
@@ -312,8 +315,11 @@ user_008,"What is GraphQL?","GraphQL is a query language and runtime for APIs...
     console.log(`   • Published: ${dataset.published ? "Yes" : "No"}`);
     console.log(`   • Total interactions recorded: ${rows.length}`);
   } catch (error) {
-    console.error("❌ Error in dataset operations:", error.message);
-    if (error.stack) {
+    console.error(
+      "❌ Error in dataset operations:",
+      error instanceof Error ? error.message : String(error),
+    );
+    if (error instanceof Error && error.stack) {
       console.error("Stack trace:", error.stack);
     }
   }
