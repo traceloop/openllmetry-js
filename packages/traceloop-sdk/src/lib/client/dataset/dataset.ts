@@ -1,5 +1,7 @@
 import { TraceloopClient } from "../traceloop-client";
 import { BaseDataset } from "./base-dataset";
+import { Row } from "./row";
+import { Column } from "./column";
 import {
   DatasetResponse,
   DatasetUpdateOptions,
@@ -87,12 +89,12 @@ export class Dataset extends BaseDataset {
     this._data = data;
   }
 
-  async addColumn(columns: ColumnDefinition[]): Promise<ColumnResponse[]> {
+  async addColumn(columns: ColumnDefinition[]): Promise<Column[]> {
     if (!Array.isArray(columns) || columns.length === 0) {
       throw new Error("Columns must be a non-empty array");
     }
 
-    const results: ColumnResponse[] = [];
+    const results: Column[] = [];
 
     for (const column of columns) {
       if (!column.name || typeof column.name !== "string") {
@@ -121,25 +123,25 @@ export class Dataset extends BaseDataset {
         updated_at: data.updated_at,
       };
 
-      results.push(columnResponse);
+      results.push(new Column(this.client, columnResponse));
     }
 
     return results;
   }
 
-  async getColumns(): Promise<ColumnResponse[]> {
+  async getColumns(): Promise<Column[]> {
     await this.refresh();
     const dataWithColumns = this._data as any;
     if (!dataWithColumns.columns) {
       return [];
     }
 
-    const columns: ColumnResponse[] = [];
+    const columns: Column[] = [];
     for (const [columnSlug, columnData] of Object.entries(
       dataWithColumns.columns,
     )) {
       const col = columnData as any;
-      columns.push({
+      const columnResponse: ColumnResponse = {
         slug: columnSlug,
         datasetId: this._data.id,
         datasetSlug: this._data.slug,
@@ -149,13 +151,14 @@ export class Dataset extends BaseDataset {
         description: col.description,
         created_at: this.createdAt,
         updated_at: this.updatedAt,
-      });
+      };
+      columns.push(new Column(this.client, columnResponse));
     }
 
     return columns;
   }
 
-  async addRow(rowData: RowData): Promise<RowResponse> {
+  async addRow(rowData: RowData): Promise<Row> {
     if (!rowData || typeof rowData !== "object") {
       throw new Error("Row data must be a valid object");
     }
@@ -167,7 +170,7 @@ export class Dataset extends BaseDataset {
     return rows[0];
   }
 
-  async addRows(rows: RowData[]): Promise<RowResponse[]> {
+  async addRows(rows: RowData[]): Promise<Row[]> {
     if (!Array.isArray(rows)) {
       throw new Error("Rows must be an array");
     }
@@ -200,14 +203,17 @@ export class Dataset extends BaseDataset {
     const result = await this.handleResponse(response);
 
     if (result.rows) {
-      return result.rows.map((row: any) => ({
-        id: row.id,
-        datasetId: this._data.id,
-        datasetSlug: this._data.slug,
-        data: this.transformValuesBackToNames(row.values, columnMap),
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-      }));
+      return result.rows.map((row: any) => {
+        const rowResponse: RowResponse = {
+          id: row.id,
+          datasetId: this._data.id,
+          datasetSlug: this._data.slug,
+          data: this.transformValuesBackToNames(row.values, columnMap),
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+        };
+        return new Row(this.client, rowResponse);
+      });
     }
 
     return [];
@@ -234,21 +240,24 @@ export class Dataset extends BaseDataset {
     return result;
   }
 
-  async getRows(limit = 100, offset = 0): Promise<RowResponse[]> {
+  async getRows(limit = 100, offset = 0): Promise<Row[]> {
     const response = await this.client.get(
       `/v2/datasets/${this.slug}/rows?limit=${limit}&offset=${offset}`,
     );
     const data = await this.handleResponse(response);
 
     const rows = data.rows || [];
-    return rows.map((row: any) => ({
-      id: row.id,
-      datasetId: this._data.id,
-      datasetSlug: this._data.slug,
-      data: row.values || row.data || {},
-      created_at: row.created_at,
-      updated_at: row.updated_at,
-    }));
+    return rows.map((row: any) => {
+      const rowResponse: RowResponse = {
+        id: row.id,
+        datasetId: this._data.id,
+        datasetSlug: this._data.slug,
+        data: row.values || row.data || {},
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+      };
+      return new Row(this.client, rowResponse);
+    });
   }
 
   async fromCSV(
