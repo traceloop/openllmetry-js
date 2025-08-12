@@ -91,8 +91,6 @@ describe("Dataset API Comprehensive Tests", () => {
       assert.ok(result);
       assert.ok(Array.isArray(result.datasets));
       assert.ok(typeof result.total === "number" || result.total === undefined);
-      assert.ok(typeof result.page === "number" || result.page === undefined);
-      assert.ok(typeof result.limit === "number" || result.limit === undefined);
       console.log(`✓ Listed datasets: ${result.datasets.length} found`);
     });
 

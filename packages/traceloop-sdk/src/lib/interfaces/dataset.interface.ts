@@ -64,8 +64,6 @@ export interface RowUpdateOptions {
 export interface DatasetListResponse {
   datasets: DatasetResponse[];
   total: number;
-  page: number;
-  limit: number;
 }
 
 export interface DatasetPublishOptions {
