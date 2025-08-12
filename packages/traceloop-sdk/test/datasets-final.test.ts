@@ -9,7 +9,6 @@ describe("Dataset API Final Test", () => {
       appName: "dataset_final_test",
       apiKey: "test-key",
       baseUrl: "https://api-staging.traceloop.com",
-      projectId: "default",
     });
   });
 
