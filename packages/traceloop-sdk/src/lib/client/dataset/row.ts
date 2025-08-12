@@ -38,17 +38,6 @@ export class Row extends BaseDataset {
     return this._data.data[columnName] || null;
   }
 
-  setValue(
-    columnName: string,
-    value: string | number | boolean | null,
-  ): void {
-    if (!columnName || typeof columnName !== "string") {
-      throw new Error("Column name must be a non-empty string");
-    }
-
-    this._data.data[columnName] = value;
-  }
-
   hasColumn(columnName: string): boolean {
     return columnName in this._data.data;
   }
