@@ -52,12 +52,11 @@ export class Row extends BaseDatasetEntity {
     return Object.keys(this._data.data);
   }
 
-
   async update(options: RowUpdateOptions): Promise<void> {
     if (this._deleted) {
       throw new Error("Cannot update a deleted row");
     }
-    
+
     if (!options.data || typeof options.data !== "object") {
       throw new Error("Update data must be a valid object");
     }
@@ -82,7 +81,7 @@ export class Row extends BaseDatasetEntity {
     if (this._deleted) {
       throw new Error("Cannot update a deleted row");
     }
-    
+
     if (!updates || typeof updates !== "object") {
       throw new Error("Updates must be a valid object");
     }
@@ -105,7 +104,7 @@ export class Row extends BaseDatasetEntity {
     if (this._deleted) {
       throw new Error("Row is already deleted");
     }
-    
+
     const response = await this.client.delete(
       `/v2/datasets/${this.datasetSlug}/rows/${this.id}`,
     );

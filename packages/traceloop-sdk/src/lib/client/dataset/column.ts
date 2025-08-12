@@ -51,12 +51,11 @@ export class Column extends BaseDatasetEntity {
     return this._deleted;
   }
 
-
   async update(options: ColumnUpdateOptions): Promise<void> {
     if (this._deleted) {
       throw new Error("Cannot update a deleted column");
     }
-    
+
     if (options.name && typeof options.name !== "string") {
       throw new Error("Column name must be a string");
     }
@@ -73,7 +72,7 @@ export class Column extends BaseDatasetEntity {
       options,
     );
     const data = await this.handleResponse(response);
-    
+
     // API returns dataset data, extract column info if available
     if (data.columns && data.columns[this.slug]) {
       const columnData = data.columns[this.slug];
@@ -92,7 +91,7 @@ export class Column extends BaseDatasetEntity {
     if (this._deleted) {
       throw new Error("Column is already deleted");
     }
-    
+
     const response = await this.client.delete(
       `/v2/datasets/${this.datasetSlug}/columns/${this.slug}`,
     );
