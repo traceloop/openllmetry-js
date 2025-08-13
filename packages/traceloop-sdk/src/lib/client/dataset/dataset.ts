@@ -2,6 +2,7 @@ import { TraceloopClient } from "../traceloop-client";
 import { BaseDatasetEntity } from "./base-dataset";
 import { Row } from "./row";
 import { Column } from "./column";
+import * as Papa from "papaparse";
 import {
   DatasetResponse,
   DatasetUpdateOptions,
@@ -338,63 +339,19 @@ export class Dataset extends BaseDatasetEntity {
     delimiter: string,
     hasHeader: boolean,
   ): RowData[] {
-    const lines = csvContent
-      .split("\n")
-      .filter((line) => line.trim().length > 0);
+    const parseResult = Papa.parse(csvContent, {
+      delimiter,
+      header: hasHeader,
+      skipEmptyLines: true,
+      transformHeader: (header: string) => header.trim(),
+      transform: (value: string) => this.parseValue(value.trim()),
+    });
 
-    if (lines.length === 0) {
-      return [];
+    if (parseResult.errors.length > 0) {
+      throw new Error(`CSV parsing failed: ${parseResult.errors[0].message}`);
     }
 
-    const headers: string[] = [];
-    const startIndex = hasHeader ? 1 : 0;
-
-    if (hasHeader) {
-      headers.push(...this.parseCSVLine(lines[0], delimiter));
-    } else {
-      const firstRow = this.parseCSVLine(lines[0], delimiter);
-      for (let i = 0; i < firstRow.length; i++) {
-        headers.push(`column_${i + 1}`);
-      }
-    }
-
-    const rows: RowData[] = [];
-
-    for (let i = startIndex; i < lines.length; i++) {
-      const values = this.parseCSVLine(lines[i], delimiter);
-      const rowData: RowData = {};
-
-      for (let j = 0; j < Math.min(headers.length, values.length); j++) {
-        const value = values[j].trim();
-        rowData[headers[j]] = this.parseValue(value);
-      }
-
-      rows.push(rowData);
-    }
-
-    return rows;
-  }
-
-  private parseCSVLine(line: string, delimiter: string): string[] {
-    const result: string[] = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-
-      if (char === '"' && (i === 0 || line[i - 1] === delimiter || inQuotes)) {
-        inQuotes = !inQuotes;
-      } else if (char === delimiter && !inQuotes) {
-        result.push(current);
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-
-    result.push(current);
-    return result.map((value) => value.replace(/^"|"$/g, ""));
+    return parseResult.data as RowData[];
   }
 
   private parseValue(value: string): string | number | boolean | null {
