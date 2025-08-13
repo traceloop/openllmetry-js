@@ -1,6 +1,6 @@
 import { TraceloopClient } from "../traceloop-client";
 import { BaseDatasetEntity } from "./base-dataset";
-import { ColumnResponse, ColumnUpdateOptions } from "../../interfaces";
+import { ColumnResponse, ColumnUpdateOptions, DatasetColumnValue } from "../../interfaces";
 
 export class Column extends BaseDatasetEntity {
   private _data: ColumnResponse;
@@ -40,11 +40,11 @@ export class Column extends BaseDatasetEntity {
   }
 
   get createdAt(): string {
-    return this._data.created_at;
+    return this._data.createdAt;
   }
 
   get updatedAt(): string {
-    return this._data.updated_at;
+    return this._data.updatedAt;
   }
 
   get deleted(): boolean {
@@ -82,7 +82,7 @@ export class Column extends BaseDatasetEntity {
         name: columnData.name || this._data.name,
         type: columnData.type || this._data.type,
         description: columnData.description || this._data.description,
-        updated_at: data.updated_at || this._data.updated_at,
+        updatedAt: data.updatedAt || this._data.updatedAt,
       };
     }
   }
@@ -99,7 +99,7 @@ export class Column extends BaseDatasetEntity {
     this._deleted = true;
   }
 
-  validateValue(value: any): boolean {
+  validateValue(value: DatasetColumnValue): boolean {
     if (this.required && (value === null || value === undefined)) {
       return false;
     }
@@ -120,9 +120,9 @@ export class Column extends BaseDatasetEntity {
     }
   }
 
-  convertValue(value: any): any {
+  convertValue(value: unknown): DatasetColumnValue {
     if (value === null || value === undefined) {
-      return value;
+      return null;
     }
 
     switch (this.type) {
@@ -140,13 +140,8 @@ export class Column extends BaseDatasetEntity {
           if (lower === "false" || lower === "0") return false;
         }
         return Boolean(value);
-      case "date": {
-        if (value instanceof Date) return value;
-        const dateValue = new Date(value);
-        return isNaN(dateValue.getTime()) ? null : dateValue;
-      }
       default:
-        return value;
+        return value as DatasetColumnValue;
     }
   }
 }

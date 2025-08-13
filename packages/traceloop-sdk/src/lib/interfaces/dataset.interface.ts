@@ -16,8 +16,8 @@ export interface DatasetResponse {
   description?: string;
   version?: number;
   published?: boolean;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
   columns?: Record<string, any>;
   rows?: RowResponse[];
 }
@@ -34,8 +34,8 @@ export interface ColumnResponse extends ColumnDefinition {
   slug: string;
   datasetId: string;
   datasetSlug: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ColumnUpdateOptions {
@@ -54,8 +54,8 @@ export interface RowResponse {
   datasetId: string;
   datasetSlug: string;
   data: RowData;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RowUpdateOptions {
@@ -90,3 +90,5 @@ export interface DatasetVersionsResponse {
   versions: DatasetVersion[];
   total: number;
 }
+
+export type DatasetColumnValue = string | number | boolean | null | undefined;

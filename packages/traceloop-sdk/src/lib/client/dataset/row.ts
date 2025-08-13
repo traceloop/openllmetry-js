@@ -28,11 +28,11 @@ export class Row extends BaseDatasetEntity {
   }
 
   get createdAt(): string {
-    return this._data.created_at;
+    return this._data.createdAt;
   }
 
   get updatedAt(): string {
-    return this._data.updated_at;
+    return this._data.updatedAt;
   }
 
   get deleted(): boolean {

@@ -49,11 +49,11 @@ export class Dataset extends BaseDatasetEntity {
   }
 
   get createdAt(): string {
-    return this._data.created_at || "";
+    return this._data.createdAt || "";
   }
 
   get updatedAt(): string {
-    return this._data.updated_at || "";
+    return this._data.updatedAt || "";
   }
 
   get deleted(): boolean {
@@ -133,8 +133,8 @@ export class Dataset extends BaseDatasetEntity {
         type: data.type,
         required: data.required,
         description: data.description,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
       };
 
       results.push(new Column(this.client, columnResponse));
@@ -148,27 +148,25 @@ export class Dataset extends BaseDatasetEntity {
       throw new Error("Cannot get columns from a deleted dataset");
     }
 
-    const response = await this.client.get(`/v2/datasets/${this.slug}`);
-    const dataWithColumns = await this.handleResponse(response);
-    if (!dataWithColumns.columns) {
+    if (!this._data.columns) {
       return [];
     }
 
     const columns: Column[] = [];
     for (const [columnSlug, columnData] of Object.entries(
-      dataWithColumns.columns,
+      this._data.columns,
     )) {
       const col = columnData as any;
       const columnResponse: ColumnResponse = {
         slug: columnSlug,
-        datasetId: dataWithColumns.id,
+        datasetId: this._data.id,
         datasetSlug: this.slug,
         name: col.name,
         type: col.type,
         required: col.required === true,
         description: col.description,
-        created_at: dataWithColumns.created_at || this.createdAt,
-        updated_at: dataWithColumns.updated_at || this.updatedAt,
+        createdAt: this._data.createdAt || this.createdAt,
+        updatedAt: this._data.updatedAt || this.updatedAt,
       };
       columns.push(new Column(this.client, columnResponse));
     }
@@ -235,8 +233,8 @@ export class Dataset extends BaseDatasetEntity {
           datasetId: this._data.id,
           datasetSlug: this.slug,
           data: this.transformValuesBackToNames(row.values, columnMap),
-          created_at: row.created_at,
-          updated_at: row.updated_at,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
         };
         return new Row(this.client, rowResponse);
       });
@@ -283,8 +281,8 @@ export class Dataset extends BaseDatasetEntity {
         datasetId: this._data.id,
         datasetSlug: this.slug,
         data: row.values || row.data || {},
-        created_at: row.created_at,
-        updated_at: row.updated_at,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
       };
       return new Row(this.client, rowResponse);
     });

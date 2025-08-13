@@ -122,8 +122,8 @@ describe("Dataset API Test Suite", () => {
         type: "string",
         datasetId: "dataset-id",
         datasetSlug: "dataset-slug",
-        created_at: "2025-01-01T00:00:00Z",
-        updated_at: "2025-01-01T00:00:00Z",
+        createdAt: "2025-01-01T00:00:00Z",
+        updatedAt: "2025-01-01T00:00:00Z",
       };
 
       assert.strictEqual(mockColumnResponse.slug, "test-column-slug");
@@ -137,8 +137,8 @@ describe("Dataset API Test Suite", () => {
         type: "string",
         datasetId: "dataset-id",
         datasetSlug: "dataset-slug",
-        created_at: "2025-01-01T00:00:00Z",
-        updated_at: "2025-01-01T00:00:00Z",
+        createdAt: "2025-01-01T00:00:00Z",
+        updatedAt: "2025-01-01T00:00:00Z",
       };
 
       assert.strictEqual(mockColumnResponse.name, "Test Column");
@@ -155,12 +155,12 @@ describe("Dataset API Test Suite", () => {
         type: "string",
         datasetId: "dataset-id",
         datasetSlug: "dataset-slug",
-        created_at: "2025-01-01T00:00:00Z",
-        updated_at: "2025-01-01T00:00:00Z",
+        createdAt: "2025-01-01T00:00:00Z",
+        updatedAt: "2025-01-01T00:00:00Z",
       };
 
-      assert.ok(mockColumnResponse.created_at);
-      assert.ok(mockColumnResponse.updated_at);
+      assert.ok(mockColumnResponse.createdAt);
+      assert.ok(mockColumnResponse.updatedAt);
       console.log("✓ Column timestamps use snake_case format");
     });
   });
