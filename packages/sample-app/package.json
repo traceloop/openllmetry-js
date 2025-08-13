@@ -29,7 +29,6 @@
     "run:langchain": "npm run build && node dist/src/sample_langchain.js",
     "run:sample_structured_output": "npm run build && node dist/src/sample_structured_output.js",
     "run:dataset": "npm run build && node dist/src/sample_dataset.js",
-    "test:dataset": "npm run build && node dist/src/test_dataset_api.js",
     "run:image_generation": "npm run build && node dist/src/sample_openai_image_generation.js",
     "run:sample_edit": "npm run build && node dist/src/test_edit_only.js",
     "run:sample_generate": "npm run build && node dist/src/test_generate_only.js",
