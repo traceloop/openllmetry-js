@@ -1,6 +1,10 @@
 import { TraceloopClient } from "../traceloop-client";
 import { BaseDatasetEntity } from "./base-dataset";
-import { ColumnResponse, ColumnUpdateOptions, DatasetColumnValue } from "../../interfaces";
+import {
+  ColumnResponse,
+  ColumnUpdateOptions,
+  DatasetColumnValue,
+} from "../../interfaces";
 
 export class Column extends BaseDatasetEntity {
   private _data: ColumnResponse;

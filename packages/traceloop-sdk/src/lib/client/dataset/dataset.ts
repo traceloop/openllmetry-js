@@ -153,9 +153,7 @@ export class Dataset extends BaseDatasetEntity {
     }
 
     const columns: Column[] = [];
-    for (const [columnSlug, columnData] of Object.entries(
-      this._data.columns,
-    )) {
+    for (const [columnSlug, columnData] of Object.entries(this._data.columns)) {
       const col = columnData as any;
       const columnResponse: ColumnResponse = {
         slug: columnSlug,
