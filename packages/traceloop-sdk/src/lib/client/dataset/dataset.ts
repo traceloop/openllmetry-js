@@ -41,7 +41,7 @@ export class Dataset extends BaseDatasetEntity {
     return this._data.description;
   }
 
-  get version(): number | undefined {
+  get version(): string | undefined {
     return this._data.version;
   }
 

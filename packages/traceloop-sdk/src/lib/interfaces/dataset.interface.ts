@@ -14,7 +14,7 @@ export interface DatasetResponse {
   slug: string;
   name: string;
   description?: string;
-  version?: number;
+  version?: string;
   published?: boolean;
   createdAt?: string;
   updatedAt?: string;
