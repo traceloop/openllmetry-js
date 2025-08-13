@@ -49,7 +49,7 @@
     "@google-cloud/aiplatform": "^4.4.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@langchain/aws": "^0.1.12",
-    "@langchain/community": "^0.3.49",
+    "@langchain/community": "^0.3.50",
     "@langchain/core": "^0.3.58",
     "@langchain/openai": "^0.6.2",
     "@llamaindex/openai": "^0.4.10",
