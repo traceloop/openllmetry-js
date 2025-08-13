@@ -8,26 +8,13 @@ export abstract class BaseDatasetEntity {
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
 
-      if (!response.bodyUsed) {
-        try {
-          const errorText = await response.text();
-          try {
-            const errorData = JSON.parse(errorText);
-            if (errorData.message) {
-              errorMessage = errorData.message;
-            } else if (errorData.error) {
-              errorMessage = errorData.error;
-            }
-          } catch {
-            if (errorText) {
-              errorMessage = `${errorMessage} - ${errorText}`;
-            }
-          }
-        } catch {
-          errorMessage = `${errorMessage} (body unavailable)`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
         }
-      } else {
-        errorMessage = `${errorMessage} (body already consumed)`;
+      } catch {
+        // Use default HTTP error message if JSON parsing fails
       }
 
       throw new Error(errorMessage);
@@ -36,26 +23,15 @@ export abstract class BaseDatasetEntity {
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
       const rawData = await response.json();
-
       return transformApiResponse(rawData);
     }
 
-    // Handle non-JSON responses (text/*, text/csv, etc.)
-    if (!response.bodyUsed) {
-      try {
-        const textContent = await response.text();
-        if (textContent) {
-          return {
-            contentType: contentType || "unknown",
-            body: textContent,
-          };
-        }
-      } catch {
-        // Fall through to return null for errors
-      }
-    }
-
-    return null;
+    // Handle non-JSON responses (text/csv, etc.)
+    const textContent = await response.text();
+    return {
+      contentType: contentType || "text/plain",
+      body: textContent,
+    };
   }
 
   protected validateDatasetId(id: string): void {
