@@ -814,6 +814,9 @@ importers:
       nunjucks:
         specifier: ^3.2.4
         version: 3.2.4
+      papaparse:
+        specifier: ^5.5.3
+        version: 5.5.3
       posthog-node:
         specifier: ^5.5.1
         version: 5.6.0
@@ -866,6 +869,9 @@ importers:
       '@types/node':
         specifier: ^24.0.15
         version: 24.0.15
+      '@types/papaparse':
+        specifier: ^5.3.16
+        version: 5.3.16
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -3813,6 +3819,9 @@ packages:
   '@types/nunjucks@3.2.6':
     resolution: {integrity: sha512-pHiGtf83na1nCzliuAdq8GowYiXvH5l931xZ0YEHaLMNFgynpEqx+IPStlu7UaDkehfvl01e4x/9Tpwhy7Ue3w==}
 
+  '@types/papaparse@5.3.16':
+    resolution: {integrity: sha512-T3VuKMC2H0lgsjI9buTB3uuKj3EMD2eap1MOuEQuBQ44EnDx/IkGhU6EwiTf9zG3za4SKlmwKAImdDKdNnCsXg==}
+
   '@types/parquetjs@0.10.6':
     resolution: {integrity: sha512-ZCsD6j97YD0mGU8/VnVs3NjORXa7zeHvqlpJpCqy4jU8a1O21dalL+MFn9QNbdEfy8rszR1N7NHeT7/LdtHf+A==}
 
@@ -6689,6 +6698,9 @@ packages:
 
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
+
+  papaparse@5.5.3:
+    resolution: {integrity: sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -11969,6 +11981,10 @@ snapshots:
 
   '@types/nunjucks@3.2.6': {}
 
+  '@types/papaparse@5.3.16':
+    dependencies:
+      '@types/node': 24.0.15
+
   '@types/parquetjs@0.10.6':
     dependencies:
       '@types/node-int64': 0.4.32
@@ -15456,6 +15472,8 @@ snapshots:
       - supports-color
 
   pako@1.0.11: {}
+
+  papaparse@5.5.3: {}
 
   parent-module@1.0.1:
     dependencies:

@@ -3,8 +3,23 @@ export {
   InitializeOptions,
   TraceloopClientOptions,
   AnnotationCreateOptions,
+  DatasetCreateOptions,
+  DatasetUpdateOptions,
+  DatasetResponse,
+  ColumnDefinition,
+  ColumnResponse,
+  ColumnUpdateOptions,
+  RowData,
+  RowResponse,
+  RowUpdateOptions,
+  DatasetListResponse,
+  DatasetPublishOptions,
+  CSVImportOptions,
+  DatasetVersion,
+  DatasetVersionsResponse,
 } from "./interfaces";
 export { TraceloopClient } from "./client/traceloop-client";
+export { Dataset, Datasets, Column, Row } from "./client/dataset";
 export { initialize, getClient } from "./configuration";
 export { forceFlush } from "./tracing";
 export * from "./tracing/decorators";
