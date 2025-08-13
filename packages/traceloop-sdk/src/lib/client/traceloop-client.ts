@@ -1,6 +1,7 @@
 import { TraceloopClientOptions } from "../interfaces";
 import { version } from "../../../package.json";
 import { UserFeedback } from "./annotation/user-feedback";
+import { Datasets } from "./dataset/datasets";
 
 /**
  * The main client for interacting with Traceloop's API.
@@ -36,8 +37,9 @@ export class TraceloopClient {
   }
 
   userFeedback = new UserFeedback(this);
+  datasets = new Datasets(this);
 
-  async post(path: string, body: Record<string, unknown>) {
+  async post(path: string, body: Record<string, unknown> | any) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: {
@@ -46,6 +48,38 @@ export class TraceloopClient {
         "X-Traceloop-SDK-Version": this.version,
       },
       body: JSON.stringify(body),
+    });
+  }
+
+  async get(path: string) {
+    return await fetch(`${this.baseUrl}${path}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "X-Traceloop-SDK-Version": this.version,
+      },
+    });
+  }
+
+  async put(path: string, body: Record<string, unknown> | any) {
+    return await fetch(`${this.baseUrl}${path}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+        "X-Traceloop-SDK-Version": this.version,
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async delete(path: string) {
+    return await fetch(`${this.baseUrl}${path}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "X-Traceloop-SDK-Version": this.version,
+      },
     });
   }
 }
