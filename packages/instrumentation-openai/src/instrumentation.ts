@@ -39,7 +39,11 @@ import type {
 import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
 import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
-import { APIPromise } from "openai/core";
+// Type definition for APIPromise - compatible with both OpenAI v4 and v5+
+// The actual import is handled at runtime via require() calls in the _wrapPromise method
+type APIPromiseType<T> = Promise<T> & {
+  _thenUnwrap: <U>(onFulfilled: (value: T) => U) => APIPromiseType<U>;
+};
 import {
   wrapImageGeneration,
   wrapImageEdit,
@@ -57,69 +61,57 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  public manuallyInstrument(module: typeof openai.OpenAI) {
+  public manuallyInstrument(module: unknown) {
     this._diag.debug(`Manually instrumenting openai`);
 
-    // Old version of OpenAI API (v3.1.0)
-    if ((module as any).OpenAIApi) {
-      this._wrap(
-        (module as any).OpenAIApi.prototype,
-        "createChatCompletion",
-        this.patchOpenAI("chat", "v3"),
-      );
-      this._wrap(
-        (module as any).OpenAIApi.prototype,
-        "createCompletion",
-        this.patchOpenAI("completion", "v3"),
-      );
-    } else {
-      this._wrap(
-        module.Chat.Completions.prototype,
-        "create",
-        this.patchOpenAI("chat"),
-      );
-      this._wrap(
-        module.Completions.prototype,
-        "create",
-        this.patchOpenAI("completion"),
-      );
+    const openaiModule = module as any;
 
-      if (module.Images) {
-        this._wrap(
-          module.Images.prototype,
-          "generate",
-          wrapImageGeneration(
-            this.tracer,
-            this._config.uploadBase64Image,
-            this._config,
-          ),
-        );
-        this._wrap(
-          module.Images.prototype,
-          "edit",
-          wrapImageEdit(
-            this.tracer,
-            this._config.uploadBase64Image,
-            this._config,
-          ),
-        );
-        this._wrap(
-          module.Images.prototype,
-          "createVariation",
-          wrapImageVariation(
-            this.tracer,
-            this._config.uploadBase64Image,
-            this._config,
-          ),
-        );
-      }
+    this._wrap(
+      openaiModule.Chat.Completions.prototype,
+      "create",
+      this.patchOpenAI("chat"),
+    );
+    this._wrap(
+      openaiModule.Completions.prototype,
+      "create",
+      this.patchOpenAI("completion"),
+    );
+
+    if (openaiModule.Images) {
+      this._wrap(
+        openaiModule.Images.prototype,
+        "generate",
+        wrapImageGeneration(
+          this.tracer,
+          this._config.uploadBase64Image,
+          this._config,
+        ),
+      );
+      this._wrap(
+        openaiModule.Images.prototype,
+        "edit",
+        wrapImageEdit(
+          this.tracer,
+          this._config.uploadBase64Image,
+          this._config,
+        ),
+      );
+      this._wrap(
+        openaiModule.Images.prototype,
+        "createVariation",
+        wrapImageVariation(
+          this.tracer,
+          this._config.uploadBase64Image,
+          this._config,
+        ),
+      );
     }
   }
 
   protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "openai",
-      [">=3.1.0 <5"],
+      [">=4 <6"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
@@ -365,7 +357,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             ] = JSON.stringify(func.parameters);
           });
           params.tools?.forEach((tool, index) => {
-            if (!tool.function) {
+            if (
+              tool.type !== "function" ||
+              !("function" in tool) ||
+              !tool.function
+            ) {
               return;
             }
 
@@ -411,13 +407,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         span: Span;
         type: "chat";
         params: ChatCompletionCreateParamsStreaming;
-        promise: APIPromise<Stream<ChatCompletionChunk>>;
+        promise: APIPromiseType<Stream<ChatCompletionChunk>>;
       }
     | {
         span: Span;
         params: CompletionCreateParamsStreaming;
         type: "completion";
-        promise: APIPromise<Stream<Completion>>;
+        promise: APIPromiseType<Stream<Completion>>;
       }) {
     if (type === "chat") {
       const result: ChatCompletion = {
@@ -433,7 +429,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
               role: "assistant",
               content: "",
               tool_calls: [],
-            },
+            } as any,
           },
         ],
         object: "chat.completion",
@@ -486,18 +482,18 @@ export class OpenAIInstrumentation extends InstrumentationBase {
                 toolCall.id;
             }
             if (toolCall.type) {
-              result.choices[0].message.tool_calls[toolCall.index].type +=
+              result.choices[0].message.tool_calls[toolCall.index].type =
                 toolCall.type;
             }
             if (toolCall.function?.name) {
-              result.choices[0].message.tool_calls[
-                toolCall.index
-              ].function.name += toolCall.function.name;
+              (
+                result.choices[0].message.tool_calls[toolCall.index] as any
+              ).function.name += toolCall.function.name;
             }
             if (toolCall.function?.arguments) {
-              result.choices[0].message.tool_calls[
-                toolCall.index
-              ].function.arguments += toolCall.function.arguments;
+              (
+                result.choices[0].message.tool_calls[toolCall.index] as any
+              ).function.arguments += toolCall.function.arguments;
             }
           }
         }
@@ -604,8 +600,8 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     type: "chat" | "completion",
     version: "v3" | "v4",
     span: Span,
-    promise: APIPromise<T>,
-  ): APIPromise<T> {
+    promise: APIPromiseType<T>,
+  ): APIPromiseType<T> {
     return promise._thenUnwrap((result) => {
       if (version === "v3") {
         if (type === "chat") {
@@ -703,14 +699,16 @@ export class OpenAIInstrumentation extends InstrumentationBase {
               toolIndex,
               toolCall,
             ] of choice?.message?.tool_calls?.entries() || []) {
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
-                toolCall.function.name,
-              );
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
-                toolCall.function.arguments,
-              );
+              if (toolCall.type === "function" && "function" in toolCall) {
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
+                  toolCall.function.name,
+                );
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
+                  toolCall.function.arguments,
+                );
+              }
             }
           });
         } else {
