@@ -39,7 +39,11 @@ import type {
 import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
 import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
-import { APIPromise } from "openai/core";
+// Type definition for APIPromise - compatible with both OpenAI v4 and v5+
+// The actual import is handled at runtime via require() calls in the _wrapPromise method
+type APIPromiseType<T> = Promise<T> & {
+  _thenUnwrap: <U>(onFulfilled: (value: T) => U) => APIPromiseType<U>;
+};
 import {
   wrapImageGeneration,
   wrapImageEdit,
@@ -415,13 +419,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         span: Span;
         type: "chat";
         params: ChatCompletionCreateParamsStreaming;
-        promise: APIPromise<Stream<ChatCompletionChunk>>;
+        promise: APIPromiseType<Stream<ChatCompletionChunk>>;
       }
     | {
         span: Span;
         params: CompletionCreateParamsStreaming;
         type: "completion";
-        promise: APIPromise<Stream<Completion>>;
+        promise: APIPromiseType<Stream<Completion>>;
       }) {
     if (type === "chat") {
       const result: ChatCompletion = {
@@ -608,8 +612,8 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     type: "chat" | "completion",
     version: "v3" | "v4",
     span: Span,
-    promise: APIPromise<T>,
-  ): APIPromise<T> {
+    promise: APIPromiseType<T>,
+  ): APIPromiseType<T> {
     return promise._thenUnwrap((result) => {
       if (version === "v3") {
         if (type === "chat") {
