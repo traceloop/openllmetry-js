@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](https://github.com/traceloop/openllmetry-js/compare/v0.15.0...v0.16.0) (2025-08-14)
+
+### Bug Fixes
+
+- **openai:** support for 5.x versions ([#646](https://github.com/traceloop/openllmetry-js/issues/646)) ([588bb01](https://github.com/traceloop/openllmetry-js/commit/588bb01c1e7b93a0e3c7fa3acc2f50e87f977102))
+
 # [0.15.0](https://github.com/traceloop/openllmetry-js/compare/v0.14.6...v0.15.0) (2025-08-11)
 
 ### Features

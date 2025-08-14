@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.16.0](https://github.com/traceloop/openllmetry-js/compare/v0.15.0...v0.16.0) (2025-08-14)
+
+### Features
+
+- add datasets api ([#643](https://github.com/traceloop/openllmetry-js/issues/643)) ([e240945](https://github.com/traceloop/openllmetry-js/commit/e2409456a7c9bd856f5af76fa475fcd5f18a5246))
+
 # [0.15.0](https://github.com/traceloop/openllmetry-js/compare/v0.14.6...v0.15.0) (2025-08-11)
 
 ### Features
