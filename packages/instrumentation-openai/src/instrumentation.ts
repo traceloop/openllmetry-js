@@ -61,69 +61,57 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  public manuallyInstrument(module: typeof openai.OpenAI) {
+  public manuallyInstrument(module: unknown) {
     this._diag.debug(`Manually instrumenting openai`);
 
-    // Old version of OpenAI API (v3.1.0)
-    if ((module as any).OpenAIApi) {
-      this._wrap(
-        (module as any).OpenAIApi.prototype,
-        "createChatCompletion",
-        this.patchOpenAI("chat", "v3"),
-      );
-      this._wrap(
-        (module as any).OpenAIApi.prototype,
-        "createCompletion",
-        this.patchOpenAI("completion", "v3"),
-      );
-    } else {
-      this._wrap(
-        module.Chat.Completions.prototype,
-        "create",
-        this.patchOpenAI("chat"),
-      );
-      this._wrap(
-        module.Completions.prototype,
-        "create",
-        this.patchOpenAI("completion"),
-      );
+    const openaiModule = module as any;
 
-      if (module.Images) {
-        this._wrap(
-          module.Images.prototype,
-          "generate",
-          wrapImageGeneration(
-            this.tracer,
-            this._config.uploadBase64Image,
-            this._config,
-          ),
-        );
-        this._wrap(
-          module.Images.prototype,
-          "edit",
-          wrapImageEdit(
-            this.tracer,
-            this._config.uploadBase64Image,
-            this._config,
-          ),
-        );
-        this._wrap(
-          module.Images.prototype,
-          "createVariation",
-          wrapImageVariation(
-            this.tracer,
-            this._config.uploadBase64Image,
-            this._config,
-          ),
-        );
-      }
+    this._wrap(
+      openaiModule.Chat.Completions.prototype,
+      "create",
+      this.patchOpenAI("chat"),
+    );
+    this._wrap(
+      openaiModule.Completions.prototype,
+      "create",
+      this.patchOpenAI("completion"),
+    );
+
+    if (openaiModule.Images) {
+      this._wrap(
+        openaiModule.Images.prototype,
+        "generate",
+        wrapImageGeneration(
+          this.tracer,
+          this._config.uploadBase64Image,
+          this._config,
+        ),
+      );
+      this._wrap(
+        openaiModule.Images.prototype,
+        "edit",
+        wrapImageEdit(
+          this.tracer,
+          this._config.uploadBase64Image,
+          this._config,
+        ),
+      );
+      this._wrap(
+        openaiModule.Images.prototype,
+        "createVariation",
+        wrapImageVariation(
+          this.tracer,
+          this._config.uploadBase64Image,
+          this._config,
+        ),
+      );
     }
   }
 
   protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "openai",
-      [">=3.1.0 <6"],
+      [">=4 <6"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
