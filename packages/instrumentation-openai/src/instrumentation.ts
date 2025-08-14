@@ -365,7 +365,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             ] = JSON.stringify(func.parameters);
           });
           params.tools?.forEach((tool, index) => {
-            if (tool.type !== 'function' || !('function' in tool) || !tool.function) {
+            if (
+              tool.type !== "function" ||
+              !("function" in tool) ||
+              !tool.function
+            ) {
               return;
             }
 
@@ -490,10 +494,14 @@ export class OpenAIInstrumentation extends InstrumentationBase {
                 toolCall.type;
             }
             if (toolCall.function?.name) {
-              (result.choices[0].message.tool_calls[toolCall.index] as any).function.name += toolCall.function.name;
+              (
+                result.choices[0].message.tool_calls[toolCall.index] as any
+              ).function.name += toolCall.function.name;
             }
             if (toolCall.function?.arguments) {
-              (result.choices[0].message.tool_calls[toolCall.index] as any).function.arguments += toolCall.function.arguments;
+              (
+                result.choices[0].message.tool_calls[toolCall.index] as any
+              ).function.arguments += toolCall.function.arguments;
             }
           }
         }
@@ -699,7 +707,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
               toolIndex,
               toolCall,
             ] of choice?.message?.tool_calls?.entries() || []) {
-              if (toolCall.type === 'function' && 'function' in toolCall) {
+              if (toolCall.type === "function" && "function" in toolCall) {
                 span.setAttribute(
                   `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
                   toolCall.function.name,
