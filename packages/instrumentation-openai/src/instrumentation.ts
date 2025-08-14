@@ -39,7 +39,6 @@ import type {
 import type { Stream } from "openai/streaming";
 import { version } from "../package.json";
 import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
-import { APIPromise } from "openai/core";
 import {
   wrapImageGeneration,
   wrapImageEdit,
@@ -365,7 +364,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             ] = JSON.stringify(func.parameters);
           });
           params.tools?.forEach((tool, index) => {
-            if (!tool.function) {
+            if (tool.type !== "function") {
               return;
             }
 
@@ -411,13 +410,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         span: Span;
         type: "chat";
         params: ChatCompletionCreateParamsStreaming;
-        promise: APIPromise<Stream<ChatCompletionChunk>>;
+        promise: openai.APIPromise<Stream<ChatCompletionChunk>>;
       }
     | {
         span: Span;
         params: CompletionCreateParamsStreaming;
         type: "completion";
-        promise: APIPromise<Stream<Completion>>;
+        promise: openai.APIPromise<Stream<Completion>>;
       }) {
     if (type === "chat") {
       const result: ChatCompletion = {
@@ -433,6 +432,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
               role: "assistant",
               content: "",
               tool_calls: [],
+              refusal: null,
             },
           },
         ],
@@ -481,23 +481,24 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           }
 
           if (result.choices[0].message.tool_calls) {
+            const currentToolCall =
+              result.choices[0].message.tool_calls[toolCall.index];
+
             if (toolCall.id) {
-              result.choices[0].message.tool_calls[toolCall.index].id +=
-                toolCall.id;
+              currentToolCall.id += toolCall.id;
             }
             if (toolCall.type) {
-              result.choices[0].message.tool_calls[toolCall.index].type +=
-                toolCall.type;
+              currentToolCall.type += toolCall.type;
             }
-            if (toolCall.function?.name) {
-              result.choices[0].message.tool_calls[
-                toolCall.index
-              ].function.name += toolCall.function.name;
-            }
-            if (toolCall.function?.arguments) {
-              result.choices[0].message.tool_calls[
-                toolCall.index
-              ].function.arguments += toolCall.function.arguments;
+
+            if (currentToolCall.type === "function") {
+              if (toolCall.function?.name) {
+                currentToolCall.function.name += toolCall.function.name;
+              }
+              if (toolCall.function?.arguments) {
+                currentToolCall.function.arguments +=
+                  toolCall.function.arguments;
+              }
             }
           }
         }
@@ -604,8 +605,8 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     type: "chat" | "completion",
     version: OpenAIVersion,
     span: Span,
-    promise: APIPromise<T>,
-  ): APIPromise<T> {
+    promise: openai.APIPromise<T>,
+  ): openai.APIPromise<T> {
     return promise._thenUnwrap((result) => {
       if (version === "v3") {
         if (type === "chat") {
@@ -703,14 +704,16 @@ export class OpenAIInstrumentation extends InstrumentationBase {
               toolIndex,
               toolCall,
             ] of choice?.message?.tool_calls?.entries() || []) {
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
-                toolCall.function.name,
-              );
-              span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
-                toolCall.function.arguments,
-              );
+              if (toolCall.type === "function") {
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.name`,
+                  toolCall.function.name,
+                );
+                span.setAttribute(
+                  `${SpanAttributes.LLM_COMPLETIONS}.${index}.tool_calls.${toolIndex}.arguments`,
+                  toolCall.function.arguments,
+                );
+              }
             }
           });
         } else {
