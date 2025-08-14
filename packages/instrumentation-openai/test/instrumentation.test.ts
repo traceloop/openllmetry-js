@@ -404,13 +404,14 @@ describe("Test OpenAI instrumentation", async function () {
       ],
       "get_current_weather",
     );
-    const functionCallArguments = JSON.parse(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.arguments`
-      ]! as string,
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.arguments`
+        ]! as string,
+      ),
+      { location: "Boston" },
     );
-    assert.ok(functionCallArguments.location);
-    assert.ok(functionCallArguments.location.includes("Boston"));
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
@@ -503,13 +504,14 @@ describe("Test OpenAI instrumentation", async function () {
       ],
       "get_current_weather",
     );
-    const toolCallArguments = JSON.parse(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
-      ]! as string,
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
+        ]! as string,
+      ),
+      { location: "Boston" },
     );
-    assert.ok(toolCallArguments.location);
-    assert.ok(toolCallArguments.location.includes("Boston"));
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
@@ -597,26 +599,28 @@ describe("Test OpenAI instrumentation", async function () {
       ],
       "get_current_weather",
     );
-    const toolCall0Arguments = JSON.parse(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
-      ]! as string,
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
+        ]! as string,
+      ),
+      { location: "Boston, MA" },
     );
-    assert.ok(toolCall0Arguments.location);
-    assert.ok(toolCall0Arguments.location.includes("Boston"));
     assert.strictEqual(
       completionSpan.attributes[
         `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.name`
       ],
       "get_tomorrow_weather",
     );
-    const toolCall1Arguments = JSON.parse(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.arguments`
-      ]! as string,
+    assert.deepEqual(
+      JSON.parse(
+        completionSpan.attributes[
+          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.arguments`
+        ]! as string,
+      ),
+      { location: "Chicago, IL" },
     );
-    assert.ok(toolCall1Arguments.location);
-    assert.ok(toolCall1Arguments.location.includes("Chicago"));
   });
 
   it("should set attributes in span for image generation", async () => {
