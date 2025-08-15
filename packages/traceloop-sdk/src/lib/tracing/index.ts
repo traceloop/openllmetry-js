@@ -2,7 +2,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { resourceFromAttributes } from "@opentelemetry/resources";
+import { resourceFromAttributes, Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
@@ -307,10 +307,38 @@ export const startTracing = (options: InitializeOptions) => {
     spanProcessors.push(options.processor);
   }
 
+  // Create resource with proper detection and defensive handling for OTLP serialization
+  const serviceName =
+    options.appName || process.env.npm_package_name || "unknown-service";
+  let resource: Resource;
+
+  try {
+    // Create our custom resource with service name and let NodeSDK handle default detection
+    resource = resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: serviceName,
+    });
+
+    // Defensive check to prevent OTLP serialization errors
+    if (!resource || typeof resource !== "object") {
+      throw new Error("Invalid resource object");
+    }
+
+    if (!resource.attributes || typeof resource.attributes !== "object") {
+      throw new Error("Resource missing attributes");
+    }
+  } catch (error) {
+    // Fallback: create a basic resource manually
+    diag.warn(
+      "Failed to create resource with resourceFromAttributes, using fallback",
+      error,
+    );
+    resource = resourceFromAttributes({
+      [ATTR_SERVICE_NAME]: serviceName,
+    });
+  }
+
   _sdk = new NodeSDK({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: options.appName || process.env.npm_package_name,
-    }),
+    resource,
     spanProcessors,
     contextManager: options.contextManager,
     textMapPropagator: options.propagator,
