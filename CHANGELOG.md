@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.16.1](https://github.com/traceloop/openllmetry-js/compare/v0.16.0...v0.16.1) (2025-08-15)
+
+### Bug Fixes
+
+- **sdk:** defensive resource creation for otel v1, v2 resolution ([#647](https://github.com/traceloop/openllmetry-js/issues/647)) ([27bfaec](https://github.com/traceloop/openllmetry-js/commit/27bfaec0ba5b23246603809f5e9fd30512a9f88f))
+
 # [0.16.0](https://github.com/traceloop/openllmetry-js/compare/v0.15.0...v0.16.0) (2025-08-14)
 
 ### Bug Fixes
