@@ -2,7 +2,13 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { resourceFromAttributes, Resource } from "@opentelemetry/resources";
+import {
+  resourceFromAttributes,
+  Resource,
+  detectResources,
+  envDetector,
+  processDetector,
+} from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
@@ -307,23 +313,22 @@ export const startTracing = (options: InitializeOptions) => {
     spanProcessors.push(options.processor);
   }
 
-  // Create resource with defensive handling for OTLP serialization
+  // Create resource with proper detection and defensive handling for OTLP serialization
   const serviceName =
     options.appName || process.env.npm_package_name || "unknown-service";
   let resource: Resource;
 
   try {
+    // Create our custom resource with service name and let NodeSDK handle default detection
     resource = resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
     });
 
     // Defensive check to prevent OTLP serialization errors
-    // Ensure the resource has the expected structure for createResourceMap
     if (!resource || typeof resource !== "object") {
       throw new Error("Invalid resource object");
     }
 
-    // Ensure resource has required properties for OTLP export
     if (!resource.attributes || typeof resource.attributes !== "object") {
       throw new Error("Resource missing attributes");
     }
@@ -333,12 +338,9 @@ export const startTracing = (options: InitializeOptions) => {
       "Failed to create resource with resourceFromAttributes, using fallback",
       error,
     );
-    resource = resourceFromAttributes({});
-    // Manually set the service name on the fallback resource
-    (resource as any).attributes = {
+    resource = resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
-      ...((resource as any).attributes || {}),
-    };
+    });
   }
 
   _sdk = new NodeSDK({
