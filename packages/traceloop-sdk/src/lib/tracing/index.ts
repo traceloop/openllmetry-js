@@ -5,7 +5,6 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import {
   resourceFromAttributes,
   Resource,
-  detectResources,
   envDetector,
   processDetector,
 } from "@opentelemetry/resources";
