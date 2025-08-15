@@ -308,28 +308,31 @@ export const startTracing = (options: InitializeOptions) => {
   }
 
   // Create resource with defensive handling for OTLP serialization
-  const serviceName = options.appName || process.env.npm_package_name || "unknown-service";
+  const serviceName =
+    options.appName || process.env.npm_package_name || "unknown-service";
   let resource: Resource;
-  
+
   try {
     resource = resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
     });
-    
+
     // Defensive check to prevent OTLP serialization errors
     // Ensure the resource has the expected structure for createResourceMap
-    if (!resource || typeof resource !== 'object') {
-      throw new Error('Invalid resource object');
+    if (!resource || typeof resource !== "object") {
+      throw new Error("Invalid resource object");
     }
-    
+
     // Ensure resource has required properties for OTLP export
-    if (!resource.attributes || typeof resource.attributes !== 'object') {
-      throw new Error('Resource missing attributes');
+    if (!resource.attributes || typeof resource.attributes !== "object") {
+      throw new Error("Resource missing attributes");
     }
-    
   } catch (error) {
     // Fallback: create a basic resource manually
-    diag.warn('Failed to create resource with resourceFromAttributes, using fallback', error);
+    diag.warn(
+      "Failed to create resource with resourceFromAttributes, using fallback",
+      error,
+    );
     resource = resourceFromAttributes({});
     // Manually set the service name on the fallback resource
     (resource as any).attributes = {
