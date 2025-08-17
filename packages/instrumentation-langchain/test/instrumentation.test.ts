@@ -439,10 +439,7 @@ describe("Test Langchain instrumentation", async function () {
       // Test LLM span attributes like in amazon.test.ts
       const attributes = llmSpan.attributes;
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_REQUEST_TYPE],
-        "chat",
-      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
       assert.ok(attributes[SpanAttributes.LLM_REQUEST_MODEL]);
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
@@ -461,10 +458,8 @@ describe("Test Langchain instrumentation", async function () {
       assert.ok(attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     } else {
-      // Test LangChain callback handler spans - now only creates completion span  
-      const completionSpan = spans.find(
-        (span) => span.name === "bedrock.chat",
-      );
+      // Test LangChain callback handler spans - now only creates completion span
+      const completionSpan = spans.find((span) => span.name === "bedrock.chat");
 
       assert.ok(
         completionSpan,

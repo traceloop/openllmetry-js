@@ -28,7 +28,6 @@ export class LangChainInstrumentation extends InstrumentationBase {
   constructor(config: LangChainInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-langchain", version, config);
 
-    console.log("🚀 LangChain instrumentation constructor called");
 
     // Manually instrument CallbackManager immediately since module detection doesn't work
     this.instrumentCallbackManagerDirectly();
@@ -83,9 +82,6 @@ export class LangChainInstrumentation extends InstrumentationBase {
         inheritableMetadata?: Record<string, unknown>,
         localMetadata?: Record<string, unknown>,
       ) {
-        console.log(
-          "🎉 _configureSync called - Creating TraceloopCallbackHandler...",
-        );
 
         // Add our callback handler to inheritable handlers
         const callbackHandler = new TraceloopCallbackHandler(

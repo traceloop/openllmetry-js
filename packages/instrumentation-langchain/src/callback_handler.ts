@@ -51,10 +51,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _metadata?: Record<string, unknown>,
     _runName?: string,
   ): Promise<void> {
-    console.log("📞 handleChatModelStart called!", {
-      runId,
-      className: llm.id?.[llm.id.length - 1],
-    });
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const vendor = this.detectVendor(llm);
     const spanBaseName = this.convertClassNameToSpanName(className);
