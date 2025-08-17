@@ -461,9 +461,9 @@ describe("Test Langchain instrumentation", async function () {
       assert.ok(attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     } else {
-      // Test LangChain callback handler spans - now only creates completion span
+      // Test LangChain callback handler spans - now only creates completion span  
       const completionSpan = spans.find(
-        (span) => span.name === "bedrock.chat.completion",
+        (span) => span.name === "bedrock.chat",
       );
 
       assert.ok(

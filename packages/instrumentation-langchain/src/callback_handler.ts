@@ -61,7 +61,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const spanBaseName = this.convertClassNameToSpanName(className);
 
     // Create single LLM span like Python implementation
-    const span = this.tracer.startSpan(`${spanBaseName}.completion`, {
+    const span = this.tracer.startSpan(spanBaseName, {
       kind: SpanKind.CLIENT,
     });
 
@@ -105,7 +105,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const spanBaseName = this.convertClassNameToSpanName(className);
 
     // Create single LLM span like handleChatModelStart
-    const span = this.tracer.startSpan(`${spanBaseName}.completion`, {
+    const span = this.tracer.startSpan(spanBaseName, {
       kind: SpanKind.CLIENT,
     });
 
