@@ -162,38 +162,41 @@ const onSpanStart = (span: Span): void => {
  */
 const ensureSpanCompatibility = (span: ReadableSpan): ReadableSpan => {
   const spanAny = span as any;
-  
+
   // If the span already has instrumentationLibrary, it's compatible (OTel v2.x)
   if (spanAny.instrumentationLibrary) {
     return span;
   }
-  
+
   // If it has instrumentationScope but no instrumentationLibrary (OTel v1.x),
   // add instrumentationLibrary as an alias to prevent OTLP transformer errors
   if (spanAny.instrumentationScope) {
     // Create a proxy that provides both properties
     return new Proxy(span, {
       get(target, prop) {
-        if (prop === 'instrumentationLibrary') {
+        if (prop === "instrumentationLibrary") {
           return (target as any).instrumentationScope;
         }
         return (target as any)[prop];
-      }
+      },
     }) as ReadableSpan;
   }
-  
+
   // Fallback: add both properties with defaults
   return new Proxy(span, {
     get(target, prop) {
-      if (prop === 'instrumentationLibrary' || prop === 'instrumentationScope') {
+      if (
+        prop === "instrumentationLibrary" ||
+        prop === "instrumentationScope"
+      ) {
         return {
-          name: 'unknown',
+          name: "unknown",
           version: undefined,
-          schemaUrl: undefined
+          schemaUrl: undefined,
         };
       }
       return (target as any)[prop];
-    }
+    },
   }) as ReadableSpan;
 };
 
@@ -218,7 +221,7 @@ const onSpanEnd = (
 
     // Apply AI SDK transformations (if needed)
     transformAiSdkSpan(span);
-    
+
     // Ensure OTLP transformer compatibility
     const compatibleSpan = ensureSpanCompatibility(span);
 

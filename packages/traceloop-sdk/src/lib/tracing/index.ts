@@ -5,20 +5,6 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
-
-// Compatibility function for creating resources that works with both OTel v1.x and v2.x
-function createResource(attributes: Record<string, any>): Resource {
-  // Import the resource module at runtime to handle both v1.x and v2.x
-  const resourcesModule = require("@opentelemetry/resources");
-  
-  // Try to use resourceFromAttributes if it exists (OTel v2.x)
-  if (resourcesModule.resourceFromAttributes) {
-    return resourcesModule.resourceFromAttributes(attributes);
-  }
-  
-  // Fallback to constructor for OTel v1.x
-  return new resourcesModule.Resource(attributes);
-}
 import { InitializeOptions } from "../interfaces";
 import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
@@ -322,7 +308,8 @@ export const startTracing = (options: InitializeOptions) => {
   }
 
   const resource = createResource({
-    [ATTR_SERVICE_NAME]: options.appName || process.env.npm_package_name || "unknown_service",
+    [ATTR_SERVICE_NAME]:
+      options.appName || process.env.npm_package_name || "unknown_service",
   });
 
   _sdk = new NodeSDK({
@@ -366,3 +353,17 @@ export const shouldSendTraces = () => {
 export const forceFlush = async () => {
   await _spanProcessor.forceFlush();
 };
+
+// Compatibility function for creating resources that works with both OTel v1.x and v2.x
+function createResource(attributes: Record<string, any>): Resource {
+  // Import the resource module at runtime to handle both v1.x and v2.x
+  const resourcesModule = require("@opentelemetry/resources");
+
+  // Try to use resourceFromAttributes if it exists (OTel v2.x)
+  if (resourcesModule.resourceFromAttributes) {
+    return resourcesModule.resourceFromAttributes(attributes);
+  }
+
+  // Fallback to constructor for OTel v1.x
+  return new resourcesModule.Resource(attributes);
+}
