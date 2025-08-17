@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.16.2](https://github.com/traceloop/openllmetry-js/compare/v0.16.1...v0.16.2) (2025-08-17)
+
+### Bug Fixes
+
+- **sdk:** otel v1 resource backward compatibility ([#648](https://github.com/traceloop/openllmetry-js/issues/648)) ([0c21b36](https://github.com/traceloop/openllmetry-js/commit/0c21b3616ff6cbe4035158f2cc85764de0f34a7d))
+
 ## [0.16.1](https://github.com/traceloop/openllmetry-js/compare/v0.16.0...v0.16.1) (2025-08-15)
 
 ### Bug Fixes
