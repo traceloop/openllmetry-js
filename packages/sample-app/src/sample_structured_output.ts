@@ -17,7 +17,7 @@ const CalendarEvent = z.object({
 });
 
 async function create_event() {
-  const completion = await openai.beta.chat.completions.parse({
+  const completion = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
       { role: "system", content: "Extract the event information." },
@@ -29,9 +29,10 @@ async function create_event() {
     response_format: zodResponseFormat(CalendarEvent, "event"),
   });
 
-  console.log(completion.choices[0].message.parsed);
+  const content = completion.choices[0].message.content;
+  console.log(content);
 
-  return completion.choices[0].message.parsed;
+  return content;
 }
 
 create_event();

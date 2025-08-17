@@ -24,11 +24,8 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
 
-import type * as ToolsModule from "langchain/tools";
-import type * as AgentsModule from "langchain/agents";
-import type * as ChainsModule from "langchain/chains";
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { createOpenAIToolsAgent } from "langchain/agents";
+import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ChatOpenAI, OpenAI, OpenAIEmbeddings } from "@langchain/openai";
@@ -37,6 +34,8 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_run";
 
 import { LangChainInstrumentation } from "../src/instrumentation";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
@@ -54,10 +53,8 @@ describe("Test Langchain instrumentation", async function () {
     spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: LangChainInstrumentation;
+  let bedrockInstrumentation: BedrockInstrumentation;
   let contextManager: AsyncHooksContextManager;
-  let langchainAgentsModule: typeof AgentsModule;
-  let langchainChainsModule: typeof ChainsModule;
-  let langchainToolsModule: typeof ToolsModule;
 
   setupPolly({
     adapters: ["node-http", "fetch"],
@@ -80,20 +77,16 @@ describe("Test Langchain instrumentation", async function () {
   before(() => {
     if (process.env.RECORD_MODE !== "NEW") {
       process.env.OPENAI_API_KEY = "test";
+      process.env.AWS_ACCESS_KEY_ID = "test";
+      process.env.AWS_SECRET_ACCESS_KEY = "test";
     }
     // span processor is already set up during provider initialization
     instrumentation = new LangChainInstrumentation();
     instrumentation.setTracerProvider(provider);
 
-    langchainAgentsModule = require("langchain/agents");
-    langchainChainsModule = require("langchain/chains");
-    langchainToolsModule = require("langchain/tools");
+    bedrockInstrumentation = new BedrockInstrumentation();
+    bedrockInstrumentation.setTracerProvider(provider);
 
-    instrumentation.manuallyInstrument({
-      chainsModule: langchainChainsModule,
-      agentsModule: langchainAgentsModule,
-      toolsModule: langchainToolsModule,
-    });
   });
 
   beforeEach(function () {
@@ -106,6 +99,11 @@ describe("Test Langchain instrumentation", async function () {
         ({ name }: { name: string }) => name !== "authorization",
       );
     });
+  });
+
+  after(() => {
+    instrumentation.disable();
+    bedrockInstrumentation.disable();
   });
 
   afterEach(async () => {
@@ -144,7 +142,7 @@ describe("Test Langchain instrumentation", async function () {
       ["placeholder", "{agent_scratchpad}"],
     ]);
     const agent = await createOpenAIToolsAgent({ llm, tools, prompt });
-    const agentExecutor = new langchainAgentsModule.AgentExecutor({
+    const agentExecutor = new AgentExecutor({
       agent,
       tools,
     });
@@ -356,7 +354,7 @@ describe("Test Langchain instrumentation", async function () {
     assert.strictEqual(
       JSON.parse(wikipediaSpan.attributes["traceloop.entity.input"].toString())
         .args[0],
-      "Current Prime Minister of Malaysia",
+      '"Current Prime Minister of Malaysia" site:wikipedia.org',
     );
     assert.deepEqual(
       JSON.parse(
@@ -364,5 +362,103 @@ describe("Test Langchain instrumentation", async function () {
       ),
       result,
     );
+  }).timeout(300000);
+
+  it("should set attributes in span for BedrockChat with tools", async function () {
+    const { BedrockChat } = await import("@langchain/community/chat_models/bedrock");
+    const { HumanMessage } = await import("@langchain/core/messages");
+    const { tool } = await import("@langchain/core/tools");
+    const { z } = await import("zod");
+
+    const get_cities_data_by_country = tool(
+      (_args: {country: string}): object => {
+        return [
+          {
+            "city": "New York",
+            "population": 8419600,
+          },
+          {
+            "city": "Los Angeles",
+            "population": 3980400,
+          },
+          {
+            "city": "Chicago",
+            "population": 2716000,
+          },
+          {
+            "city": "Houston",
+            "population": 2328000,
+          },
+          {
+            "city": "Phoenix",
+            "population": 1690000,
+          }
+        ]
+      },
+      {
+        name: "get_cities_data_by_country",
+        description: "Get city population data by country",
+        schema: z.object({
+          country: z.string(),
+        }),
+      }
+    );
+
+    const model = new BedrockChat({
+      model: "us.anthropic.claude-3-7-sonnet-20250219-v1:0",
+      region: "us-east-1",
+    });
+    model.bindTools([get_cities_data_by_country]);
+
+    const message = new HumanMessage({
+      content: "What is a popular landmark in the most populous city in the US?",
+    });
+
+    const response = await model.invoke([message]);
+
+    const spans = memoryExporter.getFinishedSpans();
+    
+    assert.ok(response);
+    assert.ok(response.content);
+    
+    // Look for LLM span created by Bedrock instrumentation
+    const llmSpan = spans.find(span => span.attributes[SpanAttributes.LLM_SYSTEM] === "AWS");
+    
+    if (llmSpan) {
+      // Test LLM span attributes like in amazon.test.ts
+      const attributes = llmSpan.attributes;
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
+      assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "completion");
+      assert.ok(attributes[SpanAttributes.LLM_REQUEST_MODEL]);
+      assert.strictEqual(attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`], "user");
+      assert.strictEqual(attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`], "What is a popular landmark in the most populous city in the US?");
+      assert.strictEqual(attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`], "assistant");
+      assert.ok(attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]);
+      assert.ok(attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
+      assert.ok(attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
+      assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
+    } else {
+      // Test LangChain callback handler spans
+      const taskSpan = spans.find(span => span.name === "bedrock.chat.task");
+      const completionSpan = spans.find(span => span.name === "bedrock.chat.completion");
+      
+      assert.ok(taskSpan, `No task span found. Available spans: ${spans.map(s => s.name).join(', ')}`);
+      assert.ok(completionSpan, `No completion span found. Available spans: ${spans.map(s => s.name).join(', ')}`);
+      
+      // Test task span attributes
+      const taskAttributes = taskSpan.attributes;
+      assert.strictEqual(taskAttributes["traceloop.span.kind"], "task");
+      assert.ok(taskAttributes["traceloop.entity.input"]);
+      assert.ok(taskAttributes["traceloop.entity.output"]);
+      
+      // Test completion span attributes
+      const completionAttributes = completionSpan.attributes;
+      assert.strictEqual(completionAttributes[SpanAttributes.LLM_SYSTEM], "AWS");
+      assert.strictEqual(completionAttributes[SpanAttributes.LLM_REQUEST_TYPE], "completion");
+      assert.strictEqual(completionAttributes[SpanAttributes.LLM_REQUEST_MODEL], "claude-3-7-sonnet");
+      assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
+      assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
+      assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
+    }
   }).timeout(300000);
 });

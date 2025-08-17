@@ -8,11 +8,6 @@ import type * as aiplatform from "@google-cloud/aiplatform";
 import type * as vertexAI from "@google-cloud/vertexai";
 import type * as pinecone from "@pinecone-database/pinecone";
 import type * as together from "together-ai";
-import type * as ChainsModule from "langchain/chains";
-import type * as AgentsModule from "langchain/agents";
-import type * as ToolsModule from "langchain/tools";
-import type * as RunnableModule from "@langchain/core/runnables";
-import type * as VectorStoreModule from "@langchain/core/vectorstores";
 import type * as llamaindex from "llamaindex";
 import type * as chromadb from "chromadb";
 import type * as qdrant from "@qdrant/js-client-rest";
@@ -99,13 +94,7 @@ export interface InitializeOptions {
     google_aiplatform?: typeof aiplatform;
     pinecone?: typeof pinecone;
     together?: typeof together.Together;
-    langchain?: {
-      chainsModule?: typeof ChainsModule;
-      agentsModule?: typeof AgentsModule;
-      toolsModule?: typeof ToolsModule;
-      runnablesModule?: typeof RunnableModule;
-      vectorStoreModule?: typeof VectorStoreModule;
-    };
+    langchain?: boolean;
     llamaIndex?: typeof llamaindex;
     chromadb?: typeof chromadb;
     qdrant?: typeof qdrant;
