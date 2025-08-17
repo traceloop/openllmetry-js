@@ -103,9 +103,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const modelName = this.extractModelName(llm);
     const vendor = this.detectVendor(llm);
     const spanBaseName = this.convertClassNameToSpanName(className);
-    const spanName = `${spanBaseName}.task`;
 
-    const span = this.tracer.startSpan(spanName, {
+    // Create single LLM span like handleChatModelStart
+    const span = this.tracer.startSpan(`${spanBaseName}.completion`, {
       kind: SpanKind.CLIENT,
     });
 
@@ -113,8 +113,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       [SpanAttributes.LLM_SYSTEM]: vendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
       [SpanAttributes.LLM_REQUEST_MODEL]: modelName,
-      "traceloop.span.kind": "task",
-      "traceloop.workflow.name": _runName || spanName,
     });
 
     if (this.traceContent && prompts.length > 0) {
