@@ -19,7 +19,13 @@ import { BaseMessage } from "@langchain/core/messages";
 import { LLMResult } from "@langchain/core/outputs";
 import { Serialized } from "@langchain/core/load/serializable";
 import { ChainValues } from "@langchain/core/utils/types";
-import { Tracer, trace, SpanKind, SpanStatusCode, context } from "@opentelemetry/api";
+import {
+  Tracer,
+  trace,
+  SpanKind,
+  SpanStatusCode,
+  context,
+} from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 interface SpanData {
@@ -28,10 +34,9 @@ interface SpanData {
   runId: string;
 }
 
- 
 export class TraceloopCallbackHandler extends BaseCallbackHandler {
   name = "traceloop_callback_handler";
-  
+
   private tracer: Tracer;
   private spans: Map<string, SpanData> = new Map();
   private traceContent: boolean;
@@ -50,14 +55,14 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     extraParams?: Record<string, unknown>,
     tags?: string[],
     metadata?: Record<string, unknown>,
-    runName?: string
+    runName?: string,
   ): Promise<void> {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const modelName = this.extractModelName(llm);
     const vendor = this.detectVendor(llm);
     const spanBaseName = this.convertClassNameToSpanName(className);
-    
-    // Create both a task span and an LLM span like Python implementation  
+
+    // Create both a task span and an LLM span like Python implementation
     const taskSpanName = `${spanBaseName}.task`;
     const taskSpan = this.tracer.startSpan(taskSpanName, {
       kind: SpanKind.CLIENT,
@@ -71,17 +76,26 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     if (this.traceContent) {
       const flatMessages = messages.flat();
       taskSpan.setAttributes({
-        "traceloop.entity.input": JSON.stringify(flatMessages.map(m => ({ 
-          role: m._getType(), 
-          content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-        }))),
+        "traceloop.entity.input": JSON.stringify(
+          flatMessages.map((m) => ({
+            role: m._getType(),
+            content:
+              typeof m.content === "string"
+                ? m.content
+                : JSON.stringify(m.content),
+          })),
+        ),
       });
     }
 
     // Create LLM span as child of task span
-    const llmSpan = this.tracer.startSpan(`${spanBaseName}.completion`, {
-      kind: SpanKind.CLIENT,
-    }, trace.setSpan(context.active(), taskSpan));
+    const llmSpan = this.tracer.startSpan(
+      `${spanBaseName}.completion`,
+      {
+        kind: SpanKind.CLIENT,
+      },
+      trace.setSpan(context.active(), taskSpan),
+    );
 
     const flatMessages = messages.flat();
     llmSpan.setAttributes({
@@ -96,7 +110,10 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
         const role = this.mapMessageTypeToRole(message._getType());
         llmSpan.setAttributes({
           [`${SpanAttributes.LLM_PROMPTS}.${idx}.role`]: role,
-          [`${SpanAttributes.LLM_PROMPTS}.${idx}.content`]: typeof message.content === 'string' ? message.content : JSON.stringify(message.content),
+          [`${SpanAttributes.LLM_PROMPTS}.${idx}.content`]:
+            typeof message.content === "string"
+              ? message.content
+              : JSON.stringify(message.content),
         });
       });
     }
@@ -113,14 +130,14 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _extraParams?: Record<string, unknown>,
     _tags?: string[],
     _metadata?: Record<string, unknown>,
-    _runName?: string
+    _runName?: string,
   ): Promise<void> {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const modelName = this.extractModelName(llm);
     const vendor = this.detectVendor(llm);
     const spanBaseName = this.convertClassNameToSpanName(className);
     const spanName = `${spanBaseName}.task`;
-    
+
     const span = this.tracer.startSpan(spanName, {
       kind: SpanKind.CLIENT,
     });
@@ -150,7 +167,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    _extraParams?: Record<string, unknown>
+    _extraParams?: Record<string, unknown>,
   ): Promise<void> {
     // End both LLM and task spans
     const llmSpanData = this.spans.get(`${runId}_llm`);
@@ -159,12 +176,17 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     if (llmSpanData) {
       const { span: llmSpan } = llmSpanData;
 
-      if (this.traceContent && output.generations && output.generations.length > 0) {
+      if (
+        this.traceContent &&
+        output.generations &&
+        output.generations.length > 0
+      ) {
         output.generations.forEach((generation, idx) => {
           if (generation && generation.length > 0) {
             llmSpan.setAttributes({
               [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.role`]: "assistant",
-              [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`]: generation[0].text,
+              [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`]:
+                generation[0].text,
             });
           }
         });
@@ -183,14 +205,15 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
             [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.output_tokens,
           });
         }
-        const totalTokens = (usage.input_tokens || 0) + (usage.output_tokens || 0);
+        const totalTokens =
+          (usage.input_tokens || 0) + (usage.output_tokens || 0);
         if (totalTokens > 0) {
           llmSpan.setAttributes({
             [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: totalTokens,
           });
         }
       }
-      
+
       // Also check for tokenUsage format (for compatibility)
       if (output.llmOutput?.tokenUsage) {
         const usage = output.llmOutput.tokenUsage;
@@ -201,7 +224,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
         }
         if (usage.completionTokens) {
           llmSpan.setAttributes({
-            [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.completionTokens,
+            [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]:
+              usage.completionTokens,
           });
         }
         if (usage.totalTokens) {
@@ -218,8 +242,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
     if (taskSpanData) {
       const { span: taskSpan } = taskSpanData;
-      
-      if (this.traceContent && output.generations && output.generations.length > 0) {
+
+      if (
+        this.traceContent &&
+        output.generations &&
+        output.generations.length > 0
+      ) {
         const completions = output.generations.map((generation, _idx) => {
           if (generation && generation.length > 0) {
             return generation[0].text;
@@ -242,7 +270,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    _extraParams?: Record<string, unknown>
+    _extraParams?: Record<string, unknown>,
   ): Promise<void> {
     // Same as handleLLMEnd for chat models
     return this.handleLLMEnd(output, runId, _parentRunId, _tags, _extraParams);
@@ -253,7 +281,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    _extraParams?: Record<string, unknown>
+    _extraParams?: Record<string, unknown>,
   ): Promise<void> {
     // End both spans on error
     const llmSpanData = this.spans.get(`${runId}_llm`);
@@ -284,11 +312,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _tags?: string[],
     metadata?: Record<string, unknown>,
     runType?: string,
-    runName?: string
+    runName?: string,
   ): Promise<void> {
     const chainName = chain.id?.[chain.id.length - 1] || "unknown";
     const spanName = `${chainName}.workflow`;
-    
+
     const span = this.tracer.startSpan(spanName, {
       kind: SpanKind.CLIENT,
     });
@@ -312,7 +340,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    _kwargs?: { inputs?: Record<string, unknown> }
+    _kwargs?: { inputs?: Record<string, unknown> },
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
@@ -335,7 +363,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     runId: string,
     _parentRunId?: string,
     _tags?: string[],
-    _kwargs?: { inputs?: Record<string, unknown> }
+    _kwargs?: { inputs?: Record<string, unknown> },
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
@@ -354,11 +382,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _parentRunId?: string,
     _tags?: string[],
     _metadata?: Record<string, unknown>,
-    _runName?: string
+    _runName?: string,
   ): Promise<void> {
     const toolName = tool.id?.[tool.id.length - 1] || "unknown";
     const spanName = `${toolName}.task`;
-    
+
     const span = this.tracer.startSpan(spanName, {
       kind: SpanKind.CLIENT,
     });
@@ -381,7 +409,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     output: any,
     runId: string,
     _parentRunId?: string,
-    _tags?: string[]
+    _tags?: string[],
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
@@ -403,7 +431,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     err: Error,
     runId: string,
     _parentRunId?: string,
-    _tags?: string[]
+    _tags?: string[],
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
@@ -418,23 +446,23 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   private extractModelName(llm: Serialized): string {
     // Extract from class hierarchy - last element is usually the class name
     const className = llm.id?.[llm.id.length - 1] || "unknown";
-    
+
     // For BedrockChat, try to get the actual model name
     if (className === "BedrockChat") {
       // The model name might be available in kwargs - cast to any to access kwargs
       const llmAny = llm as any;
       const modelId = llmAny.kwargs?.model || llmAny.kwargs?.model_id;
-      if (modelId && typeof modelId === 'string') {
+      if (modelId && typeof modelId === "string") {
         // Extract clean model name from full ID (e.g., "us.anthropic.claude-3-7-sonnet-20250219-v1:0" -> "claude-3-7-sonnet")
-        const parts = modelId.split('.');
+        const parts = modelId.split(".");
         if (parts.length >= 3) {
-          const modelPart = parts.slice(2).join('.').split(':')[0]; // Remove region and version
-          return modelPart.replace('-20250219-v1', ''); // Clean up version suffix
+          const modelPart = parts.slice(2).join(".").split(":")[0]; // Remove region and version
+          return modelPart.replace("-20250219-v1", ""); // Clean up version suffix
         }
         return modelId;
       }
     }
-    
+
     return className;
   }
 
@@ -442,15 +470,14 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     // Convert PascalCase to lowercase with dots
     // BedrockChat -> bedrock.chat
     // ChatOpenAI -> chat.openai
-    return className
-      .replace(/([A-Z])/g, (match, char, index) => {
-        return index === 0 ? char.toLowerCase() : `.${char.toLowerCase()}`;
-      });
+    return className.replace(/([A-Z])/g, (match, char, index) => {
+      return index === 0 ? char.toLowerCase() : `.${char.toLowerCase()}`;
+    });
   }
 
   private detectVendor(llm: Serialized): string {
     const className = llm.id?.[llm.id.length - 1] || "";
-    
+
     // Follow Python implementation - map class names to vendors
     if (className.includes("OpenAI") || className.includes("GPT")) {
       return "OpenAI";
@@ -477,7 +504,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     if (className.includes("Cohere")) {
       return "Cohere";
     }
-    
+
     return "LangChain";
   }
 

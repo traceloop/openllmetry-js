@@ -86,7 +86,6 @@ describe("Test Langchain instrumentation", async function () {
 
     bedrockInstrumentation = new BedrockInstrumentation();
     bedrockInstrumentation.setTracerProvider(provider);
-
   });
 
   beforeEach(function () {
@@ -151,7 +150,9 @@ describe("Test Langchain instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const agentSpan = spans.find((span) => span.name === "AgentExecutor.workflow");
+    const agentSpan = spans.find(
+      (span) => span.name === "AgentExecutor.workflow",
+    );
 
     assert.ok(result);
     assert.ok(agentSpan);
@@ -351,10 +352,12 @@ describe("Test Langchain instrumentation", async function () {
     assert.strictEqual(wikipediaSpan.attributes["traceloop.span.kind"], "task");
     assert.ok(wikipediaSpan.attributes["traceloop.entity.input"]);
     assert.ok(wikipediaSpan.attributes["traceloop.entity.output"]);
-    
-    const inputData = JSON.parse(wikipediaSpan.attributes["traceloop.entity.input"].toString());
+
+    const inputData = JSON.parse(
+      wikipediaSpan.attributes["traceloop.entity.input"].toString(),
+    );
     const toolInput = JSON.parse(inputData.args[0]);
-    
+
     assert.strictEqual(
       toolInput.input,
       '"Current Prime Minister of Malaysia" site:wikipedia.org',
@@ -368,35 +371,37 @@ describe("Test Langchain instrumentation", async function () {
   }).timeout(300000);
 
   it("should set attributes in span for BedrockChat with tools", async function () {
-    const { BedrockChat } = await import("@langchain/community/chat_models/bedrock");
+    const { BedrockChat } = await import(
+      "@langchain/community/chat_models/bedrock"
+    );
     const { HumanMessage } = await import("@langchain/core/messages");
     const { tool } = await import("@langchain/core/tools");
     const { z } = await import("zod");
 
     const get_cities_data_by_country = tool(
-      (args: {country: string}): object => {
+      (_args: { country: string }): object => {
         return [
           {
-            "city": "New York",
-            "population": 8419600,
+            city: "New York",
+            population: 8419600,
           },
           {
-            "city": "Los Angeles",
-            "population": 3980400,
+            city: "Los Angeles",
+            population: 3980400,
           },
           {
-            "city": "Chicago",
-            "population": 2716000,
+            city: "Chicago",
+            population: 2716000,
           },
           {
-            "city": "Houston",
-            "population": 2328000,
+            city: "Houston",
+            population: 2328000,
           },
           {
-            "city": "Phoenix",
-            "population": 1690000,
-          }
-        ]
+            city: "Phoenix",
+            population: 1690000,
+          },
+        ];
       },
       {
         name: "get_cities_data_by_country",
@@ -404,7 +409,7 @@ describe("Test Langchain instrumentation", async function () {
         schema: z.object({
           country: z.string(),
         }),
-      }
+      },
     );
 
     const model = new BedrockChat({
@@ -414,53 +419,87 @@ describe("Test Langchain instrumentation", async function () {
     model.bindTools([get_cities_data_by_country]);
 
     const message = new HumanMessage({
-      content: "What is a popular landmark in the most populous city in the US?",
+      content:
+        "What is a popular landmark in the most populous city in the US?",
     });
 
     const response = await model.invoke([message]);
 
     const spans = memoryExporter.getFinishedSpans();
-    
+
     assert.ok(response);
     assert.ok(response.content);
-    
+
     // Look for LLM span created by Bedrock instrumentation
-    const llmSpan = spans.find(span => span.attributes[SpanAttributes.LLM_SYSTEM] === "AWS");
-    
+    const llmSpan = spans.find(
+      (span) => span.attributes[SpanAttributes.LLM_SYSTEM] === "AWS",
+    );
+
     if (llmSpan) {
       // Test LLM span attributes like in amazon.test.ts
       const attributes = llmSpan.attributes;
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
-      assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "completion");
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_REQUEST_TYPE],
+        "completion",
+      );
       assert.ok(attributes[SpanAttributes.LLM_REQUEST_MODEL]);
-      assert.strictEqual(attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`], "user");
-      assert.strictEqual(attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`], "What is a popular landmark in the most populous city in the US?");
-      assert.strictEqual(attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`], "assistant");
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+        "user",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        "What is a popular landmark in the most populous city in the US?",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+        "assistant",
+      );
       assert.ok(attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     } else {
       // Test LangChain callback handler spans
-      const taskSpan = spans.find(span => span.name === "bedrock.chat.task");
-      const completionSpan = spans.find(span => span.name === "bedrock.chat.completion");
-      
-      assert.ok(taskSpan, `No task span found. Available spans: ${spans.map(s => s.name).join(', ')}`);
-      assert.ok(completionSpan, `No completion span found. Available spans: ${spans.map(s => s.name).join(', ')}`);
-      
+      const taskSpan = spans.find((span) => span.name === "bedrock.chat.task");
+      const completionSpan = spans.find(
+        (span) => span.name === "bedrock.chat.completion",
+      );
+
+      assert.ok(
+        taskSpan,
+        `No task span found. Available spans: ${spans.map((s) => s.name).join(", ")}`,
+      );
+      assert.ok(
+        completionSpan,
+        `No completion span found. Available spans: ${spans.map((s) => s.name).join(", ")}`,
+      );
+
       // Test task span attributes
       const taskAttributes = taskSpan.attributes;
       assert.strictEqual(taskAttributes["traceloop.span.kind"], "task");
       assert.ok(taskAttributes["traceloop.entity.input"]);
       assert.ok(taskAttributes["traceloop.entity.output"]);
-      
+
       // Test completion span attributes
       const completionAttributes = completionSpan.attributes;
-      assert.strictEqual(completionAttributes[SpanAttributes.LLM_SYSTEM], "AWS");
-      assert.strictEqual(completionAttributes[SpanAttributes.LLM_REQUEST_TYPE], "completion");
-      assert.strictEqual(completionAttributes[SpanAttributes.LLM_REQUEST_MODEL], "claude-3-7-sonnet");
+      assert.strictEqual(
+        completionAttributes[SpanAttributes.LLM_SYSTEM],
+        "AWS",
+      );
+      assert.strictEqual(
+        completionAttributes[SpanAttributes.LLM_REQUEST_TYPE],
+        "completion",
+      );
+      assert.strictEqual(
+        completionAttributes[SpanAttributes.LLM_REQUEST_MODEL],
+        "claude-3-7-sonnet",
+      );
       assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
-      assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
+      assert.ok(
+        completionAttributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+      );
       assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     }
   }).timeout(300000);

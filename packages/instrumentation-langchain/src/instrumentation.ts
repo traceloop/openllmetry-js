@@ -27,7 +27,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
 
   constructor(config: LangChainInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-langchain", version, config);
-    
+
     // Manually instrument CallbackManager immediately since module detection doesn't work
     this.instrumentCallbackManagerDirectly();
   }
@@ -38,22 +38,23 @@ export class LangChainInstrumentation extends InstrumentationBase {
     callbackManagerModule?: any;
   }) {
     if (callbackManagerModule) {
-      this._diag.debug("Manually instrumenting @langchain/core/callbacks/manager");
+      this._diag.debug(
+        "Manually instrumenting @langchain/core/callbacks/manager",
+      );
       this.patchCallbackManager(callbackManagerModule.CallbackManager);
     }
   }
-
 
   protected init(): InstrumentationModuleDefinition[] {
     // Return empty array since we're using require patching instead
     return [];
   }
 
-
   private instrumentCallbackManagerDirectly() {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const callbackManagerModule = require("@langchain/core/callbacks/manager");
-      
+
       if (callbackManagerModule?.CallbackManager) {
         this.patchCallbackManager(callbackManagerModule.CallbackManager);
       }
@@ -64,10 +65,13 @@ export class LangChainInstrumentation extends InstrumentationBase {
 
   private patchCallbackManager(CallbackManager: unknown) {
     const callbackManagerAny = CallbackManager as Record<string, unknown>;
-    
-    if (callbackManagerAny._configureSync && !callbackManagerAny._traceloopPatched) {
+
+    if (
+      callbackManagerAny._configureSync &&
+      !callbackManagerAny._traceloopPatched
+    ) {
       const originalConfigureSync = callbackManagerAny._configureSync;
-      
+
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       callbackManagerAny._configureSync = function (
@@ -76,15 +80,18 @@ export class LangChainInstrumentation extends InstrumentationBase {
         inheritableTags?: string[],
         localTags?: string[],
         inheritableMetadata?: Record<string, unknown>,
-        localMetadata?: Record<string, unknown>
+        localMetadata?: Record<string, unknown>,
       ) {
-        
         // Add our callback handler to inheritable handlers
-        const callbackHandler = new TraceloopCallbackHandler(self.tracer, self._shouldSendPrompts());
-        const updatedInheritableHandlers = (inheritableHandlers && Array.isArray(inheritableHandlers)) 
-          ? [...inheritableHandlers, callbackHandler] 
-          : [callbackHandler];
-        
+        const callbackHandler = new TraceloopCallbackHandler(
+          self.tracer,
+          self._shouldSendPrompts(),
+        );
+        const updatedInheritableHandlers =
+          inheritableHandlers && Array.isArray(inheritableHandlers)
+            ? [...inheritableHandlers, callbackHandler]
+            : [callbackHandler];
+
         return (originalConfigureSync as (...args: unknown[]) => unknown).call(
           this,
           updatedInheritableHandlers,
@@ -92,10 +99,10 @@ export class LangChainInstrumentation extends InstrumentationBase {
           inheritableTags,
           localTags,
           inheritableMetadata,
-          localMetadata
+          localMetadata,
         );
       };
-      
+
       // Mark as patched to avoid double patching
       callbackManagerAny._traceloopPatched = true;
     }
