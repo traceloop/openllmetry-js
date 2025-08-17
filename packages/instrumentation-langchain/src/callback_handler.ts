@@ -130,7 +130,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
       [SpanAttributes.LLM_REQUEST_MODEL]: modelName,
       "traceloop.span.kind": "task",
-      "traceloop.workflow.name": runName || spanName,
+      "traceloop.workflow.name": _runName || spanName,
     });
 
     if (this.traceContent && prompts.length > 0) {

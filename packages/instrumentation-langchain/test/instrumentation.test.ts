@@ -151,7 +151,7 @@ describe("Test Langchain instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const agentSpan = spans.find((span) => span.name === "langchain.agent");
+    const agentSpan = spans.find((span) => span.name === "AgentExecutor.workflow");
 
     assert.ok(result);
     assert.ok(agentSpan);
@@ -160,7 +160,7 @@ describe("Test Langchain instrumentation", async function () {
     assert.ok(agentSpan.attributes["traceloop.entity.output"]);
     assert.strictEqual(
       JSON.parse(agentSpan.attributes["traceloop.entity.input"].toString())
-        .args[0].input,
+        .input,
       "Solve `5 * (10 + 2)`",
     );
     assert.deepEqual(
@@ -351,9 +351,12 @@ describe("Test Langchain instrumentation", async function () {
     assert.strictEqual(wikipediaSpan.attributes["traceloop.span.kind"], "task");
     assert.ok(wikipediaSpan.attributes["traceloop.entity.input"]);
     assert.ok(wikipediaSpan.attributes["traceloop.entity.output"]);
+    
+    const inputData = JSON.parse(wikipediaSpan.attributes["traceloop.entity.input"].toString());
+    const toolInput = JSON.parse(inputData.args[0]);
+    
     assert.strictEqual(
-      JSON.parse(wikipediaSpan.attributes["traceloop.entity.input"].toString())
-        .args[0],
+      toolInput.input,
       '"Current Prime Minister of Malaysia" site:wikipedia.org',
     );
     assert.deepEqual(
