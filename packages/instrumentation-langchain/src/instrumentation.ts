@@ -56,9 +56,9 @@ export class LangChainInstrumentation extends InstrumentationBase {
       
       if (callbackManagerModule?.CallbackManager) {
         this.patchCallbackManager(callbackManagerModule.CallbackManager);
-      } else {
       }
     } catch (error) {
+      this._diag.debug("Error instrumenting callback manager:", error);
     }
   }
 
@@ -68,6 +68,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
     if (callbackManagerAny._configureSync && !callbackManagerAny._traceloopPatched) {
       const originalConfigureSync = callbackManagerAny._configureSync;
       
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       callbackManagerAny._configureSync = function (
         inheritableHandlers?: unknown[],
@@ -97,8 +98,6 @@ export class LangChainInstrumentation extends InstrumentationBase {
       
       // Mark as patched to avoid double patching
       callbackManagerAny._traceloopPatched = true;
-    } else if (callbackManagerAny._traceloopPatched) {
-    } else {
     }
   }
 

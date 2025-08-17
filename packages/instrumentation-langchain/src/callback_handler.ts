@@ -23,10 +23,12 @@ import { Tracer, trace, SpanKind, SpanStatusCode, context } from "@opentelemetry
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 interface SpanData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   span: any;
   runId: string;
 }
 
+ 
 export class TraceloopCallbackHandler extends BaseCallbackHandler {
   name = "traceloop_callback_handler";
   
@@ -107,11 +109,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     llm: Serialized,
     prompts: string[],
     runId: string,
-    parentRunId?: string,
-    extraParams?: Record<string, unknown>,
-    tags?: string[],
-    metadata?: Record<string, unknown>,
-    runName?: string
+    _parentRunId?: string,
+    _extraParams?: Record<string, unknown>,
+    _tags?: string[],
+    _metadata?: Record<string, unknown>,
+    _runName?: string
   ): Promise<void> {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const modelName = this.extractModelName(llm);
@@ -146,9 +148,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   override async handleLLMEnd(
     output: LLMResult,
     runId: string,
-    parentRunId?: string,
-    tags?: string[],
-    extraParams?: Record<string, unknown>
+    _parentRunId?: string,
+    _tags?: string[],
+    _extraParams?: Record<string, unknown>
   ): Promise<void> {
     // End both LLM and task spans
     const llmSpanData = this.spans.get(`${runId}_llm`);
@@ -218,7 +220,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       const { span: taskSpan } = taskSpanData;
       
       if (this.traceContent && output.generations && output.generations.length > 0) {
-        const completions = output.generations.map((generation, idx) => {
+        const completions = output.generations.map((generation, _idx) => {
           if (generation && generation.length > 0) {
             return generation[0].text;
           }
@@ -238,20 +240,20 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   async handleChatModelEnd(
     output: LLMResult,
     runId: string,
-    parentRunId?: string,
-    tags?: string[],
-    extraParams?: Record<string, unknown>
+    _parentRunId?: string,
+    _tags?: string[],
+    _extraParams?: Record<string, unknown>
   ): Promise<void> {
     // Same as handleLLMEnd for chat models
-    return this.handleLLMEnd(output, runId, parentRunId, tags, extraParams);
+    return this.handleLLMEnd(output, runId, _parentRunId, _tags, _extraParams);
   }
 
   override async handleLLMError(
     err: Error,
     runId: string,
-    parentRunId?: string,
-    tags?: string[],
-    extraParams?: Record<string, unknown>
+    _parentRunId?: string,
+    _tags?: string[],
+    _extraParams?: Record<string, unknown>
   ): Promise<void> {
     // End both spans on error
     const llmSpanData = this.spans.get(`${runId}_llm`);
@@ -278,8 +280,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     chain: Serialized,
     inputs: ChainValues,
     runId: string,
-    parentRunId?: string,
-    tags?: string[],
+    _parentRunId?: string,
+    _tags?: string[],
     metadata?: Record<string, unknown>,
     runType?: string,
     runName?: string
@@ -308,9 +310,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   override async handleChainEnd(
     outputs: ChainValues,
     runId: string,
-    parentRunId?: string,
-    tags?: string[],
-    kwargs?: { inputs?: Record<string, unknown> }
+    _parentRunId?: string,
+    _tags?: string[],
+    _kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
@@ -331,9 +333,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   override async handleChainError(
     err: Error,
     runId: string,
-    parentRunId?: string,
-    tags?: string[],
-    kwargs?: { inputs?: Record<string, unknown> }
+    _parentRunId?: string,
+    _tags?: string[],
+    _kwargs?: { inputs?: Record<string, unknown> }
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
@@ -349,10 +351,10 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     tool: Serialized,
     input: string,
     runId: string,
-    parentRunId?: string,
-    tags?: string[],
-    metadata?: Record<string, unknown>,
-    runName?: string
+    _parentRunId?: string,
+    _tags?: string[],
+    _metadata?: Record<string, unknown>,
+    _runName?: string
   ): Promise<void> {
     const toolName = tool.id?.[tool.id.length - 1] || "unknown";
     const spanName = `${toolName}.task`;
@@ -378,8 +380,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   override async handleToolEnd(
     output: any,
     runId: string,
-    parentRunId?: string,
-    tags?: string[]
+    _parentRunId?: string,
+    _tags?: string[]
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
@@ -400,8 +402,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   override async handleToolError(
     err: Error,
     runId: string,
-    parentRunId?: string,
-    tags?: string[]
+    _parentRunId?: string,
+    _tags?: string[]
   ): Promise<void> {
     const spanData = this.spans.get(runId);
     if (!spanData) return;

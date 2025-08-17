@@ -371,7 +371,7 @@ describe("Test Langchain instrumentation", async function () {
     const { z } = await import("zod");
 
     const get_cities_data_by_country = tool(
-      (_args: {country: string}): object => {
+      (args: {country: string}): object => {
         return [
           {
             "city": "New York",
