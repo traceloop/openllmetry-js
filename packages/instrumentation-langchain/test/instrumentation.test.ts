@@ -461,26 +461,15 @@ describe("Test Langchain instrumentation", async function () {
       assert.ok(attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     } else {
-      // Test LangChain callback handler spans
-      const taskSpan = spans.find((span) => span.name === "bedrock.chat.task");
+      // Test LangChain callback handler spans - now only creates completion span
       const completionSpan = spans.find(
         (span) => span.name === "bedrock.chat.completion",
       );
 
       assert.ok(
-        taskSpan,
-        `No task span found. Available spans: ${spans.map((s) => s.name).join(", ")}`,
-      );
-      assert.ok(
         completionSpan,
         `No completion span found. Available spans: ${spans.map((s) => s.name).join(", ")}`,
       );
-
-      // Test task span attributes
-      const taskAttributes = taskSpan.attributes;
-      assert.strictEqual(taskAttributes["traceloop.span.kind"], "task");
-      assert.ok(taskAttributes["traceloop.entity.input"]);
-      assert.ok(taskAttributes["traceloop.entity.output"]);
 
       // Test completion span attributes
       const completionAttributes = completionSpan.attributes;

@@ -21,10 +21,8 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { ChainValues } from "@langchain/core/utils/types";
 import {
   Tracer,
-  trace,
   SpanKind,
   SpanStatusCode,
-  context,
 } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
@@ -51,54 +49,24 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     llm: Serialized,
     messages: BaseMessage[][],
     runId: string,
-    parentRunId?: string,
-    extraParams?: Record<string, unknown>,
-    tags?: string[],
-    metadata?: Record<string, unknown>,
-    runName?: string,
+    _parentRunId?: string,
+    _extraParams?: Record<string, unknown>,
+    _tags?: string[],
+    _metadata?: Record<string, unknown>,
+    _runName?: string,
   ): Promise<void> {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const modelName = this.extractModelName(llm);
     const vendor = this.detectVendor(llm);
     const spanBaseName = this.convertClassNameToSpanName(className);
 
-    // Create both a task span and an LLM span like Python implementation
-    const taskSpanName = `${spanBaseName}.task`;
-    const taskSpan = this.tracer.startSpan(taskSpanName, {
+    // Create single LLM span like Python implementation
+    const span = this.tracer.startSpan(`${spanBaseName}.completion`, {
       kind: SpanKind.CLIENT,
     });
 
-    taskSpan.setAttributes({
-      "traceloop.span.kind": "task",
-      "traceloop.workflow.name": runName || taskSpanName,
-    });
-
-    if (this.traceContent) {
-      const flatMessages = messages.flat();
-      taskSpan.setAttributes({
-        "traceloop.entity.input": JSON.stringify(
-          flatMessages.map((m) => ({
-            role: m._getType(),
-            content:
-              typeof m.content === "string"
-                ? m.content
-                : JSON.stringify(m.content),
-          })),
-        ),
-      });
-    }
-
-    // Create LLM span as child of task span
-    const llmSpan = this.tracer.startSpan(
-      `${spanBaseName}.completion`,
-      {
-        kind: SpanKind.CLIENT,
-      },
-      trace.setSpan(context.active(), taskSpan),
-    );
-
     const flatMessages = messages.flat();
-    llmSpan.setAttributes({
+    span.setAttributes({
       [SpanAttributes.LLM_SYSTEM]: vendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
       [SpanAttributes.LLM_REQUEST_MODEL]: modelName,
@@ -108,7 +76,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     if (this.traceContent && flatMessages.length > 0) {
       flatMessages.forEach((message, idx) => {
         const role = this.mapMessageTypeToRole(message._getType());
-        llmSpan.setAttributes({
+        span.setAttributes({
           [`${SpanAttributes.LLM_PROMPTS}.${idx}.role`]: role,
           [`${SpanAttributes.LLM_PROMPTS}.${idx}.content`]:
             typeof message.content === "string"
@@ -118,8 +86,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       });
     }
 
-    this.spans.set(runId, { span: taskSpan, runId });
-    this.spans.set(`${runId}_llm`, { span: llmSpan, runId: `${runId}_llm` });
+    this.spans.set(runId, { span, runId });
   }
 
   override async handleLLMStart(
@@ -169,100 +136,66 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _tags?: string[],
     _extraParams?: Record<string, unknown>,
   ): Promise<void> {
-    // End both LLM and task spans
-    const llmSpanData = this.spans.get(`${runId}_llm`);
-    const taskSpanData = this.spans.get(runId);
+    const spanData = this.spans.get(runId);
+    if (!spanData) return;
 
-    if (llmSpanData) {
-      const { span: llmSpan } = llmSpanData;
+    const { span } = spanData;
 
-      if (
-        this.traceContent &&
-        output.generations &&
-        output.generations.length > 0
-      ) {
-        output.generations.forEach((generation, idx) => {
-          if (generation && generation.length > 0) {
-            llmSpan.setAttributes({
-              [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.role`]: "assistant",
-              [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`]:
-                generation[0].text,
-            });
-          }
-        });
-      }
-
-      // Add usage metrics if available
-      if (output.llmOutput?.usage) {
-        const usage = output.llmOutput.usage;
-        if (usage.input_tokens) {
-          llmSpan.setAttributes({
-            [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: usage.input_tokens,
+    if (this.traceContent && output.generations && output.generations.length > 0) {
+      output.generations.forEach((generation, idx) => {
+        if (generation && generation.length > 0) {
+          span.setAttributes({
+            [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.role`]: "assistant",
+            [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`]: generation[0].text,
           });
         }
-        if (usage.output_tokens) {
-          llmSpan.setAttributes({
-            [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.output_tokens,
-          });
-        }
-        const totalTokens =
-          (usage.input_tokens || 0) + (usage.output_tokens || 0);
-        if (totalTokens > 0) {
-          llmSpan.setAttributes({
-            [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: totalTokens,
-          });
-        }
-      }
-
-      // Also check for tokenUsage format (for compatibility)
-      if (output.llmOutput?.tokenUsage) {
-        const usage = output.llmOutput.tokenUsage;
-        if (usage.promptTokens) {
-          llmSpan.setAttributes({
-            [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: usage.promptTokens,
-          });
-        }
-        if (usage.completionTokens) {
-          llmSpan.setAttributes({
-            [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]:
-              usage.completionTokens,
-          });
-        }
-        if (usage.totalTokens) {
-          llmSpan.setAttributes({
-            [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: usage.totalTokens,
-          });
-        }
-      }
-
-      llmSpan.setStatus({ code: SpanStatusCode.OK });
-      llmSpan.end();
-      this.spans.delete(`${runId}_llm`);
+      });
     }
 
-    if (taskSpanData) {
-      const { span: taskSpan } = taskSpanData;
-
-      if (
-        this.traceContent &&
-        output.generations &&
-        output.generations.length > 0
-      ) {
-        const completions = output.generations.map((generation, _idx) => {
-          if (generation && generation.length > 0) {
-            return generation[0].text;
-          }
-          return "";
-        });
-        taskSpan.setAttributes({
-          "traceloop.entity.output": JSON.stringify(completions),
+    // Add usage metrics if available
+    if (output.llmOutput?.usage) {
+      const usage = output.llmOutput.usage;
+      if (usage.input_tokens) {
+        span.setAttributes({
+          [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: usage.input_tokens,
         });
       }
-
-      taskSpan.setStatus({ code: SpanStatusCode.OK });
-      taskSpan.end();
-      this.spans.delete(runId);
+      if (usage.output_tokens) {
+        span.setAttributes({
+          [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.output_tokens,
+        });
+      }
+      const totalTokens = (usage.input_tokens || 0) + (usage.output_tokens || 0);
+      if (totalTokens > 0) {
+        span.setAttributes({
+          [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: totalTokens,
+        });
+      }
     }
+
+    // Also check for tokenUsage format (for compatibility)
+    if (output.llmOutput?.tokenUsage) {
+      const usage = output.llmOutput.tokenUsage;
+      if (usage.promptTokens) {
+        span.setAttributes({
+          [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: usage.promptTokens,
+        });
+      }
+      if (usage.completionTokens) {
+        span.setAttributes({
+          [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.completionTokens,
+        });
+      }
+      if (usage.totalTokens) {
+        span.setAttributes({
+          [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: usage.totalTokens,
+        });
+      }
+    }
+
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+    this.spans.delete(runId);
   }
 
   async handleChatModelEnd(
@@ -283,25 +216,14 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _tags?: string[],
     _extraParams?: Record<string, unknown>,
   ): Promise<void> {
-    // End both spans on error
-    const llmSpanData = this.spans.get(`${runId}_llm`);
-    const taskSpanData = this.spans.get(runId);
+    const spanData = this.spans.get(runId);
+    if (!spanData) return;
 
-    if (llmSpanData) {
-      const { span: llmSpan } = llmSpanData;
-      llmSpan.recordException(err);
-      llmSpan.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
-      llmSpan.end();
-      this.spans.delete(`${runId}_llm`);
-    }
-
-    if (taskSpanData) {
-      const { span: taskSpan } = taskSpanData;
-      taskSpan.recordException(err);
-      taskSpan.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
-      taskSpan.end();
-      this.spans.delete(runId);
-    }
+    const { span } = spanData;
+    span.recordException(err);
+    span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+    span.end();
+    this.spans.delete(runId);
   }
 
   override async handleChainStart(
