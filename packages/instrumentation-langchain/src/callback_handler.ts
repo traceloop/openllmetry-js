@@ -19,11 +19,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { LLMResult } from "@langchain/core/outputs";
 import { Serialized } from "@langchain/core/load/serializable";
 import { ChainValues } from "@langchain/core/utils/types";
-import {
-  Tracer,
-  SpanKind,
-  SpanStatusCode,
-} from "@opentelemetry/api";
+import { Tracer, SpanKind, SpanStatusCode } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 interface SpanData {
@@ -55,8 +51,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _metadata?: Record<string, unknown>,
     _runName?: string,
   ): Promise<void> {
+    console.log("📞 handleChatModelStart called!", {
+      runId,
+      className: llm.id?.[llm.id.length - 1],
+    });
     const className = llm.id?.[llm.id.length - 1] || "unknown";
-    const modelName = this.extractModelName(llm);
     const vendor = this.detectVendor(llm);
     const spanBaseName = this.convertClassNameToSpanName(className);
 
@@ -68,8 +67,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const flatMessages = messages.flat();
     span.setAttributes({
       [SpanAttributes.LLM_SYSTEM]: vendor,
-      [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
-      [SpanAttributes.LLM_REQUEST_MODEL]: modelName,
+      [SpanAttributes.LLM_REQUEST_TYPE]: "chat",
     });
 
     // Add prompts if tracing content
@@ -100,7 +98,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _runName?: string,
   ): Promise<void> {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
-    const modelName = this.extractModelName(llm);
     const vendor = this.detectVendor(llm);
     const spanBaseName = this.convertClassNameToSpanName(className);
 
@@ -112,7 +109,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     span.setAttributes({
       [SpanAttributes.LLM_SYSTEM]: vendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
-      [SpanAttributes.LLM_REQUEST_MODEL]: modelName,
     });
 
     if (this.traceContent && prompts.length > 0) {
@@ -139,16 +135,30 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
     const { span } = spanData;
 
-    if (this.traceContent && output.generations && output.generations.length > 0) {
+    if (
+      this.traceContent &&
+      output.generations &&
+      output.generations.length > 0
+    ) {
       output.generations.forEach((generation, idx) => {
         if (generation && generation.length > 0) {
           span.setAttributes({
             [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.role`]: "assistant",
-            [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`]: generation[0].text,
+            [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`]:
+              generation[0].text,
           });
         }
       });
     }
+
+    // Extract model name from response only, like Python implementation
+    const modelName = this.extractModelNameFromResponse(output);
+
+    // Set both request and response model attributes like Python implementation
+    span.setAttributes({
+      [SpanAttributes.LLM_REQUEST_MODEL]: modelName || "unknown",
+      [SpanAttributes.LLM_RESPONSE_MODEL]: modelName || "unknown",
+    });
 
     // Add usage metrics if available
     if (output.llmOutput?.usage) {
@@ -163,7 +173,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
           [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.output_tokens,
         });
       }
-      const totalTokens = (usage.input_tokens || 0) + (usage.output_tokens || 0);
+      const totalTokens =
+        (usage.input_tokens || 0) + (usage.output_tokens || 0);
       if (totalTokens > 0) {
         span.setAttributes({
           [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: totalTokens,
@@ -190,11 +201,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
         });
       }
     }
-
-    // Set response model (same as request model for most cases)
-    span.setAttributes({
-      [SpanAttributes.LLM_RESPONSE_MODEL]: span.attributes?.[SpanAttributes.LLM_REQUEST_MODEL] || "unknown",
-    });
 
     span.setStatus({ code: SpanStatusCode.OK });
     span.end();
@@ -368,27 +374,19 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     this.spans.delete(runId);
   }
 
-  private extractModelName(llm: Serialized): string {
-    // Extract from class hierarchy - last element is usually the class name
-    const className = llm.id?.[llm.id.length - 1] || "unknown";
-
-    // For BedrockChat, try to get the actual model name
-    if (className === "BedrockChat") {
-      // The model name might be available in kwargs - cast to any to access kwargs
-      const llmAny = llm as any;
-      const modelId = llmAny.kwargs?.model || llmAny.kwargs?.model_id;
-      if (modelId && typeof modelId === "string") {
-        // Extract clean model name from full ID (e.g., "us.anthropic.claude-3-7-sonnet-20250219-v1:0" -> "claude-3-7-sonnet")
-        const parts = modelId.split(".");
-        if (parts.length >= 3) {
-          const modelPart = parts.slice(2).join(".").split(":")[0]; // Remove region and version
-          return modelPart.replace("-20250219-v1", ""); // Clean up version suffix
-        }
-        return modelId;
+  private extractModelNameFromResponse(output: LLMResult): string | null {
+    // Follow Python implementation - extract from llm_output first
+    if (output.llmOutput) {
+      const modelName =
+        output.llmOutput.model_name ||
+        output.llmOutput.model_id ||
+        output.llmOutput.model;
+      if (modelName && typeof modelName === "string") {
+        return modelName;
       }
     }
 
-    return className;
+    return null;
   }
 
   private convertClassNameToSpanName(className: string): string {
@@ -403,34 +401,115 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   private detectVendor(llm: Serialized): string {
     const className = llm.id?.[llm.id.length - 1] || "";
 
-    // Follow Python implementation - map class names to vendors
-    if (className.includes("OpenAI") || className.includes("GPT")) {
-      return "OpenAI";
+    if (!className) {
+      return "Langchain";
     }
-    if (className.includes("Anthropic") || className.includes("Claude")) {
-      return "Anthropic";
-    }
-    if (className.includes("Bedrock") || className === "BedrockChat") {
-      // Python implementation returns "AWS" for all Bedrock classes
-      return "AWS";
-    }
-    if (className.includes("Vertex")) {
-      return "Google";
-    }
-    if (className.includes("Azure")) {
+
+    // Follow Python implementation with exact matches and patterns
+    // Ordered by specificity (most specific first)
+
+    // Azure (most specific - check first)
+    if (
+      ["AzureChatOpenAI", "AzureOpenAI", "AzureOpenAIEmbeddings"].includes(
+        className,
+      ) ||
+      className.toLowerCase().includes("azure")
+    ) {
       return "Azure";
     }
-    if (className.includes("Hugging")) {
-      return "HuggingFace";
+
+    // OpenAI
+    if (
+      ["ChatOpenAI", "OpenAI", "OpenAIEmbeddings"].includes(className) ||
+      className.toLowerCase().includes("openai")
+    ) {
+      return "OpenAI";
     }
-    if (className.includes("Ollama")) {
-      return "Ollama";
+
+    // AWS Bedrock
+    if (
+      ["ChatBedrock", "BedrockEmbeddings", "Bedrock", "BedrockChat"].includes(
+        className,
+      ) ||
+      className.toLowerCase().includes("bedrock") ||
+      className.toLowerCase().includes("aws")
+    ) {
+      return "AWS";
     }
-    if (className.includes("Cohere")) {
+
+    // Anthropic
+    if (
+      ["ChatAnthropic", "AnthropicLLM"].includes(className) ||
+      className.toLowerCase().includes("anthropic")
+    ) {
+      return "Anthropic";
+    }
+
+    // Google (Vertex/PaLM/Gemini)
+    if (
+      [
+        "ChatVertexAI",
+        "VertexAI",
+        "VertexAIEmbeddings",
+        "ChatGoogleGenerativeAI",
+        "GoogleGenerativeAI",
+        "GooglePaLM",
+        "ChatGooglePaLM",
+      ].includes(className) ||
+      className.toLowerCase().includes("vertex") ||
+      className.toLowerCase().includes("google") ||
+      className.toLowerCase().includes("palm") ||
+      className.toLowerCase().includes("gemini")
+    ) {
+      return "Google";
+    }
+
+    // Cohere
+    if (
+      ["ChatCohere", "CohereEmbeddings", "Cohere"].includes(className) ||
+      className.toLowerCase().includes("cohere")
+    ) {
       return "Cohere";
     }
 
-    return "LangChain";
+    // HuggingFace
+    if (
+      [
+        "HuggingFacePipeline",
+        "HuggingFaceTextGenInference",
+        "HuggingFaceEmbeddings",
+        "ChatHuggingFace",
+      ].includes(className) ||
+      className.toLowerCase().includes("huggingface")
+    ) {
+      return "HuggingFace";
+    }
+
+    // Ollama
+    if (
+      ["ChatOllama", "OllamaEmbeddings", "Ollama"].includes(className) ||
+      className.toLowerCase().includes("ollama")
+    ) {
+      return "Ollama";
+    }
+
+    // Together
+    if (
+      ["Together", "ChatTogether"].includes(className) ||
+      className.toLowerCase().includes("together")
+    ) {
+      return "Together";
+    }
+
+    // Replicate
+    if (
+      ["Replicate", "ChatReplicate"].includes(className) ||
+      className.toLowerCase().includes("replicate")
+    ) {
+      return "Replicate";
+    }
+
+    return "Langchain";
   }
 
   private mapMessageTypeToRole(messageType: string): string {

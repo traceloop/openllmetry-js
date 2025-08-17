@@ -441,7 +441,7 @@ describe("Test Langchain instrumentation", async function () {
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
       assert.strictEqual(
         attributes[SpanAttributes.LLM_REQUEST_TYPE],
-        "completion",
+        "chat",
       );
       assert.ok(attributes[SpanAttributes.LLM_REQUEST_MODEL]);
       assert.strictEqual(
@@ -479,7 +479,7 @@ describe("Test Langchain instrumentation", async function () {
       );
       assert.strictEqual(
         completionAttributes[SpanAttributes.LLM_REQUEST_TYPE],
-        "completion",
+        "chat",
       );
       assert.strictEqual(
         completionAttributes[SpanAttributes.LLM_REQUEST_MODEL],

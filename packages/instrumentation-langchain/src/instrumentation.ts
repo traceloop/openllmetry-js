@@ -28,6 +28,8 @@ export class LangChainInstrumentation extends InstrumentationBase {
   constructor(config: LangChainInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-langchain", version, config);
 
+    console.log("🚀 LangChain instrumentation constructor called");
+
     // Manually instrument CallbackManager immediately since module detection doesn't work
     this.instrumentCallbackManagerDirectly();
   }
@@ -46,13 +48,12 @@ export class LangChainInstrumentation extends InstrumentationBase {
   }
 
   protected init(): InstrumentationModuleDefinition[] {
-    // Return empty array since we're using require patching instead
+    // Return empty array since we handle patching in constructor
     return [];
   }
 
   private instrumentCallbackManagerDirectly() {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const callbackManagerModule = require("@langchain/core/callbacks/manager");
 
       if (callbackManagerModule?.CallbackManager) {
@@ -82,6 +83,10 @@ export class LangChainInstrumentation extends InstrumentationBase {
         inheritableMetadata?: Record<string, unknown>,
         localMetadata?: Record<string, unknown>,
       ) {
+        console.log(
+          "🎉 _configureSync called - Creating TraceloopCallbackHandler...",
+        );
+
         // Add our callback handler to inheritable handlers
         const callbackHandler = new TraceloopCallbackHandler(
           self.tracer,
