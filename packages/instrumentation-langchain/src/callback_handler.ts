@@ -191,6 +191,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       }
     }
 
+    // Set response model (same as request model for most cases)
+    span.setAttributes({
+      [SpanAttributes.LLM_RESPONSE_MODEL]: span.attributes?.[SpanAttributes.LLM_REQUEST_MODEL] || "unknown",
+    });
+
     span.setStatus({ code: SpanStatusCode.OK });
     span.end();
     this.spans.delete(runId);
