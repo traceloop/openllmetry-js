@@ -158,7 +158,51 @@ const onSpanStart = (span: Span): void => {
 };
 
 /**
+ * Ensures span compatibility between OTel v1.x and v2.x for OTLP transformer
+ */
+const ensureSpanCompatibility = (span: ReadableSpan): ReadableSpan => {
+  const spanAny = span as any;
+
+  // If the span already has instrumentationLibrary, it's compatible (OTel v2.x)
+  if (spanAny.instrumentationLibrary) {
+    return span;
+  }
+
+  // If it has instrumentationScope but no instrumentationLibrary (OTel v1.x),
+  // add instrumentationLibrary as an alias to prevent OTLP transformer errors
+  if (spanAny.instrumentationScope) {
+    // Create a proxy that provides both properties
+    return new Proxy(span, {
+      get(target, prop) {
+        if (prop === "instrumentationLibrary") {
+          return (target as any).instrumentationScope;
+        }
+        return (target as any)[prop];
+      },
+    }) as ReadableSpan;
+  }
+
+  // Fallback: add both properties with defaults
+  return new Proxy(span, {
+    get(target, prop) {
+      if (
+        prop === "instrumentationLibrary" ||
+        prop === "instrumentationScope"
+      ) {
+        return {
+          name: "unknown",
+          version: undefined,
+          schemaUrl: undefined,
+        };
+      }
+      return (target as any)[prop];
+    },
+  }) as ReadableSpan;
+};
+
+/**
  * Handles span end event, adapting attributes for Vercel AI compatibility
+ * and ensuring OTLP transformer compatibility
  */
 const onSpanEnd = (
   originalOnEnd: (span: ReadableSpan) => void,
@@ -178,6 +222,9 @@ const onSpanEnd = (
     // Apply AI SDK transformations (if needed)
     transformAiSdkSpan(span);
 
-    originalOnEnd(span);
+    // Ensure OTLP transformer compatibility
+    const compatibleSpan = ensureSpanCompatibility(span);
+
+    originalOnEnd(compatibleSpan);
   };
 };
