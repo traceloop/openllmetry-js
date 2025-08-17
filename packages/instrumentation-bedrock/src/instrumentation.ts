@@ -351,10 +351,11 @@ export class BedrockInstrumentation extends InstrumentationBase {
         if (requestBody["messages"]) {
           const promptAttributes: Record<string, any> = {};
           requestBody["messages"].forEach((message: any, index: number) => {
-            promptAttributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = message.role;
-            promptAttributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] = 
-              typeof message.content === "string" 
-                ? message.content 
+            promptAttributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+              message.role;
+            promptAttributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+              typeof message.content === "string"
+                ? message.content
                 : JSON.stringify(message.content);
           });
           return { ...baseAttributes, ...promptAttributes };
@@ -469,7 +470,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
         // Handle new messages API format response
         if (response["content"]) {
-          const content = Array.isArray(response["content"]) 
+          const content = Array.isArray(response["content"])
             ? response["content"].map((c: any) => c.text || c).join("")
             : response["content"];
           return {
@@ -482,7 +483,8 @@ export class BedrockInstrumentation extends InstrumentationBase {
         if (response["completion"]) {
           return {
             ...baseAttributes,
-            [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]: response["completion"],
+            [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+              response["completion"],
           };
         }
 
@@ -491,12 +493,12 @@ export class BedrockInstrumentation extends InstrumentationBase {
       case "cohere": {
         const baseAttributes = {
           [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
-            response["finish_reason"],
+            response["generations"]?.[0]?.["finish_reason"],
           [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
           ...(this._shouldSendPrompts()
             ? {
                 [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
-                  response["text"],
+                  response["generations"]?.[0]?.["text"],
               }
             : {}),
         };
@@ -506,10 +508,13 @@ export class BedrockInstrumentation extends InstrumentationBase {
           const billedUnits = response["meta"]["billed_units"];
           return {
             ...baseAttributes,
-            [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: billedUnits["input_tokens"],
-            [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: billedUnits["output_tokens"],
-            [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: 
-              (billedUnits["input_tokens"] || 0) + (billedUnits["output_tokens"] || 0),
+            [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]:
+              billedUnits["input_tokens"],
+            [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]:
+              billedUnits["output_tokens"],
+            [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]:
+              (billedUnits["input_tokens"] || 0) +
+              (billedUnits["output_tokens"] || 0),
           };
         }
 
