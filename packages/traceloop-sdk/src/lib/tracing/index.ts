@@ -2,9 +2,23 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
-import { resourceFromAttributes, Resource } from "@opentelemetry/resources";
+import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
+
+// Compatibility function for creating resources that works with both OTel v1.x and v2.x
+function createResource(attributes: Record<string, any>): Resource {
+  // Import the resource module at runtime to handle both v1.x and v2.x
+  const resourcesModule = require("@opentelemetry/resources");
+  
+  // Try to use resourceFromAttributes if it exists (OTel v2.x)
+  if (resourcesModule.resourceFromAttributes) {
+    return resourcesModule.resourceFromAttributes(attributes);
+  }
+  
+  // Fallback to constructor for OTel v1.x
+  return new resourcesModule.Resource(attributes);
+}
 import { InitializeOptions } from "../interfaces";
 import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
@@ -314,7 +328,7 @@ export const startTracing = (options: InitializeOptions) => {
 
   try {
     // Create our custom resource with service name and let NodeSDK handle default detection
-    resource = resourceFromAttributes({
+    resource = createResource({
       [ATTR_SERVICE_NAME]: serviceName,
     });
 
@@ -331,7 +345,7 @@ export const startTracing = (options: InitializeOptions) => {
     // Ensure the resource has all required properties for serialization
     if (!resource.attributes[ATTR_SERVICE_NAME]) {
       diag.warn("Service name missing from resource, adding fallback");
-      resource = resourceFromAttributes({
+      resource = createResource({
         ...resource.attributes,
         [ATTR_SERVICE_NAME]: serviceName,
       });
@@ -358,18 +372,18 @@ export const startTracing = (options: InitializeOptions) => {
       }
 
       // Recreate resource with sanitized attributes to ensure compatibility
-      resource = resourceFromAttributes(sanitizedAttributes);
+      resource = createResource(sanitizedAttributes);
     }
   } catch (error) {
     // Fallback: create a basic resource manually with full error recovery
     diag.warn(
-      "Failed to create resource with resourceFromAttributes, using fallback",
+      "Failed to create resource with createResource, using fallback",
       error,
     );
 
     try {
       // Try creating a more robust resource
-      resource = resourceFromAttributes({
+      resource = createResource({
         [ATTR_SERVICE_NAME]: serviceName || "unknown-service",
       });
     } catch (fallbackError) {
@@ -378,7 +392,7 @@ export const startTracing = (options: InitializeOptions) => {
         "Failed to create resource with fallback, creating minimal resource",
         fallbackError,
       );
-      resource = resourceFromAttributes({
+      resource = createResource({
         [ATTR_SERVICE_NAME]: serviceName || "unknown-service",
       });
     }
