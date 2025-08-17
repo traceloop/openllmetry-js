@@ -326,15 +326,62 @@ export const startTracing = (options: InitializeOptions) => {
     if (!resource.attributes || typeof resource.attributes !== "object") {
       throw new Error("Resource missing attributes");
     }
+
+    // Additional defensive measures for OTLP transformer compatibility
+    // Ensure the resource has all required properties for serialization
+    if (!resource.attributes[ATTR_SERVICE_NAME]) {
+      diag.warn("Service name missing from resource, adding fallback");
+      resource = resourceFromAttributes({
+        ...resource.attributes,
+        [ATTR_SERVICE_NAME]: serviceName,
+      });
+    }
+
+    // Critical fix for OTel v1.x compatibility: ensure resource has proper structure
+    // The OTLP transformer expects certain properties to exist on resources
+
+    // Ensure resource attributes are properly structured for OTLP serialization
+    if (resource.attributes) {
+      // Make sure all attribute values are properly defined to prevent
+      // "Cannot read properties of undefined" errors in OTLP transformer
+      const sanitizedAttributes: Record<string, any> = {};
+      for (const [key, value] of Object.entries(resource.attributes)) {
+        if (value !== undefined && value !== null) {
+          sanitizedAttributes[key] = value;
+        }
+      }
+
+      // Ensure we have at least the service name
+      if (!sanitizedAttributes[ATTR_SERVICE_NAME]) {
+        sanitizedAttributes[ATTR_SERVICE_NAME] =
+          serviceName || "unknown-service";
+      }
+
+      // Recreate resource with sanitized attributes to ensure compatibility
+      resource = resourceFromAttributes(sanitizedAttributes);
+    }
   } catch (error) {
-    // Fallback: create a basic resource manually
+    // Fallback: create a basic resource manually with full error recovery
     diag.warn(
       "Failed to create resource with resourceFromAttributes, using fallback",
       error,
     );
-    resource = resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: serviceName,
-    });
+
+    try {
+      // Try creating a more robust resource
+      resource = resourceFromAttributes({
+        [ATTR_SERVICE_NAME]: serviceName || "unknown-service",
+      });
+    } catch (fallbackError) {
+      // Last resort: create minimal resource
+      diag.error(
+        "Failed to create resource with fallback, creating minimal resource",
+        fallbackError,
+      );
+      resource = resourceFromAttributes({
+        [ATTR_SERVICE_NAME]: serviceName || "unknown-service",
+      });
+    }
   }
 
   _sdk = new NodeSDK({
