@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-openai",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "OpenAI Instrumentaion",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

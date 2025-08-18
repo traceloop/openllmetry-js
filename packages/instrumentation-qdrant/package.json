@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-qdrant",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Qdrant Instrumentation",
   "main": "dist/src/index.js",
   "module": "dist/src/index.mjs",
