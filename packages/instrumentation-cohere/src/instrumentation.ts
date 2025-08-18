@@ -48,7 +48,7 @@ export class CohereInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<typeof cohere> {
+  protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "cohere-ai",
       [">=7.7.5"],

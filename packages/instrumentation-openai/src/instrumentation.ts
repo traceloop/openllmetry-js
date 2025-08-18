@@ -108,7 +108,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     }
   }
 
-  protected init(): InstrumentationModuleDefinition<typeof openai> {
+  protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "openai",
       [">=4 <6"],

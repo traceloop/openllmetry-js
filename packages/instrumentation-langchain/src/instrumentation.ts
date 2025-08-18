@@ -45,7 +45,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
     }
   }
 
-  protected init(): InstrumentationModuleDefinition<any>[] {
+  protected init(): InstrumentationModuleDefinition[] {
     // Return empty array since we handle patching in constructor
     return [];
   }

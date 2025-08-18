@@ -42,7 +42,7 @@ export class PineconeInstrumentation extends InstrumentationBase {
     this.patch(module);
   }
 
-  protected init(): InstrumentationModuleDefinition<typeof pinecone> {
+  protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "@pinecone-database/pinecone",
       [">=2.0.1"],
