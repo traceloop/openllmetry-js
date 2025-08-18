@@ -47,7 +47,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition {
+  protected init(): InstrumentationModuleDefinition<typeof bedrock> {
     const module = new InstrumentationNodeModuleDefinition(
       "@aws-sdk/client-bedrock-runtime",
       [">=3.499.0"],

@@ -70,7 +70,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
     }
   }
 
-  protected init(): InstrumentationModuleDefinition[] {
+  protected init(): InstrumentationModuleDefinition<any>[] {
     const chainModule = new InstrumentationNodeModuleDefinition(
       "langchain/chains.cjs",
       [">=0.3.0"],

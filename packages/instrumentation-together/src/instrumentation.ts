@@ -75,7 +75,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
     );
   }
 
-  protected init(): InstrumentationModuleDefinition {
+  protected init(): InstrumentationModuleDefinition<typeof togetherai> {
     const module = new InstrumentationNodeModuleDefinition(
       "together-ai",
       [">=0.13.0"],
