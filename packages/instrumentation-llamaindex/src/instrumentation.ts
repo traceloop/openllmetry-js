@@ -51,7 +51,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
     this.patch(module);
   }
 
-  protected init(): InstrumentationModuleDefinition<any>[] {
+  protected init(): InstrumentationModuleDefinition[] {
     const llamaindexModule = new InstrumentationNodeModuleDefinition(
       "llamaindex",
       [">=0.1.0"],

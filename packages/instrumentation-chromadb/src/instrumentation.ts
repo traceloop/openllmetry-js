@@ -47,7 +47,7 @@ export class ChromaDBInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition<typeof chromadb> {
+  protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "chromadb",
       ["^1.8.1"],
