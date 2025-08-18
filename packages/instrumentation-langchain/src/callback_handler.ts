@@ -494,7 +494,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ["Together", "ChatTogether"].includes(className) ||
       className.toLowerCase().includes("together")
     ) {
-      return "Together";
+      return "TogetherAI";
     }
 
     // Replicate
