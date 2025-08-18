@@ -335,26 +335,45 @@ export class BedrockInstrumentation extends InstrumentationBase {
         };
       }
       case "anthropic": {
-        return {
+        const baseAttributes = {
           [SpanAttributes.LLM_REQUEST_TOP_P]: requestBody["top_p"],
           [SpanAttributes.LLM_TOP_K]: requestBody["top_k"],
           [SpanAttributes.LLM_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [SpanAttributes.LLM_REQUEST_MAX_TOKENS]:
-            requestBody["max_tokens_to_sample"],
-
-          // Prompt & Role
-          ...(this._shouldSendPrompts()
-            ? {
-                [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
-                [`${SpanAttributes.LLM_PROMPTS}.0.content`]: requestBody[
-                  "prompt"
-                ]
-                  // The format is removing when we are setting span attribute
-                  .replace("\n\nHuman:", "")
-                  .replace("\n\nAssistant:", ""),
-              }
-            : {}),
+            requestBody["max_tokens_to_sample"] || requestBody["max_tokens"],
         };
+
+        if (!this._shouldSendPrompts()) {
+          return baseAttributes;
+        }
+
+        // Handle new messages API format (used by langchain)
+        if (requestBody["messages"]) {
+          const promptAttributes: Record<string, any> = {};
+          requestBody["messages"].forEach((message: any, index: number) => {
+            promptAttributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+              message.role;
+            promptAttributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+              typeof message.content === "string"
+                ? message.content
+                : JSON.stringify(message.content);
+          });
+          return { ...baseAttributes, ...promptAttributes };
+        }
+
+        // Handle legacy prompt format
+        if (requestBody["prompt"]) {
+          return {
+            ...baseAttributes,
+            [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
+            [`${SpanAttributes.LLM_PROMPTS}.0.content`]: requestBody["prompt"]
+              // The format is removing when we are setting span attribute
+              .replace("\n\nHuman:", "")
+              .replace("\n\nAssistant:", ""),
+          };
+        }
+
+        return baseAttributes;
       }
       case "cohere": {
         return {
@@ -368,7 +387,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
             ? {
                 [`${SpanAttributes.LLM_PROMPTS}.0.role`]: "user",
                 [`${SpanAttributes.LLM_PROMPTS}.0.content`]:
-                  requestBody["prompt"],
+                  requestBody["message"] || requestBody["prompt"],
               }
             : {}),
         };
@@ -439,30 +458,67 @@ export class BedrockInstrumentation extends InstrumentationBase {
         };
       }
       case "anthropic": {
-        return {
+        const baseAttributes = {
           [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
             response["stop_reason"],
           [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
-          ...(this._shouldSendPrompts()
-            ? {
-                [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
-                  response["completion"],
-              }
-            : {}),
         };
+
+        if (!this._shouldSendPrompts()) {
+          return baseAttributes;
+        }
+
+        // Handle new messages API format response
+        if (response["content"]) {
+          const content = Array.isArray(response["content"])
+            ? response["content"].map((c: any) => c.text || c).join("")
+            : response["content"];
+          return {
+            ...baseAttributes,
+            [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]: content,
+          };
+        }
+
+        // Handle legacy completion format
+        if (response["completion"]) {
+          return {
+            ...baseAttributes,
+            [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
+              response["completion"],
+          };
+        }
+
+        return baseAttributes;
       }
       case "cohere": {
-        return {
+        const baseAttributes = {
           [`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`]:
-            response["generations"][0]["finish_reason"],
+            response["generations"]?.[0]?.["finish_reason"],
           [`${SpanAttributes.LLM_COMPLETIONS}.0.role`]: "assistant",
           ...(this._shouldSendPrompts()
             ? {
                 [`${SpanAttributes.LLM_COMPLETIONS}.0.content`]:
-                  response["generations"][0]["text"],
+                  response["generations"]?.[0]?.["text"],
               }
             : {}),
         };
+
+        // Add token usage if available
+        if (response["meta"] && response["meta"]["billed_units"]) {
+          const billedUnits = response["meta"]["billed_units"];
+          return {
+            ...baseAttributes,
+            [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]:
+              billedUnits["input_tokens"],
+            [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]:
+              billedUnits["output_tokens"],
+            [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]:
+              (billedUnits["input_tokens"] || 0) +
+              (billedUnits["output_tokens"] || 0),
+          };
+        }
+
+        return baseAttributes;
       }
       case "meta": {
         return {
