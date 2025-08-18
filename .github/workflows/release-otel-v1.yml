@@ -50,4 +50,4 @@ jobs:
       - name: Publish with otel-v1 tag
         run: |
           # Publish all packages with otel-v1 dist-tag
-          pnpm lerna publish from-git --dist-tag otel-v1 --no-private --yes
+          pnpm lerna publish from-package --dist-tag otel-v1 --no-private --yes
