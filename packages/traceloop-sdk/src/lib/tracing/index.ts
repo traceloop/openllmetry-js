@@ -312,7 +312,7 @@ export const startTracing = (options: InitializeOptions) => {
 
   _sdk = new NodeSDK({
     resource,
-    spanProcessor: spanProcessors[0],
+    spanProcessors: spanProcessors,
     contextManager: options.contextManager,
     textMapPropagator: options.propagator,
     traceExporter,
