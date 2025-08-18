@@ -2,9 +2,6 @@ name: Release - OpenTelemetry v1 Compatible
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - otel-v1-main
 
 jobs:
   release:
@@ -50,31 +47,7 @@ jobs:
         run: |
           git add .
           git commit -m "chore: release v${NEW_VERSION} for OpenTelemetry v1 compatibility"
-          git tag v${NEW_VERSION}
           git push origin otel-v1-main
-          git push origin v${NEW_VERSION}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body: |
-            ## OpenTelemetry v1 Compatible Release
-
-            This release is compatible with OpenTelemetry JavaScript SDK v1.30.1 and earlier versions.
-
-            ### Changes in this version:
-            - Downgraded OpenTelemetry dependencies to v1.30.1 for backward compatibility
-            - Fixed TypeScript compatibility issues with v1.x instrumentation interfaces
-            - Updated API version to 1.7.0 for compatibility with v1.x SDK packages
-
-            ### For users on OpenTelemetry v2.x
-            Please use the regular releases without the `-otel-v1` suffix.
-
-            ### For users on OpenTelemetry v1.x
-            Install using: `npm install @traceloop/node-server-sdk@otel-v1`
-          tag_name: v${{ env.NEW_VERSION }}
-          name: v${{ env.NEW_VERSION }} (OpenTelemetry v1 Compatible)
         env:
           GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
       - name: "NPM Identity"
