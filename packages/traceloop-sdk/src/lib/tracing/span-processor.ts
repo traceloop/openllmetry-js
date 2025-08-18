@@ -3,7 +3,7 @@ import {
   BatchSpanProcessor,
   SpanProcessor,
   ReadableSpan,
-} from "@opentelemetry/sdk-trace-node";
+} from "@opentelemetry/sdk-trace-base";
 import { Span, context } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
