@@ -46,7 +46,7 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition {
+  protected init(): InstrumentationModuleDefinition<typeof vertexAI> {
     const vertexAIModule = new InstrumentationNodeModuleDefinition(
       "@google-cloud/vertexai",
       [">=1.1.0"],

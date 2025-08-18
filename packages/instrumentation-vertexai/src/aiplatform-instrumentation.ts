@@ -47,7 +47,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition {
+  protected init(): InstrumentationModuleDefinition<typeof aiplatform> {
     const aiPlatformModule = new InstrumentationNodeModuleDefinition(
       "@google-cloud/aiplatform",
       [">=3.10.0"],

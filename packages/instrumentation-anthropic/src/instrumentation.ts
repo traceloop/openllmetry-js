@@ -74,7 +74,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     );
   }
 
-  protected init(): InstrumentationModuleDefinition {
+  protected init(): InstrumentationModuleDefinition<typeof anthropic> {
     const module = new InstrumentationNodeModuleDefinition(
       "@anthropic-ai/sdk",
       [">=0.9.1"],
