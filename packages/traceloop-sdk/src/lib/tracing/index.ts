@@ -312,7 +312,7 @@ export const startTracing = (options: InitializeOptions) => {
 
   _sdk = new NodeSDK({
     resource,
-    spanProcessor: spanProcessors[0], // v1.x uses singular spanProcessor
+    spanProcessors: spanProcessors,
     contextManager: options.contextManager,
     textMapPropagator: options.propagator,
     traceExporter,
@@ -352,16 +352,8 @@ export const forceFlush = async () => {
   await _spanProcessor.forceFlush();
 };
 
-// Compatibility function for creating resources that works with both OTel v1.x and v2.x
-function createResource(attributes: Record<string, any>): Resource {
-  // Import the resource module at runtime to handle both v1.x and v2.x
-  const resourcesModule = require("@opentelemetry/resources");
-
-  // Try to use resourceFromAttributes if it exists (OTel v2.x)
-  if (resourcesModule.resourceFromAttributes) {
-    return resourcesModule.resourceFromAttributes(attributes);
-  }
-
-  // Fallback to constructor for OTel v1.x
-  return new resourcesModule.Resource(attributes);
+function createResource(
+  attributes: Record<string, string | number | boolean>,
+): Resource {
+  return new Resource(attributes);
 }
