@@ -419,7 +419,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ["ChatOpenAI", "OpenAI", "OpenAIEmbeddings"].includes(className) ||
       className.toLowerCase().includes("openai")
     ) {
-      return "OpenAI";
+      return "openai";
     }
 
     // AWS Bedrock
