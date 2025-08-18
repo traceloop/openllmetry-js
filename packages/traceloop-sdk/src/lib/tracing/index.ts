@@ -198,13 +198,11 @@ export const manuallyInitInstrumentations = (
     instrumentation.manuallyInstrument(instrumentModules.pinecone);
   }
 
-  if (instrumentModules?.langchain) {
-    langchainInstrumentation = new LangChainInstrumentation({
-      exceptionLogger,
-    });
-    instrumentations.push(langchainInstrumentation);
-    langchainInstrumentation.manuallyInstrument(instrumentModules.langchain);
-  }
+  // Always enable LangChain instrumentation
+  langchainInstrumentation = new LangChainInstrumentation({
+    exceptionLogger,
+  });
+  instrumentations.push(langchainInstrumentation);
 
   if (instrumentModules?.llamaIndex) {
     llamaIndexInstrumentation = new LlamaIndexInstrumentation({
