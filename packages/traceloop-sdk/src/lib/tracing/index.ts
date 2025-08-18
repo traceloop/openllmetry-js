@@ -1,5 +1,5 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
+import { SpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { Resource } from "@opentelemetry/resources";
