@@ -15,7 +15,7 @@ This branch (`otel-v1-main`) contains a version of the OpenLLMetry JS SDK that i
 
 ### Code Changes Made for v1 Compatibility
 
-1. **TypeScript Interface Updates**: Fixed `InstrumentationModuleDefinition<T>` generic type parameters across all instrumentation packages
+1. **TypeScript Interface Updates**: Fixed `InstrumentationModuleDefinition` generic type parameters across all instrumentation packages
 2. **SDK Configuration**: Updated `NodeSDK` configuration to use `spanProcessor` (singular) instead of `spanProcessors` (plural) as required by v1.x
 3. **API Version Compatibility**: Ensured all packages use compatible API versions
 

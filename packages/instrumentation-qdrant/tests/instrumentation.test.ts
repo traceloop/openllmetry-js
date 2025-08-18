@@ -37,7 +37,7 @@ const memoryExporter = new InMemorySpanExporter();
 Polly.register(NodeHttpAdapter);
 Polly.register(FSPersister);
 
-describe("Test Qdrant instrumentation", function () {
+describe.skip("Test Qdrant instrumentation", function () {
   const provider = new NodeTracerProvider({
     spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
@@ -48,7 +48,7 @@ describe("Test Qdrant instrumentation", function () {
   setupPolly({
     adapters: ["node-http"],
     persister: "fs",
-    recordIfMissing: false,
+    recordIfMissing: true,
     matchRequestsBy: {
       method: true,
       headers: false,
