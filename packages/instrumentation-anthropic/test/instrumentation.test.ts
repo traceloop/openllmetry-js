@@ -385,8 +385,14 @@ describe("Test Anthropic instrumentation", async function () {
     const content = JSON.parse(chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] as string);
     assert.ok(Array.isArray(content));
     
-    const thinkingBlock = content.find((block: any) => block.type === "thinking");
-    const textBlock = content.find((block: any) => block.type === "text");
+    interface ContentBlock {
+      type: string;
+      thinking?: string;
+      text?: string;
+    }
+    
+    const thinkingBlock = content.find((block: ContentBlock) => block.type === "thinking");
+    const textBlock = content.find((block: ContentBlock) => block.type === "text");
     
     assert.ok(thinkingBlock, "Should contain a thinking block");
     assert.ok(thinkingBlock.thinking, "Thinking block should have thinking content");

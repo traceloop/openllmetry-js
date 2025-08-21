@@ -31,7 +31,7 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import { AnthropicInstrumentationConfig } from "./types";
+import { AnthropicInstrumentationConfig, MessageCreateParamsWithThinking } from "./types";
 import { version } from "../package.json";
 import type * as anthropic from "@anthropic-ai/sdk";
 import type {
@@ -214,14 +214,11 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
       // Handle thinking parameters
-      if ((params as any).thinking) {
-        const thinking = (params as any).thinking;
-        if (thinking.type) {
-          attributes["llm.request.thinking.type"] = thinking.type;
-        }
-        if (thinking.budget_tokens) {
-          attributes["llm.request.thinking.budget_tokens"] = thinking.budget_tokens;
-        }
+      const paramsWithThinking = params as MessageCreateParamsWithThinking;
+      if (paramsWithThinking.thinking) {
+        const thinking = paramsWithThinking.thinking;
+        attributes["llm.request.thinking.type"] = thinking.type;
+        attributes["llm.request.thinking.budget_tokens"] = thinking.budget_tokens;
       }
 
       if (type === "completion") {
