@@ -400,16 +400,12 @@ describe("Test Anthropic instrumentation", async function () {
     assert.ok(textBlock.text, "Text block should have text content");
 
     // Verify token usage includes thinking tokens
-    assert.ok(
-      +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]! > 0,
-    );
-    assert.ok(
-      +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]! > 0,
-    );
-    assert.equal(
-      +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]! +
-        +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]!,
-      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
-    );
+    const completionTokens = chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
+    const promptTokens = chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`];
+    const totalTokens = chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`];
+    
+    assert.ok(completionTokens && +completionTokens > 0);
+    assert.ok(promptTokens && +promptTokens > 0);
+    assert.equal(+promptTokens + +completionTokens, totalTokens);
   }).timeout(30000);
 });
