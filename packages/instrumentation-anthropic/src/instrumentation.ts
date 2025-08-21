@@ -45,9 +45,7 @@ import type {
   Message,
   MessageStreamEvent,
 } from "@anthropic-ai/sdk/resources/messages";
-import type {
-  MessageCreateParamsNonStreaming as BetaMessageCreateParamsNonStreaming,
-} from "@anthropic-ai/sdk/resources/beta/messages";
+import type { MessageCreateParamsNonStreaming as BetaMessageCreateParamsNonStreaming } from "@anthropic-ai/sdk/resources/beta/messages";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type { APIPromise, BaseAnthropic } from "@anthropic-ai/sdk";
 
@@ -220,7 +218,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       const betaParams = params as BetaMessageCreateParamsNonStreaming;
       if (betaParams.thinking && betaParams.thinking.type === "enabled") {
         attributes["llm.request.thinking.type"] = betaParams.thinking.type;
-        attributes["llm.request.thinking.budget_tokens"] = betaParams.thinking.budget_tokens;
+        attributes["llm.request.thinking.budget_tokens"] =
+          betaParams.thinking.budget_tokens;
       }
 
       if (type === "completion") {

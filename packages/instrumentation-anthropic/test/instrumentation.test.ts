@@ -332,9 +332,12 @@ describe("Test Anthropic instrumentation", async function () {
   it("should set attributes in span for beta messages with thinking", async () => {
     const message = await anthropic.beta.messages.create({
       max_tokens: 2048,
-      betas: ['interleaved-thinking-2025-05-14'],
+      betas: ["interleaved-thinking-2025-05-14"],
       messages: [
-        { role: "user", content: "What is 2+2? Think through this step by step." },
+        {
+          role: "user",
+          content: "What is 2+2? Think through this step by step.",
+        },
       ],
       model: "claude-opus-4-1-20250805",
       thinking: {
@@ -360,7 +363,7 @@ describe("Test Anthropic instrumentation", async function () {
       chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MAX_TOKENS}`],
       2048,
     );
-    
+
     // Check if thinking parameters are captured (these will fail initially)
     assert.strictEqual(
       chatSpan.attributes["llm.request.thinking.type"],
@@ -382,28 +385,42 @@ describe("Test Anthropic instrumentation", async function () {
     );
 
     // Check that we capture both thinking and regular content blocks
-    const content = JSON.parse(chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] as string);
+    const content = JSON.parse(
+      chatSpan.attributes[
+        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+      ] as string,
+    );
     assert.ok(Array.isArray(content));
-    
+
     interface ContentBlock {
       type: string;
       thinking?: string;
       text?: string;
     }
-    
-    const thinkingBlock = content.find((block: ContentBlock) => block.type === "thinking");
-    const textBlock = content.find((block: ContentBlock) => block.type === "text");
-    
+
+    const thinkingBlock = content.find(
+      (block: ContentBlock) => block.type === "thinking",
+    );
+    const textBlock = content.find(
+      (block: ContentBlock) => block.type === "text",
+    );
+
     assert.ok(thinkingBlock, "Should contain a thinking block");
-    assert.ok(thinkingBlock.thinking, "Thinking block should have thinking content");
+    assert.ok(
+      thinkingBlock.thinking,
+      "Thinking block should have thinking content",
+    );
     assert.ok(textBlock, "Should contain a text block");
     assert.ok(textBlock.text, "Text block should have text content");
 
     // Verify token usage includes thinking tokens
-    const completionTokens = chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
-    const promptTokens = chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`];
-    const totalTokens = chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`];
-    
+    const completionTokens =
+      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
+    const promptTokens =
+      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`];
+    const totalTokens =
+      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`];
+
     assert.ok(completionTokens && +completionTokens > 0);
     assert.ok(promptTokens && +promptTokens > 0);
     assert.equal(+promptTokens + +completionTokens, totalTokens);
