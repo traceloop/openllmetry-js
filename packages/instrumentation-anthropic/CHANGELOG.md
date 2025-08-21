@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.17.1](https://github.com/traceloop/openllmetry-js/compare/v0.17.0...v0.17.1) (2025-08-21)
+
+### Bug Fixes
+
+- **anthropic:** add support for Claude thinking API ([#671](https://github.com/traceloop/openllmetry-js/issues/671)) ([088986a](https://github.com/traceloop/openllmetry-js/commit/088986a5e92c003fad6221e76ad0d60bd9410e8f))
+
 # [0.17.0](https://github.com/traceloop/openllmetry-js/compare/v0.16.2...v0.17.0) (2025-08-18)
 
 **Note:** Version bump only for package @traceloop/instrumentation-anthropic
