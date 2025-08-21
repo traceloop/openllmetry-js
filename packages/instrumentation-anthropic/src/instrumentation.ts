@@ -31,7 +31,7 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import { AnthropicInstrumentationConfig, MessageCreateParamsWithThinking } from "./types";
+import { AnthropicInstrumentationConfig } from "./types";
 import { version } from "../package.json";
 import type * as anthropic from "@anthropic-ai/sdk";
 import type {
@@ -45,6 +45,9 @@ import type {
   Message,
   MessageStreamEvent,
 } from "@anthropic-ai/sdk/resources/messages";
+import type {
+  MessageCreateParamsNonStreaming as BetaMessageCreateParamsNonStreaming,
+} from "@anthropic-ai/sdk/resources/beta/messages";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type { APIPromise, BaseAnthropic } from "@anthropic-ai/sdk";
 
@@ -213,12 +216,11 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       attributes[SpanAttributes.LLM_REQUEST_TOP_P] = params.top_p;
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
-      // Handle thinking parameters
-      const paramsWithThinking = params as MessageCreateParamsWithThinking;
-      if (paramsWithThinking.thinking) {
-        const thinking = paramsWithThinking.thinking;
-        attributes["llm.request.thinking.type"] = thinking.type;
-        attributes["llm.request.thinking.budget_tokens"] = thinking.budget_tokens;
+      // Handle thinking parameters (for beta messages)
+      const betaParams = params as BetaMessageCreateParamsNonStreaming;
+      if (betaParams.thinking && betaParams.thinking.type === "enabled") {
+        attributes["llm.request.thinking.type"] = betaParams.thinking.type;
+        attributes["llm.request.thinking.budget_tokens"] = betaParams.thinking.budget_tokens;
       }
 
       if (type === "completion") {
