@@ -45,6 +45,7 @@ import type {
   Message,
   MessageStreamEvent,
 } from "@anthropic-ai/sdk/resources/messages";
+import type { MessageCreateParamsNonStreaming as BetaMessageCreateParamsNonStreaming } from "@anthropic-ai/sdk/resources/beta/messages";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type { APIPromise, BaseAnthropic } from "@anthropic-ai/sdk";
 
@@ -69,6 +70,11 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     );
     this._wrap(
       module.Anthropic.Messages.prototype,
+      "create",
+      this.patchAnthropic("chat", module),
+    );
+    this._wrap(
+      module.Anthropic.Beta.Messages.prototype,
       "create",
       this.patchAnthropic("chat", module),
     );
@@ -97,6 +103,11 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       "create",
       this.patchAnthropic("chat", moduleExports),
     );
+    this._wrap(
+      moduleExports.Anthropic.Beta.Messages.prototype,
+      "create",
+      this.patchAnthropic("chat", moduleExports),
+    );
     return moduleExports;
   }
 
@@ -108,6 +119,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
     this._unwrap(moduleExports.Anthropic.Completions.prototype, "create");
     this._unwrap(moduleExports.Anthropic.Messages.prototype, "create");
+    this._unwrap(moduleExports.Anthropic.Beta.Messages.prototype, "create");
   }
 
   private patchAnthropic(
@@ -201,6 +213,14 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] = params.temperature;
       attributes[SpanAttributes.LLM_REQUEST_TOP_P] = params.top_p;
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
+
+      // Handle thinking parameters (for beta messages)
+      const betaParams = params as BetaMessageCreateParamsNonStreaming;
+      if (betaParams.thinking && betaParams.thinking.type === "enabled") {
+        attributes["llm.request.thinking.type"] = betaParams.thinking.type;
+        attributes["llm.request.thinking.budget_tokens"] =
+          betaParams.thinking.budget_tokens;
+      }
 
       if (type === "completion") {
         attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
