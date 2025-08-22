@@ -11,7 +11,7 @@ import type {
   ExperimentInitResponse,
   ExecutionResponse,
   CreateTaskRequest,
-  CreateTaskResponse
+  CreateTaskResponse,
 } from "../../interfaces/experiment.interface";
 
 export class Experiment {
@@ -69,7 +69,7 @@ export class Experiment {
    */
   async run<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
-    options: ExperimentRunOptions = {}
+    options: ExperimentRunOptions = {},
   ): Promise<ExperimentRunResult> {
     const {
       datasetSlug,
@@ -81,21 +81,28 @@ export class Experiment {
     // When experimentSlug is not provided a random one is generated
     let { experimentSlug } = options;
     if (!experimentSlug) {
-      experimentSlug = this.client.experimentSlug || this.generateExperimentSlug();
+      experimentSlug =
+        this.client.experimentSlug || this.generateExperimentSlug();
     }
 
     this.validateRunOptions(task, options);
 
     try {
-      const evaluatorSlugs = evaluators.map((evaluator) => typeof evaluator === 'string' ? evaluator : evaluator.name);
+      const evaluatorSlugs = evaluators.map((evaluator) =>
+        typeof evaluator === "string" ? evaluator : evaluator.name,
+      );
       const experimentResponse = await this.initializeExperiment({
         slug: experimentSlug,
         datasetSlug,
         datasetVersion,
         evaluatorSlugs,
       });
-      console.log(`✅ Step 1: Experiment initialized with ID: ${experimentResponse.experiment.id}`);
-      console.log(`🔧 Step 2: Getting dataset rows for: ${datasetSlug}, version: ${datasetVersion}`);
+      console.log(
+        `✅ Step 1: Experiment initialized with ID: ${experimentResponse.experiment.id}`,
+      );
+      console.log(
+        `🔧 Step 2: Getting dataset rows for: ${datasetSlug}, version: ${datasetVersion}`,
+      );
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
       console.log(`✅ Step 2: Retrieved ${rows.length} rows from dataset`);
 
@@ -111,11 +118,11 @@ export class Experiment {
         const taskResponse: TaskResponse = {
           input: row,
           output: taskOutput as Record<string, any>,
-          metadata: { 
+          metadata: {
             rowId: row.id,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           },
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         taskResults.push(taskResponse);
@@ -124,42 +131,43 @@ export class Experiment {
           experimentSlug,
           experimentResponse.run.id,
           row,
-          taskOutput as Record<string, any>
+          taskOutput as Record<string, any>,
         );
         const taskId = response.id;
-        
+
         if (evaluators.length > 0) {
           for (const evaluator of evaluators) {
-            const singleEvaluationResult = await this.evaluator.runExperimentEvaluator({
-              experimentId: experimentResponse.experiment.id,
-              experimentRunId: experimentResponse.run.id,
-              taskId,
-              evaluator,
-              taskResult: taskOutput as Record<string, any>,
-              waitForResults,
-              timeout: 120000 // 2 minutes default
-            });
+            const singleEvaluationResult =
+              await this.evaluator.runExperimentEvaluator({
+                experimentId: experimentResponse.experiment.id,
+                experimentRunId: experimentResponse.run.id,
+                taskId,
+                evaluator,
+                taskResult: taskOutput as Record<string, any>,
+                waitForResults,
+                timeout: 120000, // 2 minutes default
+              });
             evaluationResults.push(...singleEvaluationResult);
           }
         }
       }
 
-      const evalResults = evaluationResults.map((evaluation) => evaluation.result);
+      const evalResults = evaluationResults.map(
+        (evaluation) => evaluation.result,
+      );
       console.log("evalResults", evalResults);
       return {
         taskResults: taskResults,
         errors: taskErrors,
         experimentId: experimentResponse.experiment.id,
         runId: experimentResponse.run.id,
-        evaluations: evalResults
+        evaluations: evalResults,
       };
-
     } catch (error) {
       throw new Error(
-        `Experiment execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Experiment execution failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
-    
   }
 
   /**
@@ -169,32 +177,50 @@ export class Experiment {
     experimentSlug: string,
     experimentRunId: string,
     taskInput: Record<string, any>,
-    taskOutput: Record<string, any>
+    taskOutput: Record<string, any>,
   ): Promise<CreateTaskResponse> {
     const body: CreateTaskRequest = {
       input: taskInput,
-      output: taskOutput
+      output: taskOutput,
     };
 
     const response = await this.client.post(
       `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/task`,
-      body
+      body,
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to create task for experiment '${experimentSlug}'`);
+      throw new Error(
+        `Failed to create task for experiment '${experimentSlug}'`,
+      );
     }
 
     const data = await this.handleResponse(response);
     return {
-      id: data.id
+      id: data.id,
     };
   }
 
   /**
    * Initialize a new experiment
    */
-  async initializeExperiment(request: InitExperimentRequest): Promise<ExperimentInitResponse> {
+  async initializeExperiment(
+    request: InitExperimentRequest,
+  ): Promise<ExperimentInitResponse> {
+    if (request.aux) {
+      request.experimentRunMetadata = {
+        ...request.experimentRunMetadata,
+        aux: request.aux,
+      };
+    }
+
+    if (request.relatedRef) {
+      request.experimentRunMetadata = {
+        ...request.experimentRunMetadata,
+        related_ref: request.relatedRef,
+      };
+    }
+
     const payload = {
       slug: request.slug,
       dataset_slug: request.datasetSlug,
@@ -204,8 +230,10 @@ export class Experiment {
       experiment_run_metadata: request.experimentRunMetadata,
     };
 
-    const response = await this.client.put('/v2/experiments/initialize', payload);
-    console.log("response", response);
+    const response = await this.client.put(
+      "/v2/experiments/initialize",
+      payload,
+    );
     const data = await this.handleResponse(response);
 
     return data;
@@ -217,12 +245,12 @@ export class Experiment {
    */
   private parseJsonlToRows(jsonlData: string): Record<string, any>[] {
     const rows: Record<string, any>[] = [];
-    const lines = jsonlData.trim().split('\n');
+    const lines = jsonlData.trim().split("\n");
 
     // Skip the first line (columns definition)
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
-      
+
       if (line) {
         try {
           const rowData = JSON.parse(line);
@@ -241,17 +269,20 @@ export class Experiment {
    * Get dataset rows for experiment execution
    */
   private async getDatasetRows(
-    datasetSlug?: string, 
-    datasetVersion?: string
+    datasetSlug?: string,
+    datasetVersion?: string,
   ): Promise<Record<string, any>[]> {
     if (!datasetSlug) {
-      throw new Error('Dataset slug is required for experiment execution');
+      throw new Error("Dataset slug is required for experiment execution");
     }
 
     console.log(`🔧 Fetching dataset: ${datasetSlug}`);
-    const dataset = await this.datasets.getVersionAsJsonl(datasetSlug, datasetVersion || '');
+    const dataset = await this.datasets.getVersionAsJsonl(
+      datasetSlug,
+      datasetVersion || "",
+    );
     const rows = this.parseJsonlToRows(dataset);
-    console.log(`✅ Dataset fetched successfully: ${rows || 'unknown'}`);
+    console.log(`✅ Dataset fetched successfully: ${rows || "unknown"}`);
     return rows;
   }
 
@@ -260,31 +291,46 @@ export class Experiment {
    */
   private validateRunOptions<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
-    options: ExperimentRunOptions
+    options: ExperimentRunOptions,
   ): void {
-    if (!task || typeof task !== 'function') {
-      throw new Error('Task function is required and must be a function');
+    if (!task || typeof task !== "function") {
+      throw new Error("Task function is required and must be a function");
     }
 
     if (options.evaluators) {
       options.evaluators.forEach((evaluator, index) => {
-        if (typeof evaluator === 'string') {
+        if (typeof evaluator === "string") {
           if (!evaluator.trim()) {
-            throw new Error(`Evaluator at index ${index} cannot be an empty string`);
+            throw new Error(
+              `Evaluator at index ${index} cannot be an empty string`,
+            );
           }
         } else {
-          if (!evaluator || typeof evaluator !== 'object') {
-            throw new Error(`Evaluator at index ${index} must be a string or object with name and version`);
+          if (!evaluator || typeof evaluator !== "object") {
+            throw new Error(
+              `Evaluator at index ${index} must be a string or object with name and version`,
+            );
           }
-          if (!evaluator.name || typeof evaluator.name !== 'string' || !evaluator.name.trim()) {
-            throw new Error(`Evaluator at index ${index} must have a valid non-empty name`);
+          if (
+            !evaluator.name ||
+            typeof evaluator.name !== "string" ||
+            !evaluator.name.trim()
+          ) {
+            throw new Error(
+              `Evaluator at index ${index} must have a valid non-empty name`,
+            );
           }
-          if (!evaluator.version || typeof evaluator.version !== 'string' || !evaluator.version.trim()) {
-            throw new Error(`Evaluator at index ${index} must have a valid non-empty version`);
+          if (
+            !evaluator.version ||
+            typeof evaluator.version !== "string" ||
+            !evaluator.version.trim()
+          ) {
+            throw new Error(
+              `Evaluator at index ${index} must have a valid non-empty version`,
+            );
           }
         }
       });
     }
   }
-
 }

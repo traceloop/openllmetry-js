@@ -3,11 +3,14 @@ type dataValue = string | number | boolean;
 export type TaskInput = Record<string, dataValue>;
 export type TaskOutput = Record<string, dataValue>;
 
-export interface ExperimentTaskFunction<TInput = TaskInput, TOutput = TaskOutput> {
-  (input: TInput): Promise<TOutput> | TOutput;  
+export interface ExperimentTaskFunction<
+  TInput = TaskInput,
+  TOutput = TaskOutput,
+> {
+  (input: TInput): Promise<TOutput> | TOutput;
 }
 
-export type EvaluatorDetails  = string | EvaluatorWithVersion;
+export type EvaluatorDetails = string | EvaluatorWithVersion;
 
 export interface EvaluatorWithVersion {
   name: string;
@@ -25,7 +28,7 @@ export interface ExperimentRunOptions {
   waitForResults?: boolean;
 }
 
-import type { InputSchemaMapping } from './evaluator.interface';
+import type { InputSchemaMapping } from "./evaluator.interface";
 
 export interface TaskResponse {
   input: Record<string, any>;

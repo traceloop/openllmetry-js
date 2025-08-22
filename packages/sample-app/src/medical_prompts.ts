@@ -59,16 +59,16 @@ Your health is important, and qualified medical professionals are best equipped 
 Is there anything else I can help you with that doesn't involve medical advice?`;
 }
 
-
 /**
  * Example prompt categories for experiment testing
  */
 export const PROMPT_CATEGORIES = {
-  PROVIDE_INFO: 'provide' as const,
-  REFUSE_ADVICE: 'refuse' as const,
-  MENTAL_HEALTH: 'mental-health' as const,
-  FITNESS: 'fitness' as const,
-  NUTRITION: 'nutrition' as const,
+  PROVIDE_INFO: "provide" as const,
+  REFUSE_ADVICE: "refuse" as const,
+  MENTAL_HEALTH: "mental-health" as const,
+  FITNESS: "fitness" as const,
+  NUTRITION: "nutrition" as const,
 } as const;
 
-export type PromptCategory = typeof PROMPT_CATEGORIES[keyof typeof PROMPT_CATEGORIES];
+export type PromptCategory =
+  (typeof PROMPT_CATEGORIES)[keyof typeof PROMPT_CATEGORIES];

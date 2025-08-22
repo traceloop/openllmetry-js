@@ -4,14 +4,11 @@ import type {
   EvaluatorRunOptions,
   TriggerEvaluatorRequest,
   TriggerEvaluatorResponse,
-  InputSchemaMapping
+  InputSchemaMapping,
 } from "../../interfaces/evaluator.interface";
-import type {
-  ExecutionResponse
-} from "../../interfaces/experiment.interface";
+import type { ExecutionResponse } from "../../interfaces/experiment.interface";
 
 export class Evaluator extends BaseDatasetEntity {
-
   constructor(client: TraceloopClient) {
     super(client);
   }
@@ -22,12 +19,12 @@ export class Evaluator extends BaseDatasetEntity {
   async runExperimentEvaluator(
     options: EvaluatorRunOptions,
   ): Promise<ExecutionResponse[]> {
-    const { 
-      experimentId, 
+    const {
+      experimentId,
       experimentRunId,
       taskId,
-      taskResult, 
-      evaluator, 
+      taskResult,
+      evaluator,
       waitForResults = true,
     } = options;
 
@@ -38,58 +35,68 @@ export class Evaluator extends BaseDatasetEntity {
       experimentRunId,
       taskId,
       evaluator,
-      taskResult
+      taskResult,
     });
 
     if (!waitForResults) {
-      return [{
-        executionId: triggerResponse.executionId,
-        result: { status: 'running', startedAt: new Date().toISOString() }
-      }];
+      return [
+        {
+          executionId: triggerResponse.executionId,
+          result: { status: "running", startedAt: new Date().toISOString() },
+        },
+      ];
     }
 
-    return this.waitForResult(triggerResponse.executionId, triggerResponse.streamUrl);
+    return this.waitForResult(
+      triggerResponse.executionId,
+      triggerResponse.streamUrl,
+    );
   }
 
   /**
    * Trigger evaluator execution without waiting for results
    */
   async triggerExperimentEvaluator(
-    request: TriggerEvaluatorRequest
+    request: TriggerEvaluatorRequest,
   ): Promise<TriggerEvaluatorResponse> {
-    const { experimentId, experimentRunId, taskId, evaluator, taskResult } = request;
+    const { experimentId, experimentRunId, taskId, evaluator, taskResult } =
+      request;
 
     if (!experimentId || !taskResult) {
-      throw new Error('experimentId, evaluator, and taskResult are required');
+      throw new Error("experimentId, evaluator, and taskResult are required");
     }
 
     // Handle both string and object evaluator types
-    const evaluatorName = typeof evaluator === 'string' ? evaluator : evaluator.name;
-    const evaluatorVersion = typeof evaluator === 'string' ? undefined : evaluator.version;
+    const evaluatorName =
+      typeof evaluator === "string" ? evaluator : evaluator.name;
+    const evaluatorVersion =
+      typeof evaluator === "string" ? undefined : evaluator.version;
 
     if (!evaluatorName) {
-      throw new Error('evaluator name is required');
+      throw new Error("evaluator name is required");
     }
 
     const inputSchemaMapping = this.createInputSchemaMapping(taskResult);
 
     const payload = {
-      experiment_id: experimentId,  
+      experiment_id: experimentId,
       experiment_run_id: experimentRunId,
       evaluator_version: evaluatorVersion,
       task_id: taskId,
       input_schema_mapping: inputSchemaMapping,
     };
 
-    const response = await this.client.post(`/v2/evaluators/slug/${evaluatorName}/execute`, payload);
+    const response = await this.client.post(
+      `/v2/evaluators/slug/${evaluatorName}/execute`,
+      payload,
+    );
     const data = await this.handleResponse(response);
 
     return {
       executionId: data.executionId,
-      streamUrl: data.streamUrl
+      streamUrl: data.streamUrl,
     };
   }
-
 
   /**
    * Wait for execution result via stream URL (actually JSON endpoint)
@@ -99,56 +106,65 @@ export class Evaluator extends BaseDatasetEntity {
     streamUrl: string,
   ): Promise<ExecutionResponse[]> {
     if (!executionId || !streamUrl) {
-      throw new Error('Execution ID and stream URL are required');
+      throw new Error("Execution ID and stream URL are required");
     }
 
-    console.log('waitForResult called with:', { executionId, streamUrl });
+    console.log("waitForResult called with:", { executionId, streamUrl });
 
-    const fullStreamUrl = `${this.client['baseUrl']}/v2${streamUrl}`;
-    console.log('Full stream URL:', fullStreamUrl);
+    const fullStreamUrl = `${this.client["baseUrl"]}/v2${streamUrl}`;
+    console.log("Full stream URL:", fullStreamUrl);
 
     try {
       const response = await fetch(fullStreamUrl, {
         headers: {
-          'Authorization': `Bearer ${this.client['apiKey']}`,
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache',
+          Authorization: `Bearer ${this.client["apiKey"]}`,
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
         },
       });
 
-      console.log('waitForResult - Response status:', response.status, response.statusText);
+      console.log(
+        "waitForResult - Response status:",
+        response.status,
+        response.statusText,
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to get results: ${response.status}, body: ${errorText}`);
+        throw new Error(
+          `Failed to get results: ${response.status}, body: ${errorText}`,
+        );
       }
 
       const responseText = await response.text();
-      console.log('waitForResult - Response text length:', responseText.length);
-      
+      console.log("waitForResult - Response text length:", responseText.length);
+
       const responseData = JSON.parse(responseText);
-      console.log('waitForResult - Parsed response:', responseData);
-      
+      console.log("waitForResult - Parsed response:", responseData);
+
       // Check execution ID match
-      if (responseData.execution_id && responseData.execution_id !== executionId) {
-        throw new Error(`Execution ID mismatch: ${responseData.execution_id} !== ${executionId}`);
+      if (
+        responseData.execution_id &&
+        responseData.execution_id !== executionId
+      ) {
+        throw new Error(
+          `Execution ID mismatch: ${responseData.execution_id} !== ${executionId}`,
+        );
       }
 
       // Convert to ExecutionResponse format
       const executionResponse: ExecutionResponse = {
         executionId: responseData.execution_id,
-        result: responseData.result
+        result: responseData.result,
       };
 
       return [executionResponse];
-
     } catch (error) {
       throw new Error(
-        `Failed to wait for result: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to wait for result: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }
-
 
   /**
    * Validate evaluator run options
@@ -156,46 +172,57 @@ export class Evaluator extends BaseDatasetEntity {
   private validateEvaluatorOptions(options: EvaluatorRunOptions): void {
     const { experimentId, evaluator, taskResult } = options;
 
-    if (!experimentId || typeof experimentId !== 'string' || experimentId.trim().length === 0) {
-      throw new Error('Experiment ID is required and must be a non-empty string');
+    if (
+      !experimentId ||
+      typeof experimentId !== "string" ||
+      experimentId.trim().length === 0
+    ) {
+      throw new Error(
+        "Experiment ID is required and must be a non-empty string",
+      );
     }
 
     if (!evaluator) {
-      throw new Error('At least one evaluator must be specified');
+      throw new Error("At least one evaluator must be specified");
     }
 
     if (!taskResult) {
-      throw new Error('At least one task result must be provided');
+      throw new Error("At least one task result must be provided");
     }
 
     // Validate evaluator based on its type
-    if (typeof evaluator === 'string') {
+    if (typeof evaluator === "string") {
       if (!evaluator.trim()) {
-        throw new Error('Evaluator name cannot be empty');
+        throw new Error("Evaluator name cannot be empty");
       }
     } else {
-      if (!evaluator.name || typeof evaluator.name !== 'string' || !evaluator.name.trim()) {
-        throw new Error('Evaluator must have a valid name');
+      if (
+        !evaluator.name ||
+        typeof evaluator.name !== "string" ||
+        !evaluator.name.trim()
+      ) {
+        throw new Error("Evaluator must have a valid name");
       }
     }
 
     // Validate each task result
-    if (!taskResult || typeof taskResult !== 'object') {
+    if (!taskResult || typeof taskResult !== "object") {
       throw new Error(`Task result must be a valid object`);
     }
   }
 
-    /**
+  /**
    * Create InputSchemaMapping from input object
    */
-    private createInputSchemaMapping(input: Record<string, any>): InputSchemaMapping {
-      const mapping: InputSchemaMapping = {};
-      
-      for (const [key, value] of Object.entries(input)) {
-        mapping[key] = { source: String(value) };
-      }
-      
-      return mapping;
+  private createInputSchemaMapping(
+    input: Record<string, any>,
+  ): InputSchemaMapping {
+    const mapping: InputSchemaMapping = {};
+
+    for (const [key, value] of Object.entries(input)) {
+      mapping[key] = { source: String(value) };
     }
-    
+
+    return mapping;
+  }
 }

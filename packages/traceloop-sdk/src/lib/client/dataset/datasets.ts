@@ -85,9 +85,11 @@ export class Datasets extends BaseDatasetEntity {
     const url = `/v2/datasets/${slug}/versions/${version}/jsonl`;
 
     const response = await this.client.get(url);
-    
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch JSONL data: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch JSONL data: ${response.status} ${response.statusText}`,
+      );
     }
 
     const contentType = response.headers.get("content-type");
@@ -99,7 +101,7 @@ export class Datasets extends BaseDatasetEntity {
       }
       // Convert JSON response to JSONL format if needed
       if (Array.isArray(jsonData)) {
-        return jsonData.map(item => JSON.stringify(item)).join('\n');
+        return jsonData.map((item) => JSON.stringify(item)).join("\n");
       }
       return JSON.stringify(jsonData);
     }

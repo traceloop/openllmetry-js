@@ -1,7 +1,7 @@
-import type { EvaluatorDetails } from './experiment.interface';
+import type { EvaluatorDetails } from "./experiment.interface";
 
 export interface StreamEvent {
-  type: 'progress' | 'result' | 'error' | 'complete';
+  type: "progress" | "result" | "error" | "complete";
   data: any;
   timestamp: string;
   id?: string;
@@ -17,7 +17,6 @@ export interface EvaluatorRunOptions {
   waitForResults?: boolean;
   timeout?: number;
 }
-
 
 export interface EvaluatorResult {
   evaluatorName: string;
@@ -48,7 +47,7 @@ export interface SSEClientOptions {
 }
 
 export interface StreamProgressEvent {
-  type: 'progress';
+  type: "progress";
   data: {
     completed: number;
     total: number;
@@ -58,7 +57,7 @@ export interface StreamProgressEvent {
 }
 
 export interface StreamResultEvent {
-  type: 'result';
+  type: "result";
   data: {
     taskId: string;
     evaluatorName: string;
@@ -67,7 +66,7 @@ export interface StreamResultEvent {
 }
 
 export interface StreamErrorEvent {
-  type: 'error';
+  type: "error";
   data: {
     error: string;
     taskId?: string;
@@ -76,7 +75,7 @@ export interface StreamErrorEvent {
 }
 
 export interface StreamCompleteEvent {
-  type: 'complete';
+  type: "complete";
   data: {
     executionId: string;
     totalResults: number;
@@ -85,7 +84,11 @@ export interface StreamCompleteEvent {
   };
 }
 
-export type SSEStreamEvent = StreamProgressEvent | StreamResultEvent | StreamErrorEvent | StreamCompleteEvent;
+export type SSEStreamEvent =
+  | StreamProgressEvent
+  | StreamResultEvent
+  | StreamErrorEvent
+  | StreamCompleteEvent;
 
 export interface InputExtractor {
   source: string;

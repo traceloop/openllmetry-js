@@ -2,7 +2,12 @@ import * as traceloop from "@traceloop/node-server-sdk";
 import { OpenAI } from "openai";
 // import { provideMedicalInfoPrompt } from "./medical_prompts";
 import { refuseMedicalAdvicePrompt } from "./medical_prompts";
-import type { ExperimentTaskFunction, TaskResponse, TaskInput, TaskOutput } from "@traceloop/node-server-sdk";
+import type {
+  ExperimentTaskFunction,
+  TaskResponse,
+  TaskInput,
+  TaskOutput,
+} from "@traceloop/node-server-sdk";
 
 const main = async () => {
   console.log("Starting sample experiment");
@@ -56,7 +61,9 @@ const main = async () => {
   /**
    * Task function for refusing medical advice prompt
    */
-  const medicalTaskRefuseAdvice: ExperimentTaskFunction = async (row: TaskInput): Promise<TaskOutput> => {
+  const medicalTaskRefuseAdvice: ExperimentTaskFunction = async (
+    row: TaskInput,
+  ): Promise<TaskOutput> => {
     const promptText = refuseMedicalAdvicePrompt(row.question as string);
     const answer = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -64,7 +71,7 @@ const main = async () => {
       temperature: 0.7,
       max_tokens: 500,
     });
-    
+
     return {
       completion: answer.choices?.[0]?.message?.content || "",
       prompt: promptText,
@@ -72,12 +79,12 @@ const main = async () => {
   };
 
   // /**
-  //  * Task function for providing medical info prompt  
+  //  * Task function for providing medical info prompt
   //  */
   // const medicalTaskProvideInfo: ExperimentTaskFunction = async (row: any): Promise<any> => {
   //   const promptText = provideMedicalInfoPrompt(row.question);
   //   const answer = await generateMedicalAnswer(promptText);
-    
+
   //   return {
   //     completion: answer,
   //     prompt: promptText,
@@ -86,10 +93,11 @@ const main = async () => {
   // };
 
   try {
-    console.log("\n🧪 Running experiment with clinical guidance prompt (refuses medical advice)...");
-    
-    const results1 = await client.
-    experiment.run(medicalTaskRefuseAdvice, {
+    console.log(
+      "\n🧪 Running experiment with clinical guidance prompt (refuses medical advice)...",
+    );
+
+    const results1 = await client.experiment.run(medicalTaskRefuseAdvice, {
       datasetSlug: "medical-q",
       datasetVersion: "v1",
       evaluators: ["medical_advice"],
@@ -103,13 +111,15 @@ const main = async () => {
     console.log(`   - Experiment ID: ${results1.experimentId}`);
     console.log("Evaluation Results:", results1.evaluations);
 
-    console.log("\n🧪 Running experiment with comprehensive medical info prompt...");
-    
+    console.log(
+      "\n🧪 Running experiment with comprehensive medical info prompt...",
+    );
+
     // const results2 = await client.experiment.run(medicalTaskProvideInfo, {
-    //   datasetSlug: "medical-q", 
+    //   datasetSlug: "medical-q",
     //   datasetVersion: "v1",
     //   evaluators: [{ name: "medical_advice" }],
-    //   experimentSlug: "medical-advice-exp-ts", 
+    //   experimentSlug: "medical-advice-exp-ts",
     //   stopOnError: false,
     //   waitForResults: true,
     // });
@@ -122,11 +132,15 @@ const main = async () => {
     // Compare results
     console.log("\n📊 Experiment Comparison:");
     console.log("Refuse Advice Strategy:");
-    results1.taskResults.slice(0, 2).forEach((result: TaskResponse, i: number) => {
-      console.log(`  Sample ${i + 1}:`);
-      console.log(`    Question: ${result.input?.question || 'N/A'}`);
-      console.log(`    Response: ${result.output?.completion?.substring(0, 100) || 'N/A'}...`);
-    });
+    results1.taskResults
+      .slice(0, 2)
+      .forEach((result: TaskResponse, i: number) => {
+        console.log(`  Sample ${i + 1}:`);
+        console.log(`    Question: ${result.input?.question || "N/A"}`);
+        console.log(
+          `    Response: ${result.output?.completion?.substring(0, 100) || "N/A"}...`,
+        );
+      });
 
     // console.log("\nProvide Info Strategy:");
     // results2.results.slice(0, 2).forEach((result: TaskResponse, i: number) => {
@@ -134,7 +148,6 @@ const main = async () => {
     //   console.log(`    Question: ${result.input?.question || 'N/A'}`);
     //   console.log(`    Response: ${result.output?.completion?.substring(0, 100) || 'N/A'}...`);
     // });
-
   } catch (error) {
     console.error(
       "❌ Error in experiment operations:",
