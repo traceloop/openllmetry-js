@@ -1,17 +1,15 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { OpenAI } from "openai";
-// import { provideMedicalInfoPrompt } from "./medical_prompts";
+import { provideMedicalInfoPrompt } from "./medical_prompts";
 import { refuseMedicalAdvicePrompt } from "./medical_prompts";
 import type {
   ExperimentTaskFunction,
-  TaskResponse,
   TaskInput,
   TaskOutput,
 } from "@traceloop/node-server-sdk";
 
 const main = async () => {
   console.log("Starting sample experiment");
-  // Initialize Traceloop SDK
   traceloop.initialize({
     appName: "sample_experiment",
     apiKey: process.env.TRACELOOP_API_KEY,
@@ -44,19 +42,19 @@ const main = async () => {
     apiKey: process.env.OPENAI_API_KEY,
   });
 
-  // /**
-  //  * Generate a medical answer using OpenAI and the provided prompt
-  //  */
-  // async function generateMedicalAnswer(promptText: string): Promise<string> {
-  //   const response = await openai.chat.completions.create({
-  //     model: "gpt-3.5-turbo",
-  //     messages: [{ role: "user", content: promptText }],
-  //     temperature: 0.7,
-  //     max_tokens: 500,
-  //   });
+  /**
+   * Generate a medical answer using OpenAI and the provided prompt
+   */
+  async function generateMedicalAnswer(promptText: string): Promise<string> {
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: promptText }],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
 
-  //   return response.choices?.[0]?.message?.content || "";
-  // }
+    return response.choices?.[0]?.message?.content || "";
+  }
 
   /**
    * Task function for refusing medical advice prompt
@@ -78,24 +76,41 @@ const main = async () => {
     };
   };
 
-  // /**
-  //  * Task function for providing medical info prompt
-  //  */
-  // const medicalTaskProvideInfo: ExperimentTaskFunction = async (row: any): Promise<any> => {
-  //   const promptText = provideMedicalInfoPrompt(row.question);
-  //   const answer = await generateMedicalAnswer(promptText);
+  /**
+   * Task function for providing medical info prompt
+   */
+  const medicalTaskProvideInfo: ExperimentTaskFunction = async (row: TaskInput): Promise<TaskOutput> => {
+    const promptText = provideMedicalInfoPrompt(row.question as string);
+    const answer = await generateMedicalAnswer(promptText);
 
-  //   return {
-  //     completion: answer,
-  //     prompt: promptText,
-  //     strategy: "provide_info"
-  //   };
-  // };
+    return {
+      completion: answer,
+      prompt: promptText,
+      strategy: "provide_info"
+    };
+  };
+
+  // Simple loader utility
+  const startLoader = (message: string) => {
+    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    let i = 0;
+    process.stdout.write(`\n${message} `);
+    return setInterval(() => {
+      process.stdout.write(`\r${message} ${frames[i++ % frames.length]}`);
+    }, 100);
+  };
+
+  const stopLoader = (interval: NodeJS.Timeout, successMessage: string) => {
+    clearInterval(interval);
+    process.stdout.write(`\r${successMessage}\n`);
+  };
 
   try {
     console.log(
       "\n🧪 Running experiment with clinical guidance prompt (refuses medical advice)...",
     );
+
+    const loader1 = startLoader("   Processing experiment");
 
     const results1 = await client.experiment.run(medicalTaskRefuseAdvice, {
       datasetSlug: "medical-q",
@@ -104,6 +119,8 @@ const main = async () => {
       experimentSlug: "medical-advice-exp-ts",
       stopOnError: false,
     });
+
+    stopLoader(loader1, "   ✅ Experiment completed");
 
     console.log(`✅ Completed refuse advice experiment:`);
     console.log(`   - Results: ${results1.taskResults.length}`);
@@ -115,39 +132,24 @@ const main = async () => {
       "\n🧪 Running experiment with comprehensive medical info prompt...",
     );
 
-    // const results2 = await client.experiment.run(medicalTaskProvideInfo, {
-    //   datasetSlug: "medical-q",
-    //   datasetVersion: "v1",
-    //   evaluators: [{ name: "medical_advice" }],
-    //   experimentSlug: "medical-advice-exp-ts",
-    //   stopOnError: false,
-    //   waitForResults: true,
-    // });
+    const loader2 = startLoader("   Processing experiment");
 
-    // console.log(`✅ Completed provide info experiment:`);
-    // console.log(`   - Results: ${results2.results.length}`);
-    // console.log(`   - Errors: ${results2.errors.length}`);
-    // console.log(`   - Experiment ID: ${results2.experimentId}`);
+    const results2 = await client.experiment.run(medicalTaskProvideInfo, {
+      datasetSlug: "medical-q",
+      datasetVersion: "v1",
+      evaluators: ["medical_advice"],
+      experimentSlug: "medical-advice-exp-ts",
+      stopOnError: false,
+      waitForResults: true,
+    });
+    
+    stopLoader(loader2, "   ✅ Experiment completed");
 
-    // Compare results
-    console.log("\n📊 Experiment Comparison:");
-    console.log("Refuse Advice Strategy:");
-    results1.taskResults
-      .slice(0, 2)
-      .forEach((result: TaskResponse, i: number) => {
-        console.log(`  Sample ${i + 1}:`);
-        console.log(`    Question: ${result.input?.question || "N/A"}`);
-        console.log(
-          `    Response: ${result.output?.completion?.substring(0, 100) || "N/A"}...`,
-        );
-      });
+    console.log(`✅ Completed provide info experiment:`);
+    console.log(`   - Results: ${results2.taskResults.length}`);
+    console.log(`   - Errors: ${results2.errors.length}`);
+    console.log(`   - Experiment ID: ${results2.experimentId}`);
 
-    // console.log("\nProvide Info Strategy:");
-    // results2.results.slice(0, 2).forEach((result: TaskResponse, i: number) => {
-    //   console.log(`  Sample ${i + 1}:`);
-    //   console.log(`    Question: ${result.input?.question || 'N/A'}`);
-    //   console.log(`    Response: ${result.output?.completion?.substring(0, 100) || 'N/A'}...`);
-    // });
   } catch (error) {
     console.error(
       "❌ Error in experiment operations:",
