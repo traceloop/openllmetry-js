@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { OpenAI } from "openai";
-import { provideMedicalInfoPrompt, refuseMedicalAdvicePrompt } from "./medical_prompts";
+import { provideMedicalInfoPrompt } from "./medical_prompts";
 import type { ExperimentTaskFunction, TaskResponse } from "@traceloop/node-server-sdk";
 
 const main = async () => {
@@ -56,12 +56,12 @@ const main = async () => {
    * Task function for refusing medical advice prompt
    */
   const medicalTaskRefuseAdvice: ExperimentTaskFunction = async (row: Record<string, any>): Promise<Record<string, any>> => {
-    const promptText = refuseMedicalAdvicePrompt(row.question);
-    const answer = await generateMedicalAnswer(promptText);
+    // const promptText = refuseMedicalAdvicePrompt(row.question);
+    // const answer = await generateMedicalAnswer(promptText);
     
     return {
-      completion: answer,
-      prompt: promptText,
+      completion: "answer",
+      prompt: "promptText",
     };
   };
 

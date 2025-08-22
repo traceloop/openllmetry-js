@@ -58,8 +58,8 @@ export class Evaluator extends BaseDatasetEntity {
       }];
     }
 
-    // Stream results until completion
-    return this.streamEvaluatorResults(triggerResponse.executionId, timeout);
+    // Wait for results using the stream URL (which is actually a JSON endpoint)
+    return this.waitForResult(triggerResponse.executionId, triggerResponse.streamUrl, timeout);
   }
 
   /**
@@ -113,6 +113,71 @@ export class Evaluator extends BaseDatasetEntity {
       startedAt: data.started_at || data.startedAt,
       completedAt: data.completed_at || data.completedAt
     };
+  }
+
+  /**
+   * Wait for execution result via stream URL (actually JSON endpoint)
+   */
+  async waitForResult(
+    executionId: string,
+    streamUrl: string,
+    timeout: number = 120000
+  ): Promise<ExecutionResponse[]> {
+    if (!executionId || !streamUrl) {
+      throw new Error('Execution ID and stream URL are required');
+    }
+
+    console.log('waitForResult called with:', { executionId, streamUrl });
+
+    const fullStreamUrl = `${this.client['baseUrl']}/v2${streamUrl}`;
+    console.log('Full stream URL:', fullStreamUrl);
+
+    try {
+      const response = await fetch(fullStreamUrl, {
+        headers: {
+          'Authorization': `Bearer ${this.client['apiKey']}`,
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache',
+        },
+        signal: AbortSignal.timeout(timeout)
+      });
+
+      console.log('waitForResult - Response status:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to get results: ${response.status}, body: ${errorText}`);
+      }
+
+      const responseText = await response.text();
+      console.log('waitForResult - Response text length:', responseText.length);
+      
+      const responseData = JSON.parse(responseText);
+      console.log('waitForResult - Parsed response:', responseData);
+      
+      // Check execution ID match
+      if (responseData.execution_id && responseData.execution_id !== executionId) {
+        throw new Error(`Execution ID mismatch: ${responseData.execution_id} !== ${executionId}`);
+      }
+
+      // Convert to ExecutionResponse format
+      const executionResponse: ExecutionResponse = {
+        id: responseData.execution_id || executionId,
+        status: responseData.status || 'completed',
+        result: responseData.result || responseData,
+        error: responseData.error,
+        progress: responseData.progress || 100,
+        startedAt: responseData.started_at || responseData.startedAt,
+        completedAt: responseData.completed_at || responseData.completedAt || new Date().toISOString()
+      };
+
+      return [executionResponse];
+
+    } catch (error) {
+      throw new Error(
+        `Failed to wait for result: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   /**

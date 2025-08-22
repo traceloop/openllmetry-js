@@ -10,8 +10,12 @@ import type { ExecutionResponse } from "../../interfaces/experiment.interface";
 let EventSource: any;
 try {
   // Try to import eventsource for Node.js
-  EventSource = require('eventsource');
+  const EventSourceModule = require('eventsource');
+  // The eventsource package exports EventSource as the default export
+  EventSource = EventSourceModule.default || EventSourceModule;
+  console.log('EventSource loaded successfully:', typeof EventSource, 'constructor:', typeof EventSource === 'function');
 } catch (error) {
+  console.warn('Failed to load EventSource:', error);
   // EventSource not available (might be in browser or not installed)
   EventSource = null;
 }
@@ -28,14 +32,19 @@ export class SSEClient {
   ): AsyncIterable<StreamEvent> {
     const { timeout = 30000, headers = {}, withCredentials = false } = options;
 
+    console.log('streamEvents called with:', { url, EventSourceAvailable: !!EventSource, typeof_EventSource: typeof EventSource });
+
     // Check if we're in a browser environment
     if (typeof window !== 'undefined' && window.EventSource) {
+      console.log('Using browser EventSource');
       yield* this.streamEventsWithEventSource(url, { headers, withCredentials, timeout });
-    } else if (EventSource) {
+    } else if (EventSource && typeof EventSource === 'function') {
       // Node.js environment with eventsource package
+      console.log('Using Node.js EventSource');
       yield* this.streamEventsWithNodeEventSource(url, { headers, timeout });
     } else {
       // Fallback to fetch-based streaming
+      console.log('Using fetch-based streaming fallback');
       yield* this.streamEventsWithFetch(url, { headers, timeout });
     }
   }
@@ -217,9 +226,11 @@ export class SSEClient {
     options: { headers: Record<string, string>; timeout: number }
   ): AsyncIterable<StreamEvent> {
     const fullUrl = `${this.client['baseUrl']}${url}`;
+    console.log('Fetch SSE - Full URL:', fullUrl);
     
     const controller = new AbortController();
     const timeout = setTimeout(() => {
+      console.log('Fetch SSE - Timeout reached');
       controller.abort();
     }, options.timeout);
 
@@ -235,6 +246,9 @@ export class SSEClient {
         signal: controller.signal
       });
 
+      console.log('Fetch SSE - Response status:', response.status, response.statusText);
+      console.log('Fetch SSE - Content-Type:', response.headers.get('content-type'));
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -246,25 +260,40 @@ export class SSEClient {
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let eventCount = 0;
+
+      console.log('Fetch SSE - Starting to read stream...');
 
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log('Fetch SSE - Stream ended, total events:', eventCount);
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
+        console.log('Fetch SSE - Received lines:', lines.length);
+
         for (const line of lines) {
           if (line.trim() === '') continue;
           
+          console.log('Fetch SSE - Processing line:', line.substring(0, 100) + '...');
+          
           const event = this.parseSSEEvent(line);
           if (event) {
+            console.log('Fetch SSE - Parsed event:', event.type);
+            eventCount++;
             yield event;
             
             if (event.type === 'complete') {
+              console.log('Fetch SSE - Complete event received');
               return;
             }
+          } else {
+            console.log('Fetch SSE - Failed to parse line as event');
           }
         }
       }
