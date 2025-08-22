@@ -86,8 +86,8 @@ const main = async () => {
     experiment.run(medicalTaskRefuseAdvice, {
       datasetSlug: "medical-q",
       datasetVersion: "v1",
-      evaluators: [{ name: "medical_advice" }],
-      // experimentSlug: "medical-advice-exp-ts",
+      evaluators: ["medical_advice"],
+      experimentSlug: "medical-advice-exp-ts",
       stopOnError: false,
       waitForResults: true,
     });

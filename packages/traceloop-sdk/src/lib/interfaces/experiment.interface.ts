@@ -2,9 +2,11 @@ export interface ExperimentTaskFunction<TInput = Record<string, any>, TOutput = 
   (input: TInput): Promise<TOutput> | TOutput;
 }
 
-export interface EvaluatorDetails {
+export type EvaluatorDetails  = string | EvaluatorWithVersion;
+
+export interface EvaluatorWithVersion {
   name: string;
-  version?: string;
+  version: string;
 }
 
 export interface ExperimentRunOptions {

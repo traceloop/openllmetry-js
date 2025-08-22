@@ -67,8 +67,12 @@ export class Evaluator extends BaseDatasetEntity {
       throw new Error('experimentId, evaluator, and taskResult are required');
     }
 
-    if (!evaluator.name) {
-      throw new Error('evaluator.name is required');
+    // Handle both string and object evaluator types
+    const evaluatorName = typeof evaluator === 'string' ? evaluator : evaluator.name;
+    const evaluatorVersion = typeof evaluator === 'string' ? undefined : evaluator.version;
+
+    if (!evaluatorName) {
+      throw new Error('evaluator name is required');
     }
 
     const inputSchemaMapping = this.createInputSchemaMapping(taskResult);
@@ -76,12 +80,12 @@ export class Evaluator extends BaseDatasetEntity {
     const payload = {
       experiment_id: experimentId,  
       experiment_run_id: experimentRunId,
-      evaluator_version: evaluator.version,
+      evaluator_version: evaluatorVersion,
       task_id: taskId,
       input_schema_mapping: inputSchemaMapping,
     };
 
-    const response = await this.client.post(`/v2/evaluators/slug/${evaluator.name}/execute`, payload);
+    const response = await this.client.post(`/v2/evaluators/slug/${evaluatorName}/execute`, payload);
     const data = await this.handleResponse(response);
 
     return {
@@ -169,9 +173,15 @@ export class Evaluator extends BaseDatasetEntity {
       throw new Error('At least one task result must be provided');
     }
 
-    // Validate each evaluator
-    if (!evaluator.name || typeof evaluator.name !== 'string') {
-      throw new Error(`Evaluator must have a valid name`);
+    // Validate evaluator based on its type
+    if (typeof evaluator === 'string') {
+      if (!evaluator.trim()) {
+        throw new Error('Evaluator name cannot be empty');
+      }
+    } else {
+      if (!evaluator.name || typeof evaluator.name !== 'string' || !evaluator.name.trim()) {
+        throw new Error('Evaluator must have a valid name');
+      }
     }
 
     // Validate each task result

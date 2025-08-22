@@ -272,8 +272,20 @@ export class Experiment {
 
     if (options.evaluators) {
       options.evaluators.forEach((evaluator, index) => {
-        if (!evaluator.name || typeof evaluator.name !== 'string') {
-          throw new Error(`Evaluator at index ${index} must have a valid name`);
+        if (typeof evaluator === 'string') {
+          if (!evaluator.trim()) {
+            throw new Error(`Evaluator at index ${index} cannot be an empty string`);
+          }
+        } else {
+          if (!evaluator || typeof evaluator !== 'object') {
+            throw new Error(`Evaluator at index ${index} must be a string or object with name and version`);
+          }
+          if (!evaluator.name || typeof evaluator.name !== 'string' || !evaluator.name.trim()) {
+            throw new Error(`Evaluator at index ${index} must have a valid non-empty name`);
+          }
+          if (!evaluator.version || typeof evaluator.version !== 'string' || !evaluator.version.trim()) {
+            throw new Error(`Evaluator at index ${index} must have a valid non-empty version`);
+          }
         }
       });
     }
