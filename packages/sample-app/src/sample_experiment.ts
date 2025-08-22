@@ -55,14 +55,13 @@ const main = async () => {
   /**
    * Task function for refusing medical advice prompt
    */
-  const medicalTaskRefuseAdvice: ExperimentTaskFunction = async (row: any): Promise<any> => {
+  const medicalTaskRefuseAdvice: ExperimentTaskFunction = async (row: Record<string, any>): Promise<Record<string, any>> => {
     const promptText = refuseMedicalAdvicePrompt(row.question);
     const answer = await generateMedicalAnswer(promptText);
     
     return {
       completion: answer,
       prompt: promptText,
-      strategy: "refuse_advice"
     };
   };
 

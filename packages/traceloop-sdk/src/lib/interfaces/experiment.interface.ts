@@ -1,5 +1,5 @@
-export interface ExperimentTaskFunction<TInput = any, TOutput = any> {
-  (input?: TInput): Promise<TOutput> | TOutput;
+export interface ExperimentTaskFunction<TInput = Record<string, any>, TOutput = Record<string, any>> {
+  (input: TInput): Promise<TOutput> | TOutput;
 }
 
 export interface EvaluatorDetails {
@@ -19,7 +19,16 @@ export interface ExperimentRunOptions {
   concurrency?: number;
 }
 
-export type TaskResponse = Record<string, any>;
+import type { InputSchemaMapping } from './evaluator.interface';
+
+export interface TaskResponse {
+  input: Record<string, any>;
+  output: Record<string, any>;
+  metadata?: Record<string, any>;
+  timestamp?: number;
+  error?: string;
+  input_schema_mapping?: InputSchemaMapping;
+}
 
 export interface ExperimentRunResult {
   results: TaskResponse[];

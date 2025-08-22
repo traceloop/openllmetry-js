@@ -7,7 +7,8 @@ import type {
   TriggerEvaluatorRequest,
   TriggerEvaluatorResponse,
   StreamEvent,
-  SSEStreamEvent
+  SSEStreamEvent,
+  InputSchemaMapping
 } from "../../interfaces/evaluator.interface";
 import type {
   ExecutionResponse
@@ -25,12 +26,12 @@ export class Evaluator extends BaseDatasetEntity {
    * Run evaluators on experiment task results and wait for completion
    */
   async runExperimentEvaluator(
-    options: EvaluatorRunOptions
+    options: EvaluatorRunOptions,
   ): Promise<ExecutionResponse[]> {
     const { 
       experimentId, 
       experimentRunId,
-      taskResults, 
+      taskResult, 
       evaluator, 
       waitForResults = true,
       timeout = 120000 // 2 minutes default
@@ -43,7 +44,7 @@ export class Evaluator extends BaseDatasetEntity {
       experimentId,
       experimentRunId,
       evaluator,
-      taskResults
+      taskResult
     });
 
     if (!waitForResults) {
@@ -65,17 +66,20 @@ export class Evaluator extends BaseDatasetEntity {
   async triggerExperimentEvaluator(
     request: TriggerEvaluatorRequest
   ): Promise<TriggerEvaluatorResponse> {
-    const { experimentId, experimentRunId, taskId, evaluator, taskResults } = request;
+    const { experimentId, experimentRunId, taskId, evaluator, taskResult } = request;
 
-    if (!experimentId || !taskResults?.length) {
-      throw new Error('experimentId, evaluators, and taskResults are required');
+    if (!experimentId || !taskResult) {
+      throw new Error('experimentId, evaluator, and taskResult are required');
     }
+
+    const inputSchemaMapping = this.createInputSchemaMapping(taskResult);
 
     const payload = {
       experiment_id: experimentId,  
       experiment_run_id: experimentRunId,
       evaluator_version: evaluator.version,
       task_id: taskId,
+      input_schema_mapping: inputSchemaMapping,
     };
 
     const response = await this.client.post(`/v2/evaluators/slug/${evaluator.name}/execute`, payload);
@@ -283,7 +287,7 @@ export class Evaluator extends BaseDatasetEntity {
    * Validate evaluator run options
    */
   private validateEvaluatorOptions(options: EvaluatorRunOptions): void {
-    const { experimentId, evaluator, taskResults } = options;
+    const { experimentId, evaluator, taskResult } = options;
 
     if (!experimentId || typeof experimentId !== 'string' || experimentId.trim().length === 0) {
       throw new Error('Experiment ID is required and must be a non-empty string');
@@ -293,7 +297,7 @@ export class Evaluator extends BaseDatasetEntity {
       throw new Error('At least one evaluator must be specified');
     }
 
-    if (!taskResults || !Array.isArray(taskResults) || taskResults.length === 0) {
+    if (!taskResult) {
       throw new Error('At least one task result must be provided');
     }
 
@@ -303,10 +307,22 @@ export class Evaluator extends BaseDatasetEntity {
     }
 
     // Validate each task result
-    taskResults.forEach((result, index) => {
-      if (!result || typeof result !== 'object') {
-        throw new Error(`Task result at index ${index} must be a valid object`);
-      }
-    });
+    if (!taskResult || typeof taskResult !== 'object') {
+      throw new Error(`Task result must be a valid object`);
+    }
   }
+
+    /**
+   * Create InputSchemaMapping from input object
+   */
+    private createInputSchemaMapping(input: Record<string, any>): InputSchemaMapping {
+      const mapping: InputSchemaMapping = {};
+      
+      for (const [key, value] of Object.entries(input)) {
+        mapping[key] = { source: String(value) };
+      }
+      
+      return mapping;
+    }
+    
 }

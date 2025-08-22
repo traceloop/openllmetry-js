@@ -57,7 +57,7 @@ export class Experiment {
   /**
    * Run an experiment with the given task function and options
    */
-  async run<TInput = any, TOutput = any>(
+  async run<TInput = Record<string, any>, TOutput = Record<string, any>>(
     task: ExperimentTaskFunction<TInput, TOutput>,
     options: ExperimentRunOptions = {}
   ): Promise<ExperimentRunResult> {
@@ -66,9 +66,7 @@ export class Experiment {
       datasetVersion,
       evaluators = [],
       experimentSlug,
-      stopOnError = false,
       waitForResults = true,
-      concurrency = 5
     } = options;
 
     // Validate inputs
@@ -89,27 +87,25 @@ export class Experiment {
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
       console.log(`✅ Step 2: Retrieved ${rows.length} rows from dataset`);
 
-      // 3. Execute tasks with concurrency control
-      const { taskResults, taskErrors } = await this.executeTasks(
-        task,
-        rows,
-        { stopOnError, concurrency }
-      );
-
-      // 4. Run evaluators if specified
+      const taskResults: TaskResponse[] = [];
+      const taskErrors: string[] = [];
       let evaluationResults: ExecutionResponse[] = [];
-      if (evaluators.length > 0 && taskResults.length > 0) {
-        try {
-          evaluationResults = await this.evaluator.runExperimentEvaluator({
-            experimentId: experimentResponse.experiment.id,
-            experimentRunId: experimentResponse.run.id,
-            taskResults,
-            evaluator: evaluators[0],
-            waitForResults
-          });
-        } catch (evaluatorError) {
-          console.warn('Evaluator execution failed:', evaluatorError);
-          taskErrors.push(`Evaluator failed: ${evaluatorError instanceof Error ? evaluatorError.message : 'Unknown error'}`);
+
+      for (const row of rows) {
+        const taskOutput = await task(row as TInput);
+        
+        if (evaluators.length > 0) {
+          for (const evaluator of evaluators) {
+            const singleEvaluationResult = await this.evaluator.runExperimentEvaluator({
+              experimentId: experimentResponse.experiment.id,
+              experimentRunId: experimentResponse.run.id,
+              evaluator: evaluator,
+              taskResult: taskOutput as Record<string, any>,
+              waitForResults,
+              timeout: 120000 // 2 minutes default
+            });
+            evaluationResults.push(...singleEvaluationResult);
+          }
         }
       }
 
@@ -127,6 +123,7 @@ export class Experiment {
         `Experiment execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
+    
   }
 
   /**
@@ -223,99 +220,6 @@ export class Experiment {
     }
 
     return results;
-  }
-
-  /**
-   * Execute tasks across dataset rows with concurrency control
-   */
-  private async executeTasks<TInput, TOutput>(
-    task: ExperimentTaskFunction<TInput, TOutput>,
-    rows: Record<string, any>[],
-    options: { stopOnError: boolean; concurrency: number }
-  ): Promise<{ taskResults: TaskResponse[]; taskErrors: string[] }> {
-    const { stopOnError, concurrency } = options;
-    const taskResults: TaskResponse[] = [];
-    const taskErrors: string[] = [];
-
-    // Process rows in batches for concurrency control
-    for (let i = 0; i < rows.length; i += concurrency) {
-      const batch = rows.slice(i, i + concurrency);
-      
-      const batchPromises = batch.map(async (row, batchIndex) => {
-        const globalIndex = i + batchIndex;
-        
-        try {
-          const startTime = Date.now();
-          const output = await task(row.data as TInput);
-          const endTime = Date.now();
-
-          return {
-            success: true,
-            result: {
-              input: row.data,
-              output,
-              metadata: { 
-                rowId: row.id,
-                executionTime: endTime - startTime,
-                timestamp: startTime
-              },
-              timestamp: startTime
-            } as TaskResponse,
-            index: globalIndex
-          };
-        } catch (error) {
-          const errorMsg = `Task failed for row ${globalIndex} (${row.id}): ${error instanceof Error ? error.message : 'Unknown error'}`;
-          
-          if (stopOnError) {
-            throw new Error(errorMsg);
-          }
-          
-          return {
-            success: false,
-            error: errorMsg,
-            result: {
-              input: row.data,
-              error: errorMsg,
-              metadata: { 
-                rowId: row.id,
-                timestamp: Date.now()
-              },
-              timestamp: Date.now()
-            } as TaskResponse,
-            index: globalIndex
-          };
-        }
-      });
-
-      try {
-        const batchResults = await Promise.allSettled(batchPromises);
-        
-        batchResults.forEach((promiseResult) => {
-          if (promiseResult.status === 'fulfilled') {
-            const { success, result, error } = promiseResult.value;
-            taskResults.push(result);
-            
-            if (!success && error) {
-              taskErrors.push(error);
-            }
-          } else if (promiseResult.status === 'rejected') {
-            const error = `Batch processing failed: ${promiseResult.reason}`;
-            taskErrors.push(error);
-            
-            if (stopOnError) {
-              throw new Error(error);
-            }
-          }
-        });
-      } catch (error) {
-        if (stopOnError) {
-          throw error;
-        }
-        taskErrors.push(`Batch execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      }
-    }
-
-    return { taskResults, taskErrors };
   }
 
   /**

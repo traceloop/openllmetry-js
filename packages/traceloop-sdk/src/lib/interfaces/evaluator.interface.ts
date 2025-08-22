@@ -1,4 +1,4 @@
-import type { TaskResponse, EvaluatorDetails } from './experiment.interface';
+import type { EvaluatorDetails } from './experiment.interface';
 
 export interface StreamEvent {
   type: 'progress' | 'result' | 'error' | 'complete';
@@ -12,10 +12,10 @@ export interface EvaluatorRunOptions {
   experimentId: string;
   experimentRunId?: string;
   taskId?: string;
-  taskResults: TaskResponse[];
+  taskResult: Record<string, any>;
   evaluator: EvaluatorDetails;
   waitForResults?: boolean;
-  timeout?: number;
+  timeout: number;
 }
 
 
@@ -33,7 +33,7 @@ export interface TriggerEvaluatorRequest {
   experimentRunId?: string;
   taskId?: string;
   evaluator: EvaluatorDetails;
-  taskResults: TaskResponse;
+  taskResult: Record<string, any>;
   metadata?: Record<string, any>;
 }
 
@@ -87,3 +87,11 @@ export interface StreamCompleteEvent {
 }
 
 export type SSEStreamEvent = StreamProgressEvent | StreamResultEvent | StreamErrorEvent | StreamCompleteEvent;
+
+export interface InputExtractor {
+  source: string;
+}
+
+export interface InputSchemaMapping {
+  [key: string]: InputExtractor;
+}
