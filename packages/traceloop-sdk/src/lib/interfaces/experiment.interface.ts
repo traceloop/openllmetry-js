@@ -5,7 +5,6 @@ export interface ExperimentTaskFunction<TInput = any, TOutput = any> {
 export interface EvaluatorDetails {
   name: string;
   version?: string;
-  parameters?: Record<string, any>;
 }
 
 export interface ExperimentRunOptions {
@@ -20,14 +19,7 @@ export interface ExperimentRunOptions {
   concurrency?: number;
 }
 
-export interface TaskResponse {
-  input?: any;
-  output?: any;
-  evaluations?: Record<string, any>;
-  error?: string;
-  metadata?: Record<string, any>;
-  timestamp?: number;
-}
+export type TaskResponse = Record<string, any>;
 
 export interface ExperimentRunResult {
   results: TaskResponse[];

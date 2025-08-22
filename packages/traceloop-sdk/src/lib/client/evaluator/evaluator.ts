@@ -29,9 +29,9 @@ export class Evaluator extends BaseDatasetEntity {
   ): Promise<ExecutionResponse[]> {
     const { 
       experimentId, 
-      runId,
+      experimentRunId,
       taskResults, 
-      evaluators, 
+      evaluator, 
       waitForResults = true,
       timeout = 120000 // 2 minutes default
     } = options;
@@ -41,8 +41,8 @@ export class Evaluator extends BaseDatasetEntity {
     // Trigger the evaluator execution
     const triggerResponse = await this.triggerExperimentEvaluator({
       experimentId,
-      runId,
-      evaluators,
+      experimentRunId,
+      evaluator,
       taskResults
     });
 
@@ -65,36 +65,25 @@ export class Evaluator extends BaseDatasetEntity {
   async triggerExperimentEvaluator(
     request: TriggerEvaluatorRequest
   ): Promise<TriggerEvaluatorResponse> {
-    const { experimentId, runId, evaluators, taskResults, metadata } = request;
+    const { experimentId, experimentRunId, taskId, evaluator, taskResults } = request;
 
-    if (!experimentId || !evaluators?.length || !taskResults?.length) {
+    if (!experimentId || !taskResults?.length) {
       throw new Error('experimentId, evaluators, and taskResults are required');
     }
 
     const payload = {
-      experiment_id: experimentId,
-      run_id: runId,
-      evaluators: evaluators.map(evaluator => ({
-        name: evaluator.name,
-        version: evaluator.version,
-        parameters: evaluator.parameters
-      })),
-      task_results: taskResults.map(result => ({
-        input: result.input,
-        output: result.output,
-        metadata: result.metadata,
-        timestamp: result.timestamp
-      })),
-      metadata
+      experiment_id: experimentId,  
+      experiment_run_id: experimentRunId,
+      evaluator_version: evaluator.version,
+      task_id: taskId,
     };
 
-    const response = await this.client.post('/v2/evaluators/trigger', payload);
+    const response = await this.client.post(`/v2/evaluators/slug/${evaluator.name}/execute`, payload);
     const data = await this.handleResponse(response);
 
     return {
-      executionId: data.execution_id || data.executionId,
-      status: data.status || 'triggered',
-      estimatedDuration: data.estimated_duration || data.estimatedDuration
+      executionId: data.execution_id,
+      streamUrl: data.stream_url
     };
   }
 
@@ -294,13 +283,13 @@ export class Evaluator extends BaseDatasetEntity {
    * Validate evaluator run options
    */
   private validateEvaluatorOptions(options: EvaluatorRunOptions): void {
-    const { experimentId, evaluators, taskResults } = options;
+    const { experimentId, evaluator, taskResults } = options;
 
     if (!experimentId || typeof experimentId !== 'string' || experimentId.trim().length === 0) {
       throw new Error('Experiment ID is required and must be a non-empty string');
     }
 
-    if (!evaluators || !Array.isArray(evaluators) || evaluators.length === 0) {
+    if (!evaluator) {
       throw new Error('At least one evaluator must be specified');
     }
 
@@ -309,11 +298,9 @@ export class Evaluator extends BaseDatasetEntity {
     }
 
     // Validate each evaluator
-    evaluators.forEach((evaluator, index) => {
-      if (!evaluator.name || typeof evaluator.name !== 'string') {
-        throw new Error(`Evaluator at index ${index} must have a valid name`);
-      }
-    });
+    if (!evaluator.name || typeof evaluator.name !== 'string') {
+      throw new Error(`Evaluator must have a valid name`);
+    }
 
     // Validate each task result
     taskResults.forEach((result, index) => {

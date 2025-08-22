@@ -10,9 +10,10 @@ export interface StreamEvent {
 
 export interface EvaluatorRunOptions {
   experimentId: string;
-  runId?: string;
+  experimentRunId?: string;
+  taskId?: string;
   taskResults: TaskResponse[];
-  evaluators: EvaluatorDetails[];
+  evaluator: EvaluatorDetails;
   waitForResults?: boolean;
   timeout?: number;
 }
@@ -29,16 +30,16 @@ export interface EvaluatorResult {
 
 export interface TriggerEvaluatorRequest {
   experimentId: string;
-  runId?: string;
-  evaluators: EvaluatorDetails[];
-  taskResults: TaskResponse[];
+  experimentRunId?: string;
+  taskId?: string;
+  evaluator: EvaluatorDetails;
+  taskResults: TaskResponse;
   metadata?: Record<string, any>;
 }
 
 export interface TriggerEvaluatorResponse {
   executionId: string;
-  status: 'triggered' | 'running';
-  estimatedDuration?: number;
+  streamUrl: string;
 }
 
 export interface SSEClientOptions {

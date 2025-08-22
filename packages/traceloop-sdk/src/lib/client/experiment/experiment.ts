@@ -1,7 +1,6 @@
 import { TraceloopClient } from "../traceloop-client";
 import { Evaluator } from "../evaluator/evaluator";
 import { Datasets } from "../dataset/datasets";
-import { Row } from "../dataset/row";
 import { transformApiResponse } from "../../utils/response-transformer";
 import type {
   ExperimentTaskFunction,
@@ -103,9 +102,9 @@ export class Experiment {
         try {
           evaluationResults = await this.evaluator.runExperimentEvaluator({
             experimentId: experimentResponse.experiment.id,
-            runId: experimentResponse.run.id,
+            experimentRunId: experimentResponse.run.id,
             taskResults,
-            evaluators,
+            evaluator: evaluators[0],
             waitForResults
           });
         } catch (evaluatorError) {
