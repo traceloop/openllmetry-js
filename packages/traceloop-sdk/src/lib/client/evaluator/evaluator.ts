@@ -52,9 +52,8 @@ export class Evaluator extends BaseDatasetEntity {
     if (!waitForResults) {
       // Return immediately with execution ID
       return [{
-        id: triggerResponse.executionId,
-        status: 'running',
-        startedAt: new Date().toISOString()
+        executionId: triggerResponse.executionId,
+        result: { status: 'running', startedAt: new Date().toISOString() }
       }];
     }
 
@@ -105,13 +104,15 @@ export class Evaluator extends BaseDatasetEntity {
     const data = await this.handleResponse(response);
 
     return {
-      id: data.id || executionId,
-      status: data.status,
-      result: data.result,
-      error: data.error,
-      progress: data.progress,
-      startedAt: data.started_at || data.startedAt,
-      completedAt: data.completed_at || data.completedAt
+      executionId: data.id || executionId,
+      result: {
+        status: data.status,
+        result: data.result,
+        error: data.error,
+        progress: data.progress,
+        startedAt: data.started_at || data.startedAt,
+        completedAt: data.completed_at || data.completedAt
+      }
     };
   }
 
@@ -203,7 +204,7 @@ export class Evaluator extends BaseDatasetEntity {
           results.push(processedEvent);
           
           // Break on completion or error
-          if (processedEvent.status === 'completed' || processedEvent.status === 'failed') {
+          if (processedEvent.result?.status === 'completed' || processedEvent.result?.status === 'failed') {
             break;
           }
         }
@@ -305,35 +306,43 @@ export class Evaluator extends BaseDatasetEntity {
       switch (event.type) {
         case 'progress':
           return {
-            id: executionId,
-            status: 'running',
-            progress: eventData.percentage || eventData.progress,
-            result: eventData
+            executionId: executionId,
+            result: {
+              status: 'running',
+              progress: eventData.percentage || eventData.progress,
+              result: eventData
+            }
           };
 
         case 'result':
           return {
-            id: executionId,
-            status: eventData.status || 'running',
-            result: eventData.result || eventData,
-            progress: eventData.progress || 100
+            executionId: executionId,
+            result: {
+              status: eventData.status || 'running',
+              result: eventData.result || eventData,
+              progress: eventData.progress || 100
+            }
           };
 
         case 'complete':
           return {
-            id: executionId,
-            status: 'completed',
-            result: eventData.result || eventData,
-            progress: 100,
-            completedAt: event.timestamp
+            executionId: executionId,
+            result: {
+              status: 'completed',
+              result: eventData.result || eventData,
+              progress: 100,
+              completedAt: event.timestamp
+            }
           };
 
         case 'error':
           return {
-            id: executionId,
-            status: 'failed',
-            error: eventData.error || 'Unknown error',
-            completedAt: event.timestamp
+            executionId: executionId,
+            result: {
+              status: 'failed',
+              error: eventData.error || 'Unknown error',
+              completedAt: event.timestamp
+            }
           };
 
         default:

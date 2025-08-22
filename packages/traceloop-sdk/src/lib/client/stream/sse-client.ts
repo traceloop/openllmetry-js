@@ -65,13 +65,15 @@ export class SSEClient {
           const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
           
           lastResult = {
-            id: executionId,
-            status: data.status || 'completed',
-            result: data.result,
-            error: data.error,
-            progress: data.progress || 100,
-            startedAt: data.startedAt,
-            completedAt: data.completedAt || new Date().toISOString()
+            executionId: executionId,
+            result: {
+              status: data.status || 'completed',
+              result: data.result,
+              error: data.error,
+              progress: data.progress || 100,
+              startedAt: data.startedAt,
+              completedAt: data.completedAt || new Date().toISOString()
+            }
           };
 
           if (event.type === 'complete' || data.status === 'completed' || data.status === 'failed') {

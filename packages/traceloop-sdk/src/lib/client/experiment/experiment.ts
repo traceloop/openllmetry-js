@@ -97,7 +97,8 @@ export class Experiment {
       const taskErrors: string[] = [];
       let evaluationResults: ExecutionResponse[] = [];
 
-      for (const row of rows) {
+      const rows_debug = rows.slice(0, 2); // TODO nina
+      for (const row of rows_debug) {
         const taskOutput = await task(row as TInput);
 
         // Create task
@@ -191,19 +192,6 @@ export class Experiment {
     return data;
   }
 
-  /**
-   * Get experiment status
-   */
-  async getExperimentStatus(experimentId: string): Promise<ExperimentResponse> {
-    if (!experimentId) {
-      throw new Error('Experiment ID is required');
-    }
-
-    const response = await this.client.get(`/v2/experiments/${experimentId}`);
-    const data = await this.handleResponse(response);
-
-    return data;
-  }
 
   /**
    * Parse JSONL string into list of {col_name: col_value} dictionaries
