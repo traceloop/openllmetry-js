@@ -79,20 +79,22 @@ const main = async () => {
   /**
    * Task function for providing medical info prompt
    */
-  const medicalTaskProvideInfo: ExperimentTaskFunction = async (row: TaskInput): Promise<TaskOutput> => {
+  const medicalTaskProvideInfo: ExperimentTaskFunction = async (
+    row: TaskInput,
+  ): Promise<TaskOutput> => {
     const promptText = provideMedicalInfoPrompt(row.question as string);
     const answer = await generateMedicalAnswer(promptText);
 
     return {
       completion: answer,
       prompt: promptText,
-      strategy: "provide_info"
+      strategy: "provide_info",
     };
   };
 
   // Simple loader utility
   const startLoader = (message: string) => {
-    const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
     let i = 0;
     process.stdout.write(`\n${message} `);
     return setInterval(() => {
@@ -142,14 +144,13 @@ const main = async () => {
       stopOnError: false,
       waitForResults: true,
     });
-    
+
     stopLoader(loader2, "   ✅ Experiment completed");
 
     console.log(`✅ Completed provide info experiment:`);
     console.log(`   - Results: ${results2.taskResults.length}`);
     console.log(`   - Errors: ${results2.errors.length}`);
     console.log(`   - Experiment ID: ${results2.experimentId}`);
-
   } catch (error) {
     console.error(
       "❌ Error in experiment operations:",

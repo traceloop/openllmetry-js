@@ -50,8 +50,13 @@ export class Experiment {
       throw new Error(errorMessage);
     }
 
-    const contentType = (response.headers.get("content-type") || "").toLowerCase();
-    if (contentType.includes("text/csv") || contentType.includes("application/x-ndjson")) {
+    const contentType = (
+      response.headers.get("content-type") || ""
+    ).toLowerCase();
+    if (
+      contentType.includes("text/csv") ||
+      contentType.includes("application/x-ndjson")
+    ) {
       return await response.text();
     } else {
       const rawData = await response.json();
@@ -92,7 +97,7 @@ export class Experiment {
         datasetVersion,
         evaluatorSlugs,
       });
-     
+
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
 
       const taskResults: TaskResponse[] = [];
