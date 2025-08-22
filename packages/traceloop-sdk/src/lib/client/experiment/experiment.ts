@@ -94,7 +94,7 @@ export class Experiment {
 
       const taskResults: TaskResponse[] = [];
       const taskErrors: string[] = [];
-      let evaluationResults: ExecutionResponse[] = [];
+      const evaluationResults: ExecutionResponse[] = [];
 
       const rows_debug = rows.slice(0, 2); // TODO nina
       for (const row of rows_debug) {

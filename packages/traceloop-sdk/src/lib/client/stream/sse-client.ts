@@ -54,7 +54,7 @@ export class SSEClient {
    */
   async waitForResult(
     executionId: string, 
-    timeout: number = 30000
+    timeout = 30000
   ): Promise<ExecutionResponse> {
     const url = `/v2/evaluators/executions/${executionId}/stream`;
     let lastResult: ExecutionResponse | null = null;

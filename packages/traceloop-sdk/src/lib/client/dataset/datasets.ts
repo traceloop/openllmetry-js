@@ -78,7 +78,11 @@ export class Datasets extends BaseDatasetEntity {
   }
 
   async getVersionAsJsonl(slug: string, version: string): Promise<string> {
-    let url = `/v2/datasets/${slug}/versions/${version}/jsonl`;
+    if (!version || version === "") {
+      throw new Error("Version is required");
+    }
+
+    const url = `/v2/datasets/${slug}/versions/${version}/jsonl`;
 
     const response = await this.client.get(url);
     

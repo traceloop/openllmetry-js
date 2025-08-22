@@ -34,7 +34,6 @@
     "run:sample_edit": "npm run build && node dist/src/test_edit_only.js",
     "run:sample_generate": "npm run build && node dist/src/test_generate_only.js",
     "run:sample_experiment": "npm run build && node dist/src/sample_experiment.js",
-    "run:experiment_test": "npm run build && node dist/src/simple_experiment_test.js",
     "dev:image_generation": "pnpm --filter @traceloop/instrumentation-openai build && pnpm --filter @traceloop/node-server-sdk build && npm run build && node dist/src/sample_openai_image_generation.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

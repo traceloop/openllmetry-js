@@ -67,6 +67,10 @@ export class Evaluator extends BaseDatasetEntity {
       throw new Error('experimentId, evaluator, and taskResult are required');
     }
 
+    if (!evaluator.name) {
+      throw new Error('evaluator.name is required');
+    }
+
     const inputSchemaMapping = this.createInputSchemaMapping(taskResult);
 
     const payload = {
@@ -93,7 +97,7 @@ export class Evaluator extends BaseDatasetEntity {
   async waitForResult(
     executionId: string,
     streamUrl: string,
-    timeout: number = 120000
+    timeout = 120000
   ): Promise<ExecutionResponse[]> {
     if (!executionId || !streamUrl) {
       throw new Error('Execution ID and stream URL are required');
@@ -111,7 +115,6 @@ export class Evaluator extends BaseDatasetEntity {
           'Accept': 'application/json',
           'Cache-Control': 'no-cache',
         },
-        signal: AbortSignal.timeout(timeout)
       });
 
       console.log('waitForResult - Response status:', response.status, response.statusText);
