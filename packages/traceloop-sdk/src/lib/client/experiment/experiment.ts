@@ -50,18 +50,13 @@ export class Experiment {
       throw new Error(errorMessage);
     }
 
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    if (contentType.includes("text/csv") || contentType.includes("application/x-ndjson")) {
+      return await response.text();
+    } else {
       const rawData = await response.json();
       return transformApiResponse(rawData);
     }
-
-    // Handle non-JSON responses (text/csv, etc.)
-    const textContent = await response.text();
-    return {
-      contentType: contentType || "text/plain",
-      body: textContent,
-    };
   }
 
   /**
