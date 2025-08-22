@@ -11,7 +11,7 @@ export interface StreamEvent {
 export interface EvaluatorRunOptions {
   experimentId: string;
   experimentRunId?: string;
-  taskId?: string;
+  taskId: string;
   taskResult: Record<string, any>;
   evaluator: EvaluatorDetails;
   waitForResults?: boolean;

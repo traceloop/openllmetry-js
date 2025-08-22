@@ -81,3 +81,12 @@ export interface ExecutionResponse {
   startedAt?: string;
   completedAt?: string;
 }
+
+export interface CreateTaskRequest {
+  input: Record<string, any>;
+  output: Record<string, any>;
+}
+
+export interface CreateTaskResponse {
+  id: string;
+}

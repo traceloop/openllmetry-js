@@ -31,6 +31,7 @@ export class Evaluator extends BaseDatasetEntity {
     const { 
       experimentId, 
       experimentRunId,
+      taskId,
       taskResult, 
       evaluator, 
       waitForResults = true,
@@ -43,6 +44,7 @@ export class Evaluator extends BaseDatasetEntity {
     const triggerResponse = await this.triggerExperimentEvaluator({
       experimentId,
       experimentRunId,
+      taskId,
       evaluator,
       taskResult
     });
@@ -86,8 +88,8 @@ export class Evaluator extends BaseDatasetEntity {
     const data = await this.handleResponse(response);
 
     return {
-      executionId: data.execution_id,
-      streamUrl: data.stream_url
+      executionId: data.executionId,
+      streamUrl: data.streamUrl
     };
   }
 
@@ -125,7 +127,7 @@ export class Evaluator extends BaseDatasetEntity {
     }
 
     const results: ExecutionResponse[] = [];
-    const url = `/v2/evaluators/executions/${executionId}/stream`;
+    const url = `/v2/evaluators/events/${executionId}`;
 
     try {
       const eventStream = this.sseClient.streamEvents(url, { timeout });

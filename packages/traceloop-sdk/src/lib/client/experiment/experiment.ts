@@ -10,7 +10,9 @@ import type {
   InitExperimentRequest,
   ExperimentInitResponse,
   ExperimentResponse,
-  ExecutionResponse
+  ExecutionResponse,
+  CreateTaskRequest,
+  CreateTaskResponse
 } from "../../interfaces/experiment.interface";
 
 export class Experiment {
@@ -73,6 +75,10 @@ export class Experiment {
     this.validateRunOptions(task, options);
 
     try {
+      if (!experimentSlug) {
+        throw new Error('Experiment slug is required'); // TODO nina
+      }
+
       // 1. Initialize experiment
       console.log(`🔧 Step 1: Initializing experiment with slug: ${experimentSlug}`);
       const experimentResponse = await this.initializeExperiment({
@@ -93,13 +99,23 @@ export class Experiment {
 
       for (const row of rows) {
         const taskOutput = await task(row as TInput);
+
+        // Create task
+        const response = await this.createTask(
+          experimentSlug,
+          experimentResponse.run.id,
+          row,
+          taskOutput as Record<string, any>
+        );
+        const taskId = response.id;
         
         if (evaluators.length > 0) {
           for (const evaluator of evaluators) {
             const singleEvaluationResult = await this.evaluator.runExperimentEvaluator({
               experimentId: experimentResponse.experiment.id,
               experimentRunId: experimentResponse.run.id,
-              evaluator: evaluator,
+              taskId,
+              evaluator,
               taskResult: taskOutput as Record<string, any>,
               waitForResults,
               timeout: 120000 // 2 minutes default
@@ -124,6 +140,35 @@ export class Experiment {
       );
     }
     
+  }
+
+  /**
+   * Create a task for the experiment
+   */
+  async createTask(
+    experimentSlug: string,
+    experimentRunId: string,
+    taskInput: Record<string, any>,
+    taskOutput: Record<string, any>
+  ): Promise<CreateTaskResponse> {
+    const body: CreateTaskRequest = {
+      input: taskInput,
+      output: taskOutput
+    };
+
+    const response = await this.client.post(
+      `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/task`,
+      body
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to create task for experiment '${experimentSlug}'`);
+    }
+
+    const data = await this.handleResponse(response);
+    return {
+      id: data.id
+    };
   }
 
   /**
@@ -296,19 +341,4 @@ export class Experiment {
     }));
   }
 
-  /**
-   * List experiments
-   */
-  async listExperiments(limit = 50, offset = 0): Promise<ExperimentResponse[]> {
-    const response = await this.client.get(
-      `/v2/experiments?limit=${limit}&offset=${offset}`
-    );
-    const data = await this.handleResponse(response);
-
-    if (!data.experiments || !Array.isArray(data.experiments)) {
-      return [];
-    }
-
-    return data.experiments;
-  }
 }
