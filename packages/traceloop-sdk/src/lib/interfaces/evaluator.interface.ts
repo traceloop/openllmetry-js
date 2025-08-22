@@ -15,7 +15,7 @@ export interface EvaluatorRunOptions {
   taskResult: Record<string, any>;
   evaluator: EvaluatorDetails;
   waitForResults?: boolean;
-  timeout: number;
+  timeout?: number;
 }
 
 
