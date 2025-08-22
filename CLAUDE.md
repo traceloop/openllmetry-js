@@ -31,6 +31,27 @@ cd packages/instrumentation-openai
 pnpm test
 ```
 
+You can also use nx to run tests:
+```bash
+# Test all packages
+pnpm nx run-many -t test
+
+# Test specific package by name
+pnpm nx test @traceloop/node-server-sdk
+
+# Test only affected packages
+pnpm nx affected -t test
+
+# Test with specific pattern
+pnpm nx run-many -t test --projects="*instrumentation*"
+
+# Run tests in parallel
+pnpm nx run-many -t test --parallel
+
+# Watch mode for development
+pnpm nx test @traceloop/node-server-sdk --watch
+```
+
 ### Linting
 ```bash
 # Lint individual packages
@@ -39,12 +60,6 @@ pnpm lint
 
 # Fix lint issues
 pnpm lint:fix
-```
-
-### Publishing
-```bash
-pnpm nx run-many --targets=build
-pnpm lerna publish --no-private
 ```
 
 ## Architecture

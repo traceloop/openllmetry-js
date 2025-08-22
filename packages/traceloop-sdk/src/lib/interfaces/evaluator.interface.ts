@@ -45,7 +45,6 @@ export interface TriggerEvaluatorResponse {
 export interface SSEClientOptions {
   timeout?: number;
   headers?: Record<string, string>;
-  withCredentials?: boolean;
 }
 
 export interface StreamProgressEvent {

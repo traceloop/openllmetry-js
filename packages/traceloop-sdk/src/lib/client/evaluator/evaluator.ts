@@ -29,7 +29,6 @@ export class Evaluator extends BaseDatasetEntity {
       taskResult, 
       evaluator, 
       waitForResults = true,
-      timeout = 120000 // 2 minutes default
     } = options;
 
     this.validateEvaluatorOptions(options);
@@ -49,7 +48,7 @@ export class Evaluator extends BaseDatasetEntity {
       }];
     }
 
-    return this.waitForResult(triggerResponse.executionId, triggerResponse.streamUrl, timeout);
+    return this.waitForResult(triggerResponse.executionId, triggerResponse.streamUrl);
   }
 
   /**
@@ -98,7 +97,6 @@ export class Evaluator extends BaseDatasetEntity {
   async waitForResult(
     executionId: string,
     streamUrl: string,
-    timeout = 120000
   ): Promise<ExecutionResponse[]> {
     if (!executionId || !streamUrl) {
       throw new Error('Execution ID and stream URL are required');

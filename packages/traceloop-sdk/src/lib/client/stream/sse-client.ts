@@ -30,15 +30,11 @@ export class SSEClient {
     url: string, 
     options: SSEClientOptions = {}
   ): AsyncIterable<StreamEvent> {
-    const { timeout = 30000, headers = {}, withCredentials = false } = options;
+    const { timeout = 30000, headers = {} } = options;
 
     console.log('streamEvents called with:', { url, EventSourceAvailable: !!EventSource, typeof_EventSource: typeof EventSource });
 
-    // Check if we're in a browser environment
-    if (typeof window !== 'undefined' && window.EventSource) {
-      console.log('Using browser EventSource');
-      yield* this.streamEventsWithEventSource(url, { headers, withCredentials, timeout });
-    } else if (EventSource && typeof EventSource === 'function') {
+    if (EventSource && typeof EventSource === 'function') {
       // Node.js environment with eventsource package
       console.log('Using Node.js EventSource');
       yield* this.streamEventsWithNodeEventSource(url, { headers, timeout });
@@ -95,67 +91,6 @@ export class SSEClient {
     }
   }
 
-  /**
-   * Stream events using browser EventSource API
-   */
-  private async *streamEventsWithEventSource(
-    url: string, 
-    options: { headers: Record<string, string>; withCredentials: boolean; timeout: number }
-  ): AsyncIterable<StreamEvent> {
-    const fullUrl = `${this.client['baseUrl']}${url}`;
-    const eventSource = new window.EventSource(fullUrl, {
-      withCredentials: options.withCredentials
-    });
-
-    const eventQueue: StreamEvent[] = [];
-    let finished = false;
-    let error: Error | null = null;
-
-    const timeout = setTimeout(() => {
-      error = new Error('SSE stream timeout');
-      eventSource.close();
-    }, options.timeout);
-
-    eventSource.onmessage = (event: MessageEvent) => {
-      const parsedEvent = this.parseSSEEvent(event.data);
-      if (parsedEvent) {
-        eventQueue.push(parsedEvent);
-      }
-    };
-
-    eventSource.onerror = () => {
-      error = new Error('SSE stream error');
-      finished = true;
-      eventSource.close();
-    };
-
-    eventSource.addEventListener('complete', () => {
-      finished = true;
-      eventSource.close();
-    });
-
-    try {
-      while (!finished && !error) {
-        if (eventQueue.length > 0) {
-          yield eventQueue.shift()!;
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 10));
-        }
-      }
-
-      // Yield remaining events
-      while (eventQueue.length > 0) {
-        yield eventQueue.shift()!;
-      }
-
-      if (error) {
-        throw error;
-      }
-    } finally {
-      clearTimeout(timeout);
-      eventSource.close();
-    }
-  }
 
   /**
    * Stream events using Node.js eventsource package
