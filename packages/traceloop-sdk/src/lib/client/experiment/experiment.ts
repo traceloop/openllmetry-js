@@ -1,8 +1,8 @@
 import { TraceloopClient } from "../traceloop-client";
-import { BaseDatasetEntity } from "../dataset/base-dataset";
 import { Evaluator } from "../evaluator/evaluator";
 import { Datasets } from "../dataset/datasets";
 import { Row } from "../dataset/row";
+import { transformApiResponse } from "../../utils/response-transformer";
 import type {
   ExperimentTaskFunction,
   ExperimentRunOptions,
@@ -13,14 +13,45 @@ import type {
   ExecutionResponse
 } from "../../interfaces/experiment.interface";
 
-export class Experiment extends BaseDatasetEntity {
+export class Experiment {
+  private client: TraceloopClient;
   private evaluator: Evaluator;
   private datasets: Datasets;
 
   constructor(client: TraceloopClient) {
-    super(client);
+    this.client = client;
     this.evaluator = new Evaluator(client);
     this.datasets = new Datasets(client);
+  }
+
+  private async handleResponse(response: Response) {
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // Use default HTTP error message if JSON parsing fails
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      const rawData = await response.json();
+      return transformApiResponse(rawData);
+    }
+
+    // Handle non-JSON responses (text/csv, etc.)
+    const textContent = await response.text();
+    return {
+      contentType: contentType || "text/plain",
+      body: textContent,
+    };
   }
 
   /**
@@ -47,6 +78,7 @@ export class Experiment extends BaseDatasetEntity {
 
     try {
       // 1. Initialize experiment
+      console.log(`🔧 Step 1: Initializing experiment with slug: ${experimentSlug}`);
       const experimentResponse = await this.initializeExperiment({
         datasetSlug,
         datasetVersion,
@@ -54,9 +86,12 @@ export class Experiment extends BaseDatasetEntity {
         relatedRef,
         aux
       });
+      console.log(`✅ Step 1: Experiment initialized with ID: ${experimentResponse.id}`);
 
       // 2. Get dataset rows
+      console.log(`🔧 Step 2: Getting dataset rows for: ${datasetSlug}, version: ${datasetVersion}`);
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
+      console.log(`✅ Step 2: Retrieved ${rows.length} rows from dataset`);
 
       // 3. Execute tasks with concurrency control
       const { taskResults, taskErrors } = await this.executeTasks(
@@ -281,7 +316,9 @@ export class Experiment extends BaseDatasetEntity {
       throw new Error('Dataset slug is required for experiment execution');
     }
 
+    console.log(`🔧 Fetching dataset: ${datasetSlug}`);
     const dataset = await this.datasets.get(datasetSlug);
+    console.log(`✅ Dataset fetched successfully: ${dataset.slug || 'unknown'}`);
     
     if (datasetVersion) {
       // If a specific version is requested, get that version

@@ -3,22 +3,32 @@ import { OpenAI } from "openai";
 import { provideMedicalInfoPrompt, refuseMedicalAdvicePrompt } from "./medical_prompts";
 import type { ExperimentTaskFunction, TaskResponse } from "@traceloop/node-server-sdk";
 
+// Check if we're in mock mode for debugging
+const MOCK_MODE = process.env.MOCK_MODE === 'true';
+
 // Initialize Traceloop
 traceloop.initialize({
-  apiKey: process.env.TRACELOOP_API_KEY!,
+  apiKey: process.env.TRACELOOP_API_KEY || 'mock-key-for-testing',
   appName: "experiment-sample-app",
   disableBatch: true,
 });
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY || 'mock-key-for-testing',
 });
 
 /**
  * Generate a medical answer using OpenAI and the provided prompt
  */
 async function generateMedicalAnswer(promptText: string): Promise<string> {
+  // In mock mode, return a simulated response
+  if (MOCK_MODE) {
+    console.log(`🤖 Mock OpenAI call with prompt: ${promptText.substring(0, 100)}...`);
+    await new Promise(resolve => setTimeout(resolve, 100)); // Simulate API delay
+    return `Mock response for: "${promptText.substring(0, 50)}..."`;
+  }
+
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [{ role: "user", content: promptText }],
@@ -63,8 +73,13 @@ const medicalTaskProvideInfo: ExperimentTaskFunction = async (row: any): Promise
 async function runExperimentExample(): Promise<void> {
   const client = traceloop.getClient();
   
+  // Debug information
+  console.log(`🔧 Debug Mode: ${MOCK_MODE ? 'ENABLED (Mock responses)' : 'DISABLED (Real API calls)'}`);
+  console.log(`📊 Traceloop Client: ${client ? 'Initialized' : 'Not initialized'}`);
+  console.log(`🧪 Experiment API Available: ${client.experiment ? 'Yes' : 'No'}`);
+  
   try {
-    console.log("🧪 Running experiment with clinical guidance prompt (refuses medical advice)...");
+    console.log("\n🧪 Running experiment with clinical guidance prompt (refuses medical advice)...");
     
     const results1 = await client.experiment.run(medicalTaskRefuseAdvice, {
       datasetSlug: "medical-q",
