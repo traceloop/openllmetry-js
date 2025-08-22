@@ -334,6 +334,72 @@ export class Dataset extends BaseDatasetEntity {
     return versionsData.versions.find((v) => v.version === version) || null;
   }
 
+  async getVersionAsJsonl(version?: string): Promise<string> {
+    if (this._deleted) {
+      throw new Error("Cannot get JSONL data from a deleted dataset");
+    }
+
+    let url = `/v2/datasets/${this.slug}/jsonl`;
+    if (version) {
+      url += `?version=${encodeURIComponent(version)}`;
+    }
+
+    const response = await this.client.get(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch JSONL data: ${response.status} ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      // If server returns JSON, handle it appropriately
+      const jsonData = await response.json();
+      if (jsonData.error) {
+        throw new Error(jsonData.error);
+      }
+      // Convert JSON response to JSONL format if needed
+      if (Array.isArray(jsonData)) {
+        return jsonData.map(item => JSON.stringify(item)).join('\n');
+      }
+      return JSON.stringify(jsonData);
+    }
+
+    // Expect JSONL format (text/plain or application/jsonl)
+    return await response.text();
+  }
+
+  parseJsonlData(jsonlContent: string): Record<string, any>[] {
+    if (!jsonlContent || jsonlContent.trim() === '') {
+      return [];
+    }
+
+    const lines = jsonlContent.trim().split('\n');
+    const results: Record<string, any>[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip empty lines
+      if (line === '') {
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(line);
+        
+        // Only add non-null objects
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          results.push(parsed);
+        }
+      } catch (error) {
+        // Log parsing errors but continue processing
+        console.warn(`Skipping invalid JSON line ${i + 1}: ${line}`, error);
+      }
+    }
+
+    return results;
+  }
+
   private parseCSV(
     csvContent: string,
     delimiter: string,

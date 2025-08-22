@@ -33,6 +33,8 @@
     "run:image_generation": "npm run build && node dist/src/sample_openai_image_generation.js",
     "run:sample_edit": "npm run build && node dist/src/test_edit_only.js",
     "run:sample_generate": "npm run build && node dist/src/test_generate_only.js",
+    "run:experiment": "npm run build && node dist/src/experiment_example.js",
+    "run:experiment_test": "npm run build && node dist/src/experiment_test.js",
     "dev:image_generation": "pnpm --filter @traceloop/instrumentation-openai build && pnpm --filter @traceloop/node-server-sdk build && npm run build && node dist/src/sample_openai_image_generation.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -71,6 +73,7 @@
     "langchain": "^0.3.30",
     "llamaindex": "^0.11.19",
     "openai": "^5.12.2",
+    "eventsource": "^3.0.2",
     "zod": "^3.25.76"
   },
   "private": true,

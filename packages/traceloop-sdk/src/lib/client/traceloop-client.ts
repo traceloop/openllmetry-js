@@ -2,6 +2,8 @@ import { TraceloopClientOptions } from "../interfaces";
 import { version } from "../../../package.json";
 import { UserFeedback } from "./annotation/user-feedback";
 import { Datasets } from "./dataset/datasets";
+import { Experiment } from "./experiment/experiment";
+import { Evaluator } from "./evaluator/evaluator";
 
 /**
  * The main client for interacting with Traceloop's API.
@@ -38,6 +40,8 @@ export class TraceloopClient {
 
   userFeedback = new UserFeedback(this);
   datasets = new Datasets(this);
+  experiment = new Experiment(this);
+  evaluator = new Evaluator(this);
 
   async post(path: string, body: Record<string, unknown> | any) {
     return await fetch(`${this.baseUrl}${path}`, {
