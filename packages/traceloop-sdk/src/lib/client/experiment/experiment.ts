@@ -10,6 +10,7 @@ import type {
   TaskResponse,
   InitExperimentRequest,
   ExperimentInitResponse,
+  ExperimentResponse,
   ExecutionResponse
 } from "../../interfaces/experiment.interface";
 
@@ -66,8 +67,6 @@ export class Experiment {
       datasetVersion,
       evaluators = [],
       experimentSlug,
-      relatedRef,
-      aux,
       stopOnError = false,
       waitForResults = true,
       concurrency = 5
@@ -80,13 +79,11 @@ export class Experiment {
       // 1. Initialize experiment
       console.log(`🔧 Step 1: Initializing experiment with slug: ${experimentSlug}`);
       const experimentResponse = await this.initializeExperiment({
+        slug: experimentSlug || 'default-experiment',
         datasetSlug,
         datasetVersion,
-        experimentSlug,
-        relatedRef,
-        aux
       });
-      console.log(`✅ Step 1: Experiment initialized with ID: ${experimentResponse.id}`);
+      console.log(`✅ Step 1: Experiment initialized with ID: ${experimentResponse.experiment.id}`);
 
       // 2. Get dataset rows
       console.log(`🔧 Step 2: Getting dataset rows for: ${datasetSlug}, version: ${datasetVersion}`);
@@ -105,8 +102,8 @@ export class Experiment {
       if (evaluators.length > 0 && taskResults.length > 0) {
         try {
           evaluationResults = await this.evaluator.runExperimentEvaluator({
-            experimentId: experimentResponse.id,
-            runId: experimentResponse.runId,
+            experimentId: experimentResponse.experiment.id,
+            runId: experimentResponse.run.id,
             taskResults,
             evaluators,
             waitForResults
@@ -121,8 +118,8 @@ export class Experiment {
       return {
         results: taskResults,
         errors: taskErrors,
-        experimentId: experimentResponse.id,
-        runId: experimentResponse.runId,
+        experimentId: experimentResponse.experiment.id,
+        runId: experimentResponse.run.id,
         evaluations: evaluationResults
       };
 
@@ -138,29 +135,25 @@ export class Experiment {
    */
   async initializeExperiment(request: InitExperimentRequest): Promise<ExperimentInitResponse> {
     const payload = {
+      slug: request.slug,
       dataset_slug: request.datasetSlug,
       dataset_version: request.datasetVersion,
-      experiment_slug: request.experimentSlug,
-      related_ref: request.relatedRef,
-      aux: request.aux,
-      timestamp: new Date().toISOString()
+      evaluator_slugs: request.evaluatorSlugs,
+      experiment_metadata: request.experimentMetadata,
+      experiment_run_metadata: request.experimentRunMetadata,
     };
 
-    const response = await this.client.post('/v2/experiments/init', payload);
+    const response = await this.client.put('/v2/experiments/initialize', payload);
+    console.log("response", response);
     const data = await this.handleResponse(response);
 
-    return {
-      id: data.id || data.experiment_id,
-      runId: data.run_id || data.runId,
-      status: data.status || 'initialized',
-      createdAt: data.created_at || data.createdAt || new Date().toISOString()
-    };
+    return data;
   }
 
   /**
    * Get experiment status
    */
-  async getExperimentStatus(experimentId: string): Promise<ExperimentInitResponse> {
+  async getExperimentStatus(experimentId: string): Promise<ExperimentResponse> {
     if (!experimentId) {
       throw new Error('Experiment ID is required');
     }
@@ -168,12 +161,7 @@ export class Experiment {
     const response = await this.client.get(`/v2/experiments/${experimentId}`);
     const data = await this.handleResponse(response);
 
-    return {
-      id: data.id || experimentId,
-      runId: data.run_id || data.runId,
-      status: data.status,
-      createdAt: data.created_at || data.createdAt
-    };
+    return data;
   }
 
   /**
@@ -397,7 +385,7 @@ export class Experiment {
   /**
    * List experiments
    */
-  async listExperiments(limit = 50, offset = 0): Promise<ExperimentInitResponse[]> {
+  async listExperiments(limit = 50, offset = 0): Promise<ExperimentResponse[]> {
     const response = await this.client.get(
       `/v2/experiments?limit=${limit}&offset=${offset}`
     );
@@ -407,11 +395,6 @@ export class Experiment {
       return [];
     }
 
-    return data.experiments.map((exp: any) => ({
-      id: exp.id,
-      runId: exp.run_id || exp.runId,
-      status: exp.status,
-      createdAt: exp.created_at || exp.createdAt
-    }));
+    return data.experiments;
   }
 }

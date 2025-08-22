@@ -38,18 +38,37 @@ export interface ExperimentRunResult {
 }
 
 export interface InitExperimentRequest {
+  slug: string;
   datasetSlug?: string;
   datasetVersion?: string;
-  experimentSlug?: string;
+  evaluatorSlugs?: string[];
+  experimentMetadata?: Record<string, any>;
+  experimentRunMetadata?: Record<string, any>;
   relatedRef?: Record<string, string>;
   aux?: Record<string, string>;
 }
 
-export interface ExperimentInitResponse {
+export interface ExperimentResponse {
   id: string;
-  runId: string;
-  status: 'initialized' | 'running' | 'completed' | 'failed';
-  createdAt: string;
+  slug: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExperimentRunResponse {
+  id: string;
+  metadata?: Record<string, any>;
+  dataset_id?: string;
+  dataset_version?: string;
+  evaluator_ids?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExperimentInitResponse {
+  experiment: ExperimentResponse;
+  run: ExperimentRunResponse;
 }
 
 export interface ExecutionResponse {

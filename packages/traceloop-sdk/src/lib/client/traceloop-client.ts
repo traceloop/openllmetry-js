@@ -44,6 +44,8 @@ export class TraceloopClient {
   evaluator = new Evaluator(this);
 
   async post(path: string, body: Record<string, unknown> | any) {
+    console.log(`POST ${this.baseUrl}${path}`);
+    console.log(body);
     return await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: {
@@ -66,6 +68,9 @@ export class TraceloopClient {
   }
 
   async put(path: string, body: Record<string, unknown> | any) {
+    console.log(`PUT ${this.baseUrl}${path}`);
+    console.log(body);
+    console.log('this.apiKey', this.apiKey);
     return await fetch(`${this.baseUrl}${path}`, {
       method: "PUT",
       headers: {
