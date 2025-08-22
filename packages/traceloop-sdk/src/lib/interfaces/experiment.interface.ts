@@ -1,5 +1,10 @@
-export interface ExperimentTaskFunction<TInput = Record<string, any>, TOutput = Record<string, any>> {
-  (input: TInput): Promise<TOutput> | TOutput;
+type dataValue = string | number | boolean;
+
+export type TaskInput = Record<string, dataValue>;
+export type TaskOutput = Record<string, dataValue>;
+
+export interface ExperimentTaskFunction<TInput = TaskInput, TOutput = TaskOutput> {
+  (input: TInput): Promise<TOutput> | TOutput;  
 }
 
 export type EvaluatorDetails  = string | EvaluatorWithVersion;

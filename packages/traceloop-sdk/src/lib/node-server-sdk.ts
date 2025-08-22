@@ -20,6 +20,8 @@ export {
   ExperimentTaskFunction,
   ExperimentRunOptions,
   ExperimentRunResult,
+  TaskInput,
+  TaskOutput,
   TaskResponse,
   ExecutionResponse,
   EvaluatorDetails,

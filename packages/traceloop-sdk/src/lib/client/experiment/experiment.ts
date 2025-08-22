@@ -67,7 +67,7 @@ export class Experiment {
   /**
    * Run an experiment with the given task function and options
    */
-  async run<TInput = Record<string, any>, TOutput = Record<string, any>>(
+  async run<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
     options: ExperimentRunOptions = {}
   ): Promise<ExperimentRunResult> {

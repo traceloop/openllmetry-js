@@ -1,7 +1,8 @@
 import * as traceloop from "@traceloop/node-server-sdk";
-// import { OpenAI } from "openai";
+import { OpenAI } from "openai";
 // import { provideMedicalInfoPrompt } from "./medical_prompts";
-import type { ExperimentTaskFunction, TaskResponse } from "@traceloop/node-server-sdk";
+import { refuseMedicalAdvicePrompt } from "./medical_prompts";
+import type { ExperimentTaskFunction, TaskResponse, TaskInput, TaskOutput } from "@traceloop/node-server-sdk";
 
 const main = async () => {
   console.log("Starting sample experiment");
@@ -33,10 +34,10 @@ const main = async () => {
   console.log("🚀 Experiment API Sample Application");
   console.log("====================================\n");
 
-  // Initialize OpenAI client
-  // const openai = new OpenAI({
-  //   apiKey: process.env.OPENAI_API_KEY,
-  // });
+  //Initialize OpenAI client
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   // /**
   //  * Generate a medical answer using OpenAI and the provided prompt
@@ -55,13 +56,18 @@ const main = async () => {
   /**
    * Task function for refusing medical advice prompt
    */
-  const medicalTaskRefuseAdvice: ExperimentTaskFunction = async (row: Record<string, any>): Promise<Record<string, any>> => {
-    // const promptText = refuseMedicalAdvicePrompt(row.question);
-    // const answer = await generateMedicalAnswer(promptText);
+  const medicalTaskRefuseAdvice: ExperimentTaskFunction = async (row: TaskInput): Promise<TaskOutput> => {
+    const promptText = refuseMedicalAdvicePrompt(row.question as string);
+    const answer = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: promptText }],
+      temperature: 0.7,
+      max_tokens: 500,
+    });
     
     return {
-      completion: "answer",
-      prompt: "promptText",
+      completion: answer.choices?.[0]?.message?.content || "",
+      prompt: promptText,
     };
   };
 
