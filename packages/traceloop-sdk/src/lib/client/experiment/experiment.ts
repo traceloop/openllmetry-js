@@ -87,10 +87,12 @@ export class Experiment {
     this.validateRunOptions(task, options);
 
     try {
+      const evaluatorSlugs = evaluators.map((evaluator) => typeof evaluator === 'string' ? evaluator : evaluator.name);
       const experimentResponse = await this.initializeExperiment({
         slug: experimentSlug,
         datasetSlug,
         datasetVersion,
+        evaluatorSlugs,
       });
       console.log(`✅ Step 1: Experiment initialized with ID: ${experimentResponse.experiment.id}`);
       console.log(`🔧 Step 2: Getting dataset rows for: ${datasetSlug}, version: ${datasetVersion}`);

@@ -89,7 +89,6 @@ const main = async () => {
       evaluators: ["medical_advice"],
       experimentSlug: "medical-advice-exp-ts",
       stopOnError: false,
-      waitForResults: true,
     });
 
     console.log(`✅ Completed refuse advice experiment:`);

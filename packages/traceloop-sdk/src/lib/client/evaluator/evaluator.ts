@@ -34,7 +34,6 @@ export class Evaluator extends BaseDatasetEntity {
 
     this.validateEvaluatorOptions(options);
 
-    // Trigger the evaluator execution
     const triggerResponse = await this.triggerExperimentEvaluator({
       experimentId,
       experimentRunId,
@@ -44,14 +43,12 @@ export class Evaluator extends BaseDatasetEntity {
     });
 
     if (!waitForResults) {
-      // Return immediately with execution ID
       return [{
         executionId: triggerResponse.executionId,
         result: { status: 'running', startedAt: new Date().toISOString() }
       }];
     }
 
-    // Wait for results using the stream URL (which is actually a JSON endpoint)
     return this.waitForResult(triggerResponse.executionId, triggerResponse.streamUrl, timeout);
   }
 
