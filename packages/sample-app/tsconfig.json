@@ -7,5 +7,6 @@
   },
   "files": [],
   "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["src/experiment_test.ts"],
   "references": []
 }

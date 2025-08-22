@@ -1,4 +1,4 @@
-import type { TaskResponse, ExecutionResponse } from './experiment.interface';
+import type { TaskResponse, EvaluatorDetails } from './experiment.interface';
 
 export interface StreamEvent {
   type: 'progress' | 'result' | 'error' | 'complete';
@@ -17,11 +17,6 @@ export interface EvaluatorRunOptions {
   timeout?: number;
 }
 
-export interface EvaluatorDetails {
-  name: string;
-  version?: string;
-  parameters?: Record<string, any>;
-}
 
 export interface EvaluatorResult {
   evaluatorName: string;

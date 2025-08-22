@@ -10,8 +10,7 @@ import type {
   SSEStreamEvent
 } from "../../interfaces/evaluator.interface";
 import type {
-  ExecutionResponse,
-  TaskResponse
+  ExecutionResponse
 } from "../../interfaces/experiment.interface";
 
 export class Evaluator extends BaseDatasetEntity {
@@ -136,7 +135,13 @@ export class Evaluator extends BaseDatasetEntity {
     const url = `/v2/evaluators/executions/${executionId}/stream`;
 
     try {
-      for await (const event of this.sseClient.streamEvents(url, { timeout })) {
+      const eventStream = this.sseClient.streamEvents(url, { timeout });
+      const iterator = eventStream[Symbol.asyncIterator]();
+      
+      while (true) {
+        const { done, value: event } = await iterator.next();
+        if (done) break;
+
         const processedEvent = this.processStreamEvent(event, executionId);
         
         if (processedEvent) {
@@ -170,7 +175,12 @@ export class Evaluator extends BaseDatasetEntity {
   ): AsyncIterable<SSEStreamEvent> {
     const url = `/v2/evaluators/executions/${executionId}/stream`;
     
-    for await (const event of this.sseClient.createTypedStream<SSEStreamEvent>(url, { timeout })) {
+    const eventStream = this.sseClient.createTypedStream<SSEStreamEvent>(url, { timeout });
+    const iterator = eventStream[Symbol.asyncIterator]();
+    
+    while (true) {
+      const { done, value: event } = await iterator.next();
+      if (done) break;
       yield event;
     }
   }

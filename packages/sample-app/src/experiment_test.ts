@@ -3,7 +3,20 @@
  * Tests JSONL parsing, experiment execution, and error handling
  */
 
-import * as assert from "assert";
+// Simple assertion functions since we don't have a test framework
+function assert(condition: boolean, message?: string): void {
+  if (!condition) {
+    throw new Error(message || 'Assertion failed');
+  }
+}
+
+function deepEqual<T>(actual: T, expected: T, message?: string): void {
+  const actualStr = JSON.stringify(actual);
+  const expectedStr = JSON.stringify(expected);
+  if (actualStr !== expectedStr) {
+    throw new Error(message || `Expected ${expectedStr}, got ${actualStr}`);
+  }
+}
 
 // Mock experiment class for testing JSONL parsing
 // This will be replaced with actual implementation once experiment client is built
@@ -98,9 +111,9 @@ class MockExperiment {
 }
 
 // Test cases equivalent to Python experiment tests
-describe('Experiment JSONL Parsing Tests', () => {
+function testExperimentJsonlParsing() {
   
-  it('should parse valid JSONL data correctly', () => {
+  function testParseValidJsonlData() {
     const jsonlData = `{"id": 1, "question": "What is AI?", "category": "tech"}
 {"id": 2, "question": "How to stay healthy?", "category": "health"}
 {"id": 3, "question": "Best programming language?", "category": "tech"}`;

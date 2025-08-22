@@ -2,7 +2,6 @@ import { TraceloopClient } from "../traceloop-client";
 import { BaseDatasetEntity } from "../dataset/base-dataset";
 import { Evaluator } from "../evaluator/evaluator";
 import { Datasets } from "../dataset/datasets";
-import { Dataset } from "../dataset/dataset";
 import { Row } from "../dataset/row";
 import type {
   ExperimentTaskFunction,
@@ -13,7 +12,6 @@ import type {
   ExperimentInitResponse,
   ExecutionResponse
 } from "../../interfaces/experiment.interface";
-import type { EvaluatorDetails } from "../../interfaces/evaluator.interface";
 
 export class Experiment extends BaseDatasetEntity {
   private evaluator: Evaluator;
@@ -200,7 +198,7 @@ export class Experiment extends BaseDatasetEntity {
         
         try {
           const startTime = Date.now();
-          const output = await task(row.data);
+          const output = await task(row.data as TInput);
           const endTime = Date.now();
 
           return {
@@ -283,7 +281,7 @@ export class Experiment extends BaseDatasetEntity {
       throw new Error('Dataset slug is required for experiment execution');
     }
 
-    const dataset = await this.datasets.getBySlug(datasetSlug);
+    const dataset = await this.datasets.get(datasetSlug);
     
     if (datasetVersion) {
       // If a specific version is requested, get that version

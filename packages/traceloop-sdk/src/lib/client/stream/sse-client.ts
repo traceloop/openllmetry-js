@@ -329,8 +329,13 @@ export class SSEClient {
     url: string,
     options: SSEClientOptions = {}
   ): AsyncIterable<T> {
-    for await (const event of this.streamEvents(url, options)) {
-      yield event as T;
+    const eventStream = this.streamEvents(url, options);
+    const iterator = eventStream[Symbol.asyncIterator]();
+    
+    while (true) {
+      const { done, value: event } = await iterator.next();
+      if (done) break;
+      yield event as unknown as T;
     }
   }
 }
