@@ -39,6 +39,9 @@ export const initialize = (options: InitializeOptions = {}) => {
   if (!options.appName) {
     options.appName = process.env.npm_package_name;
   }
+  if (!options.experimentSlug) {
+    options.experimentSlug = process.env.TRACELOOP_EXP_SLUG;
+  }
 
   if (options.traceloopSyncEnabled === undefined) {
     if (process.env.TRACELOOP_SYNC_ENABLED !== undefined) {
@@ -96,6 +99,7 @@ export const initialize = (options: InitializeOptions = {}) => {
       apiKey: options.apiKey,
       baseUrl: options.baseUrl,
       appName: options.appName!,
+      experimentSlug: options.experimentSlug,
     });
     return _client;
   }

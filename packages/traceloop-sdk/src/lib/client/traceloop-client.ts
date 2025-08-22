@@ -2,6 +2,8 @@ import { TraceloopClientOptions } from "../interfaces";
 import { version } from "../../../package.json";
 import { UserFeedback } from "./annotation/user-feedback";
 import { Datasets } from "./dataset/datasets";
+import { Experiment } from "./experiment/experiment";
+import { Evaluator } from "./evaluator/evaluator";
 
 /**
  * The main client for interacting with Traceloop's API.
@@ -21,6 +23,12 @@ export class TraceloopClient {
   public appName: string;
   private baseUrl: string;
   private apiKey: string;
+  public experimentSlug?: string;
+
+  public userFeedback: UserFeedback;
+  public datasets: Datasets;
+  public experiment: Experiment;
+  public evaluator: Evaluator;
 
   /**
    * Creates a new instance of the TraceloopClient.
@@ -34,10 +42,13 @@ export class TraceloopClient {
       options.baseUrl ||
       process.env.TRACELOOP_BASE_URL ||
       "https://api.traceloop.com";
-  }
+    this.experimentSlug = options.experimentSlug;
 
-  userFeedback = new UserFeedback(this);
-  datasets = new Datasets(this);
+    this.userFeedback = new UserFeedback(this);
+    this.datasets = new Datasets(this);
+    this.experiment = new Experiment(this);
+    this.evaluator = new Evaluator(this);
+  }
 
   async post(path: string, body: Record<string, unknown> | any) {
     return await fetch(`${this.baseUrl}${path}`, {

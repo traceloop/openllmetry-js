@@ -135,4 +135,10 @@ export interface InitializeOptions {
    * Defaults to true.
    */
   tracingEnabled?: boolean;
+
+  /**
+   * The experiment slug to use when running experiments. Optional.
+   * Defaults to the TRACELOOP_EXP_SLUG environment variable.
+   */
+  experimentSlug?: string;
 }
