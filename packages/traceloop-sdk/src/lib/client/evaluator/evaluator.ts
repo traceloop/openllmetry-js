@@ -1,6 +1,5 @@
 import { TraceloopClient } from "../traceloop-client";
 import { BaseDatasetEntity } from "../dataset/base-dataset";
-import { SSEClient } from "../stream/sse-client";
 import type {
   EvaluatorRunOptions,
   TriggerEvaluatorRequest,

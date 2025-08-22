@@ -139,7 +139,6 @@ export class Experiment {
         }
       }
 
-      // 5. Return comprehensive results
       return {
         results: taskResults,
         errors: taskErrors,
@@ -232,41 +231,6 @@ export class Experiment {
     return rows;
   }
 
-  /**
-   * Parse JSONL format data into array of objects
-   * Equivalent to Python's _parse_jsonl_to_rows method
-   */
-  static parseJsonlToRows(jsonlData: string): Record<string, any>[] {
-    if (!jsonlData || jsonlData.trim() === '') {
-      return [];
-    }
-
-    const lines = jsonlData.trim().split('\n');
-    const results: Record<string, any>[] = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      
-      // Skip empty lines
-      if (line === '') {
-        continue;
-      }
-
-      try {
-        const parsed = JSON.parse(line);
-        
-        // Only add non-null objects
-        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          results.push(parsed);
-        }
-      } catch (error) {
-        // Log parsing errors but continue processing
-        console.warn(`Skipping invalid JSON line ${i + 1}: ${line}`, error);
-      }
-    }
-
-    return results;
-  }
 
   /**
    * Get dataset rows for experiment execution
@@ -310,36 +274,6 @@ export class Experiment {
         }
       });
     }
-  }
-
-  /**
-   * Get experiment results
-   */
-  async getExperimentResults(experimentId: string, runId?: string): Promise<TaskResponse[]> {
-    if (!experimentId) {
-      throw new Error('Experiment ID is required');
-    }
-
-    let url = `/v2/experiments/${experimentId}/results`;
-    if (runId) {
-      url += `?run_id=${encodeURIComponent(runId)}`;
-    }
-
-    const response = await this.client.get(url);
-    const data = await this.handleResponse(response);
-
-    if (!data.results || !Array.isArray(data.results)) {
-      return [];
-    }
-
-    return data.results.map((result: any) => ({
-      input: result.input,
-      output: result.output,
-      evaluations: result.evaluations,
-      error: result.error,
-      metadata: result.metadata,
-      timestamp: result.timestamp
-    }));
   }
 
 }
