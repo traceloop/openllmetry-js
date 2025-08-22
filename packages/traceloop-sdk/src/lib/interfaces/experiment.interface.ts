@@ -73,13 +73,8 @@ export interface ExperimentInitResponse {
 }
 
 export interface ExecutionResponse {
-  id: string;
-  status: 'running' | 'completed' | 'failed';
-  result?: any;
-  error?: string;
-  progress?: number;
-  startedAt?: string;
-  completedAt?: string;
+  executionId: string;
+  result: Record<string, any>;
 }
 
 export interface CreateTaskRequest {

@@ -162,13 +162,8 @@ export class Evaluator extends BaseDatasetEntity {
 
       // Convert to ExecutionResponse format
       const executionResponse: ExecutionResponse = {
-        id: responseData.execution_id || executionId,
-        status: responseData.status || 'completed',
-        result: responseData.result || responseData,
-        error: responseData.error,
-        progress: responseData.progress || 100,
-        startedAt: responseData.started_at || responseData.startedAt,
-        completedAt: responseData.completed_at || responseData.completedAt || new Date().toISOString()
+        executionId: responseData.execution_id,
+        result: responseData.result
       };
 
       return [executionResponse];
