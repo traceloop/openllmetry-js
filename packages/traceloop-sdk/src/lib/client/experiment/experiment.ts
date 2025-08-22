@@ -266,12 +266,6 @@ export class Experiment {
       throw new Error('Task function is required and must be a function');
     }
 
-    const { concurrency = 5 } = options;
-
-    if (concurrency <= 0 || !Number.isInteger(concurrency)) {
-      throw new Error('Concurrency must be a positive integer');
-    }
-
     if (options.evaluators) {
       options.evaluators.forEach((evaluator, index) => {
         if (typeof evaluator === 'string') {

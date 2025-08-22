@@ -23,7 +23,6 @@ export interface ExperimentRunOptions {
   aux?: Record<string, string>;
   stopOnError?: boolean;
   waitForResults?: boolean;
-  concurrency?: number;
 }
 
 import type { InputSchemaMapping } from './evaluator.interface';
