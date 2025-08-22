@@ -76,4 +76,31 @@ export class Datasets extends BaseDatasetEntity {
 
     return csvData;
   }
+
+  async getVersionAsJsonl(slug: string, version: string): Promise<string> {
+    let url = `/v2/datasets/${slug}/versions/${version}/jsonl`;
+
+    const response = await this.client.get(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch JSONL data: ${response.status} ${response.statusText}`);
+    }
+
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      // If server returns JSON, handle it appropriately
+      const jsonData = await response.json();
+      if (jsonData.error) {
+        throw new Error(jsonData.error);
+      }
+      // Convert JSON response to JSONL format if needed
+      if (Array.isArray(jsonData)) {
+        return jsonData.map(item => JSON.stringify(item)).join('\n');
+      }
+      return JSON.stringify(jsonData);
+    }
+
+    // Expect JSONL format (text/plain or application/jsonl)
+    return await response.text();
+  }
 }
