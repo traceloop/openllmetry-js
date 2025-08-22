@@ -87,16 +87,16 @@ const main = async () => {
       datasetSlug: "medical-q",
       datasetVersion: "v1",
       evaluators: [{ name: "medical_advice" }],
-      experimentSlug: "medical-advice-exp-ts",
+      // experimentSlug: "medical-advice-exp-ts",
       stopOnError: false,
       waitForResults: true,
     });
 
     console.log(`✅ Completed refuse advice experiment:`);
-    console.log(`   - Results: ${results1.results.length}`);
+    console.log(`   - Results: ${results1.taskResults.length}`);
     console.log(`   - Errors: ${results1.errors.length}`);
     console.log(`   - Experiment ID: ${results1.experimentId}`);
-    console.log("Results:", results1.results);
+    console.log("Evaluation Results:", results1.evaluations);
 
     console.log("\n🧪 Running experiment with comprehensive medical info prompt...");
     
@@ -117,7 +117,7 @@ const main = async () => {
     // Compare results
     console.log("\n📊 Experiment Comparison:");
     console.log("Refuse Advice Strategy:");
-    results1.results.slice(0, 2).forEach((result: TaskResponse, i: number) => {
+    results1.taskResults.slice(0, 2).forEach((result: TaskResponse, i: number) => {
       console.log(`  Sample ${i + 1}:`);
       console.log(`    Question: ${result.input?.question || 'N/A'}`);
       console.log(`    Response: ${result.output?.completion?.substring(0, 100) || 'N/A'}...`);

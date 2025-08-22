@@ -25,6 +25,15 @@ export class Experiment {
     this.datasets = new Datasets(client);
   }
 
+  /**
+   * Generate a unique experiment slug
+   */
+  private generateExperimentSlug(): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 7);
+    return `exp-${timestamp}${random}`.substring(0, 15);
+  }
+
   private async handleResponse(response: Response) {
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
@@ -66,28 +75,24 @@ export class Experiment {
       datasetSlug,
       datasetVersion,
       evaluators = [],
-      experimentSlug,
       waitForResults = true,
     } = options;
 
-    // Validate inputs
+    // When experimentSlug is not provided a random one is generated
+    let { experimentSlug } = options;
+    if (!experimentSlug) {
+      experimentSlug = this.client.experimentSlug || this.generateExperimentSlug();
+    }
+
     this.validateRunOptions(task, options);
 
     try {
-      if (!experimentSlug) {
-        throw new Error('Experiment slug is required'); // TODO nina
-      }
-
-      // 1. Initialize experiment
-      console.log(`🔧 Step 1: Initializing experiment with slug: ${experimentSlug}`);
       const experimentResponse = await this.initializeExperiment({
-        slug: experimentSlug || 'default-experiment',
+        slug: experimentSlug,
         datasetSlug,
         datasetVersion,
       });
       console.log(`✅ Step 1: Experiment initialized with ID: ${experimentResponse.experiment.id}`);
-
-      // 2. Get dataset rows
       console.log(`🔧 Step 2: Getting dataset rows for: ${datasetSlug}, version: ${datasetVersion}`);
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
       console.log(`✅ Step 2: Retrieved ${rows.length} rows from dataset`);
@@ -111,10 +116,8 @@ export class Experiment {
           timestamp: Date.now()
         };
 
-        // Add to results array
         taskResults.push(taskResponse);
 
-        // Create task
         const response = await this.createTask(
           experimentSlug,
           experimentResponse.run.id,
@@ -139,12 +142,14 @@ export class Experiment {
         }
       }
 
+      const evalResults = evaluationResults.map((evaluation) => evaluation.result);
+      console.log("evalResults", evalResults);
       return {
-        results: taskResults,
+        taskResults: taskResults,
         errors: taskErrors,
         experimentId: experimentResponse.experiment.id,
         runId: experimentResponse.run.id,
-        evaluations: evaluationResults
+        evaluations: evalResults
       };
 
     } catch (error) {
@@ -204,7 +209,6 @@ export class Experiment {
     return data;
   }
 
-
   /**
    * Parse JSONL string into list of {col_name: col_value} dictionaries
    * Skips the first line (columns definition)
@@ -230,7 +234,6 @@ export class Experiment {
 
     return rows;
   }
-
 
   /**
    * Get dataset rows for experiment execution

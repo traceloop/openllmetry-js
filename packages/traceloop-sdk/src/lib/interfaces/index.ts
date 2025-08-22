@@ -5,8 +5,3 @@ export * from "./traceloop-client.interface";
 export * from "./dataset.interface";
 export * from "./experiment.interface";
 export * from "./evaluator.interface";
-export interface TraceloopClientOptions {
-  apiKey: string;
-  appName: string;
-  baseUrl?: string;
-}

@@ -23,6 +23,12 @@ export class TraceloopClient {
   public appName: string;
   private baseUrl: string;
   private apiKey: string;
+  public experimentSlug?: string;
+
+  public userFeedback: UserFeedback;
+  public datasets: Datasets;
+  public experiment: Experiment;
+  public evaluator: Evaluator;
 
   /**
    * Creates a new instance of the TraceloopClient.
@@ -36,12 +42,13 @@ export class TraceloopClient {
       options.baseUrl ||
       process.env.TRACELOOP_BASE_URL ||
       "https://api.traceloop.com";
-  }
+    this.experimentSlug = options.experimentSlug;
 
-  userFeedback = new UserFeedback(this);
-  datasets = new Datasets(this);
-  experiment = new Experiment(this);
-  evaluator = new Evaluator(this);
+    this.userFeedback = new UserFeedback(this);
+    this.datasets = new Datasets(this);
+    this.experiment = new Experiment(this);
+    this.evaluator = new Evaluator(this);
+  }
 
   async post(path: string, body: Record<string, unknown> | any) {
     return await fetch(`${this.baseUrl}${path}`, {

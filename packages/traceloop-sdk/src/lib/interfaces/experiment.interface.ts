@@ -31,11 +31,11 @@ export interface TaskResponse {
 }
 
 export interface ExperimentRunResult {
-  results: TaskResponse[];
+  taskResults: TaskResponse[];
   errors: string[];
   experimentId?: string;
   runId?: string;
-  evaluations?: ExecutionResponse[];
+  evaluations?: Record<string, any>[];
 }
 
 export interface InitExperimentRequest {
