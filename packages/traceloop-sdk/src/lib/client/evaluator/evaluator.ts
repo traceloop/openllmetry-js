@@ -3,11 +3,8 @@ import { BaseDatasetEntity } from "../dataset/base-dataset";
 import { SSEClient } from "../stream/sse-client";
 import type {
   EvaluatorRunOptions,
-  EvaluatorResult,
   TriggerEvaluatorRequest,
   TriggerEvaluatorResponse,
-  StreamEvent,
-  SSEStreamEvent,
   InputSchemaMapping
 } from "../../interfaces/evaluator.interface";
 import type {
@@ -15,11 +12,9 @@ import type {
 } from "../../interfaces/experiment.interface";
 
 export class Evaluator extends BaseDatasetEntity {
-  private sseClient: SSEClient;
 
   constructor(client: TraceloopClient) {
     super(client);
-    this.sseClient = new SSEClient(client);
   }
 
   /**
@@ -92,29 +87,6 @@ export class Evaluator extends BaseDatasetEntity {
     };
   }
 
-  /**
-   * Get evaluator execution status
-   */
-  async getExecutionStatus(executionId: string): Promise<ExecutionResponse> {
-    if (!executionId) {
-      throw new Error('Execution ID is required');
-    }
-
-    const response = await this.client.get(`/v2/evaluators/executions/${executionId}`);
-    const data = await this.handleResponse(response);
-
-    return {
-      executionId: data.id || executionId,
-      result: {
-        status: data.status,
-        result: data.result,
-        error: data.error,
-        progress: data.progress,
-        startedAt: data.started_at || data.startedAt,
-        completedAt: data.completed_at || data.completedAt
-      }
-    };
-  }
 
   /**
    * Wait for execution result via stream URL (actually JSON endpoint)
@@ -176,183 +148,6 @@ export class Evaluator extends BaseDatasetEntity {
     }
   }
 
-  /**
-   * Stream evaluator execution results in real-time
-   */
-  async streamEvaluatorResults(
-    executionId: string,
-    timeout: number = 120000
-  ): Promise<ExecutionResponse[]> {
-    if (!executionId) {
-      throw new Error('Execution ID is required');
-    }
-
-    const results: ExecutionResponse[] = [];
-    const url = `/v2/evaluators/events/${executionId}`;
-
-    try {
-      const eventStream = this.sseClient.streamEvents(url, { timeout });
-      const iterator = eventStream[Symbol.asyncIterator]();
-      
-      while (true) {
-        const { done, value: event } = await iterator.next();
-        if (done) break;
-
-        const processedEvent = this.processStreamEvent(event, executionId);
-        
-        if (processedEvent) {
-          results.push(processedEvent);
-          
-          // Break on completion or error
-          if (processedEvent.result?.status === 'completed' || processedEvent.result?.status === 'failed') {
-            break;
-          }
-        }
-      }
-
-      if (results.length === 0) {
-        throw new Error('No results received from evaluator stream');
-      }
-
-      return results;
-    } catch (error) {
-      throw new Error(
-        `Failed to stream evaluator results: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
-  }
-
-  /**
-   * Create a typed stream for evaluator events
-   */
-  async *streamEvaluatorEvents(
-    executionId: string,
-    timeout: number = 120000
-  ): AsyncIterable<SSEStreamEvent> {
-    const url = `/v2/evaluators/executions/${executionId}/stream`;
-    
-    const eventStream = this.sseClient.createTypedStream<SSEStreamEvent>(url, { timeout });
-    const iterator = eventStream[Symbol.asyncIterator]();
-    
-    while (true) {
-      const { done, value: event } = await iterator.next();
-      if (done) break;
-      yield event;
-    }
-  }
-
-  /**
-   * Cancel a running evaluator execution
-   */
-  async cancelExecution(executionId: string): Promise<void> {
-    if (!executionId) {
-      throw new Error('Execution ID is required');
-    }
-
-    const response = await this.client.delete(`/v2/evaluators/executions/${executionId}`);
-    await this.handleResponse(response);
-  }
-
-  /**
-   * Get results from a completed evaluator execution
-   */
-  async getExecutionResults(executionId: string): Promise<EvaluatorResult[]> {
-    if (!executionId) {
-      throw new Error('Execution ID is required');
-    }
-
-    const response = await this.client.get(`/v2/evaluators/executions/${executionId}/results`);
-    const data = await this.handleResponse(response);
-
-    if (!data.results || !Array.isArray(data.results)) {
-      return [];
-    }
-
-    return data.results.map((result: any) => ({
-      evaluatorName: result.evaluator_name || result.evaluatorName,
-      taskId: result.task_id || result.taskId,
-      score: result.score,
-      result: result.result,
-      metadata: result.metadata,
-      error: result.error
-    }));
-  }
-
-  /**
-   * List available evaluators
-   */
-  async listAvailableEvaluators(): Promise<Array<{ name: string; version: string; description?: string }>> {
-    const response = await this.client.get('/v2/evaluators');
-    const data = await this.handleResponse(response);
-
-    if (!data.evaluators || !Array.isArray(data.evaluators)) {
-      return [];
-    }
-
-    return data.evaluators.map((evaluator: any) => ({
-      name: evaluator.name,
-      version: evaluator.version,
-      description: evaluator.description
-    }));
-  }
-
-  /**
-   * Process a stream event into an ExecutionResponse
-   */
-  private processStreamEvent(event: StreamEvent, executionId: string): ExecutionResponse | null {
-    try {
-      const eventData = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-
-      switch (event.type) {
-        case 'progress':
-          return {
-            executionId: executionId,
-            result: {
-              status: 'running',
-              progress: eventData.percentage || eventData.progress,
-              result: eventData
-            }
-          };
-
-        case 'result':
-          return {
-            executionId: executionId,
-            result: {
-              status: eventData.status || 'running',
-              result: eventData.result || eventData,
-              progress: eventData.progress || 100
-            }
-          };
-
-        case 'complete':
-          return {
-            executionId: executionId,
-            result: {
-              status: 'completed',
-              result: eventData.result || eventData,
-              progress: 100,
-              completedAt: event.timestamp
-            }
-          };
-
-        case 'error':
-          return {
-            executionId: executionId,
-            result: {
-              status: 'failed',
-              error: eventData.error || 'Unknown error',
-              completedAt: event.timestamp
-            }
-          };
-
-        default:
-          return null;
-      }
-    } catch (error) {
-      console.warn('Failed to process stream event:', event, error);
-      return null;
-    }
-  }
 
   /**
    * Validate evaluator run options

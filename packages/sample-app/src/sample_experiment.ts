@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
-import { OpenAI } from "openai";
-import { provideMedicalInfoPrompt } from "./medical_prompts";
+// import { OpenAI } from "openai";
+// import { provideMedicalInfoPrompt } from "./medical_prompts";
 import type { ExperimentTaskFunction, TaskResponse } from "@traceloop/node-server-sdk";
 
 const main = async () => {
@@ -34,23 +34,23 @@ const main = async () => {
   console.log("====================================\n");
 
   // Initialize OpenAI client
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  // const openai = new OpenAI({
+  //   apiKey: process.env.OPENAI_API_KEY,
+  // });
 
-  /**
-   * Generate a medical answer using OpenAI and the provided prompt
-   */
-  async function generateMedicalAnswer(promptText: string): Promise<string> {
-    const response = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: promptText }],
-      temperature: 0.7,
-      max_tokens: 500,
-    });
+  // /**
+  //  * Generate a medical answer using OpenAI and the provided prompt
+  //  */
+  // async function generateMedicalAnswer(promptText: string): Promise<string> {
+  //   const response = await openai.chat.completions.create({
+  //     model: "gpt-3.5-turbo",
+  //     messages: [{ role: "user", content: promptText }],
+  //     temperature: 0.7,
+  //     max_tokens: 500,
+  //   });
 
-    return response.choices?.[0]?.message?.content || "";
-  }
+  //   return response.choices?.[0]?.message?.content || "";
+  // }
 
   /**
    * Task function for refusing medical advice prompt
@@ -65,19 +65,19 @@ const main = async () => {
     };
   };
 
-  /**
-   * Task function for providing medical info prompt  
-   */
-  const medicalTaskProvideInfo: ExperimentTaskFunction = async (row: any): Promise<any> => {
-    const promptText = provideMedicalInfoPrompt(row.question);
-    const answer = await generateMedicalAnswer(promptText);
+  // /**
+  //  * Task function for providing medical info prompt  
+  //  */
+  // const medicalTaskProvideInfo: ExperimentTaskFunction = async (row: any): Promise<any> => {
+  //   const promptText = provideMedicalInfoPrompt(row.question);
+  //   const answer = await generateMedicalAnswer(promptText);
     
-    return {
-      completion: answer,
-      prompt: promptText,
-      strategy: "provide_info"
-    };
-  };
+  //   return {
+  //     completion: answer,
+  //     prompt: promptText,
+  //     strategy: "provide_info"
+  //   };
+  // };
 
   try {
     console.log("\n🧪 Running experiment with clinical guidance prompt (refuses medical advice)...");
@@ -96,22 +96,23 @@ const main = async () => {
     console.log(`   - Results: ${results1.results.length}`);
     console.log(`   - Errors: ${results1.errors.length}`);
     console.log(`   - Experiment ID: ${results1.experimentId}`);
+    console.log("Results:", results1.results);
 
     console.log("\n🧪 Running experiment with comprehensive medical info prompt...");
     
-    const results2 = await client.experiment.run(medicalTaskProvideInfo, {
-      datasetSlug: "medical-q", 
-      datasetVersion: "v1",
-      evaluators: [{ name: "medical_advice" }],
-      experimentSlug: "medical-advice-exp-ts", 
-      stopOnError: false,
-      waitForResults: true,
-    });
+    // const results2 = await client.experiment.run(medicalTaskProvideInfo, {
+    //   datasetSlug: "medical-q", 
+    //   datasetVersion: "v1",
+    //   evaluators: [{ name: "medical_advice" }],
+    //   experimentSlug: "medical-advice-exp-ts", 
+    //   stopOnError: false,
+    //   waitForResults: true,
+    // });
 
-    console.log(`✅ Completed provide info experiment:`);
-    console.log(`   - Results: ${results2.results.length}`);
-    console.log(`   - Errors: ${results2.errors.length}`);
-    console.log(`   - Experiment ID: ${results2.experimentId}`);
+    // console.log(`✅ Completed provide info experiment:`);
+    // console.log(`   - Results: ${results2.results.length}`);
+    // console.log(`   - Errors: ${results2.errors.length}`);
+    // console.log(`   - Experiment ID: ${results2.experimentId}`);
 
     // Compare results
     console.log("\n📊 Experiment Comparison:");
@@ -122,12 +123,12 @@ const main = async () => {
       console.log(`    Response: ${result.output?.completion?.substring(0, 100) || 'N/A'}...`);
     });
 
-    console.log("\nProvide Info Strategy:");
-    results2.results.slice(0, 2).forEach((result: TaskResponse, i: number) => {
-      console.log(`  Sample ${i + 1}:`);
-      console.log(`    Question: ${result.input?.question || 'N/A'}`);
-      console.log(`    Response: ${result.output?.completion?.substring(0, 100) || 'N/A'}...`);
-    });
+    // console.log("\nProvide Info Strategy:");
+    // results2.results.slice(0, 2).forEach((result: TaskResponse, i: number) => {
+    //   console.log(`  Sample ${i + 1}:`);
+    //   console.log(`    Question: ${result.input?.question || 'N/A'}`);
+    //   console.log(`    Response: ${result.output?.completion?.substring(0, 100) || 'N/A'}...`);
+    // });
 
   } catch (error) {
     console.error(

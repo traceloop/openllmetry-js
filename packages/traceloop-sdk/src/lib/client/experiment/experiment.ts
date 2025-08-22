@@ -9,7 +9,6 @@ import type {
   TaskResponse,
   InitExperimentRequest,
   ExperimentInitResponse,
-  ExperimentResponse,
   ExecutionResponse,
   CreateTaskRequest,
   CreateTaskResponse
@@ -100,6 +99,20 @@ export class Experiment {
       const rows_debug = rows.slice(0, 2); // TODO nina
       for (const row of rows_debug) {
         const taskOutput = await task(row as TInput);
+
+        // Create TaskResponse object
+        const taskResponse: TaskResponse = {
+          input: row,
+          output: taskOutput as Record<string, any>,
+          metadata: { 
+            rowId: row.id,
+            timestamp: Date.now()
+          },
+          timestamp: Date.now()
+        };
+
+        // Add to results array
+        taskResults.push(taskResponse);
 
         // Create task
         const response = await this.createTask(
