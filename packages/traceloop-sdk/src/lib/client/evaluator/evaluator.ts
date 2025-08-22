@@ -109,10 +109,7 @@ export class Evaluator extends BaseDatasetEntity {
       throw new Error("Execution ID and stream URL are required");
     }
 
-    console.log("waitForResult called with:", { executionId, streamUrl });
-
     const fullStreamUrl = `${this.client["baseUrl"]}/v2${streamUrl}`;
-    console.log("Full stream URL:", fullStreamUrl);
 
     try {
       const response = await fetch(fullStreamUrl, {
@@ -123,12 +120,6 @@ export class Evaluator extends BaseDatasetEntity {
         },
       });
 
-      console.log(
-        "waitForResult - Response status:",
-        response.status,
-        response.statusText,
-      );
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -137,10 +128,7 @@ export class Evaluator extends BaseDatasetEntity {
       }
 
       const responseText = await response.text();
-      console.log("waitForResult - Response text length:", responseText.length);
-
       const responseData = JSON.parse(responseText);
-      console.log("waitForResult - Parsed response:", responseData);
 
       // Check execution ID match
       if (

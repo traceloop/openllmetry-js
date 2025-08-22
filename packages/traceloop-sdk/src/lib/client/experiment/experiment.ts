@@ -92,21 +92,14 @@ export class Experiment {
         datasetVersion,
         evaluatorSlugs,
       });
-      console.log(
-        `✅ Step 1: Experiment initialized with ID: ${experimentResponse.experiment.id}`,
-      );
-      console.log(
-        `🔧 Step 2: Getting dataset rows for: ${datasetSlug}, version: ${datasetVersion}`,
-      );
+     
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
-      console.log(`✅ Step 2: Retrieved ${rows.length} rows from dataset`);
 
       const taskResults: TaskResponse[] = [];
       const taskErrors: string[] = [];
       const evaluationResults: ExecutionResponse[] = [];
 
-      const rows_debug = rows.slice(0, 2); // TODO nina
-      for (const row of rows_debug) {
+      for (const row of rows) {
         const taskOutput = await task(row as TInput);
 
         // Create TaskResponse object
@@ -150,7 +143,6 @@ export class Experiment {
       const evalResults = evaluationResults.map(
         (evaluation) => evaluation.result,
       );
-      console.log("evalResults", evalResults);
       return {
         taskResults: taskResults,
         errors: taskErrors,
@@ -271,13 +263,11 @@ export class Experiment {
       throw new Error("Dataset slug is required for experiment execution");
     }
 
-    console.log(`🔧 Fetching dataset: ${datasetSlug}`);
     const dataset = await this.datasets.getVersionAsJsonl(
       datasetSlug,
       datasetVersion || "",
     );
     const rows = this.parseJsonlToRows(dataset);
-    console.log(`✅ Dataset fetched successfully: ${rows || "unknown"}`);
     return rows;
   }
 
