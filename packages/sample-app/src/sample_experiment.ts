@@ -83,7 +83,8 @@ const main = async () => {
   try {
     console.log("\n🧪 Running experiment with clinical guidance prompt (refuses medical advice)...");
     
-    const results1 = await client.experiment.run(medicalTaskRefuseAdvice, {
+    const results1 = await client.
+    experiment.run(medicalTaskRefuseAdvice, {
       datasetSlug: "medical-q",
       datasetVersion: "v1",
       evaluators: [{ name: "medical_advice" }],

@@ -165,6 +165,32 @@ export class Experiment {
   }
 
   /**
+   * Parse JSONL string into list of {col_name: col_value} dictionaries
+   * Skips the first line (columns definition)
+   */
+  private parseJsonlToRows(jsonlData: string): Record<string, any>[] {
+    const rows: Record<string, any>[] = [];
+    const lines = jsonlData.trim().split('\n');
+
+    // Skip the first line (columns definition)
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (line) {
+        try {
+          const rowData = JSON.parse(line);
+          rows.push(rowData);
+        } catch {
+          // Skip invalid JSON lines
+          continue;
+        }
+      }
+    }
+
+    return rows;
+  }
+
+  /**
    * Parse JSONL format data into array of objects
    * Equivalent to Python's _parse_jsonl_to_rows method
    */
@@ -205,7 +231,7 @@ export class Experiment {
    */
   private async executeTasks<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
-    rows: Row[],
+    rows: Record<string, any>[],
     options: { stopOnError: boolean; concurrency: number }
   ): Promise<{ taskResults: TaskResponse[]; taskErrors: string[] }> {
     const { stopOnError, concurrency } = options;
@@ -299,25 +325,16 @@ export class Experiment {
   private async getDatasetRows(
     datasetSlug?: string, 
     datasetVersion?: string
-  ): Promise<Row[]> {
+  ): Promise<Record<string, any>[]> {
     if (!datasetSlug) {
       throw new Error('Dataset slug is required for experiment execution');
     }
 
     console.log(`🔧 Fetching dataset: ${datasetSlug}`);
     const dataset = await this.datasets.getVersionAsJsonl(datasetSlug, datasetVersion || '');
-    console.log(`✅ Dataset fetched successfully: ${dataset || 'unknown'}`);
-    return [new Row(this.client, {
-      id: '1',
-      datasetId: 'temp-dataset',
-      datasetSlug: datasetSlug || 'unknown',
-      data: {
-        column1: 'value1',
-        column2: 'value2'
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    })];
+    const rows = this.parseJsonlToRows(dataset);
+    console.log(`✅ Dataset fetched successfully: ${rows || 'unknown'}`);
+    return rows;
   }
 
   /**
