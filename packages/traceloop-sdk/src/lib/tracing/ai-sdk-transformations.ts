@@ -113,7 +113,7 @@ export const transformVendor = (attributes: Record<string, any>): void => {
 
     // Find matching vendor prefix in mapping
     let mappedVendor = null;
-    if (vendor && vendor.length > 0) {
+    if (typeof vendor === "string" && vendor.length > 0) {
       for (const prefix of Object.keys(VENDOR_MAPPING)) {
         if (vendor.startsWith(prefix)) {
           mappedVendor = VENDOR_MAPPING[prefix];
