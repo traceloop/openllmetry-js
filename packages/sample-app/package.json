@@ -60,7 +60,7 @@
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/sdk-node": "^0.203.0",
     "@opentelemetry/sdk-trace-base": "^2.0.1",
-    "@pinecone-database/pinecone": "^6.1.1",
+    "@pinecone-database/pinecone": "^6.1.2",
     "@traceloop/node-server-sdk": "workspace:*",
     "@traceloop/instrumentation-langchain": "workspace:*",
     "@types/jimp": "^0.2.28",
