@@ -2,6 +2,8 @@ import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 
+import "dotenv/config";
+
 traceloop.initialize({
   appName: "sample_vercel_ai",
   disableBatch: true,
