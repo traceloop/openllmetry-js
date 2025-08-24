@@ -1,4 +1,4 @@
-import { Polly } from "@pollyjs/core";
+import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
@@ -17,32 +17,25 @@ describe("Dataset API Comprehensive Tests", () => {
   let createdColumnSlug: string;
   let createdRowId: string;
 
-  before(async function () {
-    // Setup Polly for recording/replaying HTTP requests
-    polly = new Polly("Dataset API Comprehensive Tests", {
-      adapters: ["node-http", "fetch"],
-      persister: "fs",
-      recordIfMissing: false,
-      mode: process.env.RECORD_MODE === "NEW" ? "record" : "replay",
-      recordFailedRequests: true,
-      matchRequestsBy: {
-        method: true,
-        headers: false,
-        body: false,
-        order: false,
-        url: {
-          protocol: true,
-          username: true,
-          password: true,
-          hostname: true,
-          port: true,
-          pathname: true,
-          query: true,
-          hash: false,
-        },
+  setupPolly({
+    adapters: ["node-http", "fetch"],
+    persister: "fs",
+    recordIfMissing: process.env.RECORD_MODE === "NEW",
+    recordFailedRequests: true,
+    mode: process.env.RECORD_MODE === "NEW" ? "record" : "replay",
+    matchRequestsBy: {
+      headers: false,
+      url: {
+        protocol: true,
+        hostname: true,
+        pathname: true,
+        query: false,
       },
-    });
+    },
+    logging: true,
+  });
 
+  before(async function () {
     const apiKey =
       process.env.RECORD_MODE === "NEW"
         ? process.env.TRACELOOP_API_KEY!
@@ -59,19 +52,20 @@ describe("Dataset API Comprehensive Tests", () => {
     });
   });
 
-  after(async function () {
-    if (polly) {
-      await polly.stop();
-    }
+  beforeEach(function () {
+    const { server } = this.polly as Polly;
+    server.any().on("beforePersist", (_req, recording) => {
+      recording.request.headers = recording.request.headers.filter(
+        ({ name }: { name: string }) =>
+          !["authorization"].includes(name.toLowerCase()),
+      );
+    });
   });
 
   describe("Dataset Management", () => {
     it("should create a new dataset", async function () {
       const datasetOptions = {
-        name:
-          process.env.RECORD_MODE === "NEW"
-            ? `test-dataset-comprehensive-${Date.now()}`
-            : "test-dataset-comprehensive-example",
+        name: "test-dataset-comprehensive-example",
         description: "Comprehensive test dataset",
       };
 
@@ -755,7 +749,7 @@ describe("Dataset API Comprehensive Tests", () => {
     it("should handle invalid column data", async function () {
       // Create a temporary dataset for error testing
       const tempDataset = await client.datasets.create({
-        name: `error-test-${Date.now()}`,
+        name: `error-test-1234`,
         description: "Temporary dataset for error testing",
       });
 
@@ -783,7 +777,7 @@ describe("Dataset API Comprehensive Tests", () => {
     it("should handle invalid row data", async function () {
       // Create a temporary dataset for error testing
       const tempDataset = await client.datasets.create({
-        name: `error-test-${Date.now()}`,
+        name: `error-test-5678`,
         description: "Temporary dataset for error testing",
       });
 

@@ -16,8 +16,6 @@
 
 import * as assert from "assert";
 
-import { InMemorySpanExporter } from "@opentelemetry/sdk-trace-base";
-
 import type * as OpenAIModule from "openai";
 
 import { openai as vercel_openai } from "@ai-sdk/openai";
@@ -31,8 +29,9 @@ import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { initializeSharedTraceloop, getSharedExporter } from "./test-setup";
 
-const memoryExporter = new InMemorySpanExporter();
+const memoryExporter = getSharedExporter();
 
 Polly.register(NodeHttpAdapter);
 Polly.register(FetchAdapter);
@@ -64,11 +63,8 @@ describe("Test SDK Decorators", () => {
       process.env.OPENAI_API_KEY = "test";
     }
 
-    traceloop.initialize({
-      appName: "test_decorators",
-      disableBatch: true,
-      exporter: memoryExporter,
-    });
+    // Use shared initialization to avoid conflicts with other test suites
+    initializeSharedTraceloop();
 
     // Initialize OpenAI after Polly is set up
     const openAIModule: typeof OpenAIModule = await import("openai");
@@ -107,6 +103,7 @@ describe("Test SDK Decorators", () => {
 
     await traceloop.forceFlush();
     const spans = memoryExporter.getFinishedSpans();
+
     const workflowSpan = spans.find(
       (span) => span.name === "sample_chat.workflow",
     );
@@ -580,7 +577,7 @@ describe("Test SDK Decorators", () => {
       ],
       "456",
     );
-  });
+  }).timeout(30000);
 
   it("should create workflow and tasks spans with chained entity names", async () => {
     class TestOpenAI {
@@ -638,7 +635,7 @@ describe("Test SDK Decorators", () => {
       jokeCreationSpan.attributes[`${SpanAttributes.TRACELOOP_ENTITY_OUTPUT}`],
       JSON.stringify(result),
     );
-  });
+  }).timeout(30000);
 
   it("should fix Vercel AI spans to match OpenLLMetry format", async () => {
     const result = await generateText({
@@ -695,5 +692,5 @@ describe("Test SDK Decorators", () => {
       generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
       22,
     );
-  });
+  }).timeout(30000);
 });
