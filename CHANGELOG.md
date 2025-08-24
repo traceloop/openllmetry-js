@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.18.1](https://github.com/traceloop/openllmetry-js/compare/v0.18.0...v0.18.1) (2025-08-24)
+
+### Bug Fixes
+
+- **sdk:** support vercel AI SDK tool calling + structured outputs ([#675](https://github.com/traceloop/openllmetry-js/issues/675)) ([0371ff7](https://github.com/traceloop/openllmetry-js/commit/0371ff7176fac07d615b5412fb1a71c1a022a9aa))
+- **vercel-sdk:** vendor names ([#674](https://github.com/traceloop/openllmetry-js/issues/674)) ([f411da1](https://github.com/traceloop/openllmetry-js/commit/f411da195d25873e058ce3d24bb0c05a6c15c791))
+
 # [0.18.0](https://github.com/traceloop/openllmetry-js/compare/v0.17.1...v0.18.0) (2025-08-24)
 
 ### Features
