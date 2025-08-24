@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.18.0](https://github.com/traceloop/openllmetry-js/compare/v0.17.1...v0.18.0) (2025-08-24)
+
+### Features
+
+- **experiment:** Add experiment capabilities ([#672](https://github.com/traceloop/openllmetry-js/issues/672)) ([d18b7b2](https://github.com/traceloop/openllmetry-js/commit/d18b7b2811e1b26d9e8f7afb50a0866849dfa0f8))
+
 ## [0.17.1](https://github.com/traceloop/openllmetry-js/compare/v0.17.0...v0.17.1) (2025-08-21)
 
 **Note:** Version bump only for package @traceloop/node-server-sdk
