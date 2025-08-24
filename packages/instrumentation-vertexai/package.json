@@ -42,7 +42,7 @@
     "@opentelemetry/instrumentation": "^0.203.0",
     "@opentelemetry/semantic-conventions": "^1.36.0",
     "@traceloop/ai-semantic-conventions": "workspace:*",
-    "google-gax": "^4.0.0",
+    "google-gax": "^5.0.3",
     "tslib": "^2.8.1"
   },
   "devDependencies": {
