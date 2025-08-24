@@ -658,7 +658,7 @@ describe("Test SDK Decorators", () => {
     );
     assert.strictEqual(
       generateTextSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-      `[{"type":"text","text":"What is the capital of France?"}]`,
+      "What is the capital of France?",
     );
     assert.strictEqual(
       generateTextSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
