@@ -114,7 +114,7 @@
     "esbuild": "^0.25.7",
     "langchain": "^0.3.30",
     "llamaindex": "^0.11.19",
-    "openai": "4.38.3",
+    "openai": "5.15.0",
     "together-ai": "^0.20.0",
     "ts-mocha": "^11.1.0"
   }
