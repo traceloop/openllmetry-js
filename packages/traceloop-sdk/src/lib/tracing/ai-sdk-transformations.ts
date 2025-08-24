@@ -24,7 +24,7 @@ const AI_PROMPT_TOOLS = "ai.prompt.tools";
 // Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
 const VENDOR_MAPPING: Record<string, string> = {
   openai: "OpenAI",
-  "azure-openai": "OpenAI",
+  "azure-openai": "Azure",
   anthropic: "Anthropic",
   cohere: "Cohere",
   mistral: "MistralAI",
@@ -36,7 +36,6 @@ const VENDOR_MAPPING: Record<string, string> = {
   perplexity: "Perplexity",
   "amazon-bedrock": "AWS",
   bedrock: "AWS",
-  azure: "Azure",
   google: "Google",
   vertex: "Google",
   ollama: "Ollama",

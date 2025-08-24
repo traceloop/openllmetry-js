@@ -927,7 +927,6 @@ describe("AI SDK Transformations", () => {
         "openai.completions",
         "openai.embeddings",
         "openai",
-        "azure-openai.chat",
       ];
 
       openaiProviders.forEach((provider) => {
@@ -938,6 +937,23 @@ describe("AI SDK Transformations", () => {
         transformAiSdkAttributes(attributes);
 
         assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+        assert.strictEqual(attributes["ai.model.provider"], undefined);
+      });
+    });
+
+    it("should transform azure openai provider to Azure system", () => {
+      const openaiProviders = [
+        "azure-openai",
+      ];
+
+      openaiProviders.forEach((provider) => {
+        const attributes = {
+          "ai.model.provider": provider,
+        };
+
+        transformAiSdkAttributes(attributes);
+
+        assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Azure");
         assert.strictEqual(attributes["ai.model.provider"], undefined);
       });
     });
@@ -1093,7 +1109,7 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
 
       // Check vendor transformation
-      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Azure");
 
       // Check original AI SDK attributes are removed
       assert.strictEqual(attributes["ai.response.object"], undefined);
