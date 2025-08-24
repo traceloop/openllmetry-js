@@ -942,9 +942,7 @@ describe("AI SDK Transformations", () => {
     });
 
     it("should transform azure openai provider to Azure system", () => {
-      const openaiProviders = [
-        "azure-openai",
-      ];
+      const openaiProviders = ["azure-openai"];
 
       openaiProviders.forEach((provider) => {
         const attributes = {
