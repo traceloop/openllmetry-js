@@ -17,24 +17,24 @@ const AI_MODEL_PROVIDER = "ai.model.provider";
 // Vendor mapping from AI SDK provider prefixes to standardized LLM_SYSTEM values
 // Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
 const VENDOR_MAPPING: Record<string, string> = {
-  "openai": "OpenAI",
-  "anthropic": "Anthropic", 
-  "cohere": "Cohere",
-  "mistral": "MistralAI",
-  "groq": "Groq",
-  "replicate": "Replicate",
-  "together": "TogetherAI",
-  "fireworks": "Fireworks",
-  "deepseek": "DeepSeek",
-  "perplexity": "Perplexity",
+  openai: "OpenAI",
+  anthropic: "Anthropic",
+  cohere: "Cohere",
+  mistral: "MistralAI",
+  groq: "Groq",
+  replicate: "Replicate",
+  together: "TogetherAI",
+  fireworks: "Fireworks",
+  deepseek: "DeepSeek",
+  perplexity: "Perplexity",
   "amazon-bedrock": "AWS",
-  "bedrock": "AWS", 
-  "azure": "Azure",
-  "google": "Google",
-  "vertex": "Google",
-  "ollama": "Ollama",
-  "huggingface": "HuggingFace",
-  "openrouter": "OpenRouter",
+  bedrock: "AWS",
+  azure: "Azure",
+  google: "Google",
+  vertex: "Google",
+  ollama: "Ollama",
+  huggingface: "HuggingFace",
+  openrouter: "OpenRouter",
 };
 
 export const transformAiSdkSpanName = (span: ReadableSpan): void => {
@@ -110,7 +110,7 @@ export const calculateTotalTokens = (attributes: Record<string, any>): void => {
 export const transformVendor = (attributes: Record<string, any>): void => {
   if (AI_MODEL_PROVIDER in attributes) {
     const vendor = attributes[AI_MODEL_PROVIDER];
-    
+
     // Find matching vendor prefix in mapping
     let mappedVendor = null;
     if (vendor && vendor.length > 0) {
@@ -121,7 +121,7 @@ export const transformVendor = (attributes: Record<string, any>): void => {
         }
       }
     }
-    
+
     attributes[SpanAttributes.LLM_SYSTEM] = mappedVendor || vendor;
     delete attributes[AI_MODEL_PROVIDER];
   }
