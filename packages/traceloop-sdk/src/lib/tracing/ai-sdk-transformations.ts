@@ -24,6 +24,7 @@ const AI_PROMPT_TOOLS = "ai.prompt.tools";
 // Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
 const VENDOR_MAPPING: Record<string, string> = {
   openai: "OpenAI",
+  "azure-openai": "OpenAI",
   anthropic: "Anthropic",
   cohere: "Cohere",
   mistral: "MistralAI",
@@ -51,9 +52,7 @@ export const transformAiSdkSpanName = (span: ReadableSpan): void => {
   }
 };
 
-const transformResponseText = (
-  attributes: Record<string, any>,
-): void => {
+const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
       attributes[AI_RESPONSE_TEXT];
@@ -62,9 +61,7 @@ const transformResponseText = (
   }
 };
 
-const transformResponseObject = (
-  attributes: Record<string, any>,
-): void => {
+const transformResponseObject = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_OBJECT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
       attributes[AI_RESPONSE_OBJECT];
@@ -73,22 +70,26 @@ const transformResponseObject = (
   }
 };
 
-const transformResponseToolCalls = (
-  attributes: Record<string, any>,
-): void => {
+const transformResponseToolCalls = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TOOL_CALLS in attributes) {
     try {
-      const toolCalls = JSON.parse(attributes[AI_RESPONSE_TOOL_CALLS] as string);
-      
+      const toolCalls = JSON.parse(
+        attributes[AI_RESPONSE_TOOL_CALLS] as string,
+      );
+
       attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
-      
+
       toolCalls.forEach((toolCall: any, index: number) => {
         if (toolCall.toolCallType === "function") {
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.name`] = toolCall.toolName;
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.arguments`] = toolCall.args;
+          attributes[
+            `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.name`
+          ] = toolCall.toolName;
+          attributes[
+            `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.arguments`
+          ] = toolCall.args;
         }
       });
-      
+
       delete attributes[AI_RESPONSE_TOOL_CALLS];
     } catch {
       // Ignore parsing errors
@@ -98,10 +99,11 @@ const transformResponseToolCalls = (
 
 const processMessageContent = (content: any): string => {
   if (Array.isArray(content)) {
-    const textItems = content.filter((item: any) => 
-      item && typeof item === 'object' && item.type === "text" && item.text
+    const textItems = content.filter(
+      (item: any) =>
+        item && typeof item === "object" && item.type === "text" && item.text,
     );
-    
+
     if (textItems.length > 0) {
       const joinedText = textItems.map((item: any) => item.text).join(" ");
       return joinedText;
@@ -109,22 +111,26 @@ const processMessageContent = (content: any): string => {
       return JSON.stringify(content);
     }
   }
-  
-  if (content && typeof content === 'object') {
+
+  if (content && typeof content === "object") {
     if (content.type === "text" && content.text) {
       return content.text;
     }
     return JSON.stringify(content);
   }
-  
+
   if (typeof content === "string") {
     try {
       const parsed = JSON.parse(content);
       if (Array.isArray(parsed)) {
-        const allTextItems = parsed.every((item: any) => 
-          item && typeof item === 'object' && item.type === "text" && item.text
+        const allTextItems = parsed.every(
+          (item: any) =>
+            item &&
+            typeof item === "object" &&
+            item.type === "text" &&
+            item.text,
         );
-        
+
         if (allTextItems && parsed.length > 0) {
           return parsed.map((item: any) => item.text).join(" ");
         } else {
@@ -134,42 +140,48 @@ const processMessageContent = (content: any): string => {
     } catch {
       // Ignore parsing errors
     }
-    
+
     return content;
   }
-  
+
   return String(content);
 };
 
-const transformTools = (
-  attributes: Record<string, any>,
-): void => {
+const transformTools = (attributes: Record<string, any>): void => {
   if (AI_PROMPT_TOOLS in attributes) {
     try {
       const tools = attributes[AI_PROMPT_TOOLS];
       if (Array.isArray(tools)) {
         tools.forEach((toolItem: any, index: number) => {
           let tool = toolItem;
-          if (typeof toolItem === 'string') {
+          if (typeof toolItem === "string") {
             try {
               tool = JSON.parse(toolItem);
             } catch {
               return;
             }
           }
-          
-          if (tool && typeof tool === 'object') {
+
+          if (tool && typeof tool === "object") {
             if (tool.name) {
-              attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`] = tool.name;
+              attributes[
+                `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
+              ] = tool.name;
             }
-            
+
             if (tool.description) {
-              attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`] = tool.description;
+              attributes[
+                `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`
+              ] = tool.description;
             }
-            
+
             if (tool.parameters) {
-              attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.parameters`] = 
-                typeof tool.parameters === 'string' ? tool.parameters : JSON.stringify(tool.parameters);
+              attributes[
+                `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.parameters`
+              ] =
+                typeof tool.parameters === "string"
+                  ? tool.parameters
+                  : JSON.stringify(tool.parameters);
             }
           }
         });
@@ -181,20 +193,18 @@ const transformTools = (
   }
 };
 
-const transformPrompts = (
-  attributes: Record<string, any>,
-): void => {
+const transformPrompts = (attributes: Record<string, any>): void => {
   if (AI_PROMPT_MESSAGES in attributes) {
     try {
       let jsonString = attributes[AI_PROMPT_MESSAGES] as string;
-      
+
       try {
         JSON.parse(jsonString);
       } catch {
         jsonString = jsonString.replace(/\\'/g, "'");
         jsonString = jsonString.replace(/\\\\\\\\/g, "\\\\");
       }
-      
+
       const messages = JSON.parse(jsonString);
       messages.forEach((msg: { role: string; content: any }, index: number) => {
         const processedContent = processMessageContent(msg.content);
@@ -211,8 +221,9 @@ const transformPrompts = (
   if (AI_PROMPT in attributes) {
     try {
       const promptData = JSON.parse(attributes[AI_PROMPT] as string);
-      if (promptData.prompt && typeof promptData.prompt === 'string') {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = promptData.prompt;
+      if (promptData.prompt && typeof promptData.prompt === "string") {
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+          promptData.prompt;
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
         delete attributes[AI_PROMPT];
       }
@@ -222,9 +233,7 @@ const transformPrompts = (
   }
 };
 
-const transformPromptTokens = (
-  attributes: Record<string, any>,
-): void => {
+const transformPromptTokens = (attributes: Record<string, any>): void => {
   if (AI_USAGE_PROMPT_TOKENS in attributes) {
     attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] =
       attributes[AI_USAGE_PROMPT_TOKENS];
@@ -232,9 +241,7 @@ const transformPromptTokens = (
   }
 };
 
-const transformCompletionTokens = (
-  attributes: Record<string, any>,
-): void => {
+const transformCompletionTokens = (attributes: Record<string, any>): void => {
   if (AI_USAGE_COMPLETION_TOKENS in attributes) {
     attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`] =
       attributes[AI_USAGE_COMPLETION_TOKENS];
