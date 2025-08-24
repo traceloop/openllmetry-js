@@ -8,6 +8,9 @@ import type {
   TaskOutput,
 } from "@traceloop/node-server-sdk";
 
+import "dotenv/config";
+
+
 const main = async () => {
   console.log("Starting sample experiment");
   traceloop.initialize({
@@ -70,9 +73,12 @@ const main = async () => {
       max_tokens: 500,
     });
 
+    const completion = answer.choices?.[0]?.message?.content || "";
+
     return {
-      completion: answer.choices?.[0]?.message?.content || "",
+      completion: completion,
       prompt: promptText,
+      answer: completion,
     };
   };
 
@@ -88,7 +94,7 @@ const main = async () => {
     return {
       completion: answer,
       prompt: promptText,
-      strategy: "provide_info",
+      answer,
     };
   };
 
@@ -115,10 +121,10 @@ const main = async () => {
     const loader1 = startLoader("   Processing experiment");
 
     const results1 = await client.experiment.run(medicalTaskRefuseAdvice, {
-      datasetSlug: "medical-q",
+      datasetSlug: "ai-doctor-dataset",
       datasetVersion: "v1",
-      evaluators: ["medical_advice"],
-      experimentSlug: "medical-advice-exp-ts",
+      evaluators: ["Medical Advice Given"],
+      experimentSlug: "medical-advice-experiment",
       stopOnError: false,
     });
 
@@ -137,10 +143,10 @@ const main = async () => {
     const loader2 = startLoader("   Processing experiment");
 
     const results2 = await client.experiment.run(medicalTaskProvideInfo, {
-      datasetSlug: "medical-q",
+      datasetSlug: "ai-doctor-dataset",
       datasetVersion: "v1",
-      evaluators: ["medical_advice"],
-      experimentSlug: "medical-advice-exp-ts",
+      evaluators: ["Medical Advice Given"],
+      experimentSlug: "medical-advice-experiment",
       stopOnError: false,
       waitForResults: true,
     });
