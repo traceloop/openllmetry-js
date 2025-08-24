@@ -10,7 +10,6 @@ import type {
 
 import "dotenv/config";
 
-
 const main = async () => {
   console.log("Starting sample experiment");
   traceloop.initialize({

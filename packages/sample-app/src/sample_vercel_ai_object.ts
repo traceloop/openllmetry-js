@@ -42,7 +42,7 @@ async function main() {
   const profile = await generatePersonProfile(
     "A talented software engineer from Paris who loves working with AI and machine learning, speaks multiple languages, and enjoys traveling.",
   );
-  
+
   console.log("Generated person profile:", JSON.stringify(profile, null, 2));
 }
 
