@@ -20,15 +20,13 @@ const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
 
-export const transformAiSdkSpanName = (span: ReadableSpan): void => {
-  // Unfortunately, the span name is not writable as this is not the intended behavior
-  // but it is a workaround to set the correct span name
+const transformAiSdkSpanName = (span: ReadableSpan): void => {
   if (span.name in HANDLED_SPAN_NAMES) {
     (span as any).name = HANDLED_SPAN_NAMES[span.name];
   }
 };
 
-export const transformResponseText = (
+const transformResponseText = (
   attributes: Record<string, any>,
 ): void => {
   if (AI_RESPONSE_TEXT in attributes) {
@@ -39,7 +37,7 @@ export const transformResponseText = (
   }
 };
 
-export const transformResponseObject = (
+const transformResponseObject = (
   attributes: Record<string, any>,
 ): void => {
   if (AI_RESPONSE_OBJECT in attributes) {
@@ -50,17 +48,15 @@ export const transformResponseObject = (
   }
 };
 
-export const transformResponseToolCalls = (
+const transformResponseToolCalls = (
   attributes: Record<string, any>,
 ): void => {
   if (AI_RESPONSE_TOOL_CALLS in attributes) {
     try {
       const toolCalls = JSON.parse(attributes[AI_RESPONSE_TOOL_CALLS] as string);
       
-      // Set role for completion
       attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
       
-      // Transform each tool call
       toolCalls.forEach((toolCall: any, index: number) => {
         if (toolCall.toolCallType === "function") {
           attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.name`] = toolCall.toolName;
@@ -70,76 +66,57 @@ export const transformResponseToolCalls = (
       
       delete attributes[AI_RESPONSE_TOOL_CALLS];
     } catch {
-      // Skip if JSON parsing fails
+      // Ignore parsing errors
     }
   }
 };
 
-// Helper function to unescape JSON escape sequences in strings
-const unescapeJsonString = (str: string): string => {
-  return str
-    .replace(/\\'/g, "'")     // Unescape single quotes
-    .replace(/\\"/g, '"')     // Unescape double quotes  
-    .replace(/\\n/g, '\n')    // Unescape newlines
-    .replace(/\\r/g, '\r')    // Unescape carriage returns
-    .replace(/\\t/g, '\t')    // Unescape tabs
-    .replace(/\\\\/g, '\\');  // Unescape backslashes
-};
-
-// Helper function to process message content
 const processMessageContent = (content: any): string => {
-  // If content is already a string, try to parse it as JSON
-  if (typeof content === 'string') {
-    try {
-      const parsed = JSON.parse(content);
-      if (Array.isArray(parsed)) {
-        // Check if ALL items are text items
-        const allTextItems = parsed.every((item: any) => 
-          item && typeof item === 'object' && item.type === "text" && item.text
-        );
-        
-        if (allTextItems && parsed.length > 0) {
-          // Extract and join text from all items
-          return parsed.map((item: any) => item.text).join(" ");
-        } else {
-          // Preserve original JSON string if mixed content or non-text items
-          return content;
-        }
-      }
-      // For parsed objects, return as JSON string
-      return JSON.stringify(parsed);
-    } catch {
-      // If parsing fails, it might be a simple string with escape sequences
-      // Try to unescape it
-      return unescapeJsonString(content);
-    }
-  }
-  
-  // If content is an array, always extract text items (filter out non-text)
   if (Array.isArray(content)) {
     const textItems = content.filter((item: any) => 
       item && typeof item === 'object' && item.type === "text" && item.text
     );
     
     if (textItems.length > 0) {
-      // Extract and join text from text items only
-      return textItems.map((item: any) => item.text).join(" ");
+      const joinedText = textItems.map((item: any) => item.text).join(" ");
+      return joinedText;
     } else {
-      // If no text items, preserve as JSON string
       return JSON.stringify(content);
     }
   }
   
-  // If content is an object, return as JSON string
   if (content && typeof content === 'object') {
+    if (content.type === "text" && content.text) {
+      return content.text;
+    }
     return JSON.stringify(content);
   }
   
-  // For other types, convert to string
+  if (typeof content === "string") {
+    try {
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        const allTextItems = parsed.every((item: any) => 
+          item && typeof item === 'object' && item.type === "text" && item.text
+        );
+        
+        if (allTextItems && parsed.length > 0) {
+          return parsed.map((item: any) => item.text).join(" ");
+        } else {
+          return content;
+        }
+      }
+    } catch {
+      // Ignore parsing errors
+    }
+    
+    return content;
+  }
+  
   return String(content);
 };
 
-export const transformTools = (
+const transformTools = (
   attributes: Record<string, any>,
 ): void => {
   if (AI_PROMPT_TOOLS in attributes) {
@@ -147,49 +124,53 @@ export const transformTools = (
       const tools = attributes[AI_PROMPT_TOOLS];
       if (Array.isArray(tools)) {
         tools.forEach((toolItem: any, index: number) => {
-          // Parse tool if it's a string (AI SDK format)
           let tool = toolItem;
           if (typeof toolItem === 'string') {
             try {
               tool = JSON.parse(toolItem);
-            } catch (e) {
-              return; // Skip invalid JSON
+            } catch {
+              return;
             }
           }
           
           if (tool && typeof tool === 'object') {
-            // Extract tool name
             if (tool.name) {
               attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`] = tool.name;
             }
             
-            // Extract tool description
             if (tool.description) {
               attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`] = tool.description;
             }
             
-            // Extract tool parameters/arguments
             if (tool.parameters) {
-              attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.arguments`] = 
+              attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.parameters`] = 
                 typeof tool.parameters === 'string' ? tool.parameters : JSON.stringify(tool.parameters);
             }
           }
         });
       }
       delete attributes[AI_PROMPT_TOOLS];
-    } catch (error) {
-      // Skip if processing fails
+    } catch {
+      // Ignore parsing errors
     }
   }
 };
 
-export const transformPrompts = (
+const transformPrompts = (
   attributes: Record<string, any>,
 ): void => {
-  // Handle ai.prompt.messages (array of messages)
   if (AI_PROMPT_MESSAGES in attributes) {
     try {
-      const messages = JSON.parse(attributes[AI_PROMPT_MESSAGES] as string);
+      let jsonString = attributes[AI_PROMPT_MESSAGES] as string;
+      
+      try {
+        JSON.parse(jsonString);
+      } catch {
+        jsonString = jsonString.replace(/\\'/g, "'");
+        jsonString = jsonString.replace(/\\\\\\\\/g, "\\\\");
+      }
+      
+      const messages = JSON.parse(jsonString);
       messages.forEach((msg: { role: string; content: any }, index: number) => {
         const processedContent = processMessageContent(msg.content);
         const contentKey = `${SpanAttributes.LLM_PROMPTS}.${index}.content`;
@@ -198,27 +179,25 @@ export const transformPrompts = (
       });
       delete attributes[AI_PROMPT_MESSAGES];
     } catch {
-      // Skip if JSON parsing fails
+      // Ignore parsing errors
     }
   }
 
-  // Handle ai.prompt (single prompt string)
   if (AI_PROMPT in attributes) {
     try {
       const promptData = JSON.parse(attributes[AI_PROMPT] as string);
       if (promptData.prompt && typeof promptData.prompt === 'string') {
-        const unescapedPrompt = unescapeJsonString(promptData.prompt);
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = unescapedPrompt;
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = promptData.prompt;
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
         delete attributes[AI_PROMPT];
       }
-    } catch (error) {
-      // Skip if JSON parsing fails
+    } catch {
+      // Ignore parsing errors
     }
   }
 };
 
-export const transformPromptTokens = (
+const transformPromptTokens = (
   attributes: Record<string, any>,
 ): void => {
   if (AI_USAGE_PROMPT_TOKENS in attributes) {
@@ -228,7 +207,7 @@ export const transformPromptTokens = (
   }
 };
 
-export const transformCompletionTokens = (
+const transformCompletionTokens = (
   attributes: Record<string, any>,
 ): void => {
   if (AI_USAGE_COMPLETION_TOKENS in attributes) {
@@ -238,7 +217,7 @@ export const transformCompletionTokens = (
   }
 };
 
-export const calculateTotalTokens = (attributes: Record<string, any>): void => {
+const calculateTotalTokens = (attributes: Record<string, any>): void => {
   const promptTokens = attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`];
   const completionTokens =
     attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
@@ -249,7 +228,7 @@ export const calculateTotalTokens = (attributes: Record<string, any>): void => {
   }
 };
 
-export const transformVendor = (attributes: Record<string, any>): void => {
+const transformVendor = (attributes: Record<string, any>): void => {
   if (AI_MODEL_PROVIDER in attributes) {
     const vendor = attributes[AI_MODEL_PROVIDER];
     if (vendor && (vendor.startsWith("openai") || vendor.includes("openai"))) {
@@ -275,7 +254,7 @@ export const transformAiSdkAttributes = (
   transformVendor(attributes);
 };
 
-export const shouldHandleSpan = (span: ReadableSpan): boolean => {
+const shouldHandleSpan = (span: ReadableSpan): boolean => {
   return span.name in HANDLED_SPAN_NAMES;
 };
 
