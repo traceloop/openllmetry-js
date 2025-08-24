@@ -14,6 +14,29 @@ const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 
+// Vendor mapping from AI SDK provider prefixes to standardized LLM_SYSTEM values
+// Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
+const VENDOR_MAPPING: Record<string, string> = {
+  "openai": "OpenAI",
+  "anthropic": "Anthropic", 
+  "cohere": "Cohere",
+  "mistral": "MistralAI",
+  "groq": "Groq",
+  "replicate": "Replicate",
+  "together": "TogetherAI",
+  "fireworks": "Fireworks",
+  "deepseek": "DeepSeek",
+  "perplexity": "Perplexity",
+  "amazon-bedrock": "AWS",
+  "bedrock": "AWS", 
+  "azure": "Azure",
+  "google": "Google",
+  "vertex": "Google",
+  "ollama": "Ollama",
+  "huggingface": "HuggingFace",
+  "openrouter": "OpenRouter",
+};
+
 export const transformAiSdkSpanName = (span: ReadableSpan): void => {
   // Unfortunately, the span name is not writable as this is not the intended behavior
   // but it is a workaround to set the correct span name
@@ -87,11 +110,19 @@ export const calculateTotalTokens = (attributes: Record<string, any>): void => {
 export const transformVendor = (attributes: Record<string, any>): void => {
   if (AI_MODEL_PROVIDER in attributes) {
     const vendor = attributes[AI_MODEL_PROVIDER];
-    if (vendor && vendor.startsWith("openai")) {
-      attributes[SpanAttributes.LLM_SYSTEM] = "OpenAI";
-    } else {
-      attributes[SpanAttributes.LLM_SYSTEM] = vendor;
+    
+    // Find matching vendor prefix in mapping
+    let mappedVendor = null;
+    if (vendor && vendor.length > 0) {
+      for (const prefix of Object.keys(VENDOR_MAPPING)) {
+        if (vendor.startsWith(prefix)) {
+          mappedVendor = VENDOR_MAPPING[prefix];
+          break;
+        }
+      }
     }
+    
+    attributes[SpanAttributes.LLM_SYSTEM] = mappedVendor || vendor;
     delete attributes[AI_MODEL_PROVIDER];
   }
 };

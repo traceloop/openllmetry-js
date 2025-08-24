@@ -373,7 +373,7 @@ describe("AI SDK Transformations", () => {
 
       transformVendor(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "anthropic");
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Anthropic");
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
 
