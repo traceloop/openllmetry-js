@@ -151,7 +151,10 @@ const processMessageContent = (content: any): string => {
   if (Array.isArray(content)) {
     const textItems = content.filter(
       (item: any) =>
-        item && typeof item === "object" && item.type === TYPE_TEXT && item.text,
+        item &&
+        typeof item === "object" &&
+        item.type === TYPE_TEXT &&
+        item.text,
     );
 
     if (textItems.length > 0) {
@@ -292,7 +295,8 @@ const transformPrompts = (attributes: Record<string, any>): void => {
     try {
       const promptData = JSON.parse(attributes[AI_PROMPT] as string);
       if (promptData.prompt && typeof promptData.prompt === "string") {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = promptData.prompt;
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+          promptData.prompt;
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = ROLE_USER;
 
         const inputMessage = {

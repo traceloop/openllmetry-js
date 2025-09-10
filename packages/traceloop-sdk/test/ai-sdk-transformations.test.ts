@@ -1488,7 +1488,8 @@ describe("AI SDK Transformations", () => {
         },
         {
           role: "user",
-          content: "Can you get the weather for this location using your tools?",
+          content:
+            "Can you get the weather for this location using your tools?",
         },
       ];
 
