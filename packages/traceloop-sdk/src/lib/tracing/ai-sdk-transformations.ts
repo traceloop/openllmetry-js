@@ -19,6 +19,10 @@ const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
+const TYPE_TEXT = "text";
+const TYPE_TOOL_CALL = "tool_call";
+const ROLE_ASSISTANT = "assistant";
+const ROLE_USER = "user";
 
 // Vendor mapping from AI SDK provider prefixes to standardized LLM_SYSTEM values
 // Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
@@ -55,14 +59,13 @@ const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
       attributes[AI_RESPONSE_TEXT];
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
+    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
 
-    // Add OpenTelemetry standard gen_ai.output.messages format
     const outputMessage = {
-      role: "assistant",
+      role: ROLE_ASSISTANT,
       parts: [
         {
-          type: "text",
+          type: TYPE_TEXT,
           content: attributes[AI_RESPONSE_TEXT],
         },
       ],
@@ -79,14 +82,13 @@ const transformResponseObject = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_OBJECT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
       attributes[AI_RESPONSE_OBJECT];
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
+    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
 
-    // Add OpenTelemetry standard gen_ai.output.messages format
     const outputMessage = {
-      role: "assistant",
+      role: ROLE_ASSISTANT,
       parts: [
         {
-          type: "text",
+          type: TYPE_TEXT,
           content: attributes[AI_RESPONSE_OBJECT],
         },
       ],
@@ -106,7 +108,7 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
         attributes[AI_RESPONSE_TOOL_CALLS] as string,
       );
 
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
+      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
 
       const toolCallParts: any[] = [];
       toolCalls.forEach((toolCall: any, index: number) => {
@@ -118,9 +120,8 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
             `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.arguments`
           ] = toolCall.args;
 
-          // Add tool calls to parts for OpenTelemetry format
           toolCallParts.push({
-            type: "tool_call",
+            type: TYPE_TOOL_CALL,
             tool_call: {
               name: toolCall.toolName,
               arguments: toolCall.args,
@@ -129,10 +130,9 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
         }
       });
 
-      // Add OpenTelemetry standard gen_ai.output.messages format for tool calls
       if (toolCallParts.length > 0) {
         const outputMessage = {
-          role: "assistant",
+          role: ROLE_ASSISTANT,
           parts: toolCallParts,
         };
         attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
@@ -151,7 +151,7 @@ const processMessageContent = (content: any): string => {
   if (Array.isArray(content)) {
     const textItems = content.filter(
       (item: any) =>
-        item && typeof item === "object" && item.type === "text" && item.text,
+        item && typeof item === "object" && item.type === TYPE_TEXT && item.text,
     );
 
     if (textItems.length > 0) {
@@ -163,7 +163,7 @@ const processMessageContent = (content: any): string => {
   }
 
   if (content && typeof content === "object") {
-    if (content.type === "text" && content.text) {
+    if (content.type === TYPE_TEXT && content.text) {
       return content.text;
     }
     return JSON.stringify(content);
@@ -177,7 +177,7 @@ const processMessageContent = (content: any): string => {
           (item: any) =>
             item &&
             typeof item === "object" &&
-            item.type === "text" &&
+            item.type === TYPE_TEXT &&
             item.text,
         );
 
@@ -269,7 +269,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
           role: msg.role,
           parts: [
             {
-              type: "text",
+              type: TYPE_TEXT,
               content: processedContent,
             },
           ],
@@ -292,16 +292,14 @@ const transformPrompts = (attributes: Record<string, any>): void => {
     try {
       const promptData = JSON.parse(attributes[AI_PROMPT] as string);
       if (promptData.prompt && typeof promptData.prompt === "string") {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
-          promptData.prompt;
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = promptData.prompt;
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = ROLE_USER;
 
-        // Add OpenTelemetry standard gen_ai.input.messages format
         const inputMessage = {
-          role: "user",
+          role: ROLE_USER,
           parts: [
             {
-              type: "text",
+              type: TYPE_TEXT,
               content: promptData.prompt,
             },
           ],
