@@ -24,6 +24,7 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
+import { createSpanProcessor } from "@traceloop/node-server-sdk";
 
 import type * as OpenAIModule from "openai";
 import { toFile } from "openai";
@@ -44,7 +45,13 @@ Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+    spanProcessors: [
+      new SimpleSpanProcessor(memoryExporter),
+      createSpanProcessor({
+        exporter: memoryExporter,
+        disableBatch: true,
+      }),
+    ],
   });
   let instrumentation: OpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -877,5 +884,49 @@ describe("Test OpenAI instrumentation", async function () {
       dalle3Span.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
       4160,
     );
+  });
+
+  it("should set LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES attributes for chat completions", async () => {
+    const result = await openai.chat.completions.create({
+      messages: [
+        { role: "user", content: "Tell me a joke about OpenTelemetry" },
+      ],
+      model: "gpt-3.5-turbo",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const completionSpan = spans.find((span) => span.name === "openai.chat");
+
+    assert.ok(result);
+    assert.ok(completionSpan);
+
+    // Verify LLM_INPUT_MESSAGES attribute exists and is valid JSON
+    assert.ok(completionSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES]);
+    const inputMessages = JSON.parse(
+      completionSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(inputMessages));
+    assert.strictEqual(inputMessages.length, 1);
+
+    // Check user message structure
+    assert.strictEqual(inputMessages[0].role, "user");
+    assert.ok(Array.isArray(inputMessages[0].parts));
+    assert.strictEqual(inputMessages[0].parts[0].type, "text");
+    assert.strictEqual(inputMessages[0].parts[0].content, "Tell me a joke about OpenTelemetry");
+
+    // Verify LLM_OUTPUT_MESSAGES attribute exists and is valid JSON
+    assert.ok(completionSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES]);
+    const outputMessages = JSON.parse(
+      completionSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(outputMessages));
+    assert.strictEqual(outputMessages.length, 1);
+
+    // Check assistant response structure
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.ok(Array.isArray(outputMessages[0].parts));
+    assert.strictEqual(outputMessages[0].parts[0].type, "text");
+    assert.ok(outputMessages[0].parts[0].content);
+    assert.ok(typeof outputMessages[0].parts[0].content === "string");
   });
 });

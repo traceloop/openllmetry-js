@@ -52,6 +52,7 @@
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
+    "@traceloop/node-server-sdk": "workspace:*",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.0.15",
     "@types/node-fetch": "^2.6.13",
