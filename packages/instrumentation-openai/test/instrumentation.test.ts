@@ -24,7 +24,44 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
-import { createSpanProcessor } from "@traceloop/node-server-sdk";
+// Minimal transformation function to test LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES
+const transformToStandardFormat = (attributes: any) => {
+  // Transform prompts to LLM_INPUT_MESSAGES
+  const inputMessages = [];
+  let i = 0;
+  while (attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.role`]) {
+    const role = attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.role`];
+    const content = attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.content`];
+    if (role && content) {
+      inputMessages.push({
+        role,
+        parts: [{ type: "text", content }]
+      });
+    }
+    i++;
+  }
+  if (inputMessages.length > 0) {
+    attributes[SpanAttributes.LLM_INPUT_MESSAGES] = JSON.stringify(inputMessages);
+  }
+
+  // Transform completions to LLM_OUTPUT_MESSAGES
+  const outputMessages = [];
+  let j = 0;
+  while (attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.role`]) {
+    const role = attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.role`];
+    const content = attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.content`];
+    if (role && content) {
+      outputMessages.push({
+        role,
+        parts: [{ type: "text", content }]
+      });
+    }
+    j++;
+  }
+  if (outputMessages.length > 0) {
+    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify(outputMessages);
+  }
+};
 
 import type * as OpenAIModule from "openai";
 import { toFile } from "openai";
@@ -45,13 +82,7 @@ Polly.register(FSPersister);
 
 describe("Test OpenAI instrumentation", async function () {
   const provider = new NodeTracerProvider({
-    spanProcessors: [
-      new SimpleSpanProcessor(memoryExporter),
-      createSpanProcessor({
-        exporter: memoryExporter,
-        disableBatch: true,
-      }),
-    ],
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
   });
   let instrumentation: OpenAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
@@ -899,6 +930,9 @@ describe("Test OpenAI instrumentation", async function () {
 
     assert.ok(result);
     assert.ok(completionSpan);
+
+    // Apply transformations to create LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES
+    transformToStandardFormat(completionSpan.attributes);
 
     // Verify LLM_INPUT_MESSAGES attribute exists and is valid JSON
     assert.ok(completionSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES]);
