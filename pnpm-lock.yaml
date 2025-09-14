@@ -448,9 +448,6 @@ importers:
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
         version: 6.0.6(supports-color@10.0.0)
-      '@traceloop/node-server-sdk':
-        specifier: workspace:*
-        version: link:../traceloop-sdk
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
