@@ -35,13 +35,14 @@ const transformToStandardFormat = (attributes: any) => {
     if (role && content) {
       inputMessages.push({
         role,
-        parts: [{ type: "text", content }]
+        parts: [{ type: "text", content }],
       });
     }
     i++;
   }
   if (inputMessages.length > 0) {
-    attributes[SpanAttributes.LLM_INPUT_MESSAGES] = JSON.stringify(inputMessages);
+    attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
+      JSON.stringify(inputMessages);
   }
 
   // Transform completions to LLM_OUTPUT_MESSAGES
@@ -49,17 +50,19 @@ const transformToStandardFormat = (attributes: any) => {
   let j = 0;
   while (attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.role`]) {
     const role = attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.role`];
-    const content = attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.content`];
+    const content =
+      attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.content`];
     if (role && content) {
       outputMessages.push({
         role,
-        parts: [{ type: "text", content }]
+        parts: [{ type: "text", content }],
       });
     }
     j++;
   }
   if (outputMessages.length > 0) {
-    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify(outputMessages);
+    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] =
+      JSON.stringify(outputMessages);
   }
 };
 
@@ -946,7 +949,10 @@ describe("Test OpenAI instrumentation", async function () {
     assert.strictEqual(inputMessages[0].role, "user");
     assert.ok(Array.isArray(inputMessages[0].parts));
     assert.strictEqual(inputMessages[0].parts[0].type, "text");
-    assert.strictEqual(inputMessages[0].parts[0].content, "Tell me a joke about OpenTelemetry");
+    assert.strictEqual(
+      inputMessages[0].parts[0].content,
+      "Tell me a joke about OpenTelemetry",
+    );
 
     // Verify LLM_OUTPUT_MESSAGES attribute exists and is valid JSON
     assert.ok(completionSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES]);
