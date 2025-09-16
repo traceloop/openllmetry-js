@@ -14,6 +14,7 @@ exports.default = [
   bundle({
     plugins: [
       typescript.default({
+        tsconfig: './tsconfig.build.json',
         exclude: ["test/**/*", "tests/**/*"],
       }),
       json.default(),
@@ -34,6 +35,7 @@ exports.default = [
   bundle({
     plugins: [
       dts.default({
+        tsconfig: './tsconfig.build.json',
         exclude: ["test/**/*", "tests/**/*"],
       }),
     ],
