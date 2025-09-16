@@ -1,7 +1,9 @@
 import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import {ATTR_GEN_AI_INPUT_MESSAGES, ATTR_GEN_AI_OUTPUT_MESSAGES} from "@opentelemetry/semantic-conventions/experimental";
-
+import {
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+} from "@opentelemetry/semantic-conventions/build/src/experimental_attributes";
 
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
@@ -72,9 +74,7 @@ const transformResponseText = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
-      outputMessage,
-    ]);
+    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([outputMessage]);
 
     delete attributes[AI_RESPONSE_TEXT];
   }
@@ -95,9 +95,7 @@ const transformResponseObject = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
-      outputMessage,
-    ]);
+    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([outputMessage]);
 
     delete attributes[AI_RESPONSE_OBJECT];
   }
@@ -283,8 +281,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
       // Set the OpenTelemetry standard input messages attribute
       if (inputMessages.length > 0) {
-        attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
-          JSON.stringify(inputMessages);
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify(inputMessages);
       }
 
       delete attributes[AI_PROMPT_MESSAGES];
@@ -310,9 +307,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
             },
           ],
         };
-        attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify([
-          inputMessage,
-        ]);
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify([inputMessage]);
 
         delete attributes[AI_PROMPT];
       }

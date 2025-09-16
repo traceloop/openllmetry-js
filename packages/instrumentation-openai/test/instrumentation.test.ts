@@ -24,7 +24,7 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
-import {ATTR_GEN_AI_INPUT_MESSAGES, ATTR_GEN_AI_OUTPUT_MESSAGES} from "@opentelemetry/semantic-conventions/experimental";
+import {ATTR_GEN_AI_INPUT_MESSAGES, ATTR_GEN_AI_OUTPUT_MESSAGES} from "@opentelemetry/semantic-conventions/build/src/experimental_attributes";
 
 
 // Minimal transformation function to test ATTR_GEN_AI_INPUT_MESSAGES and ATTR_GEN_AI_OUTPUT_MESSAGES
