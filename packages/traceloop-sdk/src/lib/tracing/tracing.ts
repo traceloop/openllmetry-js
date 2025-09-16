@@ -1,4 +1,5 @@
-import { trace, createContextKey, Context } from "@opentelemetry/api";
+import { trace, createContextKey } from "@opentelemetry/api";
+import { Context } from "@opentelemetry/api/build/src/context/types";
 
 const TRACER_NAME = "@traceloop/node-server-sdk";
 export const WORKFLOW_NAME_KEY = createContextKey("workflow_name");
