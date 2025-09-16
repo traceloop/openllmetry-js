@@ -1,10 +1,10 @@
 import * as assert from "assert";
 import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-// OpenTelemetry semantic convention attributes for gen AI
-const ATTR_GEN_AI_INPUT_MESSAGES = "gen_ai.input.messages";
-const ATTR_GEN_AI_OUTPUT_MESSAGES = "gen_ai.output.messages";
-
+import {
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+} from "@opentelemetry/semantic-conventions/build/src/experimental_attributes";
 
 import {
   transformAiSdkAttributes,
@@ -1205,9 +1205,7 @@ describe("AI SDK Transformations", () => {
         "string",
       );
 
-      const inputMessages = JSON.parse(
-        attributes[ATTR_GEN_AI_INPUT_MESSAGES],
-      );
+      const inputMessages = JSON.parse(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
       assert.strictEqual(inputMessages.length, 4);
 
       // Check system message
@@ -1505,9 +1503,7 @@ describe("AI SDK Transformations", () => {
       transformAiSdkAttributes(attributes);
 
       // Check input messages transformation
-      const inputMessages = JSON.parse(
-        attributes[ATTR_GEN_AI_INPUT_MESSAGES],
-      );
+      const inputMessages = JSON.parse(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
       assert.strictEqual(inputMessages.length, 4);
 
       // System message should be preserved

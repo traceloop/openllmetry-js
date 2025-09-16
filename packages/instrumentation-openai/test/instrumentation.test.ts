@@ -24,8 +24,10 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
-import {ATTR_GEN_AI_INPUT_MESSAGES, ATTR_GEN_AI_OUTPUT_MESSAGES} from "@opentelemetry/semantic-conventions/incubating";
-
+import {
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+} from "@opentelemetry/semantic-conventions/build/src/experimental_attributes";
 
 // Minimal transformation function to test ATTR_GEN_AI_INPUT_MESSAGES and ATTR_GEN_AI_OUTPUT_MESSAGES
 const transformToStandardFormat = (attributes: any) => {
@@ -44,8 +46,7 @@ const transformToStandardFormat = (attributes: any) => {
     i++;
   }
   if (inputMessages.length > 0) {
-    attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
-      JSON.stringify(inputMessages);
+    attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify(inputMessages);
   }
 
   // Transform completions to SemanticAttributes.GEN_AI_OUTPUT_MESSAGES
@@ -64,8 +65,7 @@ const transformToStandardFormat = (attributes: any) => {
     j++;
   }
   if (outputMessages.length > 0) {
-    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] =
-      JSON.stringify(outputMessages);
+    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify(outputMessages);
   }
 };
 
