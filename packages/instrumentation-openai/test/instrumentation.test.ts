@@ -24,9 +24,14 @@ import {
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
-// Minimal transformation function to test LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES
+import {ATTR_GEN_AI_INPUT_MESSAGES} from "@opentelemetry/semantic-conventions";
+import {ATTR_GEN_AI_OUTPUT_MESSAGES} from "@opentelemetry/semantic-conventions";
+
+
+
+// Minimal transformation function to test ATTR_GEN_AI_INPUT_MESSAGES and ATTR_GEN_AI_OUTPUT_MESSAGES
 const transformToStandardFormat = (attributes: any) => {
-  // Transform prompts to LLM_INPUT_MESSAGES
+  // Transform prompts to ATTR_GEN_AI_INPUT_MESSAGES
   const inputMessages = [];
   let i = 0;
   while (attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.role`]) {
@@ -41,11 +46,11 @@ const transformToStandardFormat = (attributes: any) => {
     i++;
   }
   if (inputMessages.length > 0) {
-    attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
+    attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
       JSON.stringify(inputMessages);
   }
 
-  // Transform completions to LLM_OUTPUT_MESSAGES
+  // Transform completions to SemanticAttributes.GEN_AI_OUTPUT_MESSAGES
   const outputMessages = [];
   let j = 0;
   while (attributes[`${SpanAttributes.LLM_COMPLETIONS}.${j}.role`]) {
@@ -61,7 +66,7 @@ const transformToStandardFormat = (attributes: any) => {
     j++;
   }
   if (outputMessages.length > 0) {
-    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] =
+    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] =
       JSON.stringify(outputMessages);
   }
 };
@@ -920,7 +925,7 @@ describe("Test OpenAI instrumentation", async function () {
     );
   });
 
-  it("should set LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES attributes for chat completions", async () => {
+  it("should set ATTR_GEN_AI_INPUT_MESSAGES and ATTR_GEN_AI_OUTPUT_MESSAGES attributes for chat completions", async () => {
     const result = await openai.chat.completions.create({
       messages: [
         { role: "user", content: "Tell me a joke about OpenTelemetry" },
@@ -934,13 +939,13 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
 
-    // Apply transformations to create LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES
+    // Apply transformations to create ATTR_GEN_AI_INPUT_MESSAGES and ATTR_GEN_AI_OUTPUT_MESSAGES
     transformToStandardFormat(completionSpan.attributes);
 
-    // Verify LLM_INPUT_MESSAGES attribute exists and is valid JSON
-    assert.ok(completionSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES]);
+    // Verify ATTR_GEN_AI_INPUT_MESSAGES attribute exists and is valid JSON
+    assert.ok(completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
     const inputMessages = JSON.parse(
-      completionSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES] as string,
+      completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
     assert.ok(Array.isArray(inputMessages));
     assert.strictEqual(inputMessages.length, 1);
@@ -954,10 +959,10 @@ describe("Test OpenAI instrumentation", async function () {
       "Tell me a joke about OpenTelemetry",
     );
 
-    // Verify LLM_OUTPUT_MESSAGES attribute exists and is valid JSON
-    assert.ok(completionSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES]);
+    // Verify ATTR_GEN_AI_OUTPUT_MESSAGES attribute exists and is valid JSON
+    assert.ok(completionSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
     const outputMessages = JSON.parse(
-      completionSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] as string,
+      completionSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
     assert.ok(Array.isArray(outputMessages));
     assert.strictEqual(outputMessages.length, 1);
