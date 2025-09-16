@@ -1,5 +1,7 @@
 import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { SemanticAttributes } from "@opentelemetry/semantic-conventions";
+
 
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
@@ -70,7 +72,7 @@ const transformResponseText = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+    attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
 
@@ -93,7 +95,7 @@ const transformResponseObject = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+    attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
 
@@ -135,7 +137,7 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
           role: ROLE_ASSISTANT,
           parts: toolCallParts,
         };
-        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+        attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
           outputMessage,
         ]);
       }
@@ -281,7 +283,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
       // Set the OpenTelemetry standard input messages attribute
       if (inputMessages.length > 0) {
-        attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
+        attributes[SemanticAttributes.GEN_AI_INPUT_MESSAGES] =
           JSON.stringify(inputMessages);
       }
 
@@ -308,7 +310,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
             },
           ],
         };
-        attributes[SpanAttributes.LLM_INPUT_MESSAGES] = JSON.stringify([
+        attributes[SemanticAttributes.GEN_AI_INPUT_MESSAGES] = JSON.stringify([
           inputMessage,
         ]);
 

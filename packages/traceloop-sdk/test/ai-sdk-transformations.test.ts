@@ -1,6 +1,9 @@
 import * as assert from "assert";
 import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { SemanticAttributes } from "@opentelemetry/semantic-conventions";
+
+
 import {
   transformAiSdkAttributes,
   transformAiSdkSpan,
@@ -1196,12 +1199,12 @@ describe("AI SDK Transformations", () => {
 
       // Check that gen_ai.input.messages is properly set
       assert.strictEqual(
-        typeof attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        typeof attributes[SemanticAttributes.GEN_AI_INPUT_MESSAGES],
         "string",
       );
 
       const inputMessages = JSON.parse(
-        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        attributes[SemanticAttributes.GEN_AI_INPUT_MESSAGES],
       );
       assert.strictEqual(inputMessages.length, 4);
 
@@ -1243,12 +1246,12 @@ describe("AI SDK Transformations", () => {
 
       // Check that gen_ai.output.messages is properly set
       assert.strictEqual(
-        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        typeof attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
         "string",
       );
 
       const outputMessages = JSON.parse(
-        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
       );
       assert.strictEqual(outputMessages.length, 1);
       assert.strictEqual(outputMessages[0].role, "assistant");
@@ -1284,12 +1287,12 @@ describe("AI SDK Transformations", () => {
 
       // Check that gen_ai.output.messages is properly set
       assert.strictEqual(
-        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        typeof attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
         "string",
       );
 
       const outputMessages = JSON.parse(
-        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
       );
       assert.strictEqual(outputMessages.length, 1);
       assert.strictEqual(outputMessages[0].role, "assistant");
@@ -1383,11 +1386,11 @@ describe("AI SDK Transformations", () => {
 
       // Check input messages
       assert.strictEqual(
-        typeof attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        typeof attributes[SemanticAttributes.GEN_AI_INPUT_MESSAGES],
         "string",
       );
       const parsedInputMessages = JSON.parse(
-        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        attributes[SemanticAttributes.GEN_AI_INPUT_MESSAGES],
       );
       assert.strictEqual(parsedInputMessages.length, 2);
       assert.strictEqual(parsedInputMessages[0].role, "system");
@@ -1403,11 +1406,11 @@ describe("AI SDK Transformations", () => {
 
       // Check output messages (tool calls)
       assert.strictEqual(
-        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        typeof attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
         "string",
       );
       const parsedOutputMessages = JSON.parse(
-        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
       );
       assert.strictEqual(parsedOutputMessages.length, 1);
       assert.strictEqual(parsedOutputMessages[0].role, "assistant");
@@ -1452,12 +1455,12 @@ describe("AI SDK Transformations", () => {
 
       // Check that gen_ai.output.messages is properly set
       assert.strictEqual(
-        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        typeof attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
         "string",
       );
 
       const outputMessages = JSON.parse(
-        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        attributes[SemanticAttributes.GEN_AI_OUTPUT_MESSAGES],
       );
       assert.strictEqual(outputMessages.length, 1);
       assert.strictEqual(outputMessages[0].role, "assistant");
@@ -1501,7 +1504,7 @@ describe("AI SDK Transformations", () => {
 
       // Check input messages transformation
       const inputMessages = JSON.parse(
-        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        attributes[SemanticAttributes.GEN_AI_INPUT_MESSAGES],
       );
       assert.strictEqual(inputMessages.length, 4);
 
