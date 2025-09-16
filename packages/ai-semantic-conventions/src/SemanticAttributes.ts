@@ -22,6 +22,8 @@ export const SpanAttributes = {
   LLM_REQUEST_TOP_P: "gen_ai.request.top_p",
   LLM_PROMPTS: "gen_ai.prompt",
   LLM_COMPLETIONS: "gen_ai.completion",
+  LLM_INPUT_MESSAGES: "gen_ai.input.messages",
+  LLM_OUTPUT_MESSAGES: "gen_ai.output.messages",
   LLM_RESPONSE_MODEL: "gen_ai.response.model",
   LLM_USAGE_PROMPT_TOKENS: "gen_ai.usage.prompt_tokens",
   LLM_USAGE_COMPLETION_TOKENS: "gen_ai.usage.completion_tokens",

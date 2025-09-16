@@ -19,6 +19,10 @@ const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
+const TYPE_TEXT = "text";
+const TYPE_TOOL_CALL = "tool_call";
+const ROLE_ASSISTANT = "assistant";
+const ROLE_USER = "user";
 
 // Vendor mapping from AI SDK provider prefixes to standardized LLM_SYSTEM values
 // Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
@@ -55,7 +59,21 @@ const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
       attributes[AI_RESPONSE_TEXT];
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
+    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
+
+    const outputMessage = {
+      role: ROLE_ASSISTANT,
+      parts: [
+        {
+          type: TYPE_TEXT,
+          content: attributes[AI_RESPONSE_TEXT],
+        },
+      ],
+    };
+    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+      outputMessage,
+    ]);
+
     delete attributes[AI_RESPONSE_TEXT];
   }
 };
@@ -64,7 +82,21 @@ const transformResponseObject = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_OBJECT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
       attributes[AI_RESPONSE_OBJECT];
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
+    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
+
+    const outputMessage = {
+      role: ROLE_ASSISTANT,
+      parts: [
+        {
+          type: TYPE_TEXT,
+          content: attributes[AI_RESPONSE_OBJECT],
+        },
+      ],
+    };
+    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+      outputMessage,
+    ]);
+
     delete attributes[AI_RESPONSE_OBJECT];
   }
 };
@@ -76,8 +108,9 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
         attributes[AI_RESPONSE_TOOL_CALLS] as string,
       );
 
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = "assistant";
+      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
 
+      const toolCallParts: any[] = [];
       toolCalls.forEach((toolCall: any, index: number) => {
         if (toolCall.toolCallType === "function") {
           attributes[
@@ -86,8 +119,26 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
           attributes[
             `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.arguments`
           ] = toolCall.args;
+
+          toolCallParts.push({
+            type: TYPE_TOOL_CALL,
+            tool_call: {
+              name: toolCall.toolName,
+              arguments: toolCall.args,
+            },
+          });
         }
       });
+
+      if (toolCallParts.length > 0) {
+        const outputMessage = {
+          role: ROLE_ASSISTANT,
+          parts: toolCallParts,
+        };
+        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+          outputMessage,
+        ]);
+      }
 
       delete attributes[AI_RESPONSE_TOOL_CALLS];
     } catch {
@@ -100,7 +151,10 @@ const processMessageContent = (content: any): string => {
   if (Array.isArray(content)) {
     const textItems = content.filter(
       (item: any) =>
-        item && typeof item === "object" && item.type === "text" && item.text,
+        item &&
+        typeof item === "object" &&
+        item.type === TYPE_TEXT &&
+        item.text,
     );
 
     if (textItems.length > 0) {
@@ -112,7 +166,7 @@ const processMessageContent = (content: any): string => {
   }
 
   if (content && typeof content === "object") {
-    if (content.type === "text" && content.text) {
+    if (content.type === TYPE_TEXT && content.text) {
       return content.text;
     }
     return JSON.stringify(content);
@@ -126,7 +180,7 @@ const processMessageContent = (content: any): string => {
           (item: any) =>
             item &&
             typeof item === "object" &&
-            item.type === "text" &&
+            item.type === TYPE_TEXT &&
             item.text,
         );
 
@@ -205,12 +259,32 @@ const transformPrompts = (attributes: Record<string, any>): void => {
       }
 
       const messages = JSON.parse(jsonString);
+      const inputMessages: any[] = [];
+
       messages.forEach((msg: { role: string; content: any }, index: number) => {
         const processedContent = processMessageContent(msg.content);
         const contentKey = `${SpanAttributes.LLM_PROMPTS}.${index}.content`;
         attributes[contentKey] = processedContent;
         attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
+
+        // Add to OpenTelemetry standard gen_ai.input.messages format
+        inputMessages.push({
+          role: msg.role,
+          parts: [
+            {
+              type: TYPE_TEXT,
+              content: processedContent,
+            },
+          ],
+        });
       });
+
+      // Set the OpenTelemetry standard input messages attribute
+      if (inputMessages.length > 0) {
+        attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
+          JSON.stringify(inputMessages);
+      }
+
       delete attributes[AI_PROMPT_MESSAGES];
     } catch {
       // Ignore parsing errors
@@ -223,7 +297,21 @@ const transformPrompts = (attributes: Record<string, any>): void => {
       if (promptData.prompt && typeof promptData.prompt === "string") {
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
           promptData.prompt;
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = ROLE_USER;
+
+        const inputMessage = {
+          role: ROLE_USER,
+          parts: [
+            {
+              type: TYPE_TEXT,
+              content: promptData.prompt,
+            },
+          ],
+        };
+        attributes[SpanAttributes.LLM_INPUT_MESSAGES] = JSON.stringify([
+          inputMessage,
+        ]);
+
         delete attributes[AI_PROMPT];
       }
     } catch {
