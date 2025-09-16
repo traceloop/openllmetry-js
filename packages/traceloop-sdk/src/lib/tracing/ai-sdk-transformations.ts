@@ -1,7 +1,6 @@
 import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import {ATTR_GEN_AI_INPUT_MESSAGES} from "@opentelemetry/semantic-conventions";
-import {ATTR_GEN_AI_OUTPUT_MESSAGES} from "@opentelemetry/semantic-conventions";
+import {ATTR_GEN_AI_INPUT_MESSAGES, ATTR_GEN_AI_OUTPUT_MESSAGES} from "@opentelemetry/semantic-conventions/experimental";
 
 
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
