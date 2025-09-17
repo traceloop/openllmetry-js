@@ -19,6 +19,7 @@ import * as assert from "assert";
 import { openai as vercel_openai } from "@ai-sdk/openai";
 import { google as vercel_google } from "@ai-sdk/google";
 import { generateText } from "ai";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 import * as traceloop from "../src";
 
@@ -215,5 +216,62 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(generateTextSpan.attributes["gen_ai.usage.prompt_tokens"]);
     assert.ok(generateTextSpan.attributes["gen_ai.usage.completion_tokens"]);
     assert.ok(generateTextSpan.attributes["llm.usage.total_tokens"]);
+  });
+
+  it("should set LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES attributes for chat completions", async () => {
+    const result = await traceloop.withWorkflow(
+      { name: "test_transformations_workflow" },
+      async () => {
+        return await generateText({
+          messages: [
+            { role: "user", content: "What is 2+2? Give a brief answer." },
+          ],
+          model: vercel_openai("gpt-3.5-turbo"),
+          experimental_telemetry: { isEnabled: true },
+        });
+      },
+    );
+
+    assert.ok(result);
+    assert.ok(result.text);
+
+    const spans = memoryExporter.getFinishedSpans();
+    const aiSdkSpan = spans.find((span) =>
+      span.name.startsWith("ai.generateText"),
+    );
+
+    assert.ok(aiSdkSpan);
+
+    // Verify LLM_INPUT_MESSAGES attribute exists and is valid JSON
+    assert.ok(aiSdkSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES]);
+    const inputMessages = JSON.parse(
+      aiSdkSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(inputMessages));
+    assert.strictEqual(inputMessages.length, 1);
+
+    // Check user message structure
+    assert.strictEqual(inputMessages[0].role, "user");
+    assert.ok(Array.isArray(inputMessages[0].parts));
+    assert.strictEqual(inputMessages[0].parts[0].type, "text");
+    assert.strictEqual(
+      inputMessages[0].parts[0].content,
+      "What is 2+2? Give a brief answer.",
+    );
+
+    // Verify LLM_OUTPUT_MESSAGES attribute exists and is valid JSON
+    assert.ok(aiSdkSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES]);
+    const outputMessages = JSON.parse(
+      aiSdkSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(outputMessages));
+    assert.strictEqual(outputMessages.length, 1);
+
+    // Check assistant response structure
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.ok(Array.isArray(outputMessages[0].parts));
+    assert.strictEqual(outputMessages[0].parts[0].type, "text");
+    assert.ok(outputMessages[0].parts[0].content);
+    assert.ok(typeof outputMessages[0].parts[0].content === "string");
   });
 });

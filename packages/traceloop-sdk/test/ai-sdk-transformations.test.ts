@@ -1180,6 +1180,361 @@ describe("AI SDK Transformations", () => {
     });
   });
 
+  describe("transformAiSdkAttributes - gen_ai input/output messages", () => {
+    it("should create gen_ai.input.messages for conversation with text", () => {
+      const messages = [
+        { role: "system", content: "You are a helpful assistant" },
+        { role: "user", content: "Hello, how are you?" },
+        { role: "assistant", content: "I'm doing well, thank you!" },
+        { role: "user", content: "Can you help me with something?" },
+      ];
+      const attributes = {
+        "ai.prompt.messages": JSON.stringify(messages),
+      };
+
+      transformAiSdkAttributes(attributes);
+
+      // Check that gen_ai.input.messages is properly set
+      assert.strictEqual(
+        typeof attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        "string",
+      );
+
+      const inputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+      );
+      assert.strictEqual(inputMessages.length, 4);
+
+      // Check system message
+      assert.strictEqual(inputMessages[0].role, "system");
+      assert.strictEqual(inputMessages[0].parts.length, 1);
+      assert.strictEqual(inputMessages[0].parts[0].type, "text");
+      assert.strictEqual(
+        inputMessages[0].parts[0].content,
+        "You are a helpful assistant",
+      );
+
+      // Check user messages
+      assert.strictEqual(inputMessages[1].role, "user");
+      assert.strictEqual(
+        inputMessages[1].parts[0].content,
+        "Hello, how are you?",
+      );
+
+      assert.strictEqual(inputMessages[2].role, "assistant");
+      assert.strictEqual(
+        inputMessages[2].parts[0].content,
+        "I'm doing well, thank you!",
+      );
+
+      assert.strictEqual(inputMessages[3].role, "user");
+      assert.strictEqual(
+        inputMessages[3].parts[0].content,
+        "Can you help me with something?",
+      );
+    });
+
+    it("should create gen_ai.output.messages for text response", () => {
+      const attributes = {
+        "ai.response.text": "I'd be happy to help you with that!",
+      };
+
+      transformAiSdkAttributes(attributes);
+
+      // Check that gen_ai.output.messages is properly set
+      assert.strictEqual(
+        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        "string",
+      );
+
+      const outputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+      );
+      assert.strictEqual(outputMessages.length, 1);
+      assert.strictEqual(outputMessages[0].role, "assistant");
+      assert.strictEqual(outputMessages[0].parts.length, 1);
+      assert.strictEqual(outputMessages[0].parts[0].type, "text");
+      assert.strictEqual(
+        outputMessages[0].parts[0].content,
+        "I'd be happy to help you with that!",
+      );
+    });
+
+    it("should create gen_ai.output.messages for tool calls", () => {
+      const toolCallsData = [
+        {
+          toolCallType: "function",
+          toolCallId: "call_weather_123",
+          toolName: "getWeather",
+          args: '{"location": "San Francisco", "unit": "celsius"}',
+        },
+        {
+          toolCallType: "function",
+          toolCallId: "call_restaurant_456",
+          toolName: "findRestaurants",
+          args: '{"location": "San Francisco", "cuisine": "italian"}',
+        },
+      ];
+
+      const attributes = {
+        "ai.response.toolCalls": JSON.stringify(toolCallsData),
+      };
+
+      transformAiSdkAttributes(attributes);
+
+      // Check that gen_ai.output.messages is properly set
+      assert.strictEqual(
+        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        "string",
+      );
+
+      const outputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+      );
+      assert.strictEqual(outputMessages.length, 1);
+      assert.strictEqual(outputMessages[0].role, "assistant");
+      assert.strictEqual(outputMessages[0].parts.length, 2);
+
+      // Check first tool call
+      assert.strictEqual(outputMessages[0].parts[0].type, "tool_call");
+      assert.strictEqual(
+        outputMessages[0].parts[0].tool_call.name,
+        "getWeather",
+      );
+      assert.strictEqual(
+        outputMessages[0].parts[0].tool_call.arguments,
+        '{"location": "San Francisco", "unit": "celsius"}',
+      );
+
+      // Check second tool call
+      assert.strictEqual(outputMessages[0].parts[1].type, "tool_call");
+      assert.strictEqual(
+        outputMessages[0].parts[1].tool_call.name,
+        "findRestaurants",
+      );
+      assert.strictEqual(
+        outputMessages[0].parts[1].tool_call.arguments,
+        '{"location": "San Francisco", "cuisine": "italian"}',
+      );
+    });
+
+    it("should create both gen_ai.input.messages and gen_ai.output.messages for complete conversation with tools", () => {
+      const inputMessages = [
+        {
+          role: "system",
+          content:
+            "You are a helpful travel assistant. Use the available tools to help users plan their trips.",
+        },
+        {
+          role: "user",
+          content:
+            "I'm planning a trip to San Francisco. Can you tell me about the weather and recommend some good Italian restaurants?",
+        },
+      ];
+
+      const toolCallsData = [
+        {
+          toolCallType: "function",
+          toolCallId: "call_weather_789",
+          toolName: "getWeather",
+          args: '{"location": "San Francisco", "forecast_days": 3}',
+        },
+        {
+          toolCallType: "function",
+          toolCallId: "call_restaurants_101",
+          toolName: "searchRestaurants",
+          args: '{"location": "San Francisco", "cuisine": "italian", "rating_min": 4.0}',
+        },
+      ];
+
+      const attributes = {
+        "ai.prompt.messages": JSON.stringify(inputMessages),
+        "ai.response.toolCalls": JSON.stringify(toolCallsData),
+        "ai.prompt.tools": [
+          {
+            name: "getWeather",
+            description: "Get weather forecast for a location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: { type: "string" },
+                forecast_days: { type: "number" },
+              },
+              required: ["location"],
+            },
+          },
+          {
+            name: "searchRestaurants",
+            description: "Search for restaurants in a location",
+            parameters: {
+              type: "object",
+              properties: {
+                location: { type: "string" },
+                cuisine: { type: "string" },
+                rating_min: { type: "number" },
+              },
+              required: ["location"],
+            },
+          },
+        ],
+      };
+
+      transformAiSdkAttributes(attributes);
+
+      // Check input messages
+      assert.strictEqual(
+        typeof attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        "string",
+      );
+      const parsedInputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+      );
+      assert.strictEqual(parsedInputMessages.length, 2);
+      assert.strictEqual(parsedInputMessages[0].role, "system");
+      assert.strictEqual(
+        parsedInputMessages[0].parts[0].content,
+        "You are a helpful travel assistant. Use the available tools to help users plan their trips.",
+      );
+      assert.strictEqual(parsedInputMessages[1].role, "user");
+      assert.strictEqual(
+        parsedInputMessages[1].parts[0].content,
+        "I'm planning a trip to San Francisco. Can you tell me about the weather and recommend some good Italian restaurants?",
+      );
+
+      // Check output messages (tool calls)
+      assert.strictEqual(
+        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        "string",
+      );
+      const parsedOutputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+      );
+      assert.strictEqual(parsedOutputMessages.length, 1);
+      assert.strictEqual(parsedOutputMessages[0].role, "assistant");
+      assert.strictEqual(parsedOutputMessages[0].parts.length, 2);
+
+      // Verify tool calls in output
+      assert.strictEqual(parsedOutputMessages[0].parts[0].type, "tool_call");
+      assert.strictEqual(
+        parsedOutputMessages[0].parts[0].tool_call.name,
+        "getWeather",
+      );
+      assert.strictEqual(parsedOutputMessages[0].parts[1].type, "tool_call");
+      assert.strictEqual(
+        parsedOutputMessages[0].parts[1].tool_call.name,
+        "searchRestaurants",
+      );
+
+      // Check that tools are also properly transformed
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
+        "getWeather",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.name`],
+        "searchRestaurants",
+      );
+    });
+
+    it("should create gen_ai.output.messages for object response", () => {
+      const objectResponse = {
+        destination: "San Francisco",
+        weather: "sunny, 22°C",
+        recommendations: ["Visit Golden Gate Bridge", "Try local sourdough"],
+        confidence: 0.95,
+      };
+
+      const attributes = {
+        "ai.response.object": JSON.stringify(objectResponse),
+      };
+
+      transformAiSdkAttributes(attributes);
+
+      // Check that gen_ai.output.messages is properly set
+      assert.strictEqual(
+        typeof attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+        "string",
+      );
+
+      const outputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES],
+      );
+      assert.strictEqual(outputMessages.length, 1);
+      assert.strictEqual(outputMessages[0].role, "assistant");
+      assert.strictEqual(outputMessages[0].parts.length, 1);
+      assert.strictEqual(outputMessages[0].parts[0].type, "text");
+      assert.strictEqual(
+        outputMessages[0].parts[0].content,
+        JSON.stringify(objectResponse),
+      );
+    });
+
+    it("should handle complex multi-turn conversation with mixed content types", () => {
+      const complexMessages = [
+        {
+          role: "system",
+          content: "You are an AI assistant that can analyze images and text.",
+        },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "What's in this image?" },
+            { type: "image", url: "data:image/jpeg;base64,..." },
+          ],
+        },
+        {
+          role: "assistant",
+          content: "I can see a beautiful sunset over a mountain landscape.",
+        },
+        {
+          role: "user",
+          content:
+            "Can you get the weather for this location using your tools?",
+        },
+      ];
+
+      const attributes = {
+        "ai.prompt.messages": JSON.stringify(complexMessages),
+      };
+
+      transformAiSdkAttributes(attributes);
+
+      // Check input messages transformation
+      const inputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+      );
+      assert.strictEqual(inputMessages.length, 4);
+
+      // System message should be preserved
+      assert.strictEqual(inputMessages[0].role, "system");
+      assert.strictEqual(
+        inputMessages[0].parts[0].content,
+        "You are an AI assistant that can analyze images and text.",
+      );
+
+      // Complex content should be flattened to text parts only
+      assert.strictEqual(inputMessages[1].role, "user");
+      assert.strictEqual(
+        inputMessages[1].parts[0].content,
+        "What's in this image?",
+      );
+
+      // Assistant response should be preserved
+      assert.strictEqual(inputMessages[2].role, "assistant");
+      assert.strictEqual(
+        inputMessages[2].parts[0].content,
+        "I can see a beautiful sunset over a mountain landscape.",
+      );
+
+      // User follow-up should be preserved
+      assert.strictEqual(inputMessages[3].role, "user");
+      assert.strictEqual(
+        inputMessages[3].parts[0].content,
+        "Can you get the weather for this location using your tools?",
+      );
+    });
+  });
+
   describe("transformAiSdkSpan", () => {
     it("should transform both span name and attributes", () => {
       const span = createMockSpan("ai.generateText.doGenerate", {
