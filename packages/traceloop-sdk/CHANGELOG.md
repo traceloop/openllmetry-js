@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.19.0](https://github.com/traceloop/openllmetry-js/compare/v0.18.1...v0.19.0) (2025-09-17)
+
+### Bug Fixes
+
+- **sdk:** export getTraceloopTracer for direct tracer access ([#686](https://github.com/traceloop/openllmetry-js/issues/686)) ([768ad76](https://github.com/traceloop/openllmetry-js/commit/768ad767e3704da844bf1a9295ca3b3457ca99f2))
+
+### Features
+
+- **vercel:** add gen.ai.input.messages + gen.ai.output.messages ([#734](https://github.com/traceloop/openllmetry-js/issues/734)) ([4d9f995](https://github.com/traceloop/openllmetry-js/commit/4d9f995df1435f31554ee92024f398d11c3e8ad6))
+
 ## [0.18.1](https://github.com/traceloop/openllmetry-js/compare/v0.18.0...v0.18.1) (2025-08-24)
 
 ### Bug Fixes

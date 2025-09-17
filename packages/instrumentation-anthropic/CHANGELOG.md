@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.19.0](https://github.com/traceloop/openllmetry-js/compare/v0.18.1...v0.19.0) (2025-09-17)
+
+**Note:** Version bump only for package @traceloop/instrumentation-anthropic
+
 # [0.18.0](https://github.com/traceloop/openllmetry-js/compare/v0.17.1...v0.18.0) (2025-08-24)
 
 **Note:** Version bump only for package @traceloop/instrumentation-anthropic
