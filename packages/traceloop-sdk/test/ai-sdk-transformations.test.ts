@@ -4,7 +4,7 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OUTPUT_MESSAGES,
-} from "@opentelemetry/semantic-conventions/build/src/experimental_attributes";
+} from "@opentelemetry/semantic-conventions/incubating";
 
 import {
   transformAiSdkAttributes,

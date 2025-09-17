@@ -1,9 +1,9 @@
 import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import {
-  ATTR_GEN_AI_INPUT_MESSAGES,
-  ATTR_GEN_AI_OUTPUT_MESSAGES,
-} from "@opentelemetry/semantic-conventions/build/src/experimental_attributes";
+const {
+ ATTR_GEN_AI_INPUT_MESSAGES,
+ ATTR_GEN_AI_OUTPUT_MESSAGES,
+} = require("@opentelemetry/semantic-conventions/incubating");
 
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
