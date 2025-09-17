@@ -224,7 +224,7 @@ describe("Test AI SDK Integration with Recording", function () {
       async () => {
         return await generateText({
           messages: [
-            { role: "user", content: "Tell me a joke about OpenTelemetry" },
+            { role: "user", content: "What is 2+2? Give a brief answer." },
           ],
           model: vercel_openai("gpt-3.5-turbo"),
           experimental_telemetry: { isEnabled: true },
@@ -254,7 +254,7 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.strictEqual(inputMessages[0].parts[0].type, "text");
     assert.strictEqual(
       inputMessages[0].parts[0].content,
-      "Tell me a joke about OpenTelemetry",
+      "What is 2+2? Give a brief answer.",
     );
 
     // Verify LLM_OUTPUT_MESSAGES attribute exists and is valid JSON
