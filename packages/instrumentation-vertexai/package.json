@@ -46,7 +46,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@google-cloud/aiplatform": "^4.4.0",
+    "@google-cloud/aiplatform": "^5.7.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@opentelemetry/context-async-hooks": "^2.0.1",
     "@opentelemetry/sdk-trace-base": "^2.0.1",
