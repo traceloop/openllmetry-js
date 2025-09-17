@@ -95,7 +95,7 @@
     "@ai-sdk/openai": "^2.0.19",
     "@anthropic-ai/sdk": "^0.56.0",
     "@aws-sdk/client-bedrock-runtime": "^3.848.0",
-    "@google-cloud/aiplatform": "^4.4.0",
+    "@google-cloud/aiplatform": "^5.7.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@langchain/core": "^0.3.58",
     "@pinecone-database/pinecone": "^6.1.1",
