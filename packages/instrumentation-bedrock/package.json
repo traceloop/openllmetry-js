@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-bedrock",
-  "version": "0.17.0-otel-v1.1",
+  "version": "0.19.0-otel-v1",
   "description": "Amazon Bedrock Instrumentation",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

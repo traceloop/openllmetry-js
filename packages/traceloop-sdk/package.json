@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.17.0-otel-v1.1",
+  "version": "0.19.0-otel-v1",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -58,14 +58,14 @@
     "@traceloop/instrumentation-vertexai": "workspace:*",
     "@types/nunjucks": "^3.2.6",
     "cross-fetch": "^4.1.0",
+    "eventsource": "^3.0.2",
     "fetch-retry": "^6.0.0",
     "nunjucks": "^3.2.4",
     "papaparse": "^5.5.3",
     "posthog-node": "^5.5.1",
     "supports-color": "^10.0.0",
-    "uuid": "^11.1.0",
-    "eventsource": "^3.0.2",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "uuid": "^11.1.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/traceloop-sdk",
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",
