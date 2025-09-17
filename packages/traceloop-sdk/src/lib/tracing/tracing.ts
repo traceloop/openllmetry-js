@@ -12,6 +12,8 @@ export const getTracer = () => {
   return trace.getTracer(TRACER_NAME);
 };
 
+export const getTraceloopTracer = getTracer;
+
 export const getEntityPath = (entityContext: Context): string | undefined => {
   const path = entityContext.getValue(ENTITY_NAME_KEY);
 

@@ -20,6 +20,7 @@ node_modules
 
 # IDE - VSCode
 .vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -47,3 +48,6 @@ Thumbs.db
 .env*
 chroma.sqlite3
 chroma.log
+
+# claude
+.claude

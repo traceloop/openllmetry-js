@@ -17,11 +17,24 @@ export {
   CSVImportOptions,
   DatasetVersion,
   DatasetVersionsResponse,
+  ExperimentTaskFunction,
+  ExperimentRunOptions,
+  ExperimentRunResult,
+  TaskInput,
+  TaskOutput,
+  TaskResponse,
+  ExecutionResponse,
+  EvaluatorDetails,
+  StreamEvent,
+  SSEStreamEvent,
 } from "./interfaces";
 export { TraceloopClient } from "./client/traceloop-client";
 export { Dataset, Datasets, Column, Row } from "./client/dataset";
+export { Experiment } from "./client/experiment";
+export { Evaluator } from "./client/evaluator";
 export { initialize, getClient } from "./configuration";
 export { forceFlush } from "./tracing";
+export { getTraceloopTracer } from "./tracing/tracing";
 export * from "./tracing/decorators";
 export * from "./tracing/manual";
 export * from "./tracing/association";

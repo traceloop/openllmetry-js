@@ -18,6 +18,8 @@
     "run:with": "npm run build && node dist/src/sample_with.js",
     "run:prompt_mgmt": "npm run build && node dist/src/sample_prompt_mgmt.js",
     "run:vercel": "npm run build && node dist/src/sample_vercel_ai.js",
+    "run:vercel_object": "npm run build && node dist/src/sample_vercel_ai_object.js",
+    "run:vercel_tools": "npm run build && node dist/src/sample_vercel_ai_tools.js",
     "run:sample_vision": "npm run build && node dist/src/sample_vision_prompt.js",
     "run:sample_azure": "npm run build && node dist/src/sample_azure.js",
     "run:openai_streaming": "npm run build && node dist/src/sample_openai_streaming.js",
@@ -33,6 +35,7 @@
     "run:image_generation": "npm run build && node dist/src/sample_openai_image_generation.js",
     "run:sample_edit": "npm run build && node dist/src/test_edit_only.js",
     "run:sample_generate": "npm run build && node dist/src/test_generate_only.js",
+    "run:sample_experiment": "npm run build && node dist/src/sample_experiment.js",
     "dev:image_generation": "pnpm --filter @traceloop/instrumentation-openai build && pnpm --filter @traceloop/node-server-sdk build && npm run build && node dist/src/sample_openai_image_generation.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -71,6 +74,7 @@
     "langchain": "^0.3.30",
     "llamaindex": "^0.11.19",
     "openai": "^5.12.2",
+    "eventsource": "^3.0.2",
     "zod": "^3.25.76"
   },
   "private": true,
