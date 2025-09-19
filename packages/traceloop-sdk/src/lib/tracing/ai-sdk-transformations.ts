@@ -1,14 +1,18 @@
-import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
+import { ReadableSpan, Span } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
+const AI_GENERATE_TEXT = "ai.generateText";
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
 const AI_STREAM_TEXT_DO_STREAM = "ai.streamText.doStream";
 const HANDLED_SPAN_NAMES: Record<string, string> = {
-  [AI_GENERATE_TEXT_DO_GENERATE]: "ai.generateText.generate",
-  [AI_GENERATE_OBJECT_DO_GENERATE]: "ai.generateObject.generate",
-  [AI_STREAM_TEXT_DO_STREAM]: "ai.streamText.stream",
+  [AI_GENERATE_TEXT]: "run.ai",
+  [AI_GENERATE_TEXT_DO_GENERATE]: "text.generate",
+  [AI_GENERATE_OBJECT_DO_GENERATE]: "object.generate",
+  [AI_STREAM_TEXT_DO_STREAM]: "text.stream",
 };
+
+const TOOL_SPAN_NAME = "ai.toolCall";
 
 const AI_RESPONSE_TEXT = "ai.response.text";
 const AI_RESPONSE_OBJECT = "ai.response.object";
@@ -45,14 +49,6 @@ const VENDOR_MAPPING: Record<string, string> = {
   ollama: "Ollama",
   huggingface: "HuggingFace",
   openrouter: "OpenRouter",
-};
-
-export const transformAiSdkSpanName = (span: ReadableSpan): void => {
-  // Unfortunately, the span name is not writable as this is not the intended behavior
-  // but it is a workaround to set the correct span name
-  if (span.name in HANDLED_SPAN_NAMES) {
-    (span as any).name = HANDLED_SPAN_NAMES[span.name];
-  }
 };
 
 const transformResponseText = (attributes: Record<string, any>): void => {
@@ -367,9 +363,7 @@ const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
-export const transformAiSdkAttributes = (
-  attributes: Record<string, any>,
-): void => {
+export const transformLLMSpans = (attributes: Record<string, any>): void => {
   transformResponseText(attributes);
   transformResponseObject(attributes);
   transformResponseToolCalls(attributes);
@@ -381,14 +375,37 @@ export const transformAiSdkAttributes = (
   transformVendor(attributes);
 };
 
-const shouldHandleSpan = (span: ReadableSpan): boolean => {
-  return span.name in HANDLED_SPAN_NAMES;
+const transformToolCalls = (span: ReadableSpan): void => {
+  if (
+    span.attributes["ai.toolCall.args"] &&
+    span.attributes["ai.toolCall.result"]
+  ) {
+    span.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] =
+      span.attributes["ai.toolCall.args"];
+    delete span.attributes["ai.toolCall.args"];
+    span.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] =
+      span.attributes["ai.toolCall.result"];
+    delete span.attributes["ai.toolCall.result"];
+  }
 };
 
-export const transformAiSdkSpan = (span: ReadableSpan): void => {
+const shouldHandleSpan = (span: ReadableSpan): boolean => {
+  return span.instrumentationScope.name === "ai";
+};
+
+export const transformAiSdkSpanNames = (span: Span): void => {
+  if (span.name === TOOL_SPAN_NAME) {
+    span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
+  }
+  if (span.name in HANDLED_SPAN_NAMES) {
+    span.updateName(HANDLED_SPAN_NAMES[span.name]);
+  }
+};
+
+export const transformAiSdkSpanAttributes = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
   }
-  transformAiSdkSpanName(span);
-  transformAiSdkAttributes(span.attributes);
+  transformLLMSpans(span.attributes);
+  transformToolCalls(span);
 };
