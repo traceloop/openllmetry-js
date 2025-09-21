@@ -647,7 +647,7 @@ describe("Test SDK Decorators", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const generateTextSpan = spans.find(
-      (span) => span.name === "ai.generateText.generate",
+      (span) => span.name === "text.generate",
     );
 
     assert.ok(result);

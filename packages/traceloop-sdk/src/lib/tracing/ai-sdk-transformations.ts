@@ -23,6 +23,7 @@ const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
+const AI_TELEMETRY_METADATA_PREFIX = "ai.telemetry.metadata.";
 const TYPE_TEXT = "text";
 const TYPE_TOOL_CALL = "tool_call";
 const ROLE_ASSISTANT = "assistant";
@@ -363,6 +364,40 @@ const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
+const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
+  const metadataAttributes: Record<string, string> = {};
+  const keysToDelete: string[] = [];
+
+  // Find all ai.telemetry.metadata.* attributes
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key.startsWith(AI_TELEMETRY_METADATA_PREFIX)) {
+      const metadataKey = key.substring(AI_TELEMETRY_METADATA_PREFIX.length);
+
+      // Always mark for deletion since it's a telemetry metadata attribute
+      keysToDelete.push(key);
+
+      if (metadataKey && value != null) {
+        // Convert value to string for association properties
+        const stringValue = typeof value === "string" ? value : String(value);
+        metadataAttributes[metadataKey] = stringValue;
+
+        // Also set as traceloop association property attribute
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`
+        ] = stringValue;
+      }
+    }
+  }
+
+  // Remove original ai.telemetry.metadata.* attributes
+  keysToDelete.forEach((key) => {
+    delete attributes[key];
+  });
+
+  // Note: Context setting for child span inheritance should be done before span creation,
+  // not during transformation. Use `withTelemetryMetadataContext` function for context propagation.
+};
+
 export const transformLLMSpans = (attributes: Record<string, any>): void => {
   transformResponseText(attributes);
   transformResponseObject(attributes);
@@ -373,6 +408,7 @@ export const transformLLMSpans = (attributes: Record<string, any>): void => {
   transformCompletionTokens(attributes);
   calculateTotalTokens(attributes);
   transformVendor(attributes);
+  transformTelemetryMetadata(attributes);
 };
 
 const transformToolCalls = (span: ReadableSpan): void => {
@@ -390,7 +426,7 @@ const transformToolCalls = (span: ReadableSpan): void => {
 };
 
 const shouldHandleSpan = (span: ReadableSpan): boolean => {
-  return span.instrumentationScope.name === "ai";
+  return span.instrumentationScope?.name === "ai";
 };
 
 export const transformAiSdkSpanNames = (span: Span): void => {

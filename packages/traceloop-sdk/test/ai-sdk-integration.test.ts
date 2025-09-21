@@ -105,17 +105,15 @@ describe("Test AI SDK Integration with Recording", function () {
     const spans = memoryExporter.getFinishedSpans();
 
     const generateTextSpan = spans.find(
-      (span) =>
-        span.name === "ai.generateText.generate" ||
-        span.name === "ai.generateText.doGenerate",
+      (span) => span.name === "text.generate",
     );
 
     assert.ok(result);
     assert.ok(result.text);
     assert.ok(generateTextSpan);
 
-    // Verify span name
-    assert.strictEqual(generateTextSpan.name, "ai.generateText.generate");
+    // Verify span name (should be transformed from ai.generateText.doGenerate to text.generate)
+    assert.strictEqual(generateTextSpan.name, "text.generate");
 
     // Verify vendor
     assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "OpenAI");
@@ -174,8 +172,7 @@ describe("Test AI SDK Integration with Recording", function () {
     // Find the Google span specifically (should have workflow name test_google_workflow)
     const generateTextSpan = spans.find(
       (span) =>
-        (span.name === "ai.generateText.generate" ||
-          span.name === "ai.generateText.doGenerate") &&
+        span.name === "text.generate" &&
         span.attributes["traceloop.workflow.name"] === "test_google_workflow",
     );
 
@@ -183,8 +180,8 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(result.text);
     assert.ok(generateTextSpan, "Could not find Google generateText span");
 
-    // Verify span name
-    assert.strictEqual(generateTextSpan.name, "ai.generateText.generate");
+    // Verify span name (should be transformed from ai.generateText.doGenerate to text.generate)
+    assert.strictEqual(generateTextSpan.name, "text.generate");
 
     // Verify vendor
     assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "Google");
@@ -237,7 +234,7 @@ describe("Test AI SDK Integration with Recording", function () {
 
     const spans = memoryExporter.getFinishedSpans();
     const aiSdkSpan = spans.find((span) =>
-      span.name.startsWith("ai.generateText"),
+      span.name === "text.generate",
     );
 
     assert.ok(aiSdkSpan);
