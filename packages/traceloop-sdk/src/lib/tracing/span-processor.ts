@@ -11,6 +11,7 @@ import {
   ASSOCATION_PROPERTIES_KEY,
   ENTITY_NAME_KEY,
   WORKFLOW_NAME_KEY,
+  AGENT_NAME_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { transformAiSdkSpan } from "./ai-sdk-transformations";
@@ -141,6 +142,14 @@ const onSpanStart = (span: Span): void => {
     span.setAttribute(
       SpanAttributes.TRACELOOP_ENTITY_PATH,
       entityName as string,
+    );
+  }
+
+  const agentName = context.active().getValue(AGENT_NAME_KEY);
+  console.log("On span start agentName: ", agentName, "span_id: ", span.spanContext().spanId);
+  if (agentName) {
+    span.setAttribute(SpanAttributes.LLM_AGENT_NAME, 
+      agentName as string
     );
   }
 
