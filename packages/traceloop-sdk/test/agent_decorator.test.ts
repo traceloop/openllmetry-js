@@ -168,7 +168,9 @@ describe("Test Agent Decorator", () => {
     const result = await testAgent.planTrip("Paris");
 
     const spans = memoryExporter.getFinishedSpans();
-    const agentSpan = spans.find((span) => span.name === "travel_planner.agent");
+    const agentSpan = spans.find(
+      (span) => span.name === "travel_planner.agent",
+    );
     const chatSpan = spans.find((span) => span.name === "openai.chat");
 
     assert.ok(result);
