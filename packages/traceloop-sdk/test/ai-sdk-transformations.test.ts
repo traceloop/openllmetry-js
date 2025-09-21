@@ -1555,7 +1555,6 @@ describe("AI SDK Transformations", () => {
     });
   });
 
-
   describe("transformAiSdkAttributes - telemetry metadata", () => {
     it("should transform ai.telemetry.metadata.* attributes to association properties", () => {
       const attributes = {
@@ -1574,18 +1573,28 @@ describe("AI SDK Transformations", () => {
         "user_123",
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`
+        ],
         "session_456",
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.experimentId`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.experimentId`
+        ],
         "exp_789",
       );
 
       // Check that original metadata attributes are removed
       assert.strictEqual(attributes["ai.telemetry.metadata.userId"], undefined);
-      assert.strictEqual(attributes["ai.telemetry.metadata.sessionId"], undefined);
-      assert.strictEqual(attributes["ai.telemetry.metadata.experimentId"], undefined);
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.sessionId"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.experimentId"],
+        undefined,
+      );
 
       // Check that other transformations still work
       assert.strictEqual(
@@ -1610,7 +1619,9 @@ describe("AI SDK Transformations", () => {
         "12345",
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.isActive`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.isActive`
+        ],
         "true",
       );
       assert.strictEqual(
@@ -1636,31 +1647,51 @@ describe("AI SDK Transformations", () => {
 
       // Valid key should be processed
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.validKey`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.validKey`
+        ],
         "valid_value",
       );
 
       // Empty string should be processed (it's a valid value)
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.emptyKey`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.emptyKey`
+        ],
         "",
       );
 
       // Null and undefined should not create association properties
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.nullKey`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.nullKey`
+        ],
         undefined,
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.undefinedKey`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.undefinedKey`
+        ],
         undefined,
       );
 
       // Original attributes should be removed only for processed ones
-      assert.strictEqual(attributes["ai.telemetry.metadata.validKey"], undefined);
-      assert.strictEqual(attributes["ai.telemetry.metadata.emptyKey"], undefined);
-      assert.strictEqual(attributes["ai.telemetry.metadata.nullKey"], undefined);
-      assert.strictEqual(attributes["ai.telemetry.metadata.undefinedKey"], undefined);
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.validKey"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.emptyKey"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.nullKey"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.undefinedKey"],
+        undefined,
+      );
 
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
@@ -1670,7 +1701,9 @@ describe("AI SDK Transformations", () => {
         "ai.telemetry.metadata.userId": "user_456",
         "ai.telemetry.metadata.sessionId": "session_789",
         "ai.response.text": "I'll help you with that!",
-        "ai.prompt.messages": JSON.stringify([{ role: "user", content: "Help me" }]),
+        "ai.prompt.messages": JSON.stringify([
+          { role: "user", content: "Help me" },
+        ]),
         "ai.usage.promptTokens": 5,
         "ai.usage.completionTokens": 10,
         "ai.model.provider": "openai.chat",
@@ -1684,7 +1717,9 @@ describe("AI SDK Transformations", () => {
         "user_456",
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`],
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`
+        ],
         "session_789",
       );
 
@@ -1702,11 +1737,13 @@ describe("AI SDK Transformations", () => {
 
       // Check original attributes are removed
       assert.strictEqual(attributes["ai.telemetry.metadata.userId"], undefined);
-      assert.strictEqual(attributes["ai.telemetry.metadata.sessionId"], undefined);
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.sessionId"],
+        undefined,
+      );
       assert.strictEqual(attributes["ai.response.text"], undefined);
       assert.strictEqual(attributes["ai.prompt.messages"], undefined);
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
   });
-
 });

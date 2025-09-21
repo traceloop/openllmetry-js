@@ -233,9 +233,7 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(result.text);
 
     const spans = memoryExporter.getFinishedSpans();
-    const aiSdkSpan = spans.find((span) =>
-      span.name === "text.generate",
-    );
+    const aiSdkSpan = spans.find((span) => span.name === "text.generate");
 
     assert.ok(aiSdkSpan);
 
