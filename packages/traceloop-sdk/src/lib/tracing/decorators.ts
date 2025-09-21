@@ -102,7 +102,10 @@ function withEntity<
         // Set agent name on all spans when there's an active agent context
         const agentName = entityContext.getValue(AGENT_NAME_KEY);
         if (agentName) {
-          span.setAttribute(SpanAttributes.GEN_AI_AGENT_NAME, agentName as string);
+          span.setAttribute(
+            SpanAttributes.GEN_AI_AGENT_NAME,
+            agentName as string,
+          );
         }
 
         if (version) {
