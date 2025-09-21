@@ -1,14 +1,18 @@
-import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
+import { ReadableSpan, Span } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
+const AI_GENERATE_TEXT = "ai.generateText";
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
 const AI_STREAM_TEXT_DO_STREAM = "ai.streamText.doStream";
 const HANDLED_SPAN_NAMES: Record<string, string> = {
-  [AI_GENERATE_TEXT_DO_GENERATE]: "ai.generateText.generate",
-  [AI_GENERATE_OBJECT_DO_GENERATE]: "ai.generateObject.generate",
-  [AI_STREAM_TEXT_DO_STREAM]: "ai.streamText.stream",
+  [AI_GENERATE_TEXT]: "run.ai",
+  [AI_GENERATE_TEXT_DO_GENERATE]: "text.generate",
+  [AI_GENERATE_OBJECT_DO_GENERATE]: "object.generate",
+  [AI_STREAM_TEXT_DO_STREAM]: "text.stream",
 };
+
+const TOOL_SPAN_NAME = "ai.toolCall";
 
 const AI_RESPONSE_TEXT = "ai.response.text";
 const AI_RESPONSE_OBJECT = "ai.response.object";
@@ -19,6 +23,7 @@ const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
+const AI_TELEMETRY_METADATA_PREFIX = "ai.telemetry.metadata.";
 const TYPE_TEXT = "text";
 const TYPE_TOOL_CALL = "tool_call";
 const ROLE_ASSISTANT = "assistant";
@@ -45,14 +50,6 @@ const VENDOR_MAPPING: Record<string, string> = {
   ollama: "Ollama",
   huggingface: "HuggingFace",
   openrouter: "OpenRouter",
-};
-
-export const transformAiSdkSpanName = (span: ReadableSpan): void => {
-  // Unfortunately, the span name is not writable as this is not the intended behavior
-  // but it is a workaround to set the correct span name
-  if (span.name in HANDLED_SPAN_NAMES) {
-    (span as any).name = HANDLED_SPAN_NAMES[span.name];
-  }
 };
 
 const transformResponseText = (attributes: Record<string, any>): void => {
@@ -367,9 +364,41 @@ const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
-export const transformAiSdkAttributes = (
-  attributes: Record<string, any>,
-): void => {
+const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
+  const metadataAttributes: Record<string, string> = {};
+  const keysToDelete: string[] = [];
+
+  // Find all ai.telemetry.metadata.* attributes
+  for (const [key, value] of Object.entries(attributes)) {
+    if (key.startsWith(AI_TELEMETRY_METADATA_PREFIX)) {
+      const metadataKey = key.substring(AI_TELEMETRY_METADATA_PREFIX.length);
+
+      // Always mark for deletion since it's a telemetry metadata attribute
+      keysToDelete.push(key);
+
+      if (metadataKey && value != null) {
+        // Convert value to string for association properties
+        const stringValue = typeof value === "string" ? value : String(value);
+        metadataAttributes[metadataKey] = stringValue;
+
+        // Also set as traceloop association property attribute
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`
+        ] = stringValue;
+      }
+    }
+  }
+
+  // Remove original ai.telemetry.metadata.* attributes
+  keysToDelete.forEach((key) => {
+    delete attributes[key];
+  });
+
+  // Note: Context setting for child span inheritance should be done before span creation,
+  // not during transformation. Use `withTelemetryMetadataContext` function for context propagation.
+};
+
+export const transformLLMSpans = (attributes: Record<string, any>): void => {
   transformResponseText(attributes);
   transformResponseObject(attributes);
   transformResponseToolCalls(attributes);
@@ -379,16 +408,40 @@ export const transformAiSdkAttributes = (
   transformCompletionTokens(attributes);
   calculateTotalTokens(attributes);
   transformVendor(attributes);
+  transformTelemetryMetadata(attributes);
+};
+
+const transformToolCalls = (span: ReadableSpan): void => {
+  if (
+    span.attributes["ai.toolCall.args"] &&
+    span.attributes["ai.toolCall.result"]
+  ) {
+    span.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] =
+      span.attributes["ai.toolCall.args"];
+    delete span.attributes["ai.toolCall.args"];
+    span.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] =
+      span.attributes["ai.toolCall.result"];
+    delete span.attributes["ai.toolCall.result"];
+  }
 };
 
 const shouldHandleSpan = (span: ReadableSpan): boolean => {
-  return span.name in HANDLED_SPAN_NAMES;
+  return span.instrumentationScope?.name === "ai";
 };
 
-export const transformAiSdkSpan = (span: ReadableSpan): void => {
+export const transformAiSdkSpanNames = (span: Span): void => {
+  if (span.name === TOOL_SPAN_NAME) {
+    span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
+  }
+  if (span.name in HANDLED_SPAN_NAMES) {
+    span.updateName(HANDLED_SPAN_NAMES[span.name]);
+  }
+};
+
+export const transformAiSdkSpanAttributes = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
   }
-  transformAiSdkSpanName(span);
-  transformAiSdkAttributes(span.attributes);
+  transformLLMSpans(span.attributes);
+  transformToolCalls(span);
 };

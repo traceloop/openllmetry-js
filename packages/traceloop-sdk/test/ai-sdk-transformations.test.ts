@@ -1,9 +1,12 @@
 import * as assert from "assert";
 import { ReadableSpan } from "@opentelemetry/sdk-trace-node";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { context } from "@opentelemetry/api";
+import { ASSOCATION_PROPERTIES_KEY } from "../src/lib/tracing/tracing";
 import {
-  transformAiSdkAttributes,
-  transformAiSdkSpan,
+  transformLLMSpans,
+  transformAiSdkSpanAttributes,
+  transformAiSdkSpanNames,
 } from "../src/lib/tracing/ai-sdk-transformations";
 
 // Helper function to create a mock ReadableSpan
@@ -14,7 +17,24 @@ const createMockSpan = (
   return {
     name,
     attributes,
+    instrumentationScope: { name: "ai", version: "1.0.0" },
   } as ReadableSpan;
+};
+
+// Helper function to create a mock span with updateName capability
+const createMockSpanWithUpdate = (
+  name: string,
+  attributes: Record<string, any> = {},
+) => {
+  const span = {
+    name,
+    attributes,
+    instrumentationScope: { name: "ai", version: "1.0.0" },
+    updateName: (newName: string) => {
+      span.name = newName;
+    },
+  };
+  return span as ReadableSpan & { updateName: (name: string) => void };
 };
 
 describe("AI SDK Transformations", () => {
@@ -25,7 +45,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
@@ -45,7 +65,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -55,7 +75,7 @@ describe("AI SDK Transformations", () => {
         "ai.response.text": "",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
@@ -76,7 +96,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
@@ -96,7 +116,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -124,7 +144,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check that role is set
       assert.strictEqual(
@@ -167,7 +187,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -178,7 +198,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should not modify attributes when JSON parsing fails
       assert.strictEqual(attributes["ai.response.toolCalls"], "invalid json {");
@@ -196,7 +216,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
@@ -228,7 +248,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
@@ -257,7 +277,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
@@ -284,7 +304,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
@@ -308,7 +328,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
@@ -332,7 +352,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should preserve the original JSON since it's not simple text
       assert.strictEqual(
@@ -357,7 +377,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should preserve the original JSON since it has mixed content
       assert.strictEqual(
@@ -376,7 +396,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should not modify attributes when JSON parsing fails
       assert.strictEqual(attributes["ai.prompt.messages"], "invalid json {");
@@ -389,7 +409,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -399,7 +419,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify([]),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes["ai.prompt.messages"], undefined);
     });
@@ -410,7 +430,7 @@ describe("AI SDK Transformations", () => {
           '[{"role":"user","content":[{"type":"text","text":"Help me plan a trip to San Francisco. I\'d like to know:\\n1. What\'s the weather like there?\\n2. Find some good restaurants to try\\n3. If I\'m traveling from New York, how far is it?\\n\\nPlease use the available tools to get current information and provide a comprehensive travel guide."}]}]',
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       const result = attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`];
 
@@ -437,7 +457,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
@@ -457,7 +477,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -468,7 +488,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should not modify attributes when JSON parsing fails
       assert.strictEqual(attributes["ai.prompt"], "invalid json {");
@@ -509,7 +529,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
@@ -577,7 +597,7 @@ describe("AI SDK Transformations", () => {
         ],
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Tool 0: only has name
       assert.strictEqual(
@@ -622,7 +642,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should not create any function attributes
       assert.strictEqual(
@@ -641,7 +661,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should not create any function attributes
       assert.strictEqual(
@@ -659,7 +679,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes.someOtherAttr, "value");
       assert.strictEqual(
@@ -673,7 +693,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.tools": [null, undefined, {}, { name: "validTool" }],
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Only the valid tool should create attributes
       assert.strictEqual(
@@ -705,7 +725,7 @@ describe("AI SDK Transformations", () => {
         ],
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Should parse and transform the first tool
       assert.strictEqual(
@@ -745,7 +765,7 @@ describe("AI SDK Transformations", () => {
         ],
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
@@ -773,7 +793,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
@@ -789,7 +809,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -799,7 +819,7 @@ describe("AI SDK Transformations", () => {
         "ai.usage.promptTokens": 0,
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS], 0);
     });
@@ -812,7 +832,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
@@ -828,7 +848,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -838,7 +858,7 @@ describe("AI SDK Transformations", () => {
         "ai.usage.completionTokens": 0,
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
@@ -854,7 +874,7 @@ describe("AI SDK Transformations", () => {
         [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: 25,
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 75);
     });
@@ -865,7 +885,7 @@ describe("AI SDK Transformations", () => {
         [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: "25",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 75);
     });
@@ -875,7 +895,7 @@ describe("AI SDK Transformations", () => {
         [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: 25,
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
@@ -888,7 +908,7 @@ describe("AI SDK Transformations", () => {
         [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: 50,
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
@@ -899,7 +919,7 @@ describe("AI SDK Transformations", () => {
     it("should not calculate total when both tokens are missing", () => {
       const attributes = {};
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
@@ -915,7 +935,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
       assert.strictEqual(attributes["ai.model.provider"], undefined);
@@ -934,7 +954,7 @@ describe("AI SDK Transformations", () => {
           "ai.model.provider": provider,
         };
 
-        transformAiSdkAttributes(attributes);
+        transformLLMSpans(attributes);
 
         assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
         assert.strictEqual(attributes["ai.model.provider"], undefined);
@@ -949,7 +969,7 @@ describe("AI SDK Transformations", () => {
           "ai.model.provider": provider,
         };
 
-        transformAiSdkAttributes(attributes);
+        transformLLMSpans(attributes);
 
         assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Azure");
         assert.strictEqual(attributes["ai.model.provider"], undefined);
@@ -961,7 +981,7 @@ describe("AI SDK Transformations", () => {
         "ai.model.provider": "anthropic",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Anthropic");
       assert.strictEqual(attributes["ai.model.provider"], undefined);
@@ -973,7 +993,7 @@ describe("AI SDK Transformations", () => {
       };
       const originalAttributes = { ...attributes };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.deepStrictEqual(attributes, originalAttributes);
     });
@@ -983,7 +1003,7 @@ describe("AI SDK Transformations", () => {
         "ai.model.provider": "",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "");
       assert.strictEqual(attributes["ai.model.provider"], undefined);
@@ -1001,7 +1021,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check response text transformation
       assert.strictEqual(
@@ -1054,7 +1074,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
@@ -1073,7 +1093,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check response object transformation
       assert.strictEqual(
@@ -1141,7 +1161,7 @@ describe("AI SDK Transformations", () => {
         someOtherAttr: "value",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check tools transformation
       assert.strictEqual(
@@ -1192,7 +1212,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(messages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check that gen_ai.input.messages is properly set
       assert.strictEqual(
@@ -1239,7 +1259,7 @@ describe("AI SDK Transformations", () => {
         "ai.response.text": "I'd be happy to help you with that!",
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check that gen_ai.output.messages is properly set
       assert.strictEqual(
@@ -1280,7 +1300,7 @@ describe("AI SDK Transformations", () => {
         "ai.response.toolCalls": JSON.stringify(toolCallsData),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check that gen_ai.output.messages is properly set
       assert.strictEqual(
@@ -1379,7 +1399,7 @@ describe("AI SDK Transformations", () => {
         ],
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check input messages
       assert.strictEqual(
@@ -1448,7 +1468,7 @@ describe("AI SDK Transformations", () => {
         "ai.response.object": JSON.stringify(objectResponse),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check that gen_ai.output.messages is properly set
       assert.strictEqual(
@@ -1497,7 +1517,7 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify(complexMessages),
       };
 
-      transformAiSdkAttributes(attributes);
+      transformLLMSpans(attributes);
 
       // Check input messages transformation
       const inputMessages = JSON.parse(
@@ -1535,126 +1555,195 @@ describe("AI SDK Transformations", () => {
     });
   });
 
-  describe("transformAiSdkSpan", () => {
-    it("should transform both span name and attributes", () => {
-      const span = createMockSpan("ai.generateText.doGenerate", {
+  describe("transformAiSdkAttributes - telemetry metadata", () => {
+    it("should transform ai.telemetry.metadata.* attributes to association properties", () => {
+      const attributes = {
+        "ai.telemetry.metadata.userId": "user_123",
+        "ai.telemetry.metadata.sessionId": "session_456",
+        "ai.telemetry.metadata.experimentId": "exp_789",
         "ai.response.text": "Hello!",
-        "ai.usage.promptTokens": 10,
-        "ai.usage.completionTokens": 5,
-      });
+        someOtherAttr: "value",
+      };
 
-      transformAiSdkSpan(span);
+      transformLLMSpans(attributes);
 
-      // Check span name transformation
-      assert.strictEqual(span.name, "ai.generateText.generate");
+      // Check that association properties are created
+      assert.strictEqual(
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`],
+        "user_123",
+      );
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`
+        ],
+        "session_456",
+      );
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.experimentId`
+        ],
+        "exp_789",
+      );
 
-      // Check attribute transformations
+      // Check that original metadata attributes are removed
+      assert.strictEqual(attributes["ai.telemetry.metadata.userId"], undefined);
       assert.strictEqual(
-        span.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
-        "Hello!",
-      );
-      assert.strictEqual(
-        span.attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
-        10,
-      );
-      assert.strictEqual(
-        span.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
-        5,
-      );
-      assert.strictEqual(
-        span.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
-        15,
-      );
-    });
-
-    it("should transform generateObject span name and attributes", () => {
-      const span = createMockSpan("ai.generateObject.doGenerate", {
-        "ai.prompt.format": "prompt",
-        "llm.usage.output_tokens": "39",
-        "traceloop.workflow.name": "generate_person_profile",
-        "llm.request.model": "gpt-4o",
-        "ai.settings.maxRetries": "2",
-        "ai.usage.promptTokens": "108",
-        "operation.name": "ai.generateObject.doGenerate",
-        "llm.response.id": "chatcmpl-C82mjzq1hNM753oc4VkStnjEzzLpk",
-        "ai.response.providerMetadata":
-          '{"openai":{"reasoningTokens":0,"acceptedPredictionTokens":0,"rejectedPredictionTokens":0,"cachedPromptTokens":0}}',
-        "ai.operationId": "ai.generateObject.doGenerate",
-        "ai.response.id": "chatcmpl-C82mjzq1hNM753oc4VkStnjEzzLpk",
-        "ai.usage.completionTokens": "39",
-        "ai.response.model": "gpt-4o-2024-08-06",
-        "ai.response.object":
-          '{"name":"Alex Dupont","age":30,"occupation":"Software Engineer","skills":["AI","Machine Learning","Programming","Multilingual"],"location":{"city":"Paris","country":"France"}}',
-        "ai.prompt.messages":
-          '[{"role":"user","content":[{"type":"text","text":"Based on this description, generate a detailed person profile: A talented software engineer from Paris who loves working with AI and machine learning, speaks multiple languages, and enjoys traveling."}]}]',
-        "ai.settings.mode": "tool",
-        "llm.vendor": "openai.chat",
-        "ai.response.timestamp": "2025-08-24T11:02:45.000Z",
-        "llm.response.model": "gpt-4o-2024-08-06",
-        "ai.model.id": "gpt-4o",
-        "ai.response.finishReason": "stop",
-        "ai.model.provider": "openai.chat",
-        "llm.usage.input_tokens": "108",
-      });
-
-      transformAiSdkSpan(span);
-
-      // Check span name transformation
-      assert.strictEqual(span.name, "ai.generateObject.generate");
-
-      // Check attribute transformations
-      assert.strictEqual(
-        span.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
-        '{"name":"Alex Dupont","age":30,"occupation":"Software Engineer","skills":["AI","Machine Learning","Programming","Multilingual"],"location":{"city":"Paris","country":"France"}}',
-      );
-      assert.strictEqual(
-        span.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
-        "assistant",
-      );
-      assert.strictEqual(
-        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-        "Based on this description, generate a detailed person profile: A talented software engineer from Paris who loves working with AI and machine learning, speaks multiple languages, and enjoys traveling.",
-      );
-      assert.strictEqual(
-        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-        "user",
-      );
-      assert.strictEqual(
-        span.attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
-        "108",
-      );
-      assert.strictEqual(
-        span.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
-        "39",
-      );
-      assert.strictEqual(
-        span.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
-        147,
-      );
-      assert.strictEqual(span.attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
-
-      // Check that original AI SDK attributes are removed
-      assert.strictEqual(span.attributes["ai.response.object"], undefined);
-      assert.strictEqual(span.attributes["ai.prompt.messages"], undefined);
-      assert.strictEqual(span.attributes["ai.usage.promptTokens"], undefined);
-      assert.strictEqual(
-        span.attributes["ai.usage.completionTokens"],
+        attributes["ai.telemetry.metadata.sessionId"],
         undefined,
       );
-      assert.strictEqual(span.attributes["ai.model.provider"], undefined);
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.experimentId"],
+        undefined,
+      );
+
+      // Check that other transformations still work
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+        "Hello!",
+      );
+      assert.strictEqual(attributes.someOtherAttr, "value");
     });
 
-    it("should handle spans with no transformations needed", () => {
-      const span = createMockSpan("some.other.span", {
-        someAttr: "value",
-      });
-      const originalName = span.name;
-      const originalAttributes = { ...span.attributes };
+    it("should handle non-string metadata values by converting to strings", () => {
+      const attributes = {
+        "ai.telemetry.metadata.userId": 12345,
+        "ai.telemetry.metadata.isActive": true,
+        "ai.telemetry.metadata.score": 98.5,
+        "ai.telemetry.metadata.config": { key: "value" },
+      };
 
-      transformAiSdkSpan(span);
+      transformLLMSpans(attributes);
 
-      assert.strictEqual(span.name, originalName);
-      assert.deepStrictEqual(span.attributes, originalAttributes);
+      assert.strictEqual(
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`],
+        "12345",
+      );
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.isActive`
+        ],
+        "true",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.score`],
+        "98.5",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.config`],
+        "[object Object]",
+      );
+    });
+
+    it("should ignore metadata attributes with null or undefined values", () => {
+      const attributes = {
+        "ai.telemetry.metadata.validKey": "valid_value",
+        "ai.telemetry.metadata.nullKey": null,
+        "ai.telemetry.metadata.undefinedKey": undefined,
+        "ai.telemetry.metadata.emptyKey": "",
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      // Valid key should be processed
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.validKey`
+        ],
+        "valid_value",
+      );
+
+      // Empty string should be processed (it's a valid value)
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.emptyKey`
+        ],
+        "",
+      );
+
+      // Null and undefined should not create association properties
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.nullKey`
+        ],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.undefinedKey`
+        ],
+        undefined,
+      );
+
+      // Original attributes should be removed only for processed ones
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.validKey"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.emptyKey"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.nullKey"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.undefinedKey"],
+        undefined,
+      );
+
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+
+    it("should work with other transformations in a complete AI SDK call", () => {
+      const attributes = {
+        "ai.telemetry.metadata.userId": "user_456",
+        "ai.telemetry.metadata.sessionId": "session_789",
+        "ai.response.text": "I'll help you with that!",
+        "ai.prompt.messages": JSON.stringify([
+          { role: "user", content: "Help me" },
+        ]),
+        "ai.usage.promptTokens": 5,
+        "ai.usage.completionTokens": 10,
+        "ai.model.provider": "openai.chat",
+      };
+
+      transformLLMSpans(attributes);
+
+      // Check metadata transformation
+      assert.strictEqual(
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`],
+        "user_456",
+      );
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`
+        ],
+        "session_789",
+      );
+
+      // Check other transformations still work
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+        "I'll help you with that!",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        "Help me",
+      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+
+      // Check original attributes are removed
+      assert.strictEqual(attributes["ai.telemetry.metadata.userId"], undefined);
+      assert.strictEqual(
+        attributes["ai.telemetry.metadata.sessionId"],
+        undefined,
+      );
+      assert.strictEqual(attributes["ai.response.text"], undefined);
+      assert.strictEqual(attributes["ai.prompt.messages"], undefined);
+      assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
   });
 });
