@@ -2,9 +2,10 @@ import {
   SimpleSpanProcessor,
   BatchSpanProcessor,
   SpanProcessor,
+  Span,
   ReadableSpan,
 } from "@opentelemetry/sdk-trace-node";
-import { Span, context } from "@opentelemetry/api";
+import { context } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { SpanExporter } from "@opentelemetry/sdk-trace-base";
 import {
@@ -14,7 +15,10 @@ import {
   AGENT_NAME_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import { transformAiSdkSpan } from "./ai-sdk-transformations";
+import {
+  transformAiSdkSpanAttributes,
+  transformAiSdkSpanNames,
+} from "./ai-sdk-transformations";
 import { parseKeyPairsIntoRecord } from "./baggage-utils";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
@@ -161,6 +165,8 @@ const onSpanStart = (span: Span): void => {
       );
     }
   }
+
+  transformAiSdkSpanNames(span);
 };
 
 /**
@@ -226,7 +232,7 @@ const onSpanEnd = (
     }
 
     // Apply AI SDK transformations (if needed)
-    transformAiSdkSpan(span);
+    transformAiSdkSpanAttributes(span);
 
     // Ensure OTLP transformer compatibility
     const compatibleSpan = ensureSpanCompatibility(span);
