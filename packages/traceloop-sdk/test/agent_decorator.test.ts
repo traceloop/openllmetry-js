@@ -155,7 +155,7 @@ describe("Test Agent Decorator", () => {
       async planTrip(destination: string) {
         const chatCompletion = await openai.chat.completions.create({
           messages: [
-            { role: "user", content: `Plan a trip to ${destination}` },
+            { role: "user", content: `Tell me a joke about OpenTelemetry` },
           ],
           model: "gpt-3.5-turbo",
         });
@@ -204,7 +204,7 @@ describe("Test Agent Decorator", () => {
     );
     assert.strictEqual(
       chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-      "Plan a trip to Paris",
+      "Tell me a joke about OpenTelemetry",
     );
   });
 
@@ -216,7 +216,7 @@ describe("Test Agent Decorator", () => {
           { vendor: "openai", type: "chat" },
           async ({ span }) => {
             const messages: ChatCompletionMessageParam[] = [
-              { role: "user", content: "Tell me a joke about agents" },
+              { role: "user", content: "Tell me a joke about OpenTelemetry" },
             ];
             const model = "gpt-3.5-turbo";
 
@@ -274,7 +274,7 @@ describe("Test Agent Decorator", () => {
     );
     assert.strictEqual(
       completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-      "Tell me a joke about agents",
+      "Tell me a joke about OpenTelemetry",
     );
   });
 });
