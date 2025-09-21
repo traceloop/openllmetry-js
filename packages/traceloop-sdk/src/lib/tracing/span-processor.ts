@@ -146,11 +146,8 @@ const onSpanStart = (span: Span): void => {
   }
 
   const agentName = context.active().getValue(AGENT_NAME_KEY);
-  console.log("On span start agentName: ", agentName, ": span_id: ", span.spanContext().spanId);
   if (agentName) {
-    span.setAttribute(SpanAttributes.LLM_AGENT_NAME, 
-      agentName as string
-    );
+    span.setAttribute(SpanAttributes.LLM_AGENT_NAME, agentName as string);
   }
 
   const associationProperties = context
