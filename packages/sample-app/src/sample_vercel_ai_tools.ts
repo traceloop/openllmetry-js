@@ -114,7 +114,7 @@ const searchRestaurants = tool({
 });
 
 async function planTrip(destination: string) {
-  return await traceloop.withWorkflow(
+  return await traceloop.withAgent(
     { name: "plan_trip" },
     async () => {
       console.log(`\n🌟 Planning a trip to ${destination}...\n`);

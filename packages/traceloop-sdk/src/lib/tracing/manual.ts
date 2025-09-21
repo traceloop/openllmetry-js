@@ -1,5 +1,5 @@
 import { Span, context, trace } from "@opentelemetry/api";
-import { getTracer } from "./tracing";
+import { getTracer, AGENT_NAME_KEY } from "./tracing";
 import {
   Events,
   EventAttributes,
@@ -145,6 +145,12 @@ export function withVectorDBCall<
     { [SpanAttributes.LLM_REQUEST_TYPE]: type },
     entityContext,
     (span: Span) => {
+      // Set agent name if there's an active agent context
+      const agentName = entityContext.getValue(AGENT_NAME_KEY);
+      if (agentName) {
+        span.setAttribute(SpanAttributes.LLM_AGENT_NAME, agentName as string);
+      }
+
       const res = fn.apply(thisArg, [{ span: new VectorSpan(span) }]);
       if (res instanceof Promise) {
         return res.then((resolvedRes) => {
@@ -162,9 +168,17 @@ export function withVectorDBCall<
 export function withLLMCall<
   F extends ({ span }: { span: LLMSpan }) => ReturnType<F>,
 >({ vendor, type }: LLMCallConfig, fn: F, thisArg?: ThisParameterType<F>) {
-  const span = getTracer().startSpan(`${vendor}.${type}`, {}, context.active());
+  const currentContext = context.active();
+  const span = getTracer().startSpan(`${vendor}.${type}`, {}, currentContext);
   span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, type);
-  trace.setSpan(context.active(), span);
+
+  // Set agent name if there's an active agent context
+  const agentName = currentContext.getValue(AGENT_NAME_KEY);
+  if (agentName) {
+    span.setAttribute(SpanAttributes.LLM_AGENT_NAME, agentName as string);
+  }
+
+  trace.setSpan(currentContext, span);
 
   const res = fn.apply(thisArg, [{ span: new LLMSpan(span) }]);
   if (res instanceof Promise) {
