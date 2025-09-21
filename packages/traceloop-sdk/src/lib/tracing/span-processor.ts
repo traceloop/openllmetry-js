@@ -151,7 +151,7 @@ const onSpanStart = (span: Span): void => {
 
   const agentName = context.active().getValue(AGENT_NAME_KEY);
   if (agentName) {
-    span.setAttribute(SpanAttributes.LLM_AGENT_NAME, agentName as string);
+    span.setAttribute(SpanAttributes.GEN_AI_AGENT_NAME, agentName as string);
   }
 
   const associationProperties = context

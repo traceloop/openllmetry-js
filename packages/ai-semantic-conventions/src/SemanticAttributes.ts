@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 export const SpanAttributes = {
   LLM_SYSTEM: "gen_ai.system",
   LLM_REQUEST_MODEL: "gen_ai.request.model",
@@ -27,7 +28,8 @@ export const SpanAttributes = {
   LLM_RESPONSE_MODEL: "gen_ai.response.model",
   LLM_USAGE_PROMPT_TOKENS: "gen_ai.usage.prompt_tokens",
   LLM_USAGE_COMPLETION_TOKENS: "gen_ai.usage.completion_tokens",
-  LLM_AGENT_NAME: "gen_ai.agent.name",
+  
+  GEN_AI_AGENT_NAME: "gen_ai.agent.name",
 
   // LLM
   LLM_REQUEST_TYPE: "llm.request.type",

@@ -148,7 +148,7 @@ export function withVectorDBCall<
       // Set agent name if there's an active agent context
       const agentName = entityContext.getValue(AGENT_NAME_KEY);
       if (agentName) {
-        span.setAttribute(SpanAttributes.LLM_AGENT_NAME, agentName as string);
+        span.setAttribute(SpanAttributes.GEN_AI_AGENT_NAME, agentName as string);
       }
 
       const res = fn.apply(thisArg, [{ span: new VectorSpan(span) }]);
@@ -175,7 +175,7 @@ export function withLLMCall<
   // Set agent name if there's an active agent context
   const agentName = currentContext.getValue(AGENT_NAME_KEY);
   if (agentName) {
-    span.setAttribute(SpanAttributes.LLM_AGENT_NAME, agentName as string);
+    span.setAttribute(SpanAttributes.GEN_AI_AGENT_NAME, agentName as string);
   }
 
   trace.setSpan(currentContext, span);

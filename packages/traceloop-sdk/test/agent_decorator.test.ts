@@ -136,7 +136,7 @@ describe("Test Agent Decorator", () => {
       "plan_trip",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_AGENT_NAME}`],
+      chatSpan.attributes[`${SpanAttributes.GEN_AI_AGENT_NAME}`],
       "plan_trip",
     );
     assert.strictEqual(
@@ -197,7 +197,7 @@ describe("Test Agent Decorator", () => {
       "travel_planner",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_AGENT_NAME}`],
+      chatSpan.attributes[`${SpanAttributes.GEN_AI_AGENT_NAME}`],
       "travel_planner",
     );
     assert.strictEqual(
@@ -259,7 +259,7 @@ describe("Test Agent Decorator", () => {
       "123",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_AGENT_NAME}`],
+      completionSpan.attributes[`${SpanAttributes.GEN_AI_AGENT_NAME}`],
       "assistant",
     );
     assert.strictEqual(
