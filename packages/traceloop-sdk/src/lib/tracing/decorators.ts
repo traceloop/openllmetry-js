@@ -1,6 +1,7 @@
 import { Span, context } from "@opentelemetry/api";
 import { suppressTracing } from "@opentelemetry/core";
 import {
+  AGENT_NAME_KEY,
   ASSOCATION_PROPERTIES_KEY,
   ENTITY_NAME_KEY,
   getEntityPath,
@@ -49,6 +50,10 @@ function withEntity<
     entityContext = entityContext.setValue(WORKFLOW_NAME_KEY, name);
   }
 
+  if (type === TraceloopSpanKindValues.AGENT) {
+    entityContext = entityContext.setValue(AGENT_NAME_KEY, name);
+  }
+
   const entityPath = getEntityPath(entityContext);
   if (
     type === TraceloopSpanKindValues.TOOL ||
@@ -93,6 +98,15 @@ function withEntity<
           entityPath || "",
         );
         span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, type);
+
+        // Set agent name on all spans when there's an active agent context
+        const agentName = entityContext.getValue(AGENT_NAME_KEY);
+        if (agentName) {
+          span.setAttribute(
+            SpanAttributes.GEN_AI_AGENT_NAME,
+            agentName as string,
+          );
+        }
 
         if (version) {
           span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_VERSION, version);

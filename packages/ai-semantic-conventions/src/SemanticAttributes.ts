@@ -28,6 +28,8 @@ export const SpanAttributes = {
   LLM_USAGE_PROMPT_TOKENS: "gen_ai.usage.prompt_tokens",
   LLM_USAGE_COMPLETION_TOKENS: "gen_ai.usage.completion_tokens",
 
+  GEN_AI_AGENT_NAME: "gen_ai.agent.name",
+
   // LLM
   LLM_REQUEST_TYPE: "llm.request.type",
   LLM_USAGE_TOTAL_TOKENS: "llm.usage.total_tokens",
