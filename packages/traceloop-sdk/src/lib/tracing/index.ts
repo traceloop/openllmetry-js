@@ -2,6 +2,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { SpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { context, diag } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { TraceExporter as GcpTraceExporter } from "@google-cloud/opentelemetry-cloud-trace-exporter";
 import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
@@ -286,10 +287,12 @@ export const startTracing = (options: InitializeOptions) => {
 
   const traceExporter =
     options.exporter ??
-    new OTLPTraceExporter({
-      url: `${options.baseUrl}/v1/traces`,
-      headers,
-    });
+    (options.gcpProjectId
+      ? new GcpTraceExporter({ projectId: options.gcpProjectId })
+      : new OTLPTraceExporter({
+          url: `${options.baseUrl}/v1/traces`,
+          headers,
+        }));
 
   _spanProcessor = createSpanProcessor({
     apiKey: options.apiKey,

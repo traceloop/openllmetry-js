@@ -141,4 +141,10 @@ export interface InitializeOptions {
    * Defaults to the TRACELOOP_EXP_SLUG environment variable.
    */
   experimentSlug?: string;
+
+  /**
+   * The Google Cloud Project ID for sending traces data. Optional.
+   * This is used to configure the Google Cloud Trace Exporter.
+   */
+  gcpProjectId?: string;
 }
