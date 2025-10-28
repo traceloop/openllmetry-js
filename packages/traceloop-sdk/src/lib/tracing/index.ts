@@ -290,7 +290,7 @@ export const startTracing = (options: InitializeOptions) => {
     (options.gcpProjectId
       ? new GcpTraceExporter({ projectId: options.gcpProjectId })
       : new OTLPTraceExporter({
-          url: `${options.baseUrl}/v1/traces`,
+          url: `${baseUrl}/v1/traces`,
           headers,
         }));
 
