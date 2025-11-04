@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0](https://github.com/traceloop/openllmetry-js/compare/v0.19.1...v0.20.0) (2025-11-04)
+
+### Bug Fixes
+
+- **agent:** Add gen_ai.agent.name span attribute ([#737](https://github.com/traceloop/openllmetry-js/issues/737)) ([b2af9a2](https://github.com/traceloop/openllmetry-js/commit/b2af9a2635624a6e30a271e3d457039166147dda))
+
+### Features
+
+- Add Google Cloud destination support ([#814](https://github.com/traceloop/openllmetry-js/issues/814)) ([e80685a](https://github.com/traceloop/openllmetry-js/commit/e80685a6b4b3550a838b5dbf429e6ad8e8f33415))
+
 ## [0.19.1](https://github.com/traceloop/openllmetry-js/compare/v0.19.0...v0.19.1) (2025-09-21)
 
 ### Bug Fixes

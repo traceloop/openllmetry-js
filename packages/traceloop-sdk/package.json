@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.19.1",
+  "version": "0.20.0",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -55,6 +55,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@google-cloud/opentelemetry-cloud-trace-exporter": "^1.0.0",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/core": "^2.0.1",
     "@opentelemetry/exporter-trace-otlp-proto": "^0.203.0",
@@ -75,7 +76,6 @@
     "@traceloop/instrumentation-pinecone": "workspace:*",
     "@traceloop/instrumentation-qdrant": "workspace:*",
     "@traceloop/instrumentation-together": "workspace:*",
-    "@google-cloud/opentelemetry-cloud-trace-exporter": "^1.0.0",
     "@traceloop/instrumentation-vertexai": "workspace:*",
     "@types/nunjucks": "^3.2.6",
     "cross-fetch": "^4.1.0",

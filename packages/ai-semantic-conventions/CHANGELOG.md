@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.20.0](https://github.com/traceloop/openllmetry-js/compare/v0.19.1...v0.20.0) (2025-11-04)
+
+### Bug Fixes
+
+- **agent:** Add gen_ai.agent.name span attribute ([#737](https://github.com/traceloop/openllmetry-js/issues/737)) ([b2af9a2](https://github.com/traceloop/openllmetry-js/commit/b2af9a2635624a6e30a271e3d457039166147dda))
+
 # [0.19.0](https://github.com/traceloop/openllmetry-js/compare/v0.18.1...v0.19.0) (2025-09-17)
 
 ### Features
