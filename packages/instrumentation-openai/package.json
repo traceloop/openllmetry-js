@@ -57,7 +57,7 @@
     "@types/node-fetch": "^2.6.13",
     "mocha": "^11.7.1",
     "node-fetch": "^2.7.0",
-    "openai": "5.12.2",
+    "openai": "6.8.1",
     "ts-mocha": "^11.1.0"
   },
   "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-openai",
