@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.1](https://github.com/traceloop/openllmetry-js/compare/v0.20.0...v0.20.1) (2025-11-11)
+
+### Bug Fixes
+
+- **sdk:** upgrade `@google-cloud/opentelemetry-cloud-trace-exporter` ([#819](https://github.com/traceloop/openllmetry-js/issues/819)) ([d7e4297](https://github.com/traceloop/openllmetry-js/commit/d7e4297973dd1d9e432f7e3278467be467a7d9c6))
+
 # [0.20.0](https://github.com/traceloop/openllmetry-js/compare/v0.19.1...v0.20.0) (2025-11-04)
 
 ### Bug Fixes
