@@ -105,22 +105,37 @@ describe("Test AI SDK Integration with Recording", function () {
     const spans = memoryExporter.getFinishedSpans();
 
     const generateTextSpan = spans.find(
-      (span) => span.name === "text.generate",
+      (span) => span.name.startsWith("text.generate"),
     );
 
     assert.ok(result);
     assert.ok(result.text);
     assert.ok(generateTextSpan);
 
-    // Verify span name (should be transformed from ai.generateText.doGenerate to text.generate)
-    assert.strictEqual(generateTextSpan.name, "text.generate");
+    // Verify span name (should be transformed and include model name)
+    assert.ok(generateTextSpan.name.startsWith("text.generate"));
 
-    // Verify vendor
-    assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "OpenAI");
+    // Verify operation name (new OTel attribute)
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+      "chat",
+    );
+
+    // Verify provider (new OTel attribute)
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+      "openai",
+    );
+
+    // Verify backward compatibility - deprecated attribute should still be set
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.LLM_SYSTEM],
+      "OpenAI",
+    );
 
     // Verify model information
     assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.request.model"],
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_REQUEST_MODEL],
       "gpt-3.5-turbo",
     );
 
@@ -141,9 +156,21 @@ describe("Test AI SDK Integration with Recording", function () {
       result.text,
     );
 
-    // Verify token usage
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.prompt_tokens"]);
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.completion_tokens"]);
+    // Verify token usage (new OTel attributes)
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_USAGE_INPUT_TOKENS],
+    );
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_USAGE_OUTPUT_TOKENS],
+    );
+
+    // Verify backward compatibility - deprecated attributes should still be set
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+    );
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+    );
     assert.ok(generateTextSpan.attributes["llm.usage.total_tokens"]);
   });
 
@@ -172,7 +199,7 @@ describe("Test AI SDK Integration with Recording", function () {
     // Find the Google span specifically (should have workflow name test_google_workflow)
     const generateTextSpan = spans.find(
       (span) =>
-        span.name === "text.generate" &&
+        span.name.startsWith("text.generate") &&
         span.attributes["traceloop.workflow.name"] === "test_google_workflow",
     );
 
@@ -180,15 +207,30 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(result.text);
     assert.ok(generateTextSpan, "Could not find Google generateText span");
 
-    // Verify span name (should be transformed from ai.generateText.doGenerate to text.generate)
-    assert.strictEqual(generateTextSpan.name, "text.generate");
+    // Verify span name (should be transformed and include model name)
+    assert.ok(generateTextSpan.name.startsWith("text.generate"));
 
-    // Verify vendor
-    assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "Google");
+    // Verify operation name (new OTel attribute)
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+      "chat",
+    );
+
+    // Verify provider (new OTel attribute - should be gcp.vertex_ai)
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+      "gcp.vertex_ai",
+    );
+
+    // Verify backward compatibility - deprecated attribute should still be set
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.LLM_SYSTEM],
+      "Google",
+    );
 
     // Verify model information
     assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.request.model"],
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_REQUEST_MODEL],
       "gemini-1.5-flash",
     );
 
@@ -209,9 +251,21 @@ describe("Test AI SDK Integration with Recording", function () {
       result.text,
     );
 
-    // Verify token usage
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.prompt_tokens"]);
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.completion_tokens"]);
+    // Verify token usage (new OTel attributes)
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_USAGE_INPUT_TOKENS],
+    );
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.GEN_AI_USAGE_OUTPUT_TOKENS],
+    );
+
+    // Verify backward compatibility - deprecated attributes should still be set
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+    );
+    assert.ok(
+      generateTextSpan.attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+    );
     assert.ok(generateTextSpan.attributes["llm.usage.total_tokens"]);
   });
 
@@ -233,7 +287,7 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(result.text);
 
     const spans = memoryExporter.getFinishedSpans();
-    const aiSdkSpan = spans.find((span) => span.name === "text.generate");
+    const aiSdkSpan = spans.find((span) => span.name.startsWith("text.generate"));
 
     assert.ok(aiSdkSpan);
 
