@@ -55,7 +55,7 @@ async function testGenerateOnly(): Promise<void> {
         const imageBuffer = await imageResponse.arrayBuffer();
         const buffer = Buffer.from(imageBuffer);
 
-        fs.writeFileSync("otter_test.png", buffer);
+        fs.writeFileSync("otter_test.png", new Uint8Array(buffer));
         console.log("💾 Image saved as otter_test.png");
         console.log("🔗 Generated URL:", firstImage.url);
       }
