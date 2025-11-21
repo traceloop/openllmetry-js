@@ -72,6 +72,7 @@
     "@traceloop/instrumentation-cohere": "workspace:*",
     "@traceloop/instrumentation-langchain": "workspace:*",
     "@traceloop/instrumentation-llamaindex": "workspace:*",
+    "@traceloop/instrumentation-mcp": "workspace:*",
     "@traceloop/instrumentation-openai": "workspace:*",
     "@traceloop/instrumentation-pinecone": "workspace:*",
     "@traceloop/instrumentation-qdrant": "workspace:*",

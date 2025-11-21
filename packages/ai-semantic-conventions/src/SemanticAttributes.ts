@@ -60,6 +60,10 @@ export const SpanAttributes = {
   TRACELOOP_ASSOCIATION_PROPERTIES: "traceloop.association.properties",
   TRACELOOP_ENTITY_INPUT: "traceloop.entity.input",
   TRACELOOP_ENTITY_OUTPUT: "traceloop.entity.output",
+
+  // MCP (Model Context Protocol)
+  MCP_RESPONSE_VALUE: "mcp.response.value",
+  MCP_REQUEST_ID: "mcp.request.id",
 };
 
 export const Events = {
@@ -117,5 +121,6 @@ export enum TraceloopSpanKindValues {
   TASK = "task",
   AGENT = "agent",
   TOOL = "tool",
+  SESSION = "session",
   UNKNOWN = "unknown",
 }
