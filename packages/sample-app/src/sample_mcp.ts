@@ -229,14 +229,22 @@ async function main() {
   console.log("- Client session lifecycle (mcp.client.session span)");
   console.log("- Tool invocations ({tool_name}.tool spans)");
   console.log("- Tool listing (tools/list.mcp spans)");
-  console.log("- Resource operations (resources/read.mcp, resources/list.mcp spans)");
-  console.log("- Prompt operations (prompts/get.mcp, prompts/list.mcp spans)\n");
+  console.log(
+    "- Resource operations (resources/read.mcp, resources/list.mcp spans)",
+  );
+  console.log(
+    "- Prompt operations (prompts/get.mcp, prompts/list.mcp spans)\n",
+  );
 
-  console.log("When you use MCP with this SDK, all operations are automatically traced!");
+  console.log(
+    "When you use MCP with this SDK, all operations are automatically traced!",
+  );
   console.log("\nExample trace structure:");
   console.log("  └─ mcp.client.session");
   console.log("      ├─ add_numbers.tool");
-  console.log("      │   ├─ input: {tool_name: 'add_numbers', arguments: {a: 5, b: 3}}");
+  console.log(
+    "      │   ├─ input: {tool_name: 'add_numbers', arguments: {a: 5, b: 3}}",
+  );
   console.log("      │   └─ output: {result: '8'}");
   console.log("      ├─ tools/list.mcp");
   console.log("      │   └─ output: {tools: [{name: 'add_numbers', ...}]}");

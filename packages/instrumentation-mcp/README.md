@@ -14,13 +14,11 @@ npm install --save @traceloop/instrumentation-mcp
 ## Usage
 
 ```javascript
-const { McpInstrumentation } = require('@traceloop/instrumentation-mcp');
-const { registerInstrumentations } = require('@opentelemetry/instrumentation');
+const { McpInstrumentation } = require("@traceloop/instrumentation-mcp");
+const { registerInstrumentations } = require("@opentelemetry/instrumentation");
 
 registerInstrumentations({
-  instrumentations: [
-    new McpInstrumentation(),
-  ],
+  instrumentations: [new McpInstrumentation()],
 });
 ```
 
@@ -33,7 +31,7 @@ However, you may want to disable this logging for privacy reasons, as they may c
 To disable logging, set the `traceContent` config option to `false`:
 
 ```javascript
-const { McpInstrumentation } = require('@traceloop/instrumentation-mcp');
+const { McpInstrumentation } = require("@traceloop/instrumentation-mcp");
 
 const mcpInstrumentation = new McpInstrumentation({
   traceContent: false,
@@ -45,6 +43,7 @@ const mcpInstrumentation = new McpInstrumentation({
 This instrumentation tracks the following MCP operations:
 
 ### Client Operations
+
 - Session lifecycle management
 - Tool invocations
 - Resource access
@@ -52,6 +51,7 @@ This instrumentation tracks the following MCP operations:
 - MCP protocol methods
 
 ### Server Operations
+
 - Request handling
 - Tool execution
 - Resource serving

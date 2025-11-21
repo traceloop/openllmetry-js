@@ -60,7 +60,9 @@ describe("Test MCP instrumentation", function () {
 
   it("should successfully import MCP SDK Client", async () => {
     // Verify we can import the MCP SDK after instrumentation is set up
-    const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
+    const { Client } = await import(
+      "@modelcontextprotocol/sdk/client/index.js"
+    );
     assert.ok(Client, "Should be able to import Client");
     assert.ok(Client.prototype.request, "Client should have request method");
     assert.ok(Client.prototype.connect, "Client should have connect method");
@@ -68,7 +70,9 @@ describe("Test MCP instrumentation", function () {
 
   it("should successfully import MCP SDK Server", async () => {
     // Verify we can import the MCP SDK Server after instrumentation is set up
-    const { Server } = await import("@modelcontextprotocol/sdk/server/index.js");
+    const { Server } = await import(
+      "@modelcontextprotocol/sdk/server/index.js"
+    );
     assert.ok(Server, "Should be able to import Server");
     assert.ok(Server.prototype.request, "Server should have request method");
   });
@@ -77,7 +81,9 @@ describe("Test MCP instrumentation", function () {
     // Create instrumentation with traceContent disabled
     instrumentation.setConfig({ traceContent: false });
 
-    const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
+    const { Client } = await import(
+      "@modelcontextprotocol/sdk/client/index.js"
+    );
 
     const client = new Client(
       {
@@ -137,7 +143,9 @@ describe("Test MCP instrumentation", function () {
   });
 
   it("should handle errors in tool calls", async () => {
-    const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
+    const { Client } = await import(
+      "@modelcontextprotocol/sdk/client/index.js"
+    );
 
     const client = new Client(
       {
@@ -190,7 +198,9 @@ describe("Test MCP instrumentation", function () {
   });
 
   it("should create session spans for client connect", async () => {
-    const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
+    const { Client } = await import(
+      "@modelcontextprotocol/sdk/client/index.js"
+    );
 
     const client = new Client(
       {

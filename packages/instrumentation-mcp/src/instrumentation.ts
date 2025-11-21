@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-import { context, trace, Span, SpanStatusCode, SpanKind } from "@opentelemetry/api";
+import {
+  context,
+  trace,
+  Span,
+  SpanStatusCode,
+  SpanKind,
+} from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
@@ -56,7 +62,7 @@ interface MCPResult {
 }
 
 export class McpInstrumentation extends InstrumentationBase {
-  protected declare _config: McpInstrumentationConfig;
+  declare protected _config: McpInstrumentationConfig;
 
   constructor(config: McpInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-mcp", version, config);
@@ -132,8 +138,14 @@ export class McpInstrumentation extends InstrumentationBase {
         kind: SpanKind.CLIENT,
       });
 
-      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, TraceloopSpanKindValues.SESSION);
-      span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, "mcp.client.session");
+      span.setAttribute(
+        SpanAttributes.TRACELOOP_SPAN_KIND,
+        TraceloopSpanKindValues.SESSION,
+      );
+      span.setAttribute(
+        SpanAttributes.TRACELOOP_ENTITY_NAME,
+        "mcp.client.session",
+      );
 
       const execContext = trace.setSpan(context.active(), span);
 
@@ -288,8 +300,7 @@ export class McpInstrumentation extends InstrumentationBase {
       if (result && typeof result === "object") {
         const mcpResult = result as MCPResult;
         if (mcpResult?.isError) {
-          const errorMessage =
-            mcpResult.content?.[0]?.text || "Unknown error";
+          const errorMessage = mcpResult.content?.[0]?.text || "Unknown error";
           span.setStatus({
             code: SpanStatusCode.ERROR,
             message: errorMessage,
@@ -317,7 +328,11 @@ export class McpInstrumentation extends InstrumentationBase {
     }
 
     try {
-      if (method === "tools/call" && typeof params === "object" && params !== null) {
+      if (
+        method === "tools/call" &&
+        typeof params === "object" &&
+        params !== null
+      ) {
         const result: Record<string, unknown> = {};
         const toolParams = params as MCPToolCallParams;
 
@@ -344,8 +359,12 @@ export class McpInstrumentation extends InstrumentationBase {
       } else if (method === "prompts/get") {
         if (typeof params === "object" && params !== null) {
           return {
-            name: "name" in params ? (params as { name: unknown }).name : undefined,
-            arguments: "arguments" in params ? (params as { arguments: unknown }).arguments : undefined,
+            name:
+              "name" in params ? (params as { name: unknown }).name : undefined,
+            arguments:
+              "arguments" in params
+                ? (params as { arguments: unknown }).arguments
+                : undefined,
           };
         }
         return {};
@@ -394,7 +413,11 @@ export class McpInstrumentation extends InstrumentationBase {
       if (method === "tools/call") {
         const output: Record<string, unknown> = {};
 
-        if (mcpResult.content && Array.isArray(mcpResult.content) && mcpResult.content.length > 0) {
+        if (
+          mcpResult.content &&
+          Array.isArray(mcpResult.content) &&
+          mcpResult.content.length > 0
+        ) {
           const contentItem = mcpResult.content[0];
           if (contentItem.text !== undefined) {
             output.result = contentItem.text;
@@ -485,7 +508,10 @@ export class McpInstrumentation extends InstrumentationBase {
       .active()
       .getValue(CONTEXT_KEY_ALLOW_TRACE_CONTENT);
 
-    if (contextShouldSendPrompts !== undefined && contextShouldSendPrompts !== null) {
+    if (
+      contextShouldSendPrompts !== undefined &&
+      contextShouldSendPrompts !== null
+    ) {
       return Boolean(contextShouldSendPrompts);
     }
 
