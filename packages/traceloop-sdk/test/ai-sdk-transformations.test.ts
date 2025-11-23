@@ -1746,7 +1746,7 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
 
-    it("should detect agent from agent metadata and set agent attributes", () => {
+    it("should detect agent from agent metadata and set agent attributes on root span", () => {
       const attributes = {
         "ai.telemetry.metadata.agent": "research_assistant",
         "ai.telemetry.metadata.sessionId": "session_123",
@@ -1754,7 +1754,8 @@ describe("AI SDK Transformations", () => {
         "ai.response.text": "Hello!",
       };
 
-      transformLLMSpans(attributes);
+      // Simulate root span (ai.generateText)
+      transformLLMSpans(attributes, "ai.generateText");
 
       // Check that agent attributes are set
       assert.strictEqual(
@@ -1776,6 +1777,29 @@ describe("AI SDK Transformations", () => {
           `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`
         ],
         "session_123",
+      );
+    });
+
+    it("should set agent name but not span kind on child spans", () => {
+      const attributes = {
+        "ai.telemetry.metadata.agent": "research_assistant",
+        "ai.telemetry.metadata.sessionId": "session_123",
+        "ai.response.text": "Hello!",
+      };
+
+      // Simulate child span (ai.generateText.doGenerate)
+      transformLLMSpans(attributes, "ai.generateText.doGenerate");
+
+      // Agent name should be set for context
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        "research_assistant",
+      );
+
+      // But span kind should NOT be set on child spans
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        undefined,
       );
     });
 

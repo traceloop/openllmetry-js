@@ -364,7 +364,10 @@ const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
-const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
+const transformTelemetryMetadata = (
+  attributes: Record<string, any>,
+  spanName?: string,
+): void => {
   const metadataAttributes: Record<string, string> = {};
   const keysToDelete: string[] = [];
   let agentName: string | null = null;
@@ -395,13 +398,15 @@ const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
     }
   }
 
-  // Set agent attributes if detected
+  // Set agent attributes if detected and this is the root AI span
   if (agentName) {
-    // Set span kind to agent
-    attributes[SpanAttributes.TRACELOOP_SPAN_KIND] = "agent";
-
-    // Set agent name
+    // Set agent name on all spans for context
     attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
+
+    // Only set span kind to "agent" for the root AI span (run.ai)
+    if (spanName === AI_GENERATE_TEXT) {
+      attributes[SpanAttributes.TRACELOOP_SPAN_KIND] = "agent";
+    }
   }
 
   // Remove original ai.telemetry.metadata.* attributes
@@ -413,7 +418,10 @@ const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
   // not during transformation. Use `withTelemetryMetadataContext` function for context propagation.
 };
 
-export const transformLLMSpans = (attributes: Record<string, any>): void => {
+export const transformLLMSpans = (
+  attributes: Record<string, any>,
+  spanName?: string,
+): void => {
   transformResponseText(attributes);
   transformResponseObject(attributes);
   transformResponseToolCalls(attributes);
@@ -423,7 +431,7 @@ export const transformLLMSpans = (attributes: Record<string, any>): void => {
   transformCompletionTokens(attributes);
   calculateTotalTokens(attributes);
   transformVendor(attributes);
-  transformTelemetryMetadata(attributes);
+  transformTelemetryMetadata(attributes, spanName);
 };
 
 const transformToolCalls = (span: ReadableSpan): void => {
@@ -457,6 +465,6 @@ export const transformAiSdkSpanAttributes = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
   }
-  transformLLMSpans(span.attributes);
+  transformLLMSpans(span.attributes, span.name);
   transformToolCalls(span);
 };
