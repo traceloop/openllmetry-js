@@ -367,6 +367,7 @@ const transformVendor = (attributes: Record<string, any>): void => {
 const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
   const metadataAttributes: Record<string, string> = {};
   const keysToDelete: string[] = [];
+  let agentName: string | null = null;
 
   // Find all ai.telemetry.metadata.* attributes
   for (const [key, value] of Object.entries(attributes)) {
@@ -381,12 +382,26 @@ const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
         const stringValue = typeof value === "string" ? value : String(value);
         metadataAttributes[metadataKey] = stringValue;
 
+        // Check for agent-specific metadata
+        if (metadataKey === "agent") {
+          agentName = stringValue;
+        }
+
         // Also set as traceloop association property attribute
         attributes[
           `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`
         ] = stringValue;
       }
     }
+  }
+
+  // Set agent attributes if detected
+  if (agentName) {
+    // Set span kind to agent
+    attributes[SpanAttributes.TRACELOOP_SPAN_KIND] = "agent";
+
+    // Set agent name
+    attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
   }
 
   // Remove original ai.telemetry.metadata.* attributes
