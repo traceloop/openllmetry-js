@@ -1767,6 +1767,10 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
         "agent",
       );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+        "research_assistant",
+      );
 
       // Check that association properties are still created
       assert.strictEqual(
@@ -1798,9 +1802,13 @@ describe("AI SDK Transformations", () => {
         "research_assistant",
       );
 
-      // But span kind should NOT be set on child spans
+      // But span kind and entity name should NOT be set on child spans
       assert.strictEqual(
         attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
         undefined,
       );
     });
@@ -1854,6 +1862,12 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(
         mockSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
         "tool",
+      );
+
+      // Check that entity name was set from tool name
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+        "calculate",
       );
 
       // Original attributes should be deleted

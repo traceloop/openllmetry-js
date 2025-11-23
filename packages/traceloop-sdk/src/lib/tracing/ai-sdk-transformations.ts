@@ -411,6 +411,7 @@ const transformTelemetryMetadata = (
     if (spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT]) {
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
         TraceloopSpanKindValues.AGENT;
+      attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
     }
   }
 
@@ -452,6 +453,12 @@ const transformToolCalls = (span: ReadableSpan): void => {
     delete span.attributes["ai.toolCall.result"];
     span.attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
       TraceloopSpanKindValues.TOOL;
+
+    // Set entity name from tool call name
+    const toolName = span.attributes["ai.toolCall.name"];
+    if (toolName) {
+      span.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = toolName;
+    }
   }
 };
 
