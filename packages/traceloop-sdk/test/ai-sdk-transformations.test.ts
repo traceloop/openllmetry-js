@@ -1825,4 +1825,40 @@ describe("AI SDK Transformations", () => {
       );
     });
   });
+
+  describe("transformAiSdkSpanAttributes - tool calls", () => {
+    it("should set traceloop span kind to tool for tool call spans", () => {
+      const mockSpan = {
+        name: "calculate.tool",
+        instrumentationScope: { name: "ai" },
+        attributes: {
+          "ai.toolCall.name": "calculate",
+          "ai.toolCall.args": JSON.stringify({ a: 5, b: 3 }),
+          "ai.toolCall.result": JSON.stringify({ result: 8 }),
+        },
+      } as any;
+
+      transformAiSdkSpanAttributes(mockSpan);
+
+      // Check that tool call attributes were transformed
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT],
+        JSON.stringify({ a: 5, b: 3 }),
+      );
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT],
+        JSON.stringify({ result: 8 }),
+      );
+
+      // Check that span kind was set to tool
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        "tool",
+      );
+
+      // Original attributes should be deleted
+      assert.strictEqual(mockSpan.attributes["ai.toolCall.args"], undefined);
+      assert.strictEqual(mockSpan.attributes["ai.toolCall.result"], undefined);
+    });
+  });
 });

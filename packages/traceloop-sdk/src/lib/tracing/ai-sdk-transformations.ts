@@ -450,6 +450,8 @@ const transformToolCalls = (span: ReadableSpan): void => {
     span.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] =
       span.attributes["ai.toolCall.result"];
     delete span.attributes["ai.toolCall.result"];
+    span.attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
+      TraceloopSpanKindValues.TOOL;
   }
 };
 
