@@ -679,13 +679,11 @@ describe("Test SDK Decorators", () => {
       result.text,
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_INPUT_TOKENS}`],
       14,
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-      ],
+      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_OUTPUT_TOKENS}`],
       8,
     );
     assert.strictEqual(

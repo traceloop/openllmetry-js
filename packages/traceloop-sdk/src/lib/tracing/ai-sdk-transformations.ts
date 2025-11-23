@@ -21,10 +21,6 @@ const AI_PROMPT_MESSAGES = "ai.prompt.messages";
 const AI_PROMPT = "ai.prompt";
 const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
-const GEN_AI_USAGE_PROMPT_TOKENS = "gen_ai.usage.prompt_tokens";
-const GEN_AI_USAGE_COMPLETION_TOKENS = "gen_ai.usage.completion_tokens";
-const GEN_AI_USAGE_INPUT_TOKENS = "gen_ai.usage.input_tokens";
-const GEN_AI_USAGE_OUTPUT_TOKENS = "gen_ai.usage.output_tokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
 const AI_TELEMETRY_METADATA_PREFIX = "ai.telemetry.metadata.";
@@ -322,28 +318,46 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 };
 
 const transformPromptTokens = (attributes: Record<string, any>): void => {
-  if (AI_USAGE_PROMPT_TOKENS in attributes) {
-    delete attributes[AI_USAGE_PROMPT_TOKENS];
-  }
-
-  if (GEN_AI_USAGE_PROMPT_TOKENS in attributes) {
-    delete attributes[GEN_AI_USAGE_PROMPT_TOKENS];
+  if (SpanAttributes.LLM_USAGE_INPUT_TOKENS in attributes) {
+    // Already has input_tokens, delete legacy duplicates
+    if (AI_USAGE_PROMPT_TOKENS in attributes) {
+      delete attributes[AI_USAGE_PROMPT_TOKENS];
+    }
+    if (SpanAttributes.LLM_USAGE_PROMPT_TOKENS in attributes) {
+      delete attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS];
+    }
+  } else {
+    // Transform legacy promptTokens to modern input_tokens
+    if (AI_USAGE_PROMPT_TOKENS in attributes) {
+      attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS] =
+        attributes[AI_USAGE_PROMPT_TOKENS];
+      delete attributes[AI_USAGE_PROMPT_TOKENS];
+    }
   }
 };
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
-  if (AI_USAGE_COMPLETION_TOKENS in attributes) {
-    delete attributes[AI_USAGE_COMPLETION_TOKENS];
-  }
-
-  if (GEN_AI_USAGE_COMPLETION_TOKENS in attributes) {
-    delete attributes[GEN_AI_USAGE_COMPLETION_TOKENS];
+  if (SpanAttributes.LLM_USAGE_OUTPUT_TOKENS in attributes) {
+    // Already has output_tokens, delete legacy duplicates
+    if (AI_USAGE_COMPLETION_TOKENS in attributes) {
+      delete attributes[AI_USAGE_COMPLETION_TOKENS];
+    }
+    if (SpanAttributes.LLM_USAGE_COMPLETION_TOKENS in attributes) {
+      delete attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS];
+    }
+  } else {
+    // Transform legacy completionTokens to modern output_tokens
+    if (AI_USAGE_COMPLETION_TOKENS in attributes) {
+      attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS] =
+        attributes[AI_USAGE_COMPLETION_TOKENS];
+      delete attributes[AI_USAGE_COMPLETION_TOKENS];
+    }
   }
 };
 
 const calculateTotalTokens = (attributes: Record<string, any>): void => {
-  const inputTokens = attributes[GEN_AI_USAGE_INPUT_TOKENS];
-  const outputTokens = attributes[GEN_AI_USAGE_OUTPUT_TOKENS];
+  const inputTokens = attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS];
+  const outputTokens = attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS];
 
   if (inputTokens && outputTokens) {
     attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =

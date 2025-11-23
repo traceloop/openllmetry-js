@@ -141,9 +141,9 @@ describe("Test AI SDK Integration with Recording", function () {
       result.text,
     );
 
-    // Verify token usage
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.prompt_tokens"]);
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.completion_tokens"]);
+    // Verify token usage - should be transformed to input/output tokens
+    assert.ok(generateTextSpan.attributes["gen_ai.usage.input_tokens"]);
+    assert.ok(generateTextSpan.attributes["gen_ai.usage.output_tokens"]);
     assert.ok(generateTextSpan.attributes["llm.usage.total_tokens"]);
   });
 
@@ -209,9 +209,9 @@ describe("Test AI SDK Integration with Recording", function () {
       result.text,
     );
 
-    // Verify token usage
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.prompt_tokens"]);
-    assert.ok(generateTextSpan.attributes["gen_ai.usage.completion_tokens"]);
+    // Verify token usage - should be transformed to input/output tokens
+    assert.ok(generateTextSpan.attributes["gen_ai.usage.input_tokens"]);
+    assert.ok(generateTextSpan.attributes["gen_ai.usage.output_tokens"]);
     assert.ok(generateTextSpan.attributes["llm.usage.total_tokens"]);
   });
 

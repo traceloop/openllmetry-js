@@ -787,18 +787,16 @@ describe("AI SDK Transformations", () => {
   });
 
   describe("transformAiSdkAttributes - prompt tokens", () => {
-    it("should transform ai.usage.promptTokens to LLM usage attribute", () => {
+    it("should delete ai.usage.promptTokens and gen_ai.usage.prompt_tokens (keep input_tokens)", () => {
       const attributes = {
         "ai.usage.promptTokens": 50,
+        "gen_ai.usage.input_tokens": 50,
         someOtherAttr: "value",
       };
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
-        50,
-      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 50);
       assert.strictEqual(attributes["ai.usage.promptTokens"], undefined);
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
@@ -814,28 +812,31 @@ describe("AI SDK Transformations", () => {
       assert.deepStrictEqual(attributes, originalAttributes);
     });
 
-    it("should handle zero prompt tokens", () => {
+    it("should handle zero input tokens", () => {
       const attributes = {
         "ai.usage.promptTokens": 0,
+        "gen_ai.usage.input_tokens": 0,
       };
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS], 0);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 0);
+      assert.strictEqual(attributes["ai.usage.promptTokens"], undefined);
     });
   });
 
   describe("transformAiSdkAttributes - completion tokens", () => {
-    it("should transform ai.usage.completionTokens to LLM usage attribute", () => {
+    it("should delete ai.usage.completionTokens and gen_ai.usage.completion_tokens (keep output_tokens)", () => {
       const attributes = {
         "ai.usage.completionTokens": 25,
+        "gen_ai.usage.output_tokens": 25,
         someOtherAttr: "value",
       };
 
       transformLLMSpans(attributes);
 
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS],
         25,
       );
       assert.strictEqual(attributes["ai.usage.completionTokens"], undefined);
@@ -853,25 +854,24 @@ describe("AI SDK Transformations", () => {
       assert.deepStrictEqual(attributes, originalAttributes);
     });
 
-    it("should handle zero completion tokens", () => {
+    it("should handle zero output tokens", () => {
       const attributes = {
         "ai.usage.completionTokens": 0,
+        "gen_ai.usage.output_tokens": 0,
       };
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
-        0,
-      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS], 0);
+      assert.strictEqual(attributes["ai.usage.completionTokens"], undefined);
     });
   });
 
   describe("transformAiSdkAttributes - total tokens calculation", () => {
-    it("should calculate total tokens from prompt and completion tokens", () => {
+    it("should calculate total tokens from input and output tokens", () => {
       const attributes = {
-        [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: 50,
-        [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: 25,
+        [SpanAttributes.LLM_USAGE_INPUT_TOKENS]: 50,
+        [SpanAttributes.LLM_USAGE_OUTPUT_TOKENS]: 25,
       };
 
       transformLLMSpans(attributes);
@@ -881,8 +881,8 @@ describe("AI SDK Transformations", () => {
 
     it("should handle string token values", () => {
       const attributes = {
-        [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: "50",
-        [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: "25",
+        [SpanAttributes.LLM_USAGE_INPUT_TOKENS]: "50",
+        [SpanAttributes.LLM_USAGE_OUTPUT_TOKENS]: "25",
       };
 
       transformLLMSpans(attributes);
@@ -890,9 +890,9 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 75);
     });
 
-    it("should not calculate total when prompt tokens are missing", () => {
+    it("should not calculate total when input tokens are missing", () => {
       const attributes = {
-        [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: 25,
+        [SpanAttributes.LLM_USAGE_OUTPUT_TOKENS]: 25,
       };
 
       transformLLMSpans(attributes);
@@ -903,9 +903,9 @@ describe("AI SDK Transformations", () => {
       );
     });
 
-    it("should not calculate total when completion tokens are missing", () => {
+    it("should not calculate total when output tokens are missing", () => {
       const attributes = {
-        [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: 50,
+        [SpanAttributes.LLM_USAGE_INPUT_TOKENS]: 50,
       };
 
       transformLLMSpans(attributes);
@@ -1017,6 +1017,8 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify([{ role: "user", content: "Hi" }]),
         "ai.usage.promptTokens": 10,
         "ai.usage.completionTokens": 5,
+        "gen_ai.usage.input_tokens": 10,
+        "gen_ai.usage.output_tokens": 5,
         "ai.model.provider": "openai.chat",
         someOtherAttr: "value",
       };
@@ -1043,15 +1045,9 @@ describe("AI SDK Transformations", () => {
         "user",
       );
 
-      // Check token transformations
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
-        10,
-      );
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
-        5,
-      );
+      // Check token transformations - should keep input/output tokens
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 10);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS], 5);
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
 
       // Check vendor transformation
@@ -1062,6 +1058,14 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes["ai.prompt.messages"], undefined);
       assert.strictEqual(attributes["ai.usage.promptTokens"], undefined);
       assert.strictEqual(attributes["ai.usage.completionTokens"], undefined);
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        undefined,
+      );
       assert.strictEqual(attributes["ai.model.provider"], undefined);
 
       // Check other attributes are preserved
@@ -1089,6 +1093,8 @@ describe("AI SDK Transformations", () => {
         "ai.prompt.messages": JSON.stringify([{ role: "user", content: "Hi" }]),
         "ai.usage.promptTokens": 10,
         "ai.usage.completionTokens": 5,
+        "gen_ai.usage.input_tokens": 10,
+        "gen_ai.usage.output_tokens": 5,
         "ai.model.provider": "azure-openai.chat",
         someOtherAttr: "value",
       };
@@ -1115,15 +1121,9 @@ describe("AI SDK Transformations", () => {
         "user",
       );
 
-      // Check token transformations
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
-        10,
-      );
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
-        5,
-      );
+      // Check token transformations - should keep input/output tokens
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 10);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS], 5);
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
 
       // Check vendor transformation
@@ -1134,6 +1134,14 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes["ai.prompt.messages"], undefined);
       assert.strictEqual(attributes["ai.usage.promptTokens"], undefined);
       assert.strictEqual(attributes["ai.usage.completionTokens"], undefined);
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        undefined,
+      );
       assert.strictEqual(attributes["ai.model.provider"], undefined);
 
       // Check other attributes are preserved
