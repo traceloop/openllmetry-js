@@ -1,5 +1,8 @@
 import { ReadableSpan, Span } from "@opentelemetry/sdk-trace-node";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  SpanAttributes,
+  TraceloopSpanKindValues,
+} from "@traceloop/ai-semantic-conventions";
 
 const AI_GENERATE_TEXT = "ai.generateText";
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
@@ -406,7 +409,8 @@ const transformTelemetryMetadata = (
     // Only set span kind to "agent" for the root AI span (run.ai)
     // Note: At this point, span names have already been transformed
     if (spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT]) {
-      attributes[SpanAttributes.TRACELOOP_SPAN_KIND] = "agent";
+      attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
+        TraceloopSpanKindValues.AGENT;
     }
   }
 
