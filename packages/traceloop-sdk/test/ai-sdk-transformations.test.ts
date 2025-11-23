@@ -1005,6 +1005,11 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
+      // Should set both new and deprecated attributes to empty string
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+        "",
+      );
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "");
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
