@@ -404,7 +404,8 @@ const transformTelemetryMetadata = (
     attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
 
     // Only set span kind to "agent" for the root AI span (run.ai)
-    if (spanName === AI_GENERATE_TEXT) {
+    // Note: At this point, span names have already been transformed
+    if (spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT]) {
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] = "agent";
     }
   }

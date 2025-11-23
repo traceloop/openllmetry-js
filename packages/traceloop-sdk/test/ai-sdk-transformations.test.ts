@@ -1754,8 +1754,9 @@ describe("AI SDK Transformations", () => {
         "ai.response.text": "Hello!",
       };
 
-      // Simulate root span (ai.generateText)
-      transformLLMSpans(attributes, "ai.generateText");
+      // Simulate root span (run.ai - after transformation)
+      // Note: In production, span names are transformed before attribute transformation
+      transformLLMSpans(attributes, "run.ai");
 
       // Check that agent attributes are set
       assert.strictEqual(
@@ -1787,8 +1788,9 @@ describe("AI SDK Transformations", () => {
         "ai.response.text": "Hello!",
       };
 
-      // Simulate child span (ai.generateText.doGenerate)
-      transformLLMSpans(attributes, "ai.generateText.doGenerate");
+      // Simulate child span (text.generate - after transformation)
+      // Note: In production, span names are transformed before attribute transformation
+      transformLLMSpans(attributes, "text.generate");
 
       // Agent name should be set for context
       assert.strictEqual(
