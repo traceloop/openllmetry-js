@@ -22,16 +22,41 @@ const AI_PROMPT = "ai.prompt";
 const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
+const AI_MODEL_ID = "ai.model.id";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
 const AI_TELEMETRY_METADATA_PREFIX = "ai.telemetry.metadata.";
+const AI_TELEMETRY_FUNCTION_ID = "ai.telemetry.functionId";
+const AI_RESPONSE_PROVIDER_METADATA = "ai.response.providerMetadata";
+const AI_RESPONSE_ID = "ai.response.id";
+const AI_RESPONSE_MODEL = "ai.response.model";
+const AI_RESPONSE_FINISH_REASON = "ai.response.finishReason";
+const GEN_AI_SYSTEM = "gen_ai.system";
 const TYPE_TEXT = "text";
 const TYPE_TOOL_CALL = "tool_call";
 const ROLE_ASSISTANT = "assistant";
 const ROLE_USER = "user";
+const ROLE_SYSTEM = "system";
 
-// Vendor mapping from AI SDK provider prefixes to standardized LLM_SYSTEM values
-// Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
-const VENDOR_MAPPING: Record<string, string> = {
+// OTel GenAI provider name mapping
+// Maps AI SDK provider prefixes to OpenTelemetry standard provider names
+// See: https://opentelemetry.io/docs/specs/semconv/attributes-registry/gen-ai/
+const OTEL_PROVIDER_MAPPING: Record<string, string> = {
+  openai: "openai",
+  "azure-openai": "azure.ai.openai",
+  anthropic: "anthropic",
+  cohere: "cohere",
+  mistral: "mistral_ai",
+  groq: "groq",
+  deepseek: "deepseek",
+  perplexity: "perplexity",
+  "amazon-bedrock": "aws.bedrock",
+  bedrock: "aws.bedrock",
+  google: "gcp.vertex_ai",
+  vertex: "gcp.vertex_ai",
+};
+
+// Legacy vendor mapping for backward compatibility (deprecated attribute names)
+const LEGACY_VENDOR_MAPPING: Record<string, string> = {
   openai: "OpenAI",
   "azure-openai": "Azure",
   anthropic: "Anthropic",
@@ -52,6 +77,89 @@ const VENDOR_MAPPING: Record<string, string> = {
   openrouter: "OpenRouter",
 };
 
+/**
+ * Adds gen_ai.operation.name attribute based on AI SDK span name
+ */
+const addOperationName = (
+  spanName: string,
+  attributes: Record<string, any>,
+): void => {
+  // Map AI SDK span names to OTel operation names
+  const operationMapping: Record<string, string> = {
+    [AI_GENERATE_TEXT_DO_GENERATE]: "chat",
+    [AI_GENERATE_OBJECT_DO_GENERATE]: "generate_content",
+    [AI_STREAM_TEXT_DO_STREAM]: "chat",
+    "ai.embed.doEmbed": "embeddings",
+    "ai.embedMany.doEmbed": "embeddings",
+  };
+
+  const operation = operationMapping[spanName] || "chat";
+  attributes[SpanAttributes.GEN_AI_OPERATION_NAME] = operation;
+};
+
+/**
+ * Transforms ai.model.id to gen_ai.request.model
+ */
+const transformModelId = (attributes: Record<string, any>): void => {
+  if (AI_MODEL_ID in attributes) {
+    // Set as gen_ai.request.model if not already set by AI SDK
+    if (!attributes[SpanAttributes.GEN_AI_REQUEST_MODEL]) {
+      attributes[SpanAttributes.GEN_AI_REQUEST_MODEL] = attributes[AI_MODEL_ID];
+    }
+    delete attributes[AI_MODEL_ID];
+  }
+};
+
+/**
+ * Transforms ai.telemetry.functionId to traceloop.entity.name
+ */
+const transformFunctionId = (attributes: Record<string, any>): void => {
+  if (AI_TELEMETRY_FUNCTION_ID in attributes) {
+    // Map to traceloop entity name for consistency with other instrumentations
+    attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] =
+      attributes[AI_TELEMETRY_FUNCTION_ID];
+    delete attributes[AI_TELEMETRY_FUNCTION_ID];
+  }
+};
+
+/**
+ * Transforms ai.response.providerMetadata to a custom gen_ai attribute
+ */
+const transformProviderMetadata = (attributes: Record<string, any>): void => {
+  if (AI_RESPONSE_PROVIDER_METADATA in attributes) {
+    // Store as provider.metadata under gen_ai namespace
+    attributes["gen_ai.provider.metadata"] =
+      attributes[AI_RESPONSE_PROVIDER_METADATA];
+    delete attributes[AI_RESPONSE_PROVIDER_METADATA];
+  }
+};
+
+/**
+ * Transforms AI SDK response metadata attributes to OTel format
+ */
+const transformResponseMetadata = (attributes: Record<string, any>): void => {
+  // Transform response ID
+  if (AI_RESPONSE_ID in attributes) {
+    attributes[SpanAttributes.GEN_AI_RESPONSE_ID] = attributes[AI_RESPONSE_ID];
+    delete attributes[AI_RESPONSE_ID];
+  }
+
+  // Transform response model
+  if (AI_RESPONSE_MODEL in attributes) {
+    attributes[SpanAttributes.GEN_AI_RESPONSE_MODEL] =
+      attributes[AI_RESPONSE_MODEL];
+    delete attributes[AI_RESPONSE_MODEL];
+  }
+
+  // Transform finish reason to finish reasons array
+  if (AI_RESPONSE_FINISH_REASON in attributes) {
+    const finishReason = attributes[AI_RESPONSE_FINISH_REASON];
+    // OTel expects an array of finish reasons
+    attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS] = [finishReason];
+    delete attributes[AI_RESPONSE_FINISH_REASON];
+  }
+};
+
 const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
@@ -67,6 +175,13 @@ const transformResponseText = (attributes: Record<string, any>): void => {
         },
       ],
     };
+
+    // Set new OTel attribute
+    attributes[SpanAttributes.GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
+      outputMessage,
+    ]);
+
+    // Set deprecated attribute for backward compatibility
     attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
@@ -90,6 +205,13 @@ const transformResponseObject = (attributes: Record<string, any>): void => {
         },
       ],
     };
+
+    // Set new OTel attribute
+    attributes[SpanAttributes.GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
+      outputMessage,
+    ]);
+
+    // Set deprecated attribute for backward compatibility
     attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
@@ -132,6 +254,13 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
           role: ROLE_ASSISTANT,
           parts: toolCallParts,
         };
+
+        // Set new OTel attribute
+        attributes[SpanAttributes.GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
+          outputMessage,
+        ]);
+
+        // Set deprecated attribute for backward compatibility
         attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
           outputMessage,
         ]);
@@ -202,6 +331,9 @@ const transformTools = (attributes: Record<string, any>): void => {
     try {
       const tools = attributes[AI_PROMPT_TOOLS];
       if (Array.isArray(tools)) {
+        // Create OTel-compliant tool definitions structure
+        const toolDefinitions: any[] = [];
+
         tools.forEach((toolItem: any, index: number) => {
           let tool = toolItem;
           if (typeof toolItem === "string") {
@@ -213,6 +345,22 @@ const transformTools = (attributes: Record<string, any>): void => {
           }
 
           if (tool && typeof tool === "object") {
+            // Add to structured tool definitions for OTel
+            const toolDef: any = {
+              type: tool.type || "function",
+            };
+
+            if (tool.type === "function" || !tool.type) {
+              toolDef.function = {
+                name: tool.name,
+                description: tool.description,
+                parameters: tool.parameters,
+              };
+            }
+
+            toolDefinitions.push(toolDef);
+
+            // Also keep flat format for backward compatibility
             if (tool.name) {
               attributes[
                 `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
@@ -235,6 +383,12 @@ const transformTools = (attributes: Record<string, any>): void => {
             }
           }
         });
+
+        // Set OTel-compliant tool definitions attribute
+        if (toolDefinitions.length > 0) {
+          attributes[SpanAttributes.GEN_AI_TOOL_DEFINITIONS] =
+            JSON.stringify(toolDefinitions);
+        }
       }
       delete attributes[AI_PROMPT_TOOLS];
     } catch {
@@ -257,6 +411,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
       const messages = JSON.parse(jsonString);
       const inputMessages: any[] = [];
+      const systemInstructions: any[] = [];
 
       messages.forEach((msg: { role: string; content: any }, index: number) => {
         const processedContent = processMessageContent(msg.content);
@@ -264,22 +419,42 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         attributes[contentKey] = processedContent;
         attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
 
-        // Add to OpenTelemetry standard gen_ai.input.messages format
-        inputMessages.push({
-          role: msg.role,
-          parts: [
-            {
-              type: TYPE_TEXT,
-              content: processedContent,
-            },
-          ],
-        });
+        const messagePart = {
+          type: TYPE_TEXT,
+          content: processedContent,
+        };
+
+        // Separate system messages into system instructions per OTel spec
+        if (msg.role === ROLE_SYSTEM) {
+          systemInstructions.push({
+            role: ROLE_SYSTEM,
+            parts: [messagePart],
+          });
+        } else {
+          // Non-system messages go to input messages
+          inputMessages.push({
+            role: msg.role,
+            parts: [messagePart],
+          });
+        }
       });
 
+      // Set system instructions separately (OTel spec)
+      if (systemInstructions.length > 0) {
+        attributes[SpanAttributes.GEN_AI_SYSTEM_INSTRUCTIONS] =
+          JSON.stringify(systemInstructions);
+      }
+
       // Set the OpenTelemetry standard input messages attribute
-      if (inputMessages.length > 0) {
+      // Note: For backward compatibility, we include all messages here
+      // but OTel spec recommends separating system messages
+      const allMessages = [...systemInstructions, ...inputMessages];
+      if (allMessages.length > 0) {
+        attributes[SpanAttributes.GEN_AI_INPUT_MESSAGES] =
+          JSON.stringify(allMessages);
+        // Also set deprecated attribute for backward compatibility
         attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
-          JSON.stringify(inputMessages);
+          JSON.stringify(allMessages);
       }
 
       delete attributes[AI_PROMPT_MESSAGES];
@@ -305,6 +480,13 @@ const transformPrompts = (attributes: Record<string, any>): void => {
             },
           ],
         };
+
+        // Set new OTel attribute
+        attributes[SpanAttributes.GEN_AI_INPUT_MESSAGES] = JSON.stringify([
+          inputMessage,
+        ]);
+
+        // Set deprecated attribute for backward compatibility
         attributes[SpanAttributes.LLM_INPUT_MESSAGES] = JSON.stringify([
           inputMessage,
         ]);
@@ -319,16 +501,28 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
 const transformPromptTokens = (attributes: Record<string, any>): void => {
   if (AI_USAGE_PROMPT_TOKENS in attributes) {
-    attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] =
-      attributes[AI_USAGE_PROMPT_TOKENS];
+    const value = attributes[AI_USAGE_PROMPT_TOKENS];
+
+    // Set new OTel-compliant attribute
+    attributes[SpanAttributes.GEN_AI_USAGE_INPUT_TOKENS] = value;
+
+    // Set deprecated attribute for backward compatibility
+    attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS] = value;
+
     delete attributes[AI_USAGE_PROMPT_TOKENS];
   }
 };
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
   if (AI_USAGE_COMPLETION_TOKENS in attributes) {
-    attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`] =
-      attributes[AI_USAGE_COMPLETION_TOKENS];
+    const value = attributes[AI_USAGE_COMPLETION_TOKENS];
+
+    // Set new OTel-compliant attribute
+    attributes[SpanAttributes.GEN_AI_USAGE_OUTPUT_TOKENS] = value;
+
+    // Set deprecated attribute for backward compatibility
+    attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS] = value;
+
     delete attributes[AI_USAGE_COMPLETION_TOKENS];
   }
 };
@@ -345,28 +539,52 @@ const calculateTotalTokens = (attributes: Record<string, any>): void => {
 };
 
 const transformVendor = (attributes: Record<string, any>): void => {
-  if (AI_MODEL_PROVIDER in attributes) {
-    const vendor = attributes[AI_MODEL_PROVIDER];
+  let providerValue: string | null = null;
 
-    // Find matching vendor prefix in mapping
-    let mappedVendor = null;
-    if (typeof vendor === "string" && vendor.length > 0) {
-      for (const prefix of Object.keys(VENDOR_MAPPING)) {
-        if (vendor.startsWith(prefix)) {
-          mappedVendor = VENDOR_MAPPING[prefix];
-          break;
-        }
+  // Check if AI SDK already set gen_ai.system (deprecated attribute)
+  // AI SDK emits this in "Call LLM Span Information"
+  if (GEN_AI_SYSTEM in attributes) {
+    providerValue = attributes[GEN_AI_SYSTEM] as string;
+    delete attributes[GEN_AI_SYSTEM]; // Remove deprecated attribute
+  } else if (AI_MODEL_PROVIDER in attributes) {
+    // Otherwise get from ai.model.provider
+    providerValue = attributes[AI_MODEL_PROVIDER] as string;
+    delete attributes[AI_MODEL_PROVIDER];
+  }
+
+  if (typeof providerValue === "string") {
+    // Handle empty string case
+    if (providerValue.length === 0) {
+      attributes[SpanAttributes.GEN_AI_PROVIDER_NAME] = "";
+      attributes[SpanAttributes.LLM_SYSTEM] = "";
+      return;
+    }
+
+    // Find matching provider prefix for OTel standard name
+    let otelProvider: string | null = null;
+    let legacyProvider: string | null = null;
+
+    for (const prefix of Object.keys(OTEL_PROVIDER_MAPPING)) {
+      if (providerValue.toLowerCase().startsWith(prefix)) {
+        otelProvider = OTEL_PROVIDER_MAPPING[prefix];
+        legacyProvider = LEGACY_VENDOR_MAPPING[prefix];
+        break;
       }
     }
 
-    attributes[SpanAttributes.LLM_SYSTEM] = mappedVendor || vendor;
-    delete attributes[AI_MODEL_PROVIDER];
+    // Set new OTel-compliant provider name
+    attributes[SpanAttributes.GEN_AI_PROVIDER_NAME] =
+      otelProvider || providerValue;
+
+    // Set deprecated attribute for backward compatibility
+    attributes[SpanAttributes.LLM_SYSTEM] = legacyProvider || providerValue;
   }
 };
 
 const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
   const metadataAttributes: Record<string, string> = {};
   const keysToDelete: string[] = [];
+  let agentName: string | null = null;
 
   // Find all ai.telemetry.metadata.* attributes
   for (const [key, value] of Object.entries(attributes)) {
@@ -381,12 +599,26 @@ const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
         const stringValue = typeof value === "string" ? value : String(value);
         metadataAttributes[metadataKey] = stringValue;
 
+        // Check for agent-specific metadata
+        if (metadataKey === "agent") {
+          agentName = stringValue;
+        }
+
         // Also set as traceloop association property attribute
         attributes[
           `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`
         ] = stringValue;
       }
     }
+  }
+
+  // Set agent attributes if detected
+  if (agentName) {
+    // Set span kind to agent
+    attributes[SpanAttributes.TRACELOOP_SPAN_KIND] = "agent";
+
+    // Set agent name
+    attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
   }
 
   // Remove original ai.telemetry.metadata.* attributes
@@ -398,16 +630,37 @@ const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
   // not during transformation. Use `withTelemetryMetadataContext` function for context propagation.
 };
 
-export const transformLLMSpans = (attributes: Record<string, any>): void => {
+export const transformLLMSpans = (
+  attributes: Record<string, any>,
+  spanName?: string,
+): void => {
+  // Add operation name first (required OTel attribute)
+  if (spanName) {
+    addOperationName(spanName, attributes);
+  }
+
+  // Transform AI SDK-specific attributes
+  transformModelId(attributes);
+  transformFunctionId(attributes);
+  transformProviderMetadata(attributes);
+  transformResponseMetadata(attributes);
+
+  // Transform request/response content
   transformResponseText(attributes);
   transformResponseObject(attributes);
   transformResponseToolCalls(attributes);
   transformPrompts(attributes);
   transformTools(attributes);
+
+  // Transform usage metrics
   transformPromptTokens(attributes);
   transformCompletionTokens(attributes);
   calculateTotalTokens(attributes);
+
+  // Transform vendor/provider (must be after tokens for backward compat)
   transformVendor(attributes);
+
+  // Transform metadata
   transformTelemetryMetadata(attributes);
 };
 
@@ -432,9 +685,23 @@ const shouldHandleSpan = (span: ReadableSpan): boolean => {
 export const transformAiSdkSpanNames = (span: Span): void => {
   if (span.name === TOOL_SPAN_NAME) {
     span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
+    return;
   }
+
   if (span.name in HANDLED_SPAN_NAMES) {
-    span.updateName(HANDLED_SPAN_NAMES[span.name]);
+    const newBaseName = HANDLED_SPAN_NAMES[span.name];
+
+    // Try to append model name for OTel compliance: "{operation} {model}"
+    const model =
+      span.attributes[AI_MODEL_ID] ||
+      span.attributes[SpanAttributes.GEN_AI_REQUEST_MODEL];
+
+    if (model && typeof model === "string") {
+      // Append model to create OTel-compliant name
+      span.updateName(`${newBaseName} ${model}`);
+    } else {
+      span.updateName(newBaseName);
+    }
   }
 };
 
@@ -442,6 +709,7 @@ export const transformAiSdkSpanAttributes = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
   }
-  transformLLMSpans(span.attributes);
+  // Pass span name to transformations so operation name can be set
+  transformLLMSpans(span.attributes, span.name);
   transformToolCalls(span);
 };

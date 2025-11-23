@@ -1005,6 +1005,8 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
+      // Should set both new and deprecated attributes to empty string
+      assert.strictEqual(attributes[SpanAttributes.GEN_AI_PROVIDER_NAME], "");
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "");
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
@@ -1744,6 +1746,59 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes["ai.response.text"], undefined);
       assert.strictEqual(attributes["ai.prompt.messages"], undefined);
       assert.strictEqual(attributes["ai.model.provider"], undefined);
+    });
+
+    it("should detect agent from agent metadata and set agent attributes", () => {
+      const attributes = {
+        "ai.telemetry.metadata.agent": "research_assistant",
+        "ai.telemetry.metadata.sessionId": "session_123",
+        "ai.telemetry.metadata.userId": "user_456",
+        "ai.response.text": "Hello!",
+      };
+
+      transformLLMSpans(attributes);
+
+      // Check that agent attributes are set
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        "research_assistant",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        "agent",
+      );
+
+      // Check that association properties are still created
+      assert.strictEqual(
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.agent`],
+        "research_assistant",
+      );
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`
+        ],
+        "session_123",
+      );
+    });
+
+    it("should not set agent attributes when no agent metadata is present", () => {
+      const attributes = {
+        "ai.telemetry.metadata.sessionId": "session_123",
+        "ai.telemetry.metadata.userId": "user_456",
+        "ai.response.text": "Hello!",
+      };
+
+      transformLLMSpans(attributes);
+
+      // Agent attributes should not be set
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        undefined,
+      );
     });
   });
 });
