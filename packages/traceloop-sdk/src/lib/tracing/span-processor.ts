@@ -24,9 +24,6 @@ import { parseKeyPairsIntoRecord } from "./baggage-utils";
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
 
-// Store agent names per trace for propagation to child spans (tool calls)
-const traceAgentNames = new Map<string, string>();
-
 export interface SpanProcessorOptions {
   /**
    * The API Key for sending traces data. Optional.
@@ -236,27 +233,6 @@ const onSpanEnd = (
 
     // Apply AI SDK transformations (if needed)
     transformAiSdkSpanAttributes(span);
-
-    // Handle agent name propagation for AI SDK spans
-    const traceId = span.spanContext().traceId;
-    const agentName = span.attributes[SpanAttributes.GEN_AI_AGENT_NAME];
-
-    if (agentName && typeof agentName === "string") {
-      // Store agent name for this trace
-      traceAgentNames.set(traceId, agentName);
-
-      // Clean up old traces (keep only last 1000 traces)
-      if (traceAgentNames.size > 1000) {
-        const firstKey = traceAgentNames.keys().next().value;
-        if (firstKey) {
-          traceAgentNames.delete(firstKey);
-        }
-      }
-    } else if (!agentName && traceAgentNames.has(traceId)) {
-      // This span doesn't have agent name but trace does - propagate it
-      span.attributes[SpanAttributes.GEN_AI_AGENT_NAME] =
-        traceAgentNames.get(traceId)!;
-    }
 
     // Ensure OTLP transformer compatibility
     const compatibleSpan = ensureSpanCompatibility(span);
