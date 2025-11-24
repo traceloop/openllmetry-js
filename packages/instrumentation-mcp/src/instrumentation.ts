@@ -146,11 +146,7 @@ export class McpInstrumentation extends InstrumentationBase {
         "request",
         this._wrapRequest.bind(this, "client"),
       );
-      this._wrap(
-        module.Client.prototype,
-        "close",
-        this._wrapClose.bind(this),
-      );
+      this._wrap(module.Client.prototype, "close", this._wrapClose.bind(this));
     }
 
     // Check if the module has Server class
@@ -172,7 +168,9 @@ export class McpInstrumentation extends InstrumentationBase {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private patchClient(moduleExports: any, moduleVersion?: string) {
-    this._diag.debug(`Patching @modelcontextprotocol/sdk/client@${moduleVersion}`);
+    this._diag.debug(
+      `Patching @modelcontextprotocol/sdk/client@${moduleVersion}`,
+    );
 
     // Patch Client class
     if (moduleExports.Client) {
@@ -199,7 +197,9 @@ export class McpInstrumentation extends InstrumentationBase {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private unpatchClient(moduleExports: any, moduleVersion?: string): void {
-    this._diag.debug(`Unpatching @modelcontextprotocol/sdk/client@${moduleVersion}`);
+    this._diag.debug(
+      `Unpatching @modelcontextprotocol/sdk/client@${moduleVersion}`,
+    );
 
     if (moduleExports.Client) {
       this._unwrap(moduleExports.Client.prototype, "connect");
@@ -210,7 +210,9 @@ export class McpInstrumentation extends InstrumentationBase {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private patchServer(moduleExports: any, moduleVersion?: string) {
-    this._diag.debug(`Patching @modelcontextprotocol/sdk/server@${moduleVersion}`);
+    this._diag.debug(
+      `Patching @modelcontextprotocol/sdk/server@${moduleVersion}`,
+    );
 
     // Patch Server class
     if (moduleExports.Server) {
@@ -227,7 +229,9 @@ export class McpInstrumentation extends InstrumentationBase {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private unpatchServer(moduleExports: any, moduleVersion?: string): void {
-    this._diag.debug(`Unpatching @modelcontextprotocol/sdk/server@${moduleVersion}`);
+    this._diag.debug(
+      `Unpatching @modelcontextprotocol/sdk/server@${moduleVersion}`,
+    );
 
     if (moduleExports.Server) {
       this._unwrap(moduleExports.Server.prototype, "request");
@@ -244,10 +248,7 @@ export class McpInstrumentation extends InstrumentationBase {
         kind: SpanKind.CLIENT,
       });
 
-      span.setAttribute(
-        SpanAttributes.TRACELOOP_SPAN_KIND,
-        "session",
-      );
+      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, "session");
       span.setAttribute(
         SpanAttributes.TRACELOOP_ENTITY_NAME,
         "mcp.client.session",

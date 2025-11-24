@@ -195,9 +195,7 @@ describe("Test MCP instrumentation", function () {
   });
 
   it("should create session spans for client connect", async () => {
-    const mcpModule = await import(
-      "@modelcontextprotocol/sdk/client/index.js"
-    );
+    const mcpModule = await import("@modelcontextprotocol/sdk/client/index.js");
     const { InMemoryTransport } = await import(
       "@modelcontextprotocol/sdk/inMemory.js"
     );
@@ -254,9 +252,7 @@ describe("Test MCP instrumentation", function () {
   });
 
   it("should create tool call spans with correct attributes", async () => {
-    const mcpModule = await import(
-      "@modelcontextprotocol/sdk/client/index.js"
-    );
+    const mcpModule = await import("@modelcontextprotocol/sdk/client/index.js");
     const { InMemoryTransport } = await import(
       "@modelcontextprotocol/sdk/inMemory.js"
     );
@@ -341,13 +337,17 @@ describe("Test MCP instrumentation", function () {
 
     // Verify tool span has input/output (since traceContent is enabled by default)
     const input = JSON.parse(
-      String(toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] || "{}"),
+      String(
+        toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] || "{}",
+      ),
     );
     assert.strictEqual(input.tool_name, "test_tool");
     assert.strictEqual(input.arguments?.a, 1);
 
     const output = JSON.parse(
-      String(toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] || "{}"),
+      String(
+        toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] || "{}",
+      ),
     );
     assert.strictEqual(output.result, "result");
   });
