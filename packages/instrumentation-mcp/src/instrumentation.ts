@@ -72,19 +72,99 @@ export class McpInstrumentation extends InstrumentationBase {
     super.setConfig(config);
   }
 
-  protected init(): InstrumentationModuleDefinition {
-    const module = new InstrumentationNodeModuleDefinition(
-      "@modelcontextprotocol/sdk",
+  protected init(): InstrumentationModuleDefinition[] {
+    // The MCP SDK exports Client and Server from subpaths.
+    // We need to hook both the bare subpath and the /index.js variant
+    // because different import styles resolve to different module specifiers.
+    const clientModule = new InstrumentationNodeModuleDefinition(
+      "@modelcontextprotocol/sdk/client",
       [">=1.0.0"],
-      this.patch.bind(this),
-      this.unpatch.bind(this),
+      this.patchClient.bind(this),
+      this.unpatchClient.bind(this),
     );
-    return module;
+
+    const clientIndexModule = new InstrumentationNodeModuleDefinition(
+      "@modelcontextprotocol/sdk/client/index.js",
+      [">=1.0.0"],
+      this.patchClient.bind(this),
+      this.unpatchClient.bind(this),
+    );
+
+    const serverModule = new InstrumentationNodeModuleDefinition(
+      "@modelcontextprotocol/sdk/server",
+      [">=1.0.0"],
+      this.patchServer.bind(this),
+      this.unpatchServer.bind(this),
+    );
+
+    const serverIndexModule = new InstrumentationNodeModuleDefinition(
+      "@modelcontextprotocol/sdk/server/index.js",
+      [">=1.0.0"],
+      this.patchServer.bind(this),
+      this.unpatchServer.bind(this),
+    );
+
+    return [clientModule, clientIndexModule, serverModule, serverIndexModule];
+  }
+
+  /**
+   * Manually instrument an MCP SDK module (Client or Server).
+   * This is useful for ESM modules where automatic instrumentation may not work.
+   *
+   * @example
+   * ```typescript
+   * import * as traceloop from "@traceloop/node-server-sdk";
+   * import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+   *
+   * traceloop.initialize({ appName: "my-app" });
+   *
+   * // Get the MCP instrumentation instance and manually instrument
+   * const mcpInstrumentation = traceloop.getMCPInstrumentation();
+   * mcpInstrumentation?.manuallyInstrument({ Client });
+   *
+   * // Now Client will be traced
+   * const client = new Client(...);
+   * ```
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public manuallyInstrument(module: any) {
+    this._diag.debug("Manually instrumenting MCP SDK");
+
+    // Check if the module has Client class
+    if (module.Client) {
+      this._diag.debug("Wrapping MCP Client methods");
+      this._wrap(
+        module.Client.prototype,
+        "connect",
+        this._wrapConnect.bind(this),
+      );
+      this._wrap(
+        module.Client.prototype,
+        "request",
+        this._wrapRequest.bind(this, "client"),
+      );
+    }
+
+    // Check if the module has Server class
+    if (module.Server) {
+      this._diag.debug("Wrapping MCP Server methods");
+      this._wrap(
+        module.Server.prototype,
+        "request",
+        this._wrapRequest.bind(this, "server"),
+      );
+    }
+
+    if (!module.Client && !module.Server) {
+      this._diag.warn(
+        "manuallyInstrument called but no Client or Server found in provided module",
+      );
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private patch(moduleExports: any, moduleVersion?: string) {
-    this._diag.debug(`Patching @modelcontextprotocol/sdk@${moduleVersion}`);
+  private patchClient(moduleExports: any, moduleVersion?: string) {
+    this._diag.debug(`Patching @modelcontextprotocol/sdk/client@${moduleVersion}`);
 
     // Patch Client class
     if (moduleExports.Client) {
@@ -101,6 +181,23 @@ export class McpInstrumentation extends InstrumentationBase {
       );
     }
 
+    return moduleExports;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private unpatchClient(moduleExports: any, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching @modelcontextprotocol/sdk/client@${moduleVersion}`);
+
+    if (moduleExports.Client) {
+      this._unwrap(moduleExports.Client.prototype, "connect");
+      this._unwrap(moduleExports.Client.prototype, "request");
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private patchServer(moduleExports: any, moduleVersion?: string) {
+    this._diag.debug(`Patching @modelcontextprotocol/sdk/server@${moduleVersion}`);
+
     // Patch Server class
     if (moduleExports.Server) {
       this._diag.debug("Patching MCP Server");
@@ -115,13 +212,8 @@ export class McpInstrumentation extends InstrumentationBase {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private unpatch(moduleExports: any, moduleVersion?: string): void {
-    this._diag.debug(`Unpatching @modelcontextprotocol/sdk@${moduleVersion}`);
-
-    if (moduleExports.Client) {
-      this._unwrap(moduleExports.Client.prototype, "connect");
-      this._unwrap(moduleExports.Client.prototype, "request");
-    }
+  private unpatchServer(moduleExports: any, moduleVersion?: string): void {
+    this._diag.debug(`Unpatching @modelcontextprotocol/sdk/server@${moduleVersion}`);
 
     if (moduleExports.Server) {
       this._unwrap(moduleExports.Server.prototype, "request");

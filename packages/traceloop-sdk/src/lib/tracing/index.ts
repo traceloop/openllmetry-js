@@ -235,6 +235,12 @@ export const manuallyInitInstrumentations = (
     instrumentations.push(togetherInstrumentation);
     togetherInstrumentation.manuallyInstrument(instrumentModules.together);
   }
+
+  if (instrumentModules?.mcp) {
+    mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
+    instrumentations.push(mcpInstrumentation);
+    mcpInstrumentation.manuallyInstrument(instrumentModules.mcp);
+  }
 };
 
 /**

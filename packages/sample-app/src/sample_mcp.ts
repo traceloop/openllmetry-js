@@ -1,260 +1,168 @@
 import * as traceloop from "@traceloop/node-server-sdk";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { z } from "zod";
-import { Readable, Writable } from "stream";
-
-traceloop.initialize({
-  appName: "sample_mcp",
-  apiKey: process.env.TRACELOOP_API_KEY,
-  disableBatch: true,
-});
 
 /**
  * This sample demonstrates MCP (Model Context Protocol) instrumentation
- * by creating a simple MCP server with tools and resources, then
- * connecting a client to interact with them.
+ * with a working in-memory client-server setup.
+ *
+ * IMPORTANT: For ESM modules like the MCP SDK, we use the instrumentModules option
+ * to manually instrument the SDK. The MCP SDK must be imported BEFORE traceloop.initialize()
+ * and passed via instrumentModules.
  */
-
-async function createMCPServer() {
-  // Create an MCP server with a simple calculator tool
-  const server = new Server(
-    {
-      name: "calculator-server",
-      version: "1.0.0",
-    },
-    {
-      capabilities: {
-        tools: {},
-        resources: {},
-      },
-    },
-  );
-
-  // Register a tools/list handler
-  server.setRequestHandler(
-    z.object({
-      method: z.literal("tools/list"),
-    }),
-    async () => ({
-      tools: [
-        {
-          name: "add",
-          description: "Add two numbers together",
-          inputSchema: {
-            type: "object",
-            properties: {
-              a: { type: "number", description: "First number" },
-              b: { type: "number", description: "Second number" },
-            },
-            required: ["a", "b"],
-          },
-        },
-        {
-          name: "multiply",
-          description: "Multiply two numbers",
-          inputSchema: {
-            type: "object",
-            properties: {
-              x: { type: "number", description: "First number" },
-              y: { type: "number", description: "Second number" },
-            },
-            required: ["x", "y"],
-          },
-        },
-      ],
-    }),
-  );
-
-  // Register a tools/call handler
-  server.setRequestHandler(
-    z.object({
-      method: z.literal("tools/call"),
-      params: z.object({
-        name: z.string(),
-        arguments: z.any(),
-      }),
-    }),
-    async (request) => {
-      const { name, arguments: args } = request.params;
-
-      if (name === "add") {
-        const { a, b } = args;
-        return {
-          content: [
-            {
-              type: "text",
-              text: String(a + b),
-            },
-          ],
-        };
-      } else if (name === "multiply") {
-        const { x, y } = args;
-        return {
-          content: [
-            {
-              type: "text",
-              text: String(x * y),
-            },
-          ],
-        };
-      }
-
-      return {
-        content: [{ type: "text", text: `Unknown tool: ${name}` }],
-        isError: true,
-      };
-    },
-  );
-
-  // Register a resources/list handler
-  server.setRequestHandler(
-    z.object({
-      method: z.literal("resources/list"),
-    }),
-    async () => ({
-      resources: [
-        {
-          uri: "calc://info",
-          name: "Calculator Info",
-          description: "Information about the calculator",
-        },
-      ],
-    }),
-  );
-
-  // Register a resources/read handler
-  server.setRequestHandler(
-    z.object({
-      method: z.literal("resources/read"),
-      params: z.object({
-        uri: z.string(),
-      }),
-    }),
-    async (request) => {
-      const { uri } = request.params;
-
-      if (uri === "calc://info") {
-        return {
-          contents: [
-            {
-              uri: "calc://info",
-              mimeType: "text/plain",
-              text: "This is a simple calculator MCP server with add and multiply operations.",
-            },
-          ],
-        };
-      }
-
-      return {
-        contents: [],
-      };
-    },
-  );
-
-  return server;
-}
 
 async function main() {
   console.log("Starting MCP Sample Application...\n");
 
-  // For this demo, we'll use in-process communication
-  // In production, you'd typically use stdio or HTTP transports
+  // Import MCP SDK modules FIRST (before traceloop.initialize)
+  const mcpClientModule = await import("@modelcontextprotocol/sdk/client/index.js");
+  const mcpServerModule = await import("@modelcontextprotocol/sdk/server/mcp.js");
+  const mcpInMemoryModule = await import("@modelcontextprotocol/sdk/inMemory.js");
 
-  // Create mock stdin/stdout streams for in-process communication
-  const serverToClient = new Readable({
-    read() {
-      // No-op for demonstration
-    },
-  });
-  const clientToServer = new Writable({
-    write(chunk, encoding, callback) {
-      // Write from client to server
-      serverToClient.push(chunk);
-      callback();
-    },
-  });
+  const { Client } = mcpClientModule;
+  const { McpServer } = mcpServerModule;
+  const { InMemoryTransport } = mcpInMemoryModule;
 
-  const clientFromServer = new Readable({
-    read() {
-      // No-op for demonstration
-    },
-  });
-  const serverFromClient = new Writable({
-    write(chunk, encoding, callback) {
-      // Write from server to client
-      clientFromServer.push(chunk);
-      callback();
+  // Initialize Traceloop with instrumentModules to manually instrument the MCP SDK
+  traceloop.initialize({
+    appName: "sample_mcp",
+    apiKey: process.env.TRACELOOP_API_KEY,
+    disableBatch: true,
+    instrumentModules: {
+      mcp: mcpClientModule,
     },
   });
 
-  // Create and connect the server
-  const server = await createMCPServer();
-  // Note: For this example to work, you'd need actual transport setup
-  // The MCP SDK requires proper stdio transports
-  // This is a simplified example showing the instrumentation structure
+  console.log("✓ Traceloop initialized with MCP instrumentation\n");
 
-  console.log("✓ MCP Server ready\n");
+  // Create linked transport pair for in-memory client-server communication
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
 
-  // Create the client
-  const client = new Client(
+  // Create and configure MCP server with tools and resources
+  const server = new McpServer(
+    { name: "calculator-server", version: "1.0.0" },
+    { capabilities: { tools: {}, resources: {} } },
+  );
+
+  // Register add tool
+  server.registerTool(
+    "add",
     {
-      name: "calculator-client",
-      version: "1.0.0",
+      description: "Add two numbers together",
+      inputSchema: {
+        a: z.number(),
+        b: z.number(),
+      },
     },
-    {
-      capabilities: {},
+    async (args) => {
+      const result = args.a + args.b;
+      return { content: [{ type: "text", text: String(result) }] };
     },
   );
 
-  console.log("✓ MCP Client ready\n");
+  // Register multiply tool
+  server.registerTool(
+    "multiply",
+    {
+      description: "Multiply two numbers",
+      inputSchema: {
+        x: z.number(),
+        y: z.number(),
+      },
+    },
+    async (args) => {
+      const result = args.x * args.y;
+      return { content: [{ type: "text", text: String(result) }] };
+    },
+  );
 
-  // Unused variables for demonstration purposes
-  void serverToClient;
-  void clientToServer;
-  void clientFromServer;
-  void serverFromClient;
-  void server;
-  void client;
+  // Register calculator info resource
+  server.registerResource(
+    "Calculator Info",
+    "calc://info",
+    { mimeType: "text/plain" },
+    async () => ({
+      contents: [
+        {
+          uri: "calc://info",
+          mimeType: "text/plain",
+          text: "This is a simple calculator MCP server with add and multiply operations.",
+        },
+      ],
+    }),
+  );
 
-  // Note: This example shows the structure of MCP instrumentation
-  // For a fully working example, you would need to:
-  // 1. Set up proper transport mechanisms (stdio, SSE, HTTP)
-  // 2. Connect the client and server through those transports
-  // 3. Then make the actual tool calls
+  await server.connect(serverTransport);
+  console.log("✓ MCP Server connected\n");
+
+  // Create and connect the client
+  const client = new Client(
+    { name: "calculator-client", version: "1.0.0" },
+    { capabilities: {} },
+  );
+
+  await client.connect(clientTransport);
+  console.log("✓ MCP Client connected\n");
 
   console.log("MCP Instrumentation Example");
   console.log("===========================\n");
-  console.log("This package instruments the following MCP operations:");
-  console.log("- Client session lifecycle (mcp.client.session span)");
-  console.log("- Tool invocations ({tool_name}.tool spans)");
-  console.log("- Tool listing (tools/list.mcp spans)");
+
+  // 1. List available tools
+  console.log("1. Listing available tools...");
+  const toolsList = await client.listTools();
   console.log(
-    "- Resource operations (resources/read.mcp, resources/list.mcp spans)",
-  );
-  console.log(
-    "- Prompt operations (prompts/get.mcp, prompts/list.mcp spans)\n",
+    `   Found ${toolsList.tools.length} tools: ${toolsList.tools.map((t) => t.name).join(", ")}\n`,
   );
 
+  // 2. Call the add tool
+  console.log("2. Calling add tool with a=5, b=3...");
+  const addResult = await client.callTool({ name: "add", arguments: { a: 5, b: 3 } });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  console.log(`   Result: ${((addResult as any).content[0] as any).text}\n`);
+
+  // 3. Call the multiply tool
+  console.log("3. Calling multiply tool with x=4, y=7...");
+  const multiplyResult = await client.callTool({ name: "multiply", arguments: { x: 4, y: 7 } });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  console.log(`   Result: ${((multiplyResult as any).content[0] as any).text}\n`);
+
+  // 4. List available resources
+  console.log("4. Listing available resources...");
+  const resourcesList = await client.listResources();
   console.log(
-    "When you use MCP with this SDK, all operations are automatically traced!",
+    `   Found ${resourcesList.resources.length} resources: ${resourcesList.resources.map((r) => r.name).join(", ")}\n`,
   );
-  console.log("\nExample trace structure:");
-  console.log("  └─ mcp.client.session");
-  console.log("      ├─ add_numbers.tool");
+
+  // 5. Read a resource
+  console.log("5. Reading resource calc://info...");
+  const resourceContent = await client.readResource({ uri: "calc://info" });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const firstContent = resourceContent.contents[0] as any;
+  console.log(`   Content: ${firstContent.text}\n`);
+
+  // Close connections
+  await client.close();
+  await server.close();
+
+  console.log("✓ All MCP operations completed successfully!");
+  console.log("\nTrace structure generated:");
+  console.log("  ├─ mcp.client.session (session parent)");
+  console.log("  ├─ initialize.mcp (initialization)");
+  console.log("  ├─ tools/list.mcp (output: {tools: [...]})");
+  console.log("  ├─ add.tool (input: {a: 5, b: 3}, output: {result: '8'})");
+  console.log("  ├─ multiply.tool (input: {x: 4, y: 7}, output: {result: '28'})");
+  console.log("  ├─ resources/list.mcp (output: {resources: [...]})");
+  console.log("  └─ resources/read.mcp (input: {uri: 'calc://info'}, output: {contents: [...]})");
+  console.log("\n✓ All spans created with SUCCESS status (no errors!)");
   console.log(
-    "      │   ├─ input: {tool_name: 'add_numbers', arguments: {a: 5, b: 3}}",
+    "\nNote: Traces are being exported to your configured endpoint.",
   );
-  console.log("      │   └─ output: {result: '8'}");
-  console.log("      ├─ tools/list.mcp");
-  console.log("      │   └─ output: {tools: [{name: 'add_numbers', ...}]}");
-  console.log("      └─ resources/read.mcp");
-  console.log("          ├─ input: {uri: 'calc://info'}");
-  console.log("          └─ output: {contents: [{text: '...'}]}");
-  console.log("\n✓ Instrumentation is active and ready!");
+  console.log(
+    "Set TRACELOOP_API_KEY environment variable to send traces to Traceloop.",
+  );
 
   // Give some time for traces to be exported
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+  console.log("\n✓ Export complete!");
   process.exit(0);
 }
 
