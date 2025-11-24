@@ -23,10 +23,7 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-node";
 import { McpInstrumentation } from "../src/instrumentation";
-import {
-  SpanAttributes,
-  TraceloopSpanKindValues,
-} from "@traceloop/ai-semantic-conventions";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
 const memoryExporter = new InMemorySpanExporter();
 
