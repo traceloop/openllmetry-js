@@ -254,6 +254,16 @@ export class McpInstrumentation extends InstrumentationBase {
         "mcp.client.session",
       );
 
+      // Add client/server name as workflow name
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientInfo = (this as any)._clientInfo;
+      if (clientInfo && clientInfo.name) {
+        span.setAttribute(
+          SpanAttributes.TRACELOOP_WORKFLOW_NAME,
+          `${clientInfo.name}.mcp`,
+        );
+      }
+
       // Create a context with this session span
       const sessionContext = trace.setSpan(context.active(), span);
 

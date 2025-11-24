@@ -254,6 +254,10 @@ describe("Test MCP instrumentation", function () {
       sessionSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
       "mcp.client.session",
     );
+    assert.strictEqual(
+      sessionSpan.attributes[SpanAttributes.TRACELOOP_WORKFLOW_NAME],
+      "test-client.mcp",
+    );
   });
 
   it("should create tool call spans with correct attributes", async () => {
@@ -328,6 +332,10 @@ describe("Test MCP instrumentation", function () {
     assert.strictEqual(
       sessionSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
       TraceloopSpanKindValues.SESSION,
+    );
+    assert.strictEqual(
+      sessionSpan.attributes[SpanAttributes.TRACELOOP_WORKFLOW_NAME],
+      "test-client.mcp",
     );
 
     // Verify tool span
