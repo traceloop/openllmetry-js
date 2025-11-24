@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.20.2](https://github.com/traceloop/openllmetry-js/compare/v0.20.1...v0.20.2) (2025-11-24)
+
+### Bug Fixes
+
+- **ai-sdk:** add agent detection support for AI SDK ([#830](https://github.com/traceloop/openllmetry-js/issues/830)) ([a1ab720](https://github.com/traceloop/openllmetry-js/commit/a1ab7205d196f70d54deb9cc9d33d2ab64622609))
+
 ## [0.20.1](https://github.com/traceloop/openllmetry-js/compare/v0.20.0...v0.20.1) (2025-11-11)
 
 ### Bug Fixes
