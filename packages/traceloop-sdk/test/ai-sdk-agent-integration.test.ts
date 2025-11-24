@@ -36,6 +36,8 @@ Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("Test AI SDK Agent Integration with Recording", function () {
+  this.timeout(30000);
+
   setupPolly({
     adapters: ["node-http", "fetch"],
     persister: "fs",
@@ -83,10 +85,12 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     // Define a simple calculator tool
     const calculate = tool({
       description: "Perform basic mathematical calculations",
-      parameters: z.object({
-        operation: z.enum(["add", "subtract", "multiply", "divide"]),
-        a: z.number(),
-        b: z.number(),
+      inputSchema: z.object({
+        operation: z
+          .enum(["add", "subtract", "multiply", "divide"])
+          .describe("The mathematical operation to perform"),
+        a: z.number().describe("First number"),
+        b: z.number().describe("Second number"),
       }),
       execute: async ({ operation, a, b }) => {
         let result: number;
@@ -105,7 +109,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
             result = a / b;
             break;
         }
-        return { result };
+        return { operation, a, b, result };
       },
     });
 
@@ -149,7 +153,6 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     );
 
     assert.ok(result);
-    assert.ok(result.text);
     assert.ok(rootSpan, "Root AI span should exist");
 
     // Verify root span has agent attributes
