@@ -345,7 +345,7 @@ export class McpInstrumentation extends InstrumentationBase {
       } else {
         spanName = `${method}.mcp`;
         entityName = method;
-        spanKind = "unknown";
+        spanKind = TraceloopSpanKindValues.UNKNOWN;
       }
 
       // Use the stored session context as parent if available
@@ -362,6 +362,20 @@ export class McpInstrumentation extends InstrumentationBase {
 
       span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, spanKind);
       span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
+
+      // Add workflow name from client/server info (similar to Python implementation)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const clientInfo = (this as any)._clientInfo;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const serverInfo = (this as any).server?._serverInfo;
+
+      const info = clientInfo || serverInfo;
+      if (info && info.name) {
+        span.setAttribute(
+          SpanAttributes.TRACELOOP_WORKFLOW_NAME,
+          `${info.name}.mcp`,
+        );
+      }
 
       // Add input attributes if traceContent is enabled
       if (plugin._shouldSendPrompts()) {

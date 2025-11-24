@@ -349,6 +349,11 @@ describe("Test MCP instrumentation", function () {
       toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
       "test_tool",
     );
+    // Verify workflow name is also set on tool spans (matching Python implementation)
+    assert.strictEqual(
+      toolSpan.attributes[SpanAttributes.TRACELOOP_WORKFLOW_NAME],
+      "test-client.mcp",
+    );
 
     // Verify tool span has input/output (since traceContent is enabled by default)
     const input = JSON.parse(
