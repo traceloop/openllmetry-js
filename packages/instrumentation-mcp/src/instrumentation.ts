@@ -28,7 +28,6 @@ import {
 } from "@opentelemetry/instrumentation";
 import {
   SpanAttributes,
-  TraceloopSpanKindValues,
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
 } from "@traceloop/ai-semantic-conventions";
 import { McpInstrumentationConfig } from "./types";
@@ -247,22 +246,12 @@ export class McpInstrumentation extends InstrumentationBase {
 
       span.setAttribute(
         SpanAttributes.TRACELOOP_SPAN_KIND,
-        TraceloopSpanKindValues.SESSION,
+        "session",
       );
       span.setAttribute(
         SpanAttributes.TRACELOOP_ENTITY_NAME,
         "mcp.client.session",
       );
-
-      // Add client/server name as workflow name
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const clientInfo = (this as any)._clientInfo;
-      if (clientInfo && clientInfo.name) {
-        span.setAttribute(
-          SpanAttributes.TRACELOOP_WORKFLOW_NAME,
-          `${clientInfo.name}.mcp`,
-        );
-      }
 
       // Create a context with this session span
       const sessionContext = trace.setSpan(context.active(), span);
@@ -332,20 +321,13 @@ export class McpInstrumentation extends InstrumentationBase {
       const method = request.method;
       const params = request.params;
 
-      // Determine span name and kind based on method
+      // Determine span name based on method
       let spanName: string;
-      let spanKind: string;
-      let entityName: string;
-
       if (method === "tools/call") {
         const toolName = (params as MCPToolCallParams)?.name || "unknown";
         spanName = `${toolName}.tool`;
-        entityName = toolName;
-        spanKind = TraceloopSpanKindValues.TOOL;
       } else {
         spanName = `${method}.mcp`;
-        entityName = method;
-        spanKind = TraceloopSpanKindValues.UNKNOWN;
       }
 
       // Use the stored session context as parent if available
@@ -360,21 +342,11 @@ export class McpInstrumentation extends InstrumentationBase {
         parentContext,
       );
 
-      span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, spanKind);
-      span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
-
-      // Add workflow name from client/server info (similar to Python implementation)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const clientInfo = (this as any)._clientInfo;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const serverInfo = (this as any).server?._serverInfo;
-
-      const info = clientInfo || serverInfo;
-      if (info && info.name) {
-        span.setAttribute(
-          SpanAttributes.TRACELOOP_WORKFLOW_NAME,
-          `${info.name}.mcp`,
-        );
+      // Only set span kind and entity name for tool calls (matching Python implementation)
+      if (method === "tools/call") {
+        const toolName = (params as MCPToolCallParams)?.name || "unknown";
+        span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, "tool");
+        span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, toolName);
       }
 
       // Add input attributes if traceContent is enabled

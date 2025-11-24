@@ -248,15 +248,11 @@ describe("Test MCP instrumentation", function () {
     const sessionSpan = sessionSpans[0];
     assert.strictEqual(
       sessionSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
-      TraceloopSpanKindValues.SESSION,
+      "session",
     );
     assert.strictEqual(
       sessionSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
       "mcp.client.session",
-    );
-    assert.strictEqual(
-      sessionSpan.attributes[SpanAttributes.TRACELOOP_WORKFLOW_NAME],
-      "test-client.mcp",
     );
   });
 
@@ -331,11 +327,7 @@ describe("Test MCP instrumentation", function () {
     const sessionSpan = sessionSpans[0];
     assert.strictEqual(
       sessionSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
-      TraceloopSpanKindValues.SESSION,
-    );
-    assert.strictEqual(
-      sessionSpan.attributes[SpanAttributes.TRACELOOP_WORKFLOW_NAME],
-      "test-client.mcp",
+      "session",
     );
 
     // Verify tool span
@@ -343,16 +335,11 @@ describe("Test MCP instrumentation", function () {
     const toolSpan = toolSpans[0];
     assert.strictEqual(
       toolSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
-      TraceloopSpanKindValues.TOOL,
+      "tool",
     );
     assert.strictEqual(
       toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
       "test_tool",
-    );
-    // Verify workflow name is also set on tool spans (matching Python implementation)
-    assert.strictEqual(
-      toolSpan.attributes[SpanAttributes.TRACELOOP_WORKFLOW_NAME],
-      "test-client.mcp",
     );
 
     // Verify tool span has input/output (since traceContent is enabled by default)
