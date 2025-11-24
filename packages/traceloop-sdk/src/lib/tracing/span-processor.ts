@@ -161,6 +161,7 @@ export const traceloopInstrumentationLibraries = [
   "@traceloop/instrumentation-pinecone",
   "@traceloop/instrumentation-qdrant",
   "@traceloop/instrumentation-together",
+  "@traceloop/instrumentation-mcp",
 ];
 
 /**

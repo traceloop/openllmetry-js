@@ -24,6 +24,7 @@ import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
 import { TogetherInstrumentation } from "@traceloop/instrumentation-together";
+import { McpInstrumentation } from "@traceloop/instrumentation-mcp";
 import {
   ALL_INSTRUMENTATION_LIBRARIES,
   createSpanProcessor,
@@ -45,6 +46,7 @@ let pineconeInstrumentation: PineconeInstrumentation | undefined;
 let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
 let qdrantInstrumentation: QdrantInstrumentation | undefined;
 let togetherInstrumentation: TogetherInstrumentation | undefined;
+let mcpInstrumentation: McpInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -121,6 +123,9 @@ export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
 
   togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
   instrumentations.push(togetherInstrumentation);
+
+  mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
+  instrumentations.push(mcpInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
@@ -229,6 +234,12 @@ export const manuallyInitInstrumentations = (
     togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
     instrumentations.push(togetherInstrumentation);
     togetherInstrumentation.manuallyInstrument(instrumentModules.together);
+  }
+
+  if (instrumentModules?.mcp) {
+    mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
+    instrumentations.push(mcpInstrumentation);
+    mcpInstrumentation.manuallyInstrument(instrumentModules.mcp);
   }
 };
 
