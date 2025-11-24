@@ -1745,5 +1745,134 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes["ai.prompt.messages"], undefined);
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
+
+    it("should detect agent from agent metadata and set agent attributes on root span", () => {
+      const attributes = {
+        "ai.telemetry.metadata.agent": "research_assistant",
+        "ai.telemetry.metadata.sessionId": "session_123",
+        "ai.telemetry.metadata.userId": "user_456",
+        "ai.response.text": "Hello!",
+      };
+
+      // Simulate root span (run.ai - after transformation)
+      // Note: In production, span names are transformed before attribute transformation
+      transformLLMSpans(attributes, "run.ai");
+
+      // Check that agent attributes are set
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        "research_assistant",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        "agent",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+        "research_assistant",
+      );
+
+      // Check that association properties are still created
+      assert.strictEqual(
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.agent`],
+        "research_assistant",
+      );
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.sessionId`
+        ],
+        "session_123",
+      );
+    });
+
+    it("should set agent name but not span kind on child spans", () => {
+      const attributes = {
+        "ai.telemetry.metadata.agent": "research_assistant",
+        "ai.telemetry.metadata.sessionId": "session_123",
+        "ai.response.text": "Hello!",
+      };
+
+      // Simulate child span (text.generate - after transformation)
+      // Note: In production, span names are transformed before attribute transformation
+      transformLLMSpans(attributes, "text.generate");
+
+      // Agent name should be set for context
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        "research_assistant",
+      );
+
+      // But span kind and entity name should NOT be set on child spans
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+        undefined,
+      );
+    });
+
+    it("should not set agent attributes when no agent metadata is present", () => {
+      const attributes = {
+        "ai.telemetry.metadata.sessionId": "session_123",
+        "ai.telemetry.metadata.userId": "user_456",
+        "ai.response.text": "Hello!",
+      };
+
+      transformLLMSpans(attributes);
+
+      // Agent attributes should not be set
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        undefined,
+      );
+    });
+  });
+
+  describe("transformAiSdkSpanAttributes - tool calls", () => {
+    it("should set traceloop span kind to tool for tool call spans", () => {
+      const mockSpan = {
+        name: "calculate.tool",
+        instrumentationScope: { name: "ai" },
+        attributes: {
+          "ai.toolCall.name": "calculate",
+          "ai.toolCall.args": JSON.stringify({ a: 5, b: 3 }),
+          "ai.toolCall.result": JSON.stringify({ result: 8 }),
+        },
+      } as any;
+
+      transformAiSdkSpanAttributes(mockSpan);
+
+      // Check that tool call attributes were transformed
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT],
+        JSON.stringify({ a: 5, b: 3 }),
+      );
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT],
+        JSON.stringify({ result: 8 }),
+      );
+
+      // Check that span kind was set to tool
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+        "tool",
+      );
+
+      // Check that entity name was set from tool name
+      assert.strictEqual(
+        mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+        "calculate",
+      );
+
+      // Original attributes should be deleted
+      assert.strictEqual(mockSpan.attributes["ai.toolCall.args"], undefined);
+      assert.strictEqual(mockSpan.attributes["ai.toolCall.result"], undefined);
+    });
   });
 });
