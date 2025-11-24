@@ -14,9 +14,15 @@ async function main() {
   console.log("Starting MCP Sample Application...\n");
 
   // Import MCP SDK modules FIRST (before traceloop.initialize)
-  const mcpClientModule = await import("@modelcontextprotocol/sdk/client/index.js");
-  const mcpServerModule = await import("@modelcontextprotocol/sdk/server/mcp.js");
-  const mcpInMemoryModule = await import("@modelcontextprotocol/sdk/inMemory.js");
+  const mcpClientModule = await import(
+    "@modelcontextprotocol/sdk/client/index.js"
+  );
+  const mcpServerModule = await import(
+    "@modelcontextprotocol/sdk/server/mcp.js"
+  );
+  const mcpInMemoryModule = await import(
+    "@modelcontextprotocol/sdk/inMemory.js"
+  );
 
   const { Client } = mcpClientModule;
   const { McpServer } = mcpServerModule;
@@ -35,7 +41,8 @@ async function main() {
   console.log("✓ Traceloop initialized with MCP instrumentation\n");
 
   // Create linked transport pair for in-memory client-server communication
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  const [clientTransport, serverTransport] =
+    InMemoryTransport.createLinkedPair();
 
   // Create and configure MCP server with tools and resources
   const server = new McpServer(
@@ -115,15 +122,23 @@ async function main() {
 
   // 2. Call the add tool
   console.log("2. Calling add tool with a=5, b=3...");
-  const addResult = await client.callTool({ name: "add", arguments: { a: 5, b: 3 } });
+  const addResult = await client.callTool({
+    name: "add",
+    arguments: { a: 5, b: 3 },
+  });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   console.log(`   Result: ${((addResult as any).content[0] as any).text}\n`);
 
   // 3. Call the multiply tool
   console.log("3. Calling multiply tool with x=4, y=7...");
-  const multiplyResult = await client.callTool({ name: "multiply", arguments: { x: 4, y: 7 } });
+  const multiplyResult = await client.callTool({
+    name: "multiply",
+    arguments: { x: 4, y: 7 },
+  });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  console.log(`   Result: ${((multiplyResult as any).content[0] as any).text}\n`);
+  console.log(
+    `   Result: ${((multiplyResult as any).content[0] as any).text}\n`,
+  );
 
   // 4. List available resources
   console.log("4. Listing available resources...");
@@ -149,13 +164,15 @@ async function main() {
   console.log("  ├─ initialize.mcp (initialization)");
   console.log("  ├─ tools/list.mcp (output: {tools: [...]})");
   console.log("  ├─ add.tool (input: {a: 5, b: 3}, output: {result: '8'})");
-  console.log("  ├─ multiply.tool (input: {x: 4, y: 7}, output: {result: '28'})");
-  console.log("  ├─ resources/list.mcp (output: {resources: [...]})");
-  console.log("  └─ resources/read.mcp (input: {uri: 'calc://info'}, output: {contents: [...]})");
-  console.log("\n✓ All spans created with SUCCESS status (no errors!)");
   console.log(
-    "\nNote: Traces are being exported to your configured endpoint.",
+    "  ├─ multiply.tool (input: {x: 4, y: 7}, output: {result: '28'})",
   );
+  console.log("  ├─ resources/list.mcp (output: {resources: [...]})");
+  console.log(
+    "  └─ resources/read.mcp (input: {uri: 'calc://info'}, output: {contents: [...]})",
+  );
+  console.log("\n✓ All spans created with SUCCESS status (no errors!)");
+  console.log("\nNote: Traces are being exported to your configured endpoint.");
   console.log(
     "Set TRACELOOP_API_KEY environment variable to send traces to Traceloop.",
   );

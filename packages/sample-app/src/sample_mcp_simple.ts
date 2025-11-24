@@ -171,10 +171,14 @@ async function main() {
   console.log("✓ All MCP operations completed successfully!");
   console.log("\nTrace structure generated:");
   console.log("  ├─ add.tool (input: {a: 5, b: 3}, output: {result: '8'})");
-  console.log("  ├─ multiply.tool (input: {x: 4, y: 7}, output: {result: '28'})");
+  console.log(
+    "  ├─ multiply.tool (input: {x: 4, y: 7}, output: {result: '28'})",
+  );
   console.log("  ├─ tools/list.mcp (output: {tools: [...]})");
   console.log("  ├─ resources/list.mcp (output: {resources: [...]})");
-  console.log("  └─ resources/read.mcp (input: {uri: 'calc://info'}, output: {contents: [...]})");
+  console.log(
+    "  └─ resources/read.mcp (input: {uri: 'calc://info'}, output: {contents: [...]})",
+  );
   console.log("\n✓ All MCP operations completed!");
   console.log("\nNote: These traces have NO errors - all requests succeeded.");
   console.log("Check your Traceloop dashboard to see the traces!");
