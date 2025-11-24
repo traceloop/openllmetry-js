@@ -1,5 +1,8 @@
 import { ReadableSpan, Span } from "@opentelemetry/sdk-trace-node";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  SpanAttributes,
+  TraceloopSpanKindValues,
+} from "@traceloop/ai-semantic-conventions";
 
 const AI_GENERATE_TEXT = "ai.generateText";
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
@@ -369,9 +372,13 @@ const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
-const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
+const transformTelemetryMetadata = (
+  attributes: Record<string, any>,
+  spanName?: string,
+): void => {
   const metadataAttributes: Record<string, string> = {};
   const keysToDelete: string[] = [];
+  let agentName: string | null = null;
 
   // Find all ai.telemetry.metadata.* attributes
   for (const [key, value] of Object.entries(attributes)) {
@@ -386,11 +393,30 @@ const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
         const stringValue = typeof value === "string" ? value : String(value);
         metadataAttributes[metadataKey] = stringValue;
 
+        // Check for agent-specific metadata
+        if (metadataKey === "agent") {
+          agentName = stringValue;
+        }
+
         // Also set as traceloop association property attribute
         attributes[
           `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`
         ] = stringValue;
       }
+    }
+  }
+
+  // Set agent attributes if detected and this is the root AI span
+  if (agentName) {
+    // Set agent name on all spans for context
+    attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
+
+    // Only set span kind to "agent" for the root AI span (run.ai)
+    // Note: At this point, span names have already been transformed
+    if (spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT]) {
+      attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
+        TraceloopSpanKindValues.AGENT;
+      attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
     }
   }
 
@@ -403,7 +429,10 @@ const transformTelemetryMetadata = (attributes: Record<string, any>): void => {
   // not during transformation. Use `withTelemetryMetadataContext` function for context propagation.
 };
 
-export const transformLLMSpans = (attributes: Record<string, any>): void => {
+export const transformLLMSpans = (
+  attributes: Record<string, any>,
+  spanName?: string,
+): void => {
   transformResponseText(attributes);
   transformResponseObject(attributes);
   transformResponseToolCalls(attributes);
@@ -413,7 +442,7 @@ export const transformLLMSpans = (attributes: Record<string, any>): void => {
   transformCompletionTokens(attributes);
   calculateTotalTokens(attributes);
   transformVendor(attributes);
-  transformTelemetryMetadata(attributes);
+  transformTelemetryMetadata(attributes, spanName);
 };
 
 const transformToolCalls = (span: ReadableSpan): void => {
@@ -427,6 +456,14 @@ const transformToolCalls = (span: ReadableSpan): void => {
     span.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] =
       span.attributes["ai.toolCall.result"];
     delete span.attributes["ai.toolCall.result"];
+    span.attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
+      TraceloopSpanKindValues.TOOL;
+
+    // Set entity name from tool call name
+    const toolName = span.attributes["ai.toolCall.name"];
+    if (toolName) {
+      span.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = toolName;
+    }
   }
 };
 
@@ -447,6 +484,6 @@ export const transformAiSdkSpanAttributes = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
   }
-  transformLLMSpans(span.attributes);
+  transformLLMSpans(span.attributes, span.name);
   transformToolCalls(span);
 };

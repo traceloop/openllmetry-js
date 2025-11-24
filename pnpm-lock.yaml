@@ -939,6 +939,9 @@ importers:
       ts-mocha:
         specifier: ^11.1.0
         version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
 
 packages:
 

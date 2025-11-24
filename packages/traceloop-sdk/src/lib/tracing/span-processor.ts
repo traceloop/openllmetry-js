@@ -24,6 +24,40 @@ import { parseKeyPairsIntoRecord } from "./baggage-utils";
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
 
+// Store agent names per trace for propagation to child spans (tool calls)
+// Maps trace ID to {agentName, timestamp} for TTL-based cleanup
+const traceAgentNames = new Map<
+  string,
+  { agentName: string; timestamp: number }
+>();
+
+// TTL for trace agent names (5 minutes)
+const TRACE_AGENT_NAME_TTL = 5 * 60 * 1000;
+
+/**
+ * Cleans up expired trace agent name entries based on TTL
+ */
+const cleanupExpiredTraceAgentNames = (): void => {
+  const now = Date.now();
+  for (const [traceId, entry] of traceAgentNames.entries()) {
+    if (now - entry.timestamp > TRACE_AGENT_NAME_TTL) {
+      traceAgentNames.delete(traceId);
+    }
+  }
+};
+
+/**
+ * Checks if a span is a root span (has no parent)
+ */
+const isRootSpan = (span: ReadableSpan): boolean => {
+  const parentContext = span.parentSpanContext;
+  return (
+    !parentContext ||
+    !parentContext.spanId ||
+    parentContext.spanId === "0000000000000000"
+  );
+};
+
 export interface SpanProcessorOptions {
   /**
    * The API Key for sending traces data. Optional.
@@ -233,6 +267,32 @@ const onSpanEnd = (
 
     // Apply AI SDK transformations (if needed)
     transformAiSdkSpanAttributes(span);
+
+    // Handle agent name propagation for AI SDK spans
+    const traceId = span.spanContext().traceId;
+    const agentName = span.attributes[SpanAttributes.GEN_AI_AGENT_NAME];
+
+    if (agentName && typeof agentName === "string") {
+      // Store agent name for this trace with current timestamp
+      traceAgentNames.set(traceId, {
+        agentName,
+        timestamp: Date.now(),
+      });
+    } else if (!agentName && traceAgentNames.has(traceId)) {
+      // This span doesn't have agent name but trace does - propagate it
+      span.attributes[SpanAttributes.GEN_AI_AGENT_NAME] =
+        traceAgentNames.get(traceId)!.agentName;
+    }
+
+    // Clean up trace agent name when root span ends
+    if (isRootSpan(span) && traceAgentNames.has(traceId)) {
+      traceAgentNames.delete(traceId);
+    }
+
+    // Periodically clean up expired entries (every 100 spans as a safety net)
+    if (Math.random() < 0.01) {
+      cleanupExpiredTraceAgentNames();
+    }
 
     // Ensure OTLP transformer compatibility
     const compatibleSpan = ensureSpanCompatibility(span);
