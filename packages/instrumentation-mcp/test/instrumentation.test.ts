@@ -198,9 +198,32 @@ describe("Test MCP instrumentation", function () {
   });
 
   it("should create session spans for client connect", async () => {
-    const { Client } = await import(
+    const mcpModule = await import(
       "@modelcontextprotocol/sdk/client/index.js"
     );
+    const { InMemoryTransport } = await import(
+      "@modelcontextprotocol/sdk/inMemory.js"
+    );
+    const { McpServer } = await import(
+      "@modelcontextprotocol/sdk/server/mcp.js"
+    );
+
+    // Manually instrument the module
+    instrumentation.manuallyInstrument(mcpModule);
+
+    const { Client } = mcpModule;
+
+    // Create a real transport pair
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+
+    // Create a minimal server
+    const server = new McpServer(
+      { name: "test-server", version: "1.0.0" },
+      { capabilities: {} },
+    );
+
+    await server.connect(serverTransport);
 
     const client = new Client(
       {
@@ -212,31 +235,123 @@ describe("Test MCP instrumentation", function () {
       },
     );
 
-    // Mock connect to avoid actual connection
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (client as any).connect = async function () {
-      // Just return a promise that resolves
-      return Promise.resolve();
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (client as any).connect();
+    await client.connect(clientTransport);
+    await client.close();
+    await server.close();
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     const spans = memoryExporter.getFinishedSpans();
     const sessionSpans = spans.filter((s) => s.name === "mcp.client.session");
 
-    if (sessionSpans.length > 0) {
-      const sessionSpan = sessionSpans[0];
-      assert.strictEqual(
-        sessionSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
-        TraceloopSpanKindValues.SESSION,
-      );
-      assert.strictEqual(
-        sessionSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
-        "mcp.client.session",
-      );
-    }
+    assert.ok(sessionSpans.length > 0, "Should create session span");
+    const sessionSpan = sessionSpans[0];
+    assert.strictEqual(
+      sessionSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+      TraceloopSpanKindValues.SESSION,
+    );
+    assert.strictEqual(
+      sessionSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+      "mcp.client.session",
+    );
+  });
+
+  it("should create tool call spans with correct attributes", async () => {
+    const mcpModule = await import(
+      "@modelcontextprotocol/sdk/client/index.js"
+    );
+    const { InMemoryTransport } = await import(
+      "@modelcontextprotocol/sdk/inMemory.js"
+    );
+    const { McpServer } = await import(
+      "@modelcontextprotocol/sdk/server/mcp.js"
+    );
+    const { z } = await import("zod");
+
+    // Manually instrument the module
+    instrumentation.manuallyInstrument(mcpModule);
+
+    const { Client } = mcpModule;
+
+    // Create a real transport pair
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+
+    // Create a server with a test tool
+    const server = new McpServer(
+      { name: "test-server", version: "1.0.0" },
+      { capabilities: { tools: {} } },
+    );
+
+    server.registerTool(
+      "test_tool",
+      {
+        description: "A test tool",
+        inputSchema: {
+          a: z.number(),
+        },
+      },
+      async () => ({
+        content: [{ type: "text", text: "result" }],
+      }),
+    );
+
+    await server.connect(serverTransport);
+
+    const client = new Client(
+      {
+        name: "test-client",
+        version: "1.0.0",
+      },
+      {
+        capabilities: {},
+      },
+    );
+
+    await client.connect(clientTransport);
+
+    // Make a tool call
+    await client.callTool({ name: "test_tool", arguments: { a: 1 } });
+
+    await client.close();
+    await server.close();
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const spans = memoryExporter.getFinishedSpans();
+    const sessionSpans = spans.filter((s) => s.name === "mcp.client.session");
+    const toolSpans = spans.filter((s) => s.name === "test_tool.tool");
+
+    // Verify session span
+    assert.ok(sessionSpans.length > 0, "Should create session span");
+    const sessionSpan = sessionSpans[0];
+    assert.strictEqual(
+      sessionSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+      TraceloopSpanKindValues.SESSION,
+    );
+
+    // Verify tool span
+    assert.ok(toolSpans.length > 0, "Should create tool span");
+    const toolSpan = toolSpans[0];
+    assert.strictEqual(
+      toolSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+      TraceloopSpanKindValues.TOOL,
+    );
+    assert.strictEqual(
+      toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+      "test_tool",
+    );
+
+    // Verify tool span has input/output (since traceContent is enabled by default)
+    const input = JSON.parse(
+      String(toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] || "{}"),
+    );
+    assert.strictEqual(input.tool_name, "test_tool");
+    assert.strictEqual(input.arguments?.a, 1);
+
+    const output = JSON.parse(
+      String(toolSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] || "{}"),
+    );
+    assert.strictEqual(output.result, "result");
   });
 });

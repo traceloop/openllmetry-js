@@ -61,6 +61,10 @@ interface MCPResult {
   [key: string]: unknown;
 }
 
+// Symbol to store session context on client/server instances
+const SESSION_CONTEXT_SYMBOL = Symbol("mcp-session-context");
+const SESSION_SPAN_SYMBOL = Symbol("mcp-session-span");
+
 export class McpInstrumentation extends InstrumentationBase {
   declare protected _config: McpInstrumentationConfig;
 
@@ -143,6 +147,11 @@ export class McpInstrumentation extends InstrumentationBase {
         "request",
         this._wrapRequest.bind(this, "client"),
       );
+      this._wrap(
+        module.Client.prototype,
+        "close",
+        this._wrapClose.bind(this),
+      );
     }
 
     // Check if the module has Server class
@@ -179,6 +188,11 @@ export class McpInstrumentation extends InstrumentationBase {
         "request",
         this._wrapRequest.bind(this, "client"),
       );
+      this._wrap(
+        moduleExports.Client.prototype,
+        "close",
+        this._wrapClose.bind(this),
+      );
     }
 
     return moduleExports;
@@ -191,6 +205,7 @@ export class McpInstrumentation extends InstrumentationBase {
     if (moduleExports.Client) {
       this._unwrap(moduleExports.Client.prototype, "connect");
       this._unwrap(moduleExports.Client.prototype, "request");
+      this._unwrap(moduleExports.Client.prototype, "close");
     }
   }
 
@@ -239,45 +254,56 @@ export class McpInstrumentation extends InstrumentationBase {
         "mcp.client.session",
       );
 
-      const execContext = trace.setSpan(context.active(), span);
+      // Create a context with this session span
+      const sessionContext = trace.setSpan(context.active(), span);
 
-      return context.with(execContext, () => {
-        try {
-          const result = original.apply(this, args);
+      // Store the session context and span on the instance for later use
+      this[SESSION_CONTEXT_SYMBOL] = sessionContext;
+      this[SESSION_SPAN_SYMBOL] = span;
 
-          // Handle promise
-          if (result && typeof result.then === "function") {
-            return result
-              .then((value: unknown) => {
-                span.setStatus({ code: SpanStatusCode.OK });
-                span.end();
-                return value;
-              })
-              .catch((error: Error) => {
-                span.recordException(error);
-                span.setStatus({
-                  code: SpanStatusCode.ERROR,
-                  message: error.message,
-                });
-                span.end();
-                throw error;
+      try {
+        const result = original.apply(this, args);
+
+        // Handle promise
+        if (result && typeof result.then === "function") {
+          return result
+            .then((value: unknown) => {
+              // Don't end the span here - it should stay open for the session
+              span.setStatus({ code: SpanStatusCode.OK });
+              return value;
+            })
+            .catch((error: Error) => {
+              // On connection error, end the span
+              span.recordException(error);
+              span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message: error.message,
               });
-          }
-
-          span.setStatus({ code: SpanStatusCode.OK });
-          span.end();
-          return result;
-        } catch (error: unknown) {
-          const err = error as Error;
-          span.recordException(err);
-          span.setStatus({
-            code: SpanStatusCode.ERROR,
-            message: err?.message || String(error),
-          });
-          span.end();
-          throw error;
+              span.end();
+              // Clean up stored references
+              delete this[SESSION_CONTEXT_SYMBOL];
+              delete this[SESSION_SPAN_SYMBOL];
+              throw error;
+            });
         }
-      });
+
+        // Sync result - don't end the span
+        span.setStatus({ code: SpanStatusCode.OK });
+        return result;
+      } catch (error: unknown) {
+        // On connection error, end the span
+        const err = error as Error;
+        span.recordException(err);
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: err?.message || String(error),
+        });
+        span.end();
+        // Clean up stored references
+        delete this[SESSION_CONTEXT_SYMBOL];
+        delete this[SESSION_SPAN_SYMBOL];
+        throw error;
+      }
     };
   }
 
@@ -312,9 +338,17 @@ export class McpInstrumentation extends InstrumentationBase {
         spanKind = "unknown";
       }
 
-      const span = plugin.tracer.startSpan(spanName, {
-        kind: side === "client" ? SpanKind.CLIENT : SpanKind.SERVER,
-      });
+      // Use the stored session context as parent if available
+      const sessionContext = this[SESSION_CONTEXT_SYMBOL];
+      const parentContext = sessionContext || context.active();
+
+      const span = plugin.tracer.startSpan(
+        spanName,
+        {
+          kind: side === "client" ? SpanKind.CLIENT : SpanKind.SERVER,
+        },
+        parentContext,
+      );
 
       span.setAttribute(SpanAttributes.TRACELOOP_SPAN_KIND, spanKind);
       span.setAttribute(SpanAttributes.TRACELOOP_ENTITY_NAME, entityName);
@@ -372,6 +406,70 @@ export class McpInstrumentation extends InstrumentationBase {
           throw error;
         }
       });
+    };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  private _wrapClose(original: Function) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return function (this: any, ...args: unknown[]) {
+      const sessionSpan = this[SESSION_SPAN_SYMBOL];
+
+      try {
+        const result = original.apply(this, args);
+
+        // Handle promise
+        if (result && typeof result.then === "function") {
+          return result
+            .then((value: unknown) => {
+              // End the session span on successful close
+              if (sessionSpan) {
+                sessionSpan.setStatus({ code: SpanStatusCode.OK });
+                sessionSpan.end();
+                delete this[SESSION_CONTEXT_SYMBOL];
+                delete this[SESSION_SPAN_SYMBOL];
+              }
+              return value;
+            })
+            .catch((error: Error) => {
+              // End the session span with error on close failure
+              if (sessionSpan) {
+                sessionSpan.recordException(error);
+                sessionSpan.setStatus({
+                  code: SpanStatusCode.ERROR,
+                  message: error.message,
+                });
+                sessionSpan.end();
+                delete this[SESSION_CONTEXT_SYMBOL];
+                delete this[SESSION_SPAN_SYMBOL];
+              }
+              throw error;
+            });
+        }
+
+        // Sync result - end the session span
+        if (sessionSpan) {
+          sessionSpan.setStatus({ code: SpanStatusCode.OK });
+          sessionSpan.end();
+          delete this[SESSION_CONTEXT_SYMBOL];
+          delete this[SESSION_SPAN_SYMBOL];
+        }
+        return result;
+      } catch (error: unknown) {
+        // End the session span with error
+        if (sessionSpan) {
+          const err = error as Error;
+          sessionSpan.recordException(err);
+          sessionSpan.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: err?.message || String(error),
+          });
+          sessionSpan.end();
+          delete this[SESSION_CONTEXT_SYMBOL];
+          delete this[SESSION_SPAN_SYMBOL];
+        }
+        throw error;
+      }
     };
   }
 
