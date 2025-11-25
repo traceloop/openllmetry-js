@@ -1,56 +1,15 @@
 import * as fs from "fs";
 import * as path from "path";
+import * as mime from "mime-types";
 
-/**
- * File cell types for attachments
- */
 export type FileCellType = "image" | "video" | "audio" | "file";
 
-/**
- * Storage types for attachments
- */
 export type FileStorageType = "internal" | "external";
 
-/**
- * Metadata for attachments
- */
 export interface AttachmentMetadata {
   [key: string]: string | number | boolean;
 }
 
-/**
- * MIME type mapping for common file extensions
- */
-const MIME_TYPES: Record<string, string> = {
-  ".jpg": "image/jpeg",
-  ".jpeg": "image/jpeg",
-  ".png": "image/png",
-  ".gif": "image/gif",
-  ".webp": "image/webp",
-  ".svg": "image/svg+xml",
-  ".bmp": "image/bmp",
-  ".ico": "image/x-icon",
-  ".pdf": "application/pdf",
-  ".json": "application/json",
-  ".csv": "text/csv",
-  ".txt": "text/plain",
-  ".xml": "application/xml",
-  ".html": "text/html",
-  ".mp3": "audio/mpeg",
-  ".wav": "audio/wav",
-  ".ogg": "audio/ogg",
-  ".mp4": "video/mp4",
-  ".webm": "video/webm",
-  ".avi": "video/x-msvideo",
-  ".mov": "video/quicktime",
-  ".zip": "application/zip",
-  ".tar": "application/x-tar",
-  ".gz": "application/gzip",
-};
-
-/**
- * Detects file type from MIME type
- */
 function detectFileType(contentType: string): FileCellType {
   if (contentType.startsWith("image/")) return "image";
   if (contentType.startsWith("video/")) return "video";
@@ -58,48 +17,19 @@ function detectFileType(contentType: string): FileCellType {
   return "file";
 }
 
-/**
- * Gets MIME type from file extension
- */
 function getMimeType(filename: string): string {
-  const ext = path.extname(filename).toLowerCase();
-  return MIME_TYPES[ext] || "application/octet-stream";
+  return mime.lookup(filename) || "application/octet-stream";
 }
 
-/**
- * Options for creating an Attachment
- */
 export interface AttachmentOptions {
-  /** Path to local file (mutually exclusive with data) */
   filePath?: string;
-  /** In-memory file data (mutually exclusive with filePath) */
   data?: Buffer | Uint8Array;
-  /** Filename (required if using data, optional override for filePath) */
   filename?: string;
-  /** MIME type (auto-detected if not provided) */
   contentType?: string;
-  /** File type category (auto-detected if not provided) */
   fileType?: FileCellType;
-  /** Additional metadata */
   metadata?: AttachmentMetadata;
 }
 
-/**
- * Represents a file attachment to be uploaded to a dataset cell.
- * Supports both local file paths and in-memory data.
- *
- * @example
- * // From file path
- * const attachment = new Attachment({ filePath: "./image.png" });
- *
- * @example
- * // From buffer
- * const attachment = new Attachment({
- *   data: myBuffer,
- *   filename: "document.pdf",
- *   contentType: "application/pdf"
- * });
- */
 export class Attachment {
   readonly type = "attachment" as const;
 
@@ -132,9 +62,6 @@ export class Attachment {
     this._metadata = metadata;
   }
 
-  /**
-   * Gets the file data as a Buffer
-   */
   async getData(): Promise<Buffer> {
     if (this._data) {
       return Buffer.isBuffer(this._data)
@@ -147,9 +74,6 @@ export class Attachment {
     throw new Error("No data source available");
   }
 
-  /**
-   * Gets the filename
-   */
   getFileName(): string {
     if (this._filename) {
       return this._filename;
@@ -160,9 +84,6 @@ export class Attachment {
     throw new Error("No filename available");
   }
 
-  /**
-   * Gets the content type (MIME type)
-   */
   getContentType(): string {
     if (this._contentType) {
       return this._contentType;
@@ -170,9 +91,6 @@ export class Attachment {
     return getMimeType(this.getFileName());
   }
 
-  /**
-   * Gets the file type category
-   */
   get fileType(): FileCellType {
     if (this._fileType) {
       return this._fileType;
@@ -180,40 +98,19 @@ export class Attachment {
     return detectFileType(this.getContentType());
   }
 
-  /**
-   * Gets the metadata
-   */
   get metadata(): AttachmentMetadata | undefined {
     return this._metadata;
   }
 }
 
-/**
- * Options for creating an ExternalAttachment
- */
 export interface ExternalAttachmentOptions {
-  /** External URL */
   url: string;
-  /** Optional filename */
   filename?: string;
-  /** Optional content type */
   contentType?: string;
-  /** File type category (defaults to "file") */
   fileType?: FileCellType;
-  /** Additional metadata */
   metadata?: AttachmentMetadata;
 }
 
-/**
- * Represents an external URL attachment for a dataset cell.
- * The file is not uploaded; only the URL is stored.
- *
- * @example
- * const attachment = new ExternalAttachment({
- *   url: "https://example.com/document.pdf",
- *   fileType: "file"
- * });
- */
 export class ExternalAttachment {
   readonly type = "external" as const;
 
@@ -230,7 +127,6 @@ export class ExternalAttachment {
       throw new Error("URL is required and must be a string");
     }
 
-    // Validate URL format
     try {
       new URL(url);
     } catch {
@@ -265,10 +161,6 @@ export class ExternalAttachment {
   }
 }
 
-/**
- * Represents a reference to an uploaded or external attachment.
- * Returned after an attachment is successfully processed.
- */
 export class AttachmentReference {
   constructor(
     readonly storageType: FileStorageType,
@@ -278,11 +170,6 @@ export class AttachmentReference {
     readonly metadata?: AttachmentMetadata,
   ) {}
 
-  /**
-   * Downloads the attachment data
-   * @param filePath Optional path to save the file (Node.js only)
-   * @returns Buffer if no filePath provided, void if saved to file
-   */
   async download(filePath?: string): Promise<Buffer | void> {
     if (!this.url) {
       throw new Error("Cannot download attachment: no URL available");
@@ -306,16 +193,10 @@ export class AttachmentReference {
     return buffer;
   }
 
-  /**
-   * Gets the download URL (for external attachments)
-   */
   getUrl(): string | undefined {
     return this.url;
   }
 
-  /**
-   * Converts to JSON representation
-   */
   toJSON(): Record<string, unknown> {
     return {
       storageType: this.storageType,
@@ -327,18 +208,10 @@ export class AttachmentReference {
   }
 }
 
-// Type guards
-
-/**
- * Checks if a value is an Attachment instance
- */
 export function isAttachment(value: unknown): value is Attachment {
   return value instanceof Attachment || (value as any)?.type === "attachment";
 }
 
-/**
- * Checks if a value is an ExternalAttachment instance
- */
 export function isExternalAttachment(
   value: unknown,
 ): value is ExternalAttachment {
@@ -347,9 +220,6 @@ export function isExternalAttachment(
   );
 }
 
-/**
- * Checks if a value is an AttachmentReference instance
- */
 export function isAttachmentReference(
   value: unknown,
 ): value is AttachmentReference {
@@ -360,36 +230,13 @@ export function isAttachmentReference(
   );
 }
 
-/**
- * Checks if a value is any attachment type
- */
 export function isAnyAttachment(
   value: unknown,
 ): value is Attachment | ExternalAttachment {
   return isAttachment(value) || isExternalAttachment(value);
 }
 
-// Factory helpers
-
-/**
- * Convenience factory for creating attachments
- *
- * @example
- * // From file
- * attachment.file("./image.png")
- *
- * @example
- * // From buffer
- * attachment.buffer(myBuffer, "doc.pdf")
- *
- * @example
- * // External URL
- * attachment.url("https://example.com/file.pdf")
- */
 export const attachment = {
-  /**
-   * Creates an Attachment from a file path
-   */
   file: (
     filePath: string,
     options?: {
@@ -405,9 +252,6 @@ export const attachment = {
     });
   },
 
-  /**
-   * Creates an Attachment from in-memory data
-   */
   buffer: (
     data: Buffer | Uint8Array,
     filename: string,
@@ -424,9 +268,6 @@ export const attachment = {
     });
   },
 
-  /**
-   * Creates an ExternalAttachment from a URL
-   */
   url: (
     url: string,
     options?: {

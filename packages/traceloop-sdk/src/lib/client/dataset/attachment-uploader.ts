@@ -7,6 +7,7 @@ import {
   AttachmentMetadata,
 } from "./attachment";
 
+
 /**
  * Response from the upload URL endpoint
  */
@@ -80,7 +81,7 @@ export class AttachmentUploader {
       headers: {
         "Content-Type": contentType,
       },
-      body: data,
+      body: new Uint8Array(data),
     });
 
     if (!response.ok) {

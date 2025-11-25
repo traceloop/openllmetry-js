@@ -46,7 +46,7 @@ export class Row extends BaseDatasetEntity {
     return this._deleted;
   }
 
-  getValue(columnName: string): string | number | boolean | Date | null {
+  getValue(columnName: string): string | number | boolean | Date | null | object {
     const value = this._data.data[columnName];
     return value !== undefined ? value : null;
   }

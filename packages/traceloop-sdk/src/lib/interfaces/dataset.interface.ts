@@ -46,7 +46,7 @@ export interface ColumnUpdateOptions {
 }
 
 export interface RowData {
-  [key: string]: string | number | boolean | null;
+  [key: string]: string | number | boolean | null | object;
 }
 
 export interface RowResponse {
