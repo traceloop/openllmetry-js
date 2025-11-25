@@ -64,9 +64,7 @@ export class Attachment {
 
   async getData(): Promise<Buffer> {
     if (this._data) {
-      return Buffer.isBuffer(this._data)
-        ? this._data
-        : Buffer.from(this._data);
+      return Buffer.isBuffer(this._data) ? this._data : Buffer.from(this._data);
     }
     if (this._filePath) {
       return fs.promises.readFile(this._filePath);

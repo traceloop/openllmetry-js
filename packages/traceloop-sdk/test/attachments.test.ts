@@ -108,11 +108,7 @@ describe("Attachment Classes Unit Tests", () => {
 
       for (const { path, expectedType } of testCases) {
         const att = new Attachment({ filePath: path });
-        assert.strictEqual(
-          att.fileType,
-          expectedType,
-          `Failed for ${path}`,
-        );
+        assert.strictEqual(att.fileType, expectedType, `Failed for ${path}`);
       }
     });
 
@@ -278,7 +274,10 @@ describe("Attachment Classes Unit Tests", () => {
           !isExternalAttachment(value),
           `isExternalAttachment failed for ${value}`,
         );
-        assert.ok(!isAnyAttachment(value), `isAnyAttachment failed for ${value}`);
+        assert.ok(
+          !isAnyAttachment(value),
+          `isAnyAttachment failed for ${value}`,
+        );
       }
     });
   });
