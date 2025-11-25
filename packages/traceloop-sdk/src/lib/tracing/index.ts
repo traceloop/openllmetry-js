@@ -133,8 +133,9 @@ export const manuallyInitInstrumentations = (
   apiKey?: string,
   baseUrl?: string,
 ) => {
-  //eslint-disable-next-line @typescript-eslint/no-empty-function
-  const exceptionLogger = (e: Error) => {};
+  const exceptionLogger = (e: Error) => {
+    console.debug("[Traceloop] Instrumentation exception:", e.message);
+  };
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
