@@ -322,8 +322,12 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
 const transformPromptTokens = (attributes: Record<string, any>): void => {
   // Make sure we have the right naming convention
-  if (!(SpanAttributes.LLM_USAGE_INPUT_TOKENS in attributes) && AI_USAGE_PROMPT_TOKENS in attributes) {
-    attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS] = attributes[AI_USAGE_PROMPT_TOKENS];
+  if (
+    !(SpanAttributes.LLM_USAGE_INPUT_TOKENS in attributes) &&
+    AI_USAGE_PROMPT_TOKENS in attributes
+  ) {
+    attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS] =
+      attributes[AI_USAGE_PROMPT_TOKENS];
   }
 
   // Clean up legacy attributes
@@ -333,8 +337,12 @@ const transformPromptTokens = (attributes: Record<string, any>): void => {
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
   // Make sure we have the right naming convention
-  if (!(SpanAttributes.LLM_USAGE_OUTPUT_TOKENS in attributes) && AI_USAGE_COMPLETION_TOKENS in attributes) {
-    attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS] = attributes[AI_USAGE_COMPLETION_TOKENS];
+  if (
+    !(SpanAttributes.LLM_USAGE_OUTPUT_TOKENS in attributes) &&
+    AI_USAGE_COMPLETION_TOKENS in attributes
+  ) {
+    attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS] =
+      attributes[AI_USAGE_COMPLETION_TOKENS];
   }
 
   // Clean up legacy attributes
