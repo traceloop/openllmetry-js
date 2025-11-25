@@ -7,7 +7,6 @@ import {
   AttachmentMetadata,
 } from "./attachment";
 
-
 /**
  * Response from the upload URL endpoint
  */

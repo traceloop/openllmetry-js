@@ -3,11 +3,7 @@ import { BaseDatasetEntity } from "./base-dataset";
 import { Row } from "./row";
 import { Column } from "./column";
 import * as Papa from "papaparse";
-import {
-  Attachment,
-  ExternalAttachment,
-  isAnyAttachment,
-} from "./attachment";
+import { Attachment, ExternalAttachment, isAnyAttachment } from "./attachment";
 import { AttachmentUploader } from "./attachment-uploader";
 import {
   DatasetResponse,
