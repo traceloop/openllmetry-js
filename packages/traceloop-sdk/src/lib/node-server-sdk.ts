@@ -29,7 +29,29 @@ export {
   SSEStreamEvent,
 } from "./interfaces";
 export { TraceloopClient } from "./client/traceloop-client";
-export { Dataset, Datasets, Column, Row } from "./client/dataset";
+export {
+  Dataset,
+  Datasets,
+  Column,
+  Row,
+  Attachment,
+  ExternalAttachment,
+  AttachmentReference,
+  attachment,
+  isAttachment,
+  isExternalAttachment,
+  isAttachmentReference,
+  isAnyAttachment,
+  AttachmentUploader,
+} from "./client/dataset";
+export type {
+  FileCellType,
+  FileStorageType,
+  AttachmentMetadata,
+  AttachmentOptions,
+  ExternalAttachmentOptions,
+  UploadUrlResponse,
+} from "./client/dataset";
 export { Experiment } from "./client/experiment";
 export { Evaluator } from "./client/evaluator";
 export { initialize, getClient } from "./configuration";

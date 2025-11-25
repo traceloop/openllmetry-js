@@ -24,7 +24,7 @@ export interface DatasetResponse {
 
 export interface ColumnDefinition {
   name: string;
-  type: "string" | "number" | "boolean" | "date";
+  type: "string" | "number" | "boolean" | "date" | "file";
   slug?: string;
   required?: boolean;
   description?: string;
@@ -40,7 +40,7 @@ export interface ColumnResponse extends ColumnDefinition {
 
 export interface ColumnUpdateOptions {
   name?: string;
-  type?: "string" | "number" | "boolean" | "date";
+  type?: "string" | "number" | "boolean" | "date" | "file";
   required?: boolean;
   description?: string;
 }
@@ -92,3 +92,30 @@ export interface DatasetVersionsResponse {
 }
 
 export type DatasetColumnValue = string | number | boolean | null | undefined;
+
+/**
+ * Response from the upload URL endpoint
+ */
+export interface UploadUrlResponse {
+  uploadUrl: string;
+  storageKey: string;
+  expiresAt?: string;
+  method?: string;
+}
+
+/**
+ * Request to confirm upload status
+ */
+export interface UploadStatusRequest {
+  status: "success" | "failed";
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Request to register an external URL
+ */
+export interface ExternalUrlRequest {
+  type: string;
+  url: string;
+  metadata?: Record<string, unknown>;
+}

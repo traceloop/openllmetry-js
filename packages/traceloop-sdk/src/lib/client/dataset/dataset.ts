@@ -4,6 +4,12 @@ import { Row } from "./row";
 import { Column } from "./column";
 import * as Papa from "papaparse";
 import {
+  Attachment,
+  ExternalAttachment,
+  isAnyAttachment,
+} from "./attachment";
+import { AttachmentUploader } from "./attachment-uploader";
+import {
   DatasetResponse,
   DatasetUpdateOptions,
   ColumnDefinition,
@@ -19,10 +25,12 @@ import {
 export class Dataset extends BaseDatasetEntity {
   private _data: DatasetResponse;
   private _deleted = false;
+  private _attachmentUploader: AttachmentUploader;
 
   constructor(client: TraceloopClient, data: DatasetResponse) {
     super(client);
     this._data = data;
+    this._attachmentUploader = new AttachmentUploader(client);
   }
 
   get id(): string {
@@ -204,7 +212,15 @@ export class Dataset extends BaseDatasetEntity {
     columns.forEach((col) => {
       columnMap.set(col.name, col.slug);
     });
-    const transformedRows = rows.map((row) => {
+
+    // Phase 1: Extract attachments and prepare clean rows
+    const { cleanRows, attachmentMap } = this.extractAttachments(
+      rows,
+      columnMap,
+    );
+
+    // Phase 2: Create rows with regular data (attachments replaced with null)
+    const transformedRows = cleanRows.map((row) => {
       const transformedRow: { [key: string]: any } = {};
       Object.keys(row).forEach((columnName) => {
         const columnSlug = columnMap.get(columnName);
@@ -225,8 +241,9 @@ export class Dataset extends BaseDatasetEntity {
     );
     const result = await this.handleResponse(response);
 
+    const createdRows: Row[] = [];
     if (result.rows) {
-      return result.rows.map((row: any) => {
+      for (const row of result.rows) {
         const rowResponse: RowResponse = {
           id: row.id,
           datasetId: this._data.id,
@@ -235,11 +252,103 @@ export class Dataset extends BaseDatasetEntity {
           createdAt: row.created_at,
           updatedAt: row.updated_at,
         };
-        return new Row(this.client, rowResponse);
-      });
+        createdRows.push(new Row(this.client, rowResponse));
+      }
     }
 
-    return [];
+    // Phase 3: Process attachments for created rows
+    if (attachmentMap.size > 0) {
+      await this.processAttachments(createdRows, attachmentMap, columnMap);
+    }
+
+    return createdRows;
+  }
+
+  /**
+   * Extracts attachments from rows and returns clean rows with null values
+   */
+  private extractAttachments(
+    rows: RowData[],
+    columnMap: Map<string, string>,
+  ): {
+    cleanRows: RowData[];
+    attachmentMap: Map<number, Map<string, Attachment | ExternalAttachment>>;
+  } {
+    const attachmentMap = new Map<
+      number,
+      Map<string, Attachment | ExternalAttachment>
+    >();
+    const cleanRows: RowData[] = [];
+
+    rows.forEach((row, rowIndex) => {
+      const cleanRow: RowData = {};
+      const rowAttachments = new Map<string, Attachment | ExternalAttachment>();
+
+      Object.keys(row).forEach((columnName) => {
+        const value = row[columnName];
+        const columnSlug = columnMap.get(columnName);
+
+        if (isAnyAttachment(value) && columnSlug) {
+          // Store attachment for later processing
+          rowAttachments.set(columnSlug, value);
+          // Replace with null in the clean row
+          cleanRow[columnName] = null;
+        } else {
+          cleanRow[columnName] = value;
+        }
+      });
+
+      cleanRows.push(cleanRow);
+
+      if (rowAttachments.size > 0) {
+        attachmentMap.set(rowIndex, rowAttachments);
+      }
+    });
+
+    return { cleanRows, attachmentMap };
+  }
+
+  /**
+   * Processes attachments for created rows
+   */
+  private async processAttachments(
+    rows: Row[],
+    attachmentMap: Map<number, Map<string, Attachment | ExternalAttachment>>,
+    columnMap: Map<string, string>,
+  ): Promise<void> {
+    // Create reverse map for slug to name lookup
+    const reverseColumnMap = new Map<string, string>();
+    columnMap.forEach((slug, name) => {
+      reverseColumnMap.set(slug, name);
+    });
+
+    for (const [rowIndex, rowAttachments] of attachmentMap) {
+      const row = rows[rowIndex];
+      if (!row) continue;
+
+      for (const [columnSlug, attachment] of rowAttachments) {
+        try {
+          const reference = await this._attachmentUploader.processAnyAttachment(
+            this.slug,
+            row.id,
+            columnSlug,
+            attachment,
+          );
+
+          // Update the row's internal data with the attachment reference
+          const columnName = reverseColumnMap.get(columnSlug);
+          if (columnName) {
+            (row as any)._data.data[columnName] = reference.toJSON();
+          }
+        } catch (error) {
+          // Log warning but don't fail the entire operation
+          console.warn(
+            `Failed to process attachment for row ${row.id}, column ${columnSlug}:`,
+            error,
+          );
+        }
+      }
+    }
   }
 
   private transformValuesBackToNames(
