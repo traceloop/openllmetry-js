@@ -128,7 +128,9 @@ const main = async () => {
 
     for (const row of allRows) {
       const att = row.getAttachment("document");
-      console.log(`  - ${row.data.title}: ${att ? att.storageType : "no attachment"}`);
+      console.log(
+        `  - ${row.data.title}: ${att ? att.storageType : "no attachment"}`,
+      );
     }
 
     // 7. Clean up
