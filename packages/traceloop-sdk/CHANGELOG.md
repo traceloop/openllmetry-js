@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.21.1](https://github.com/traceloop/openllmetry-js/compare/v0.21.0...v0.21.1) (2025-11-25)
+
+### Bug Fixes
+
+- **sdk:** remove posthog and telemetry reporting ([#835](https://github.com/traceloop/openllmetry-js/issues/835)) ([61b32f7](https://github.com/traceloop/openllmetry-js/commit/61b32f78c5f46854f35ed83f523259fdd4b3e66a))
+
 # [0.21.0](https://github.com/traceloop/openllmetry-js/compare/v0.20.2...v0.21.0) (2025-11-24)
 
 ### Features
