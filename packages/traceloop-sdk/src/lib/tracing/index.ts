@@ -7,7 +7,6 @@ import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
-import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
 import { CONTEXT_KEY_ALLOW_TRACE_CONTENT } from "@traceloop/ai-semantic-conventions";
 import { AnthropicInstrumentation } from "@traceloop/instrumentation-anthropic";
@@ -51,7 +50,8 @@ let mcpInstrumentation: McpInstrumentation | undefined;
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
-  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+  //eslint-disable-next-line @typescript-eslint/no-empty-function
+  const exceptionLogger = (e: Error) => {};
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
@@ -133,7 +133,8 @@ export const manuallyInitInstrumentations = (
   apiKey?: string,
   baseUrl?: string,
 ) => {
-  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+  //eslint-disable-next-line @typescript-eslint/no-empty-function
+  const exceptionLogger = (e: Error) => {};
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
