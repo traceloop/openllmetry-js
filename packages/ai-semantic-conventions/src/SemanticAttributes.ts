@@ -17,7 +17,7 @@
 import {
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
-  // @ts-ignore - Using exports path that TypeScript doesn't recognize but works at runtime
+  // @ts-expect-error - Using exports path that TypeScript doesn't recognize but works at runtime
 } from "@opentelemetry/semantic-conventions/incubating";
 
 export const SpanAttributes = {
