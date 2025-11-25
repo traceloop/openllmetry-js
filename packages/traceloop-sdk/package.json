@@ -84,7 +84,6 @@
     "fetch-retry": "^6.0.0",
     "nunjucks": "^3.2.4",
     "papaparse": "^5.5.3",
-    "posthog-node": "^5.5.1",
     "supports-color": "^10.0.0",
     "tslib": "^2.8.1",
     "uuid": "^11.1.0"
