@@ -1,6 +1,5 @@
 import { TraceloopError } from "../errors";
 import { Prompt, PromptVersion } from "../interfaces";
-import { Telemetry } from "../telemetry/telemetry";
 import { getPromptByKey } from "./registry";
 import { renderMessages } from "./template";
 export { waitForInitialization } from "./registry";
@@ -40,8 +39,6 @@ const managedPromptTracingAttributes = (
 };
 
 export const getPrompt = (key: string, variables: Record<string, string>) => {
-  Telemetry.getInstance().capture("prompt:rendered");
-
   const prompt = getPromptByKey(key);
   const promptVersion = getEffectiveVersion(prompt);
 

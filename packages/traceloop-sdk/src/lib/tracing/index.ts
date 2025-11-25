@@ -7,7 +7,6 @@ import { Resource } from "@opentelemetry/resources";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import { Instrumentation } from "@opentelemetry/instrumentation";
 import { InitializeOptions } from "../interfaces";
-import { Telemetry } from "../telemetry/telemetry";
 import { _configuration } from "../configuration";
 import { CONTEXT_KEY_ALLOW_TRACE_CONTENT } from "@traceloop/ai-semantic-conventions";
 import { AnthropicInstrumentation } from "@traceloop/instrumentation-anthropic";
@@ -24,6 +23,7 @@ import { LangChainInstrumentation } from "@traceloop/instrumentation-langchain";
 import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
 import { TogetherInstrumentation } from "@traceloop/instrumentation-together";
+import { McpInstrumentation } from "@traceloop/instrumentation-mcp";
 import {
   ALL_INSTRUMENTATION_LIBRARIES,
   createSpanProcessor,
@@ -45,11 +45,14 @@ let pineconeInstrumentation: PineconeInstrumentation | undefined;
 let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
 let qdrantInstrumentation: QdrantInstrumentation | undefined;
 let togetherInstrumentation: TogetherInstrumentation | undefined;
+let mcpInstrumentation: McpInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
 export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
-  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+  const exceptionLogger = (e: Error) => {
+    console.debug("[Traceloop] Instrumentation exception:", e.message);
+  };
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
@@ -121,6 +124,9 @@ export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
 
   togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
   instrumentations.push(togetherInstrumentation);
+
+  mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
+  instrumentations.push(mcpInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
@@ -128,7 +134,9 @@ export const manuallyInitInstrumentations = (
   apiKey?: string,
   baseUrl?: string,
 ) => {
-  const exceptionLogger = (e: Error) => Telemetry.getInstance().logException(e);
+  const exceptionLogger = (e: Error) => {
+    console.debug("[Traceloop] Instrumentation exception:", e.message);
+  };
   const enrichTokens =
     (process.env.TRACELOOP_ENRICH_TOKENS || "true").toLowerCase() === "true";
 
@@ -229,6 +237,12 @@ export const manuallyInitInstrumentations = (
     togetherInstrumentation = new TogetherInstrumentation({ exceptionLogger });
     instrumentations.push(togetherInstrumentation);
     togetherInstrumentation.manuallyInstrument(instrumentModules.together);
+  }
+
+  if (instrumentModules?.mcp) {
+    mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
+    instrumentations.push(mcpInstrumentation);
+    mcpInstrumentation.manuallyInstrument(instrumentModules.mcp);
   }
 };
 
