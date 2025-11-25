@@ -798,6 +798,10 @@ describe("AI SDK Transformations", () => {
 
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 50);
       assert.strictEqual(attributes["ai.usage.promptTokens"], undefined);
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+        undefined,
+      );
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
 
@@ -840,6 +844,10 @@ describe("AI SDK Transformations", () => {
         25,
       );
       assert.strictEqual(attributes["ai.usage.completionTokens"], undefined);
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        undefined,
+      );
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
 
