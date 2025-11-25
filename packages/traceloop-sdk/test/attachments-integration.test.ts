@@ -116,7 +116,9 @@ describe("Attachment API Integration Tests", () => {
       const row = rows[0];
       const attachmentRef = row.getAttachment("document");
       if (attachmentRef) {
-        console.log(`✓ Attachment reference created: ${attachmentRef.storageType}`);
+        console.log(
+          `✓ Attachment reference created: ${attachmentRef.storageType}`,
+        );
       }
     });
 
