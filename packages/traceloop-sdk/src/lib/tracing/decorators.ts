@@ -14,7 +14,6 @@ import {
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
 import { shouldSendTraces } from ".";
-import { Telemetry } from "../telemetry/telemetry";
 
 export type DecoratorConfig = {
   name: string;
@@ -134,7 +133,7 @@ function withEntity<
               );
             }
           } catch (error) {
-            Telemetry.getInstance().logException(error);
+            console.debug("Error setting input attributes", error);
           }
         }
 
@@ -149,7 +148,7 @@ function withEntity<
                 );
               }
             } catch (error) {
-              Telemetry.getInstance().logException(error);
+              console.debug("Error setting output attributes", error);
             } finally {
               span.end();
             }
@@ -165,7 +164,7 @@ function withEntity<
             );
           }
         } catch (error) {
-          Telemetry.getInstance().logException(error);
+          console.debug("Error setting output attributes", error);
         } finally {
           span.end();
         }

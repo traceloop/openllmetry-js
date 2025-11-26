@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.20.1",
+  "version": "0.21.1",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -72,6 +72,7 @@
     "@traceloop/instrumentation-cohere": "workspace:*",
     "@traceloop/instrumentation-langchain": "workspace:*",
     "@traceloop/instrumentation-llamaindex": "workspace:*",
+    "@traceloop/instrumentation-mcp": "workspace:*",
     "@traceloop/instrumentation-openai": "workspace:*",
     "@traceloop/instrumentation-pinecone": "workspace:*",
     "@traceloop/instrumentation-qdrant": "workspace:*",
@@ -81,9 +82,9 @@
     "cross-fetch": "^4.1.0",
     "eventsource": "^3.0.2",
     "fetch-retry": "^6.0.0",
+    "mime-types": "^3.0.2",
     "nunjucks": "^3.2.4",
     "papaparse": "^5.5.3",
-    "posthog-node": "^5.5.1",
     "supports-color": "^10.0.0",
     "tslib": "^2.8.1",
     "uuid": "^11.1.0"
@@ -99,12 +100,14 @@
     "@google-cloud/aiplatform": "^4.4.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@langchain/core": "^0.3.58",
+    "@modelcontextprotocol/sdk": "^1.0.4",
     "@pinecone-database/pinecone": "^6.1.1",
     "@pollyjs/adapter-fetch": "^6.0.6",
     "@pollyjs/adapter-node-http": "^6.0.6",
     "@pollyjs/core": "^6.0.6",
     "@pollyjs/persister-fs": "^6.0.6",
     "@qdrant/js-client-rest": "^1.15.0",
+    "@types/mime-types": "^3.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.0.15",
     "@types/papaparse": "^5.3.16",
@@ -117,6 +120,7 @@
     "llamaindex": "^0.11.19",
     "openai": "4.38.3",
     "together-ai": "^0.20.0",
-    "ts-mocha": "^11.1.0"
+    "ts-mocha": "^11.1.0",
+    "zod": "^3.25.76"
   }
 }
