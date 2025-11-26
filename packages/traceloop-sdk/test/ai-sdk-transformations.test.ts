@@ -791,6 +791,7 @@ describe("AI SDK Transformations", () => {
       const attributes = {
         "ai.usage.promptTokens": 50,
         "gen_ai.usage.input_tokens": 50,
+        "gen_ai.usage.prompt_tokens": 50,
         someOtherAttr: "value",
       };
 
@@ -820,6 +821,7 @@ describe("AI SDK Transformations", () => {
       const attributes = {
         "ai.usage.promptTokens": 0,
         "gen_ai.usage.input_tokens": 0,
+        "gen_ai.usage.prompt_tokens": 0,
       };
 
       transformLLMSpans(attributes);
@@ -834,6 +836,7 @@ describe("AI SDK Transformations", () => {
       const attributes = {
         "ai.usage.completionTokens": 25,
         "gen_ai.usage.output_tokens": 25,
+        "gen_ai.usage.completion_tokens": 25,
         someOtherAttr: "value",
       };
 
@@ -866,6 +869,7 @@ describe("AI SDK Transformations", () => {
       const attributes = {
         "ai.usage.completionTokens": 0,
         "gen_ai.usage.output_tokens": 0,
+        "gen_ai.usage.completion_tokens": 0,
       };
 
       transformLLMSpans(attributes);
