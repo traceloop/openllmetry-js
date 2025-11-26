@@ -94,3 +94,32 @@ export interface CreateTaskRequest {
 export interface CreateTaskResponse {
   id: string;
 }
+
+export interface GithubContext {
+  repository: string;
+  prUrl: string;
+  commitHash: string;
+  actor: string;
+}
+
+export interface TaskResult {
+  input: Record<string, any>;
+  output?: Record<string, any>;
+  error?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface RunInGithubOptions {
+  datasetSlug: string;
+  datasetVersion?: string;
+  evaluators?: EvaluatorDetails[];
+  experimentSlug?: string;
+  experimentMetadata?: Record<string, any>;
+  experimentRunMetadata?: Record<string, any>;
+}
+
+export interface RunInGithubResponse {
+  experimentId: string;
+  experimentSlug: string;
+  runId: string;
+}

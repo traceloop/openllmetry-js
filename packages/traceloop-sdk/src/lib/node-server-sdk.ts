@@ -25,6 +25,10 @@ export {
   TaskResponse,
   ExecutionResponse,
   EvaluatorDetails,
+  GithubContext,
+  TaskResult,
+  RunInGithubOptions,
+  RunInGithubResponse,
   StreamEvent,
   SSEStreamEvent,
 } from "./interfaces";

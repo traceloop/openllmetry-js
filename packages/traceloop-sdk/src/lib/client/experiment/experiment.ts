@@ -12,6 +12,10 @@ import type {
   ExecutionResponse,
   CreateTaskRequest,
   CreateTaskResponse,
+  GithubContext,
+  TaskResult,
+  RunInGithubOptions,
+  RunInGithubResponse,
 } from "../../interfaces/experiment.interface";
 
 export class Experiment {
@@ -66,8 +70,35 @@ export class Experiment {
 
   /**
    * Run an experiment with the given task function and options
+   * If running in GitHub Actions, will automatically run in GitHub context.
+   * Otherwise, will run the experiment locally.
    */
   async run<TInput, TOutput>(
+    task: ExperimentTaskFunction<TInput, TOutput>,
+    options: ExperimentRunOptions = {},
+  ): Promise<ExperimentRunResult | RunInGithubResponse> {
+    // Check if running in GitHub Actions
+    if (process.env.GITHUB_ACTIONS === "true") {
+      return await this.runInGithub(task, {
+        datasetSlug: options.datasetSlug || "",
+        datasetVersion: options.datasetVersion,
+        evaluators: options.evaluators,
+        experimentSlug: options.experimentSlug,
+        experimentMetadata: options.relatedRef ? { ...options.aux, created_from: "github" } : { created_from: "github" },
+        experimentRunMetadata: {
+          ...(options.relatedRef && { related_ref: options.relatedRef }),
+          ...(options.aux && { aux: options.aux }),
+        },
+      });
+    }
+
+    return await this.runLocally(task, options);
+  }
+
+  /**
+   * Run an experiment locally (not in GitHub Actions)
+   */
+  private async runLocally<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
     options: ExperimentRunOptions = {},
   ): Promise<ExperimentRunResult> {
@@ -321,6 +352,175 @@ export class Experiment {
           }
         }
       });
+    }
+  }
+
+  /**
+   * Extract GitHub Actions context from environment variables
+   */
+  private getGithubContext(): GithubContext {
+    const isGithubActions = process.env.CI === "true" && process.env.GITHUB_ACTIONS === "true";
+
+    if (!isGithubActions) {
+      throw new Error(
+        "This method can only be run in GitHub Actions. Please ensure CI=true and GITHUB_ACTIONS=true environment variables are set.",
+      );
+    }
+
+    const repository = process.env.GITHUB_REPOSITORY;
+    const ref = process.env.GITHUB_REF;
+    const sha = process.env.GITHUB_SHA;
+    const actor = process.env.GITHUB_ACTOR;
+
+    if (!repository || !ref || !sha || !actor) {
+      throw new Error(
+        "Missing required GitHub environment variables: GITHUB_REPOSITORY, GITHUB_REF, GITHUB_SHA, or GITHUB_ACTOR",
+      );
+    }
+
+    // Extract PR number from ref (e.g., refs/pull/123/merge -> 123)
+    const prMatch = ref.match(/refs\/pull\/(\d+)\//);
+    const prNumber = prMatch ? prMatch[1] : null;
+
+    if (!prNumber) {
+      throw new Error(
+        `This method can only be run on pull request events. Current ref: ${ref}`,
+      );
+    }
+
+    const prUrl = `https://github.com/${repository}/pull/${prNumber}`;
+
+    return {
+      repository,
+      prUrl,
+      commitHash: sha,
+      actor,
+    };
+  }
+
+  /**
+   * Execute tasks locally and capture results
+   */
+  private async executeTasksLocally<TInput, TOutput>(
+    task: ExperimentTaskFunction<TInput, TOutput>,
+    rows: Record<string, any>[],
+  ): Promise<TaskResult[]> {
+    const results: TaskResult[] = [];
+
+    for (const row of rows) {
+      try {
+        const output = await task(row as TInput);
+        results.push({
+          input: row,
+          output: output as Record<string, any>,
+          metadata: {
+            rowId: row.id,
+            timestamp: Date.now(),
+          },
+        });
+      } catch (error) {
+        results.push({
+          input: row,
+          error: error instanceof Error ? error.message : String(error),
+          metadata: {
+            rowId: row.id,
+            timestamp: Date.now(),
+          },
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Run an experiment in GitHub Actions environment
+   * This method executes tasks locally and submits results to the backend for evaluation
+   */
+  async runInGithub<TInput, TOutput>(
+    task: ExperimentTaskFunction<TInput, TOutput>,
+    options: RunInGithubOptions,
+  ): Promise<RunInGithubResponse> {
+    const {
+      datasetSlug,
+      datasetVersion,
+      evaluators = [],
+      experimentMetadata,
+      experimentRunMetadata,
+    } = options;
+
+    // Generate or use provided experiment slug
+    let { experimentSlug } = options;
+    if (!experimentSlug) {
+      experimentSlug =
+        this.client.experimentSlug || this.generateExperimentSlug();
+    }
+
+    // Validate task function
+    if (!task || typeof task !== "function") {
+      throw new Error("Task function is required and must be a function");
+    }
+
+    try {
+      // Get GitHub context
+      const githubContext = this.getGithubContext();
+
+      // Get dataset rows
+      const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
+
+      // Execute tasks locally
+      const taskResults = await this.executeTasksLocally(task, rows);
+
+      // Prepare evaluator slugs
+      const evaluatorSlugs = evaluators.map((evaluator) =>
+        typeof evaluator === "string" ? evaluator : evaluator.name,
+      );
+
+      // Add created_from to experiment metadata
+      const mergedExperimentMetadata = {
+        ...experimentMetadata,
+        created_from: "github",
+      };
+
+      // Submit to backend
+      const payload = {
+        experiment_slug: experimentSlug,
+        dataset_slug: datasetSlug,
+        dataset_version: datasetVersion,
+        evaluator_slugs: evaluatorSlugs,
+        task_results: taskResults,
+        github_context: {
+          repository: githubContext.repository,
+          pr_url: githubContext.prUrl,
+          commit_hash: githubContext.commitHash,
+          actor: githubContext.actor,
+        },
+        experiment_metadata: mergedExperimentMetadata,
+        experiment_run_metadata: experimentRunMetadata,
+      };
+
+      const response = await this.client.post(
+        "/experiments/run-in-github",
+        payload,
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to submit GitHub experiment: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const data = await this.handleResponse(response);
+
+      return {
+        experimentId: data.experimentId || data.experiment_id,
+        experimentSlug: data.experimentSlug || data.experiment_slug || experimentSlug,
+        runId: data.runId || data.run_id,
+      };
+    } catch (error) {
+      throw new Error(
+        `GitHub experiment execution failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   }
 }
