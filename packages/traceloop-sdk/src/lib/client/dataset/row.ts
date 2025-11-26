@@ -1,6 +1,13 @@
 import { TraceloopClient } from "../traceloop-client";
 import { BaseDatasetEntity } from "./base-dataset";
 import { RowResponse, RowData, RowUpdateOptions } from "../../interfaces";
+import {
+  Attachment,
+  ExternalAttachment,
+  AttachmentReference,
+  isAttachmentReference,
+} from "./attachment";
+import { AttachmentUploader } from "./attachment-uploader";
 
 export class Row extends BaseDatasetEntity {
   private _data: RowResponse;
@@ -39,7 +46,9 @@ export class Row extends BaseDatasetEntity {
     return this._deleted;
   }
 
-  getValue(columnName: string): string | number | boolean | Date | null {
+  getValue(
+    columnName: string,
+  ): string | number | boolean | Date | null | object {
     const value = this._data.data[columnName];
     return value !== undefined ? value : null;
   }
@@ -169,5 +178,114 @@ export class Row extends BaseDatasetEntity {
     };
 
     return new Row(this.client, clonedData);
+  }
+
+  /**
+   * Gets an attachment reference from a column
+   * @param columnName The name of the column containing the attachment
+   * @returns AttachmentReference if the column contains an attachment, null otherwise
+   */
+  getAttachment(columnName: string): AttachmentReference | null {
+    const value = this._data.data[columnName];
+
+    if (!value || typeof value !== "object") {
+      return null;
+    }
+
+    // Value is now guaranteed to be an object
+    const objValue = value as object;
+
+    // Check if value is already an AttachmentReference
+    if (objValue instanceof AttachmentReference) {
+      return objValue;
+    }
+
+    // Check if value is a serialized attachment reference
+    if (isAttachmentReference(objValue)) {
+      const ref = objValue as any;
+      return new AttachmentReference(
+        ref.storageType,
+        ref.storageKey,
+        ref.url,
+        ref.fileType,
+        ref.metadata,
+      );
+    }
+
+    return null;
+  }
+
+  /**
+   * Checks if a column contains an attachment
+   * @param columnName The name of the column to check
+   */
+  hasAttachment(columnName: string): boolean {
+    return this.getAttachment(columnName) !== null;
+  }
+
+  /**
+   * Sets/uploads an attachment to a column
+   * @param columnSlug The slug of the column to set the attachment in
+   * @param attachment The attachment to upload (Attachment or ExternalAttachment)
+   * @returns The created AttachmentReference
+   *
+   * @example
+   * // Upload from file
+   * await row.setAttachment("image", new Attachment({ filePath: "./photo.jpg" }));
+   *
+   * @example
+   * // Set external URL
+   * await row.setAttachment("document", new ExternalAttachment({ url: "https://example.com/doc.pdf" }));
+   */
+  async setAttachment(
+    columnSlug: string,
+    attachment: Attachment | ExternalAttachment,
+  ): Promise<AttachmentReference> {
+    if (this._deleted) {
+      throw new Error("Cannot set attachment on a deleted row");
+    }
+
+    const uploader = new AttachmentUploader(this.client);
+    const reference = await uploader.processAnyAttachment(
+      this.datasetSlug,
+      this.id,
+      columnSlug,
+      attachment,
+    );
+
+    // Update internal data
+    this._data.data[columnSlug] = reference.toJSON() as any;
+
+    return reference;
+  }
+
+  /**
+   * Downloads an attachment from a column
+   * @param columnName The name of the column containing the attachment
+   * @param outputPath Optional file path to save the downloaded file
+   * @returns Buffer if no outputPath provided, void if saved to file
+   *
+   * @example
+   * // Get as buffer
+   * const data = await row.downloadAttachment("image");
+   *
+   * @example
+   * // Save to file
+   * await row.downloadAttachment("image", "./downloaded-image.png");
+   */
+  async downloadAttachment(
+    columnName: string,
+    outputPath?: string,
+  ): Promise<Buffer | void> {
+    if (this._deleted) {
+      throw new Error("Cannot download attachment from a deleted row");
+    }
+
+    const attachment = this.getAttachment(columnName);
+    if (!attachment) {
+      throw new Error(`No attachment found in column '${columnName}'`);
+    }
+
+    return attachment.download(outputPath);
   }
 }
