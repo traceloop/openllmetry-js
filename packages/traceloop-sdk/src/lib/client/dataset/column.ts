@@ -23,7 +23,7 @@ export class Column extends BaseDatasetEntity {
     return this._data.name;
   }
 
-  get type(): "string" | "number" | "boolean" | "date" {
+  get type(): "string" | "number" | "boolean" | "date" | "file" {
     return this._data.type;
   }
 
@@ -66,9 +66,11 @@ export class Column extends BaseDatasetEntity {
 
     if (
       options.type &&
-      !["string", "number", "boolean"].includes(options.type)
+      !["string", "number", "boolean", "date", "file"].includes(options.type)
     ) {
-      throw new Error("Column type must be one of: string, number, boolean");
+      throw new Error(
+        "Column type must be one of: string, number, boolean, date, file",
+      );
     }
 
     const response = await this.client.put(
