@@ -57,7 +57,8 @@ const main = async () => {
       messages: [
         {
           role: "system",
-          content: "You are a helpful research assistant. Provide concise, accurate answers.",
+          content:
+            "You are a helpful research assistant. Provide concise, accurate answers.",
         },
         { role: "user", content: question },
       ],
@@ -76,12 +77,18 @@ const main = async () => {
 
   try {
     console.log("\n🧪 Running experiment...");
-    console.log("   If in GitHub Actions, will run in GitHub context automatically\n");
+    console.log(
+      "   If in GitHub Actions, will run in GitHub context automatically\n",
+    );
 
     const results = await client.experiment.run(researchTask, {
       datasetSlug: "research-queries",
       datasetVersion: "v2",
-      evaluators: ["research-relevancy", "categories", "research-facts-counter"],
+      evaluators: [
+        "research-relevancy",
+        "categories",
+        "research-facts-counter",
+      ],
       experimentSlug: "research-ts",
     });
 
@@ -98,7 +105,9 @@ const main = async () => {
       }
     } else {
       // GitHub execution result
-      console.log("\n💡 Results will be posted as a comment on the pull request by the backend");
+      console.log(
+        "\n💡 Results will be posted as a comment on the pull request by the backend",
+      );
     }
   } catch (error) {
     console.error(

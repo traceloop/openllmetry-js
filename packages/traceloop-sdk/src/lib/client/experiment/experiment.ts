@@ -70,8 +70,6 @@ export class Experiment {
 
   /**
    * Run an experiment with the given task function and options
-   * If running in GitHub Actions, will automatically run in GitHub context.
-   * Otherwise, will run the experiment locally.
    */
   async run<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
@@ -84,7 +82,9 @@ export class Experiment {
         datasetVersion: options.datasetVersion,
         evaluators: options.evaluators,
         experimentSlug: options.experimentSlug,
-        experimentMetadata: options.relatedRef ? { ...options.aux, created_from: "github" } : { created_from: "github" },
+        experimentMetadata: options.relatedRef
+          ? { ...options.aux, created_from: "github" }
+          : { created_from: "github" },
         experimentRunMetadata: {
           ...(options.relatedRef && { related_ref: options.relatedRef }),
           ...(options.aux && { aux: options.aux }),
@@ -506,7 +506,8 @@ export class Experiment {
 
       return {
         experimentId: data.experimentId || data.experiment_id,
-        experimentSlug: data.experimentSlug || data.experiment_slug || experimentSlug,
+        experimentSlug:
+          data.experimentSlug || data.experiment_slug || experimentSlug,
         runId: data.runId || data.run_id,
       };
     } catch (error) {
