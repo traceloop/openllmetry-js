@@ -385,32 +385,30 @@ export class Experiment {
     task: ExperimentTaskFunction<TInput, TOutput>,
     rows: Record<string, any>[],
   ): Promise<TaskResult[]> {
-    const results: TaskResult[] = [];
-
-    for (const row of rows) {
-      try {
-        const output = await task(row as TInput);
-        results.push({
-          input: row,
-          output: output as Record<string, any>,
-          metadata: {
-            rowId: row.id,
-            timestamp: Date.now(),
-          },
-        });
-      } catch (error) {
-        results.push({
-          input: row,
-          error: error instanceof Error ? error.message : String(error),
-          metadata: {
-            rowId: row.id,
-            timestamp: Date.now(),
-          },
-        });
-      }
-    }
-
-    return results;
+    return await Promise.all(
+      rows.map(async (row) => {
+        try {
+          const output = await task(row as TInput);
+          return {
+            input: row,
+            output: output as Record<string, any>,
+            metadata: {
+              rowId: row.id,
+              timestamp: Date.now(),
+            },
+          };
+        } catch (error) {
+          return {
+            input: row,
+            error: error instanceof Error ? error.message : String(error),
+            metadata: {
+              rowId: row.id,
+              timestamp: Date.now(),
+            },
+          };
+        }
+      })
+    );
   }
 
   /**
@@ -488,12 +486,7 @@ export class Experiment {
       );
       const data = await this.handleResponse(response);
 
-      return {
-        experimentId: data.experimentId || data.experiment_id,
-        experimentSlug:
-          data.experimentSlug || data.experiment_slug || experimentSlug,
-        runId: data.runId || data.run_id,
-      };
+      return data;
     } catch (error) {
       throw new Error(
         `GitHub experiment execution failed: ${error instanceof Error ? error.message : "Unknown error"}`,
