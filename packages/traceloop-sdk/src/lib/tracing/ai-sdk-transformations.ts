@@ -321,29 +321,42 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 };
 
 const transformPromptTokens = (attributes: Record<string, any>): void => {
-  if (AI_USAGE_PROMPT_TOKENS in attributes) {
-    attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`] =
+  // Make sure we have the right naming convention
+  if (
+    !(SpanAttributes.LLM_USAGE_INPUT_TOKENS in attributes) &&
+    AI_USAGE_PROMPT_TOKENS in attributes
+  ) {
+    attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS] =
       attributes[AI_USAGE_PROMPT_TOKENS];
-    delete attributes[AI_USAGE_PROMPT_TOKENS];
   }
+
+  // Clean up legacy attributes
+  delete attributes[AI_USAGE_PROMPT_TOKENS];
+  delete attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS];
 };
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
-  if (AI_USAGE_COMPLETION_TOKENS in attributes) {
-    attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`] =
+  // Make sure we have the right naming convention
+  if (
+    !(SpanAttributes.LLM_USAGE_OUTPUT_TOKENS in attributes) &&
+    AI_USAGE_COMPLETION_TOKENS in attributes
+  ) {
+    attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS] =
       attributes[AI_USAGE_COMPLETION_TOKENS];
-    delete attributes[AI_USAGE_COMPLETION_TOKENS];
   }
+
+  // Clean up legacy attributes
+  delete attributes[AI_USAGE_COMPLETION_TOKENS];
+  delete attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS];
 };
 
 const calculateTotalTokens = (attributes: Record<string, any>): void => {
-  const promptTokens = attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`];
-  const completionTokens =
-    attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
+  const inputTokens = attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS];
+  const outputTokens = attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS];
 
-  if (promptTokens && completionTokens) {
+  if (inputTokens && outputTokens) {
     attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =
-      Number(promptTokens) + Number(completionTokens);
+      Number(inputTokens) + Number(outputTokens);
   }
 };
 
