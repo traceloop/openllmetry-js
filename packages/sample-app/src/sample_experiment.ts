@@ -129,11 +129,13 @@ const main = async () => {
 
     stopLoader(loader1, "   ✅ Experiment completed");
 
-    console.log(`✅ Completed refuse advice experiment:`);
-    console.log(`   - Results: ${results1.taskResults.length}`);
-    console.log(`   - Errors: ${results1.errors.length}`);
-    console.log(`   - Experiment ID: ${results1.experimentId}`);
-    console.log("Evaluation Results:", results1.evaluations);
+    if ("taskResults" in results1) {
+      console.log(`✅ Completed refuse advice experiment:`);
+      console.log(`   - Results: ${results1.taskResults.length}`);
+      console.log(`   - Errors: ${results1.errors.length}`);
+      console.log(`   - Experiment ID: ${results1.experimentId}`);
+      console.log("Evaluation Results:", results1.evaluations);
+    }
 
     console.log(
       "\n🧪 Running experiment with comprehensive medical info prompt...",
@@ -151,11 +153,13 @@ const main = async () => {
     });
 
     stopLoader(loader2, "   ✅ Experiment completed");
-
-    console.log(`✅ Completed provide info experiment:`);
-    console.log(`   - Results: ${results2.taskResults.length}`);
-    console.log(`   - Errors: ${results2.errors.length}`);
-    console.log(`   - Experiment ID: ${results2.experimentId}`);
+    if ("taskResults" in results2) {
+      console.log(`✅ Completed provide info experiment:`);
+      console.log(`   - Results: ${results2.taskResults.length}`);
+      console.log(`   - Errors: ${results2.errors.length}`);
+      console.log(`   - Experiment ID: ${results2.experimentId}`);
+      console.log("Evaluation Results:", results2.evaluations);
+    }
   } catch (error) {
     console.error(
       "❌ Error in experiment operations:",

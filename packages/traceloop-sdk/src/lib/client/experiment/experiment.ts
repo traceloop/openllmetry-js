@@ -359,14 +359,6 @@ export class Experiment {
    * Extract GitHub Actions context from environment variables
    */
   private getGithubContext(): GithubContext {
-    const isGithubActions = process.env.CI === "true" && process.env.GITHUB_ACTIONS === "true";
-
-    if (!isGithubActions) {
-      throw new Error(
-        "This method can only be run in GitHub Actions. Please ensure CI=true and GITHUB_ACTIONS=true environment variables are set.",
-      );
-    }
-
     const repository = process.env.GITHUB_REPOSITORY;
     const ref = process.env.GITHUB_REF;
     const sha = process.env.GITHUB_SHA;
@@ -500,7 +492,7 @@ export class Experiment {
       };
 
       const response = await this.client.post(
-        "/experiments/run-in-github",
+        "/v2/experiments/run-in-github",
         payload,
       );
 
