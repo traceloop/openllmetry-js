@@ -73,23 +73,11 @@ export class Experiment {
    */
   async run<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
-    options: ExperimentRunOptions = {},
+    options: ExperimentRunOptions | RunInGithubOptions = {},
   ): Promise<ExperimentRunResult | RunInGithubResponse> {
     // Check if running in GitHub Actions
     if (process.env.GITHUB_ACTIONS === "true") {
-      return await this.runInGithub(task, {
-        datasetSlug: options.datasetSlug || "",
-        datasetVersion: options.datasetVersion,
-        evaluators: options.evaluators,
-        experimentSlug: options.experimentSlug,
-        experimentMetadata: options.relatedRef
-          ? { ...options.aux, created_from: "github" }
-          : { created_from: "github" },
-        experimentRunMetadata: {
-          ...(options.relatedRef && { related_ref: options.relatedRef }),
-          ...(options.aux && { aux: options.aux }),
-        },
-      });
+      return await this.runInGithub(task, options as RunInGithubOptions);
     }
 
     return await this.runLocally(task, options);
@@ -439,6 +427,8 @@ export class Experiment {
       evaluators = [],
       experimentMetadata,
       experimentRunMetadata,
+      relatedRef,
+      aux,
     } = options;
 
     // Generate or use provided experiment slug
@@ -448,19 +438,15 @@ export class Experiment {
         this.client.experimentSlug || this.generateExperimentSlug();
     }
 
-    // Validate task function
     if (!task || typeof task !== "function") {
       throw new Error("Task function is required and must be a function");
     }
 
     try {
-      // Get GitHub context
       const githubContext = this.getGithubContext();
 
-      // Get dataset rows
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
 
-      // Execute tasks locally
       const taskResults = await this.executeTasksLocally(task, rows);
 
       // Prepare evaluator slugs
@@ -468,10 +454,15 @@ export class Experiment {
         typeof evaluator === "string" ? evaluator : evaluator.name,
       );
 
-      // Add created_from to experiment metadata
       const mergedExperimentMetadata = {
-        ...experimentMetadata,
+        ...(experimentMetadata || {}),
         created_from: "github",
+      };
+
+      const mergedExperimentRunMetadata = {
+        ...(experimentRunMetadata || {}),
+        ...(relatedRef && { related_ref: relatedRef }),
+        ...(aux && { aux: aux }),
       };
 
       // Submit to backend
@@ -488,20 +479,13 @@ export class Experiment {
           actor: githubContext.actor,
         },
         experiment_metadata: mergedExperimentMetadata,
-        experiment_run_metadata: experimentRunMetadata,
+        experiment_run_metadata: mergedExperimentRunMetadata,
       };
 
       const response = await this.client.post(
         "/v2/experiments/run-in-github",
         payload,
       );
-
-      if (!response.ok) {
-        throw new Error(
-          `Failed to submit GitHub experiment: ${response.status} ${response.statusText}`,
-        );
-      }
-
       const data = await this.handleResponse(response);
 
       return {

@@ -50,7 +50,7 @@ const main = async () => {
     row: TaskInput,
   ): Promise<TaskOutput> => {
     console.log(`Processing question: ${row.query}`);
-    const question = row.query as string;
+    const question = String(row.query ?? "")
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

@@ -116,6 +116,8 @@ export interface RunInGithubOptions {
   experimentSlug?: string;
   experimentMetadata?: Record<string, any>;
   experimentRunMetadata?: Record<string, any>;
+  relatedRef?: Record<string, string>;
+  aux?: Record<string, string>;
 }
 
 export interface RunInGithubResponse {
