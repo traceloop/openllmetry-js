@@ -49,9 +49,8 @@ const main = async () => {
   const researchTask: ExperimentTaskFunction = async (
     row: TaskInput,
   ): Promise<TaskOutput> => {
-    const question = row.question as string;
-
-    console.log(`Processing question: ${question}`);
+    console.log(`Processing question: ${row.query}`);
+    const question = row.query as string;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
@@ -70,9 +69,8 @@ const main = async () => {
 
     return {
       question,
-      answer,
-      model: "gpt-4",
-      timestamp: Date.now(),
+      sentence: answer,
+      completion: answer,
     };
   };
 
@@ -80,12 +78,11 @@ const main = async () => {
     console.log("\n🧪 Running experiment...");
     console.log("   If in GitHub Actions, will run in GitHub context automatically\n");
 
-    const results = await client.experiment.run(
-      researchTask, {
+    const results = await client.experiment.run(researchTask, {
       datasetSlug: "research-queries",
       datasetVersion: "v2",
       evaluators: ["research-relevancy", "categories", "research-facts-counter"],
-      experimentSlug: "github-research-experiment",
+      experimentSlug: "research-ts",
     });
 
     console.log("\n✅ Experiment completed successfully!");
