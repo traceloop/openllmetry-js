@@ -80,17 +80,12 @@ const main = async () => {
     console.log("\n🧪 Running experiment...");
     console.log("   If in GitHub Actions, will run in GitHub context automatically\n");
 
-    const results = await client.experiment.run(researchTask, {
-      datasetSlug: "research-questions",
-      datasetVersion: "v1",
-      evaluators: ["Answer Quality", "Relevance"],
+    const results = await client.experiment.run(
+      researchTask, {
+      datasetSlug: "research-queries",
+      datasetVersion: "v2",
+      evaluators: ["research-relevancy", "categories", "research-facts-counter"],
       experimentSlug: "github-research-experiment",
-      aux: {
-        purpose: "Test GitHub integration",
-        framework: "openllmetry-js",
-        node_version: process.version,
-        platform: process.platform,
-      },
     });
 
     console.log("\n✅ Experiment completed successfully!");
