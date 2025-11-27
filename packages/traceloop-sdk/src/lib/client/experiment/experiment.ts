@@ -407,7 +407,7 @@ export class Experiment {
             },
           };
         }
-      })
+      }),
     );
   }
 
