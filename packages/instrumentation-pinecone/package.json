@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-pinecone",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "description": "OpenTelemetry instrumentation for pinecone vector DB",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

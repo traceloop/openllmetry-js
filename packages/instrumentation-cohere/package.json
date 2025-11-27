@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-cohere",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "description": "Cohere Instrumentation",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

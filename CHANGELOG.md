@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.22.0](https://github.com/traceloop/openllmetry-js/compare/v0.21.1...v0.22.0) (2025-11-27)
+
+### Bug Fixes
+
+- **datasets:** add files support to datasets ([#836](https://github.com/traceloop/openllmetry-js/issues/836)) ([56165f0](https://github.com/traceloop/openllmetry-js/commit/56165f0ab75f6c843e38b01b2be57a3204204934))
+- **exp:** Add run in github experiment ([#837](https://github.com/traceloop/openllmetry-js/issues/837)) ([7905242](https://github.com/traceloop/openllmetry-js/commit/79052422fa5e8e4b7c762cb7c8ce9ef84b672e5d))
+- transform Vercel AI SDK token attributes to use input_tokens/output_tokens ([1a416a0](https://github.com/traceloop/openllmetry-js/commit/1a416a0debe3673140c8bed54d6eb23cb20f3f8d))
+- **vercel:** remove duplicate token attributes (prompt/input and completion/output) ([93b2388](https://github.com/traceloop/openllmetry-js/commit/93b2388192207056074d62d4fca95dfd31b60a5e))
+
+### Features
+
+- use official OpenTelemetry incubating semantic conventions for token attributes ([00e2529](https://github.com/traceloop/openllmetry-js/commit/00e25296877503ff189a76b384aa3d143b1339f7))
+
 ## [0.21.1](https://github.com/traceloop/openllmetry-js/compare/v0.21.0...v0.21.1) (2025-11-25)
 
 ### Bug Fixes
