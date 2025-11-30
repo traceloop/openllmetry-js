@@ -236,7 +236,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     }
   });
 
-  it("should use default 'run.ai' span name when no agent metadata is provided", async () => {
+  it("should preserve original AI SDK span name when no agent metadata is provided", async () => {
     // Define a simple calculator tool
     const calculate = tool({
       description: "Perform basic mathematical calculations",
