@@ -5,14 +5,22 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 
 const AI_GENERATE_TEXT = "ai.generateText";
+const AI_STREAM_TEXT = "ai.streamText";
+const AI_GENERATE_OBJECT = "ai.generateObject";
+const AI_STREAM_OBJECT = "ai.streamObject";
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
 const AI_STREAM_TEXT_DO_STREAM = "ai.streamText.doStream";
+const AI_STREAM_OBJECT_DO_STREAM = "ai.streamObject.doStream";
 const HANDLED_SPAN_NAMES: Record<string, string> = {
   [AI_GENERATE_TEXT]: "run.ai",
+  [AI_STREAM_TEXT]: "stream.ai",
+  [AI_GENERATE_OBJECT]: "object.ai",
+  [AI_STREAM_OBJECT]: "stream-object.ai",
   [AI_GENERATE_TEXT_DO_GENERATE]: "text.generate",
   [AI_GENERATE_OBJECT_DO_GENERATE]: "object.generate",
   [AI_STREAM_TEXT_DO_STREAM]: "text.stream",
+  [AI_STREAM_OBJECT_DO_STREAM]: "object.stream",
 };
 
 const TOOL_SPAN_NAME = "ai.toolCall";
@@ -419,12 +427,19 @@ const transformTelemetryMetadata = (
     // Set agent name on all spans for context
     attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
 
-    // Only set span kind to "agent" for the root AI span
+    // Only set span kind to "agent" for top-level AI spans
     // Note: At this point, span names have already been transformed to use agent name,
-    // so we check if spanName matches the agent name OR the default "run.ai" name
+    // so we check if spanName matches the agent name OR any of the default top-level span names
+    const topLevelSpanNames = [
+      HANDLED_SPAN_NAMES[AI_GENERATE_TEXT],
+      HANDLED_SPAN_NAMES[AI_STREAM_TEXT],
+      HANDLED_SPAN_NAMES[AI_GENERATE_OBJECT],
+      HANDLED_SPAN_NAMES[AI_STREAM_OBJECT],
+    ];
+
     if (
-      spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT] ||
-      spanName === agentName
+      spanName &&
+      (spanName === agentName || topLevelSpanNames.includes(spanName))
     ) {
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
         TraceloopSpanKindValues.AGENT;
@@ -483,19 +498,25 @@ const shouldHandleSpan = (span: ReadableSpan): boolean => {
   return span.instrumentationScope?.name === "ai";
 };
 
+// Top-level AI SDK spans that can have agent names
+const TOP_LEVEL_AI_SPANS = [
+  AI_GENERATE_TEXT,
+  AI_STREAM_TEXT,
+  AI_GENERATE_OBJECT,
+  AI_STREAM_OBJECT,
+];
+
 export const transformAiSdkSpanNames = (span: Span): void => {
   if (span.name === TOOL_SPAN_NAME) {
     span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
   }
   if (span.name in HANDLED_SPAN_NAMES) {
-    // Check if this is a root AI span with agent metadata
+    // Check if this is a top-level AI span with agent metadata
     const agentName = span.attributes[`${AI_TELEMETRY_METADATA_PREFIX}agent`];
-    if (
-      agentName &&
-      typeof agentName === "string" &&
-      span.name === AI_GENERATE_TEXT
-    ) {
-      // Use agent name for root AI spans instead of generic "run.ai"
+    const isTopLevelSpan = TOP_LEVEL_AI_SPANS.includes(span.name);
+
+    if (agentName && typeof agentName === "string" && isTopLevelSpan) {
+      // Use agent name for top-level AI spans instead of generic names
       span.updateName(agentName);
     } else {
       span.updateName(HANDLED_SPAN_NAMES[span.name]);
