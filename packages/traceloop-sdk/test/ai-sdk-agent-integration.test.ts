@@ -142,7 +142,9 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     const spans = memoryExporter.getFinishedSpans();
 
     // Find the root AI span (should now be named with agent name)
-    const rootSpan = spans.find((span) => span.name === "test_calculator_agent");
+    const rootSpan = spans.find(
+      (span) => span.name === "test_calculator_agent",
+    );
 
     // Find tool call span
     const toolSpan = spans.find((span) => span.name.endsWith(".tool"));
@@ -347,7 +349,9 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     const spans = memoryExporter.getFinishedSpans();
 
     // Find the root AI span (should be named with agent name)
-    const rootSpan = spans.find((span) => span.name === "profile_generator_agent");
+    const rootSpan = spans.find(
+      (span) => span.name === "profile_generator_agent",
+    );
 
     assert.ok(result);
     assert.ok(
