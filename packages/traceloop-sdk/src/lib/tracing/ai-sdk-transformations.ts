@@ -32,6 +32,9 @@ const AI_PROMPT_MESSAGES = "ai.prompt.messages";
 const AI_PROMPT = "ai.prompt";
 const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
+const AI_USAGE_CACHED_INPUT_TOKENS = "ai.usage.cachedInputTokens";
+const AI_USAGE_CACHE_CREATION_INPUT_TOKENS = "ai.usage.cacheCreationInputTokens";
+const AI_USAGE_CACHE_READ_INPUT_TOKENS = "ai.usage.cacheReadInputTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
 const AI_TELEMETRY_METADATA_PREFIX = "ai.telemetry.metadata.";
@@ -368,6 +371,34 @@ const calculateTotalTokens = (attributes: Record<string, any>): void => {
   }
 };
 
+const transformCacheCreationInputTokens = (attributes: Record<string, any>): void => {
+  // Transform ai.usage.cacheCreationInputTokens to gen_ai.usage.cache_creation_input_tokens
+  if (AI_USAGE_CACHE_CREATION_INPUT_TOKENS in attributes) {
+    attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS] =
+      attributes[AI_USAGE_CACHE_CREATION_INPUT_TOKENS];
+    delete attributes[AI_USAGE_CACHE_CREATION_INPUT_TOKENS];
+  }
+};
+
+const transformCacheReadInputTokens = (attributes: Record<string, any>): void => {
+  // Transform ai.usage.cacheReadInputTokens to gen_ai.usage.cache_read_input_tokens
+  if (AI_USAGE_CACHE_READ_INPUT_TOKENS in attributes) {
+    attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS] =
+      attributes[AI_USAGE_CACHE_READ_INPUT_TOKENS];
+    delete attributes[AI_USAGE_CACHE_READ_INPUT_TOKENS];
+  }
+};
+
+const transformCachedInputTokens = (attributes: Record<string, any>): void => {
+  // Transform ai.usage.cachedInputTokens to gen_ai.usage.cache_read_input_tokens
+  // This is used by OpenAI provider
+  if (AI_USAGE_CACHED_INPUT_TOKENS in attributes) {
+    attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS] =
+      attributes[AI_USAGE_CACHED_INPUT_TOKENS];
+    delete attributes[AI_USAGE_CACHED_INPUT_TOKENS];
+  }
+};
+
 const transformVendor = (attributes: Record<string, any>): void => {
   if (AI_MODEL_PROVIDER in attributes) {
     const vendor = attributes[AI_MODEL_PROVIDER];
@@ -467,6 +498,9 @@ export const transformLLMSpans = (
   transformTools(attributes);
   transformPromptTokens(attributes);
   transformCompletionTokens(attributes);
+  transformCacheCreationInputTokens(attributes);
+  transformCacheReadInputTokens(attributes);
+  transformCachedInputTokens(attributes);
   calculateTotalTokens(attributes);
   transformVendor(attributes);
   transformTelemetryMetadata(attributes, spanName);

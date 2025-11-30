@@ -940,6 +940,202 @@ describe("AI SDK Transformations", () => {
     });
   });
 
+  describe("transformAiSdkAttributes - cache tokens", () => {
+    it("should transform ai.usage.cacheCreationInputTokens to gen_ai.usage.cache_creation_input_tokens", () => {
+      const attributes = {
+        "ai.usage.cacheCreationInputTokens": 1024,
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
+        1024,
+      );
+      assert.strictEqual(attributes["ai.usage.cacheCreationInputTokens"], undefined);
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+
+    it("should transform ai.usage.cacheReadInputTokens to gen_ai.usage.cache_read_input_tokens", () => {
+      const attributes = {
+        "ai.usage.cacheReadInputTokens": 512,
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        512,
+      );
+      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+
+    it("should transform ai.usage.cachedInputTokens to gen_ai.usage.cache_read_input_tokens (OpenAI format)", () => {
+      const attributes = {
+        "ai.usage.cachedInputTokens": 256,
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        256,
+      );
+      assert.strictEqual(attributes["ai.usage.cachedInputTokens"], undefined);
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+
+    it("should handle multiple cache token attributes together", () => {
+      const attributes = {
+        "ai.usage.cacheCreationInputTokens": 1024,
+        "ai.usage.cacheReadInputTokens": 512,
+        [SpanAttributes.LLM_USAGE_INPUT_TOKENS]: 2048,
+        [SpanAttributes.LLM_USAGE_OUTPUT_TOKENS]: 100,
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
+        1024,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        512,
+      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 2048);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS], 100);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 2148);
+      assert.strictEqual(attributes["ai.usage.cacheCreationInputTokens"], undefined);
+      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+    });
+
+    it("should prefer cacheReadInputTokens over cachedInputTokens when both present", () => {
+      const attributes = {
+        "ai.usage.cacheReadInputTokens": 512,
+        "ai.usage.cachedInputTokens": 256,
+      };
+
+      transformLLMSpans(attributes);
+
+      // Since transformCacheReadInputTokens runs before transformCachedInputTokens,
+      // and cachedInputTokens also writes to CACHE_READ_INPUT_TOKENS,
+      // the final value should be from cachedInputTokens (last write wins)
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        256,
+      );
+      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+      assert.strictEqual(attributes["ai.usage.cachedInputTokens"], undefined);
+    });
+
+    it("should handle zero cache token values", () => {
+      const attributes = {
+        "ai.usage.cacheCreationInputTokens": 0,
+        "ai.usage.cacheReadInputTokens": 0,
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
+        0,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        0,
+      );
+    });
+
+    it("should handle string cache token values", () => {
+      const attributes = {
+        "ai.usage.cacheCreationInputTokens": "1024",
+        "ai.usage.cacheReadInputTokens": "512",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
+        "1024",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        "512",
+      );
+    });
+
+    it("should not modify attributes when cache token attributes are not present", () => {
+      const attributes = {
+        [SpanAttributes.LLM_USAGE_INPUT_TOKENS]: 100,
+        someOtherAttr: "value",
+      };
+      const originalAttributes = { ...attributes };
+
+      transformLLMSpans(attributes);
+
+      // Should preserve input tokens and add total tokens
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 100);
+      assert.strictEqual(attributes.someOtherAttr, "value");
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        undefined,
+      );
+    });
+
+    it("should work with cache tokens in complete AI SDK response", () => {
+      const attributes = {
+        "ai.response.text": "Hello!",
+        "ai.prompt.messages": JSON.stringify([{ role: "user", content: "Hi" }]),
+        "ai.usage.promptTokens": 10,
+        "ai.usage.completionTokens": 5,
+        "ai.usage.cacheCreationInputTokens": 1024,
+        "ai.usage.cacheReadInputTokens": 512,
+        "gen_ai.usage.input_tokens": 10,
+        "gen_ai.usage.output_tokens": 5,
+        "ai.model.provider": "anthropic",
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      // Check cache token transformations
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
+        1024,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
+        512,
+      );
+
+      // Check other transformations still work
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+        "Hello!",
+      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 10);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS], 5);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Anthropic");
+
+      // Check original attributes are removed
+      assert.strictEqual(attributes["ai.usage.cacheCreationInputTokens"], undefined);
+      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+      assert.strictEqual(attributes["ai.response.text"], undefined);
+      assert.strictEqual(attributes["ai.model.provider"], undefined);
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+  });
+
   describe("transformAiSdkAttributes - vendor", () => {
     it("should transform openai.chat provider to OpenAI system", () => {
       const attributes = {
