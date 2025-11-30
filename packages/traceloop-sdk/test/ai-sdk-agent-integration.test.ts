@@ -141,8 +141,8 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     const spans = memoryExporter.getFinishedSpans();
 
-    // Find the root AI span (run.ai)
-    const rootSpan = spans.find((span) => span.name === "run.ai");
+    // Find the root AI span (should now be named with agent name)
+    const rootSpan = spans.find((span) => span.name === "test_calculator_agent");
 
     // Find tool call span
     const toolSpan = spans.find((span) => span.name.endsWith(".tool"));
@@ -153,7 +153,10 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     );
 
     assert.ok(result);
-    assert.ok(rootSpan, "Root AI span should exist");
+    assert.ok(
+      rootSpan,
+      "Root AI span should exist and be named with agent name",
+    );
 
     // Verify root span has agent attributes
     assert.strictEqual(
@@ -229,5 +232,86 @@ describe("Test AI SDK Agent Integration with Recording", function () {
         "Child LLM span should not have entity name",
       );
     }
+  });
+
+  it("should use default 'run.ai' span name when no agent metadata is provided", async () => {
+    // Define a simple calculator tool
+    const calculate = tool({
+      description: "Perform basic mathematical calculations",
+      inputSchema: z.object({
+        operation: z
+          .enum(["add", "subtract", "multiply", "divide"])
+          .describe("The mathematical operation to perform"),
+        a: z.number().describe("First number"),
+        b: z.number().describe("Second number"),
+      }),
+      execute: async ({ operation, a, b }) => {
+        let result: number;
+        switch (operation) {
+          case "add":
+            result = a + b;
+            break;
+          case "subtract":
+            result = a - b;
+            break;
+          case "multiply":
+            result = a * b;
+            break;
+          case "divide":
+            if (b === 0) throw new Error("Division by zero");
+            result = a / b;
+            break;
+        }
+        return { operation, a, b, result };
+      },
+    });
+
+    const result = await traceloop.withWorkflow(
+      { name: "test_no_agent_workflow" },
+      async () => {
+        return await generateText({
+          model: vercel_openai("gpt-4o-mini"),
+          prompt: "Calculate 10 + 5 using the calculator tool",
+          tools: {
+            calculate,
+          },
+          maxSteps: 5,
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId: "test_function_no_agent",
+            // No agent metadata provided
+            metadata: {
+              sessionId: "test_session_no_agent",
+            },
+          },
+        });
+      },
+    );
+
+    // Force flush to ensure all spans are exported
+    await traceloop.forceFlush();
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    // Find the root AI span (should be "run.ai" when no agent metadata)
+    const rootSpan = spans.find((span) => span.name === "run.ai");
+
+    assert.ok(result);
+    assert.ok(
+      rootSpan,
+      "Root AI span should exist and be named 'run.ai' when no agent metadata",
+    );
+
+    // Verify root span does NOT have agent attributes
+    assert.strictEqual(
+      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      undefined,
+      "Root span should not have agent name when no agent metadata",
+    );
+    assert.strictEqual(
+      rootSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+      undefined,
+      "Root span should not have span kind when no agent metadata",
+    );
   });
 });

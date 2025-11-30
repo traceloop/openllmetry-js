@@ -419,9 +419,13 @@ const transformTelemetryMetadata = (
     // Set agent name on all spans for context
     attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
 
-    // Only set span kind to "agent" for the root AI span (run.ai)
-    // Note: At this point, span names have already been transformed
-    if (spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT]) {
+    // Only set span kind to "agent" for the root AI span
+    // Note: At this point, span names have already been transformed to use agent name,
+    // so we check if spanName matches the agent name OR the default "run.ai" name
+    if (
+      spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT] ||
+      spanName === agentName
+    ) {
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
         TraceloopSpanKindValues.AGENT;
       attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
@@ -484,7 +488,18 @@ export const transformAiSdkSpanNames = (span: Span): void => {
     span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
   }
   if (span.name in HANDLED_SPAN_NAMES) {
-    span.updateName(HANDLED_SPAN_NAMES[span.name]);
+    // Check if this is a root AI span with agent metadata
+    const agentName = span.attributes[`${AI_TELEMETRY_METADATA_PREFIX}agent`];
+    if (
+      agentName &&
+      typeof agentName === "string" &&
+      span.name === AI_GENERATE_TEXT
+    ) {
+      // Use agent name for root AI spans instead of generic "run.ai"
+      span.updateName(agentName);
+    } else {
+      span.updateName(HANDLED_SPAN_NAMES[span.name]);
+    }
   }
 };
 
