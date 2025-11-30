@@ -429,12 +429,12 @@ const transformTelemetryMetadata = (
 
     // Only set span kind to "agent" for top-level AI spans
     // Note: At this point, span names have already been transformed to use agent name,
-    // so we check if spanName matches the agent name OR any of the default top-level span names
+    // so we check if spanName matches the agent name OR any of the original top-level span names
     const topLevelSpanNames = [
-      HANDLED_SPAN_NAMES[AI_GENERATE_TEXT],
-      HANDLED_SPAN_NAMES[AI_STREAM_TEXT],
-      HANDLED_SPAN_NAMES[AI_GENERATE_OBJECT],
-      HANDLED_SPAN_NAMES[AI_STREAM_OBJECT],
+      AI_GENERATE_TEXT,
+      AI_STREAM_TEXT,
+      AI_GENERATE_OBJECT,
+      AI_STREAM_OBJECT,
     ];
 
     if (
@@ -516,11 +516,14 @@ export const transformAiSdkSpanNames = (span: Span): void => {
     const isTopLevelSpan = TOP_LEVEL_AI_SPANS.includes(span.name);
 
     if (agentName && typeof agentName === "string" && isTopLevelSpan) {
-      // Use agent name for top-level AI spans instead of generic names
+      // Use agent name for top-level AI spans when agent metadata is provided
       span.updateName(agentName);
-    } else {
+    } else if (!isTopLevelSpan) {
+      // Only transform child spans (text.generate, object.generate, etc.)
+      // Keep top-level spans with their original names when no agent metadata
       span.updateName(HANDLED_SPAN_NAMES[span.name]);
     }
+    // else: keep the original span name for top-level spans without agent metadata
   }
 };
 

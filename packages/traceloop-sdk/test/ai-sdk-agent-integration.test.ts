@@ -293,13 +293,13 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     const spans = memoryExporter.getFinishedSpans();
 
-    // Find the root AI span (should be "run.ai" when no agent metadata)
-    const rootSpan = spans.find((span) => span.name === "run.ai");
+    // Find the root AI span (should be "ai.generateText" when no agent metadata)
+    const rootSpan = spans.find((span) => span.name === "ai.generateText");
 
     assert.ok(result);
     assert.ok(
       rootSpan,
-      "Root AI span should exist and be named 'run.ai' when no agent metadata",
+      "Root AI span should exist and be named 'ai.generateText' when no agent metadata",
     );
 
     // Verify root span does NOT have agent attributes
