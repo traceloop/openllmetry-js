@@ -953,7 +953,10 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
         1024,
       );
-      assert.strictEqual(attributes["ai.usage.cacheCreationInputTokens"], undefined);
+      assert.strictEqual(
+        attributes["ai.usage.cacheCreationInputTokens"],
+        undefined,
+      );
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
 
@@ -969,7 +972,10 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
         512,
       );
-      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+      assert.strictEqual(
+        attributes["ai.usage.cacheReadInputTokens"],
+        undefined,
+      );
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
 
@@ -1007,11 +1013,26 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
         512,
       );
-      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 2048);
-      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS], 100);
-      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 2148);
-      assert.strictEqual(attributes["ai.usage.cacheCreationInputTokens"], undefined);
-      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS],
+        2048,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS],
+        100,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
+        2148,
+      );
+      assert.strictEqual(
+        attributes["ai.usage.cacheCreationInputTokens"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.usage.cacheReadInputTokens"],
+        undefined,
+      );
     });
 
     it("should prefer cacheReadInputTokens over cachedInputTokens when both present", () => {
@@ -1029,7 +1050,10 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
         256,
       );
-      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+      assert.strictEqual(
+        attributes["ai.usage.cacheReadInputTokens"],
+        undefined,
+      );
       assert.strictEqual(attributes["ai.usage.cachedInputTokens"], undefined);
     });
 
@@ -1079,7 +1103,10 @@ describe("AI SDK Transformations", () => {
       transformLLMSpans(attributes);
 
       // Should preserve input tokens and add total tokens
-      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS], 100);
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS],
+        100,
+      );
       assert.strictEqual(attributes.someOtherAttr, "value");
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
@@ -1128,8 +1155,14 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Anthropic");
 
       // Check original attributes are removed
-      assert.strictEqual(attributes["ai.usage.cacheCreationInputTokens"], undefined);
-      assert.strictEqual(attributes["ai.usage.cacheReadInputTokens"], undefined);
+      assert.strictEqual(
+        attributes["ai.usage.cacheCreationInputTokens"],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes["ai.usage.cacheReadInputTokens"],
+        undefined,
+      );
       assert.strictEqual(attributes["ai.response.text"], undefined);
       assert.strictEqual(attributes["ai.model.provider"], undefined);
       assert.strictEqual(attributes.someOtherAttr, "value");

@@ -33,7 +33,8 @@ const AI_PROMPT = "ai.prompt";
 const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
 const AI_USAGE_COMPLETION_TOKENS = "ai.usage.completionTokens";
 const AI_USAGE_CACHED_INPUT_TOKENS = "ai.usage.cachedInputTokens";
-const AI_USAGE_CACHE_CREATION_INPUT_TOKENS = "ai.usage.cacheCreationInputTokens";
+const AI_USAGE_CACHE_CREATION_INPUT_TOKENS =
+  "ai.usage.cacheCreationInputTokens";
 const AI_USAGE_CACHE_READ_INPUT_TOKENS = "ai.usage.cacheReadInputTokens";
 const AI_MODEL_PROVIDER = "ai.model.provider";
 const AI_PROMPT_TOOLS = "ai.prompt.tools";
@@ -371,7 +372,9 @@ const calculateTotalTokens = (attributes: Record<string, any>): void => {
   }
 };
 
-const transformCacheCreationInputTokens = (attributes: Record<string, any>): void => {
+const transformCacheCreationInputTokens = (
+  attributes: Record<string, any>,
+): void => {
   // Transform ai.usage.cacheCreationInputTokens to gen_ai.usage.cache_creation_input_tokens
   if (AI_USAGE_CACHE_CREATION_INPUT_TOKENS in attributes) {
     attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS] =
@@ -380,7 +383,9 @@ const transformCacheCreationInputTokens = (attributes: Record<string, any>): voi
   }
 };
 
-const transformCacheReadInputTokens = (attributes: Record<string, any>): void => {
+const transformCacheReadInputTokens = (
+  attributes: Record<string, any>,
+): void => {
   // Transform ai.usage.cacheReadInputTokens to gen_ai.usage.cache_read_input_tokens
   if (AI_USAGE_CACHE_READ_INPUT_TOKENS in attributes) {
     attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS] =
