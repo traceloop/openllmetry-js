@@ -454,14 +454,9 @@ const transformTelemetryMetadata = (
     }
   }
 
-  // Set agent attributes if detected and this is the root AI span
   if (agentName) {
-    // Set agent name on all spans for context
     attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
 
-    // Only set span kind to "agent" for top-level AI spans
-    // Note: At this point, span names have already been transformed to use agent name,
-    // so we check if spanName matches the agent name OR any of the original top-level span names
     const topLevelSpanNames = [
       AI_GENERATE_TEXT,
       AI_STREAM_TEXT,
@@ -479,13 +474,9 @@ const transformTelemetryMetadata = (
     }
   }
 
-  // Remove original ai.telemetry.metadata.* attributes
   keysToDelete.forEach((key) => {
     delete attributes[key];
   });
-
-  // Note: Context setting for child span inheritance should be done before span creation,
-  // not during transformation. Use `withTelemetryMetadataContext` function for context propagation.
 };
 
 export const transformLLMSpans = (
@@ -533,7 +524,6 @@ const shouldHandleSpan = (span: ReadableSpan): boolean => {
   return span.instrumentationScope?.name === "ai";
 };
 
-// Top-level AI SDK spans that can have agent names
 const TOP_LEVEL_AI_SPANS = [
   AI_GENERATE_TEXT,
   AI_STREAM_TEXT,
@@ -546,19 +536,14 @@ export const transformAiSdkSpanNames = (span: Span): void => {
     span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
   }
   if (span.name in HANDLED_SPAN_NAMES) {
-    // Check if this is a top-level AI span with agent metadata
     const agentName = span.attributes[`${AI_TELEMETRY_METADATA_PREFIX}agent`];
     const isTopLevelSpan = TOP_LEVEL_AI_SPANS.includes(span.name);
 
     if (agentName && typeof agentName === "string" && isTopLevelSpan) {
-      // Use agent name for top-level AI spans when agent metadata is provided
       span.updateName(agentName);
     } else if (!isTopLevelSpan) {
-      // Only transform child spans (text.generate, object.generate, etc.)
-      // Keep top-level spans with their original names when no agent metadata
       span.updateName(HANDLED_SPAN_NAMES[span.name]);
     }
-    // else: keep the original span name for top-level spans without agent metadata
   }
 };
 
