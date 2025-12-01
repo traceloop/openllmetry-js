@@ -67,6 +67,13 @@ const VENDOR_MAPPING: Record<string, string> = {
   openrouter: "OpenRouter",
 };
 
+const getAgentNameFromAttributes = (
+  attributes: Record<string, any>,
+): string | null => {
+  const agentAttr = attributes[`${AI_TELEMETRY_METADATA_PREFIX}agent`];
+  return agentAttr && typeof agentAttr === "string" ? agentAttr : null;
+};
+
 const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
     attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
@@ -536,10 +543,10 @@ export const transformAiSdkSpanNames = (span: Span): void => {
     span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
   }
   if (span.name in HANDLED_SPAN_NAMES) {
-    const agentName = span.attributes[`${AI_TELEMETRY_METADATA_PREFIX}agent`];
+    const agentName = getAgentNameFromAttributes(span.attributes);
     const isTopLevelSpan = TOP_LEVEL_AI_SPANS.includes(span.name);
 
-    if (agentName && typeof agentName === "string" && isTopLevelSpan) {
+    if (agentName && isTopLevelSpan) {
       span.updateName(agentName);
     } else if (!isTopLevelSpan) {
       span.updateName(HANDLED_SPAN_NAMES[span.name]);
