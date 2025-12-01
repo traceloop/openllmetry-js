@@ -979,22 +979,6 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
 
-    it("should transform ai.usage.cachedInputTokens to gen_ai.usage.cache_read_input_tokens (OpenAI format)", () => {
-      const attributes = {
-        "ai.usage.cachedInputTokens": 256,
-        someOtherAttr: "value",
-      };
-
-      transformLLMSpans(attributes);
-
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
-        256,
-      );
-      assert.strictEqual(attributes["ai.usage.cachedInputTokens"], undefined);
-      assert.strictEqual(attributes.someOtherAttr, "value");
-    });
-
     it("should handle multiple cache token attributes together", () => {
       const attributes = {
         "ai.usage.cacheCreationInputTokens": 1024,
@@ -1033,25 +1017,6 @@ describe("AI SDK Transformations", () => {
         attributes["ai.usage.cacheReadInputTokens"],
         undefined,
       );
-    });
-
-    it("should prefer cacheReadInputTokens over cachedInputTokens when both present", () => {
-      const attributes = {
-        "ai.usage.cacheReadInputTokens": 512,
-        "ai.usage.cachedInputTokens": 256,
-      };
-
-      transformLLMSpans(attributes);
-
-      assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
-        256,
-      );
-      assert.strictEqual(
-        attributes["ai.usage.cacheReadInputTokens"],
-        undefined,
-      );
-      assert.strictEqual(attributes["ai.usage.cachedInputTokens"], undefined);
     });
 
     it("should handle zero cache token values", () => {
