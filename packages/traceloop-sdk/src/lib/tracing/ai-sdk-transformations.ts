@@ -375,7 +375,6 @@ const calculateTotalTokens = (attributes: Record<string, any>): void => {
 const transformCacheCreationInputTokens = (
   attributes: Record<string, any>,
 ): void => {
-  // Transform ai.usage.cacheCreationInputTokens to gen_ai.usage.cache_creation_input_tokens
   if (AI_USAGE_CACHE_CREATION_INPUT_TOKENS in attributes) {
     attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS] =
       attributes[AI_USAGE_CACHE_CREATION_INPUT_TOKENS];
@@ -386,7 +385,6 @@ const transformCacheCreationInputTokens = (
 const transformCacheReadInputTokens = (
   attributes: Record<string, any>,
 ): void => {
-  // Transform ai.usage.cacheReadInputTokens to gen_ai.usage.cache_read_input_tokens
   if (AI_USAGE_CACHE_READ_INPUT_TOKENS in attributes) {
     attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS] =
       attributes[AI_USAGE_CACHE_READ_INPUT_TOKENS];
@@ -395,8 +393,6 @@ const transformCacheReadInputTokens = (
 };
 
 const transformCachedInputTokens = (attributes: Record<string, any>): void => {
-  // Transform ai.usage.cachedInputTokens to gen_ai.usage.cache_read_input_tokens
-  // This is used by OpenAI provider
   if (AI_USAGE_CACHED_INPUT_TOKENS in attributes) {
     attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS] =
       attributes[AI_USAGE_CACHED_INPUT_TOKENS];

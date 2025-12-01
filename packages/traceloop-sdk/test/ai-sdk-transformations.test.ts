@@ -1043,9 +1043,6 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      // Since transformCacheReadInputTokens runs before transformCachedInputTokens,
-      // and cachedInputTokens also writes to CACHE_READ_INPUT_TOKENS,
-      // the final value should be from cachedInputTokens (last write wins)
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS],
         256,
@@ -1102,7 +1099,6 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      // Should preserve input tokens and add total tokens
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS],
         100,
@@ -1134,7 +1130,6 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      // Check cache token transformations
       assert.strictEqual(
         attributes[SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS],
         1024,
@@ -1144,7 +1139,6 @@ describe("AI SDK Transformations", () => {
         512,
       );
 
-      // Check other transformations still work
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
         "Hello!",
@@ -1154,7 +1148,6 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
       assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Anthropic");
 
-      // Check original attributes are removed
       assert.strictEqual(
         attributes["ai.usage.cacheCreationInputTokens"],
         undefined,

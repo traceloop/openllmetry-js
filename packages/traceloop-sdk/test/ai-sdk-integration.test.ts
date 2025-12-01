@@ -271,9 +271,7 @@ describe("Test AI SDK Integration with Recording", function () {
   });
 
   it("should capture and transform cache tokens from OpenAI with prompt caching", async function () {
-    this.timeout(30000); // Increase timeout for two API calls
-    // Create a very long system message to trigger OpenAI's prompt caching
-    // OpenAI caches prompts > 1024 tokens. We'll create a much longer one to ensure caching.
+    this.timeout(30000);
     const basePrompt =
       "You are an expert AI assistant with comprehensive knowledge across numerous domains. " +
       "Your responses should be accurate, detailed, and thoughtful. " +
@@ -317,10 +315,8 @@ describe("Test AI SDK Integration with Recording", function () {
       "- Connect philosophical concepts to real-world scenarios\n" +
       "\n";
 
-    // Repeat to ensure we're well over 1024 tokens (aiming for ~3000+ tokens)
     const longSystemPrompt = basePrompt.repeat(30);
 
-    // First call - creates cache
     const result1 = await traceloop.withWorkflow(
       { name: "test_cache_creation" },
       async () => {
@@ -346,7 +342,6 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(firstCallSpan.attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS]);
     assert.ok(firstCallSpan.attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS]);
 
-    // Verify no AI SDK cache attributes remain (should be transformed)
     assert.strictEqual(
       firstCallSpan.attributes["ai.usage.cachedInputTokens"],
       undefined,
@@ -360,7 +355,6 @@ describe("Test AI SDK Integration with Recording", function () {
       undefined,
     );
 
-    // Check for cache creation tokens if OpenAI provided them
     if (
       firstCallSpan.attributes[
         SpanAttributes.LLM_USAGE_CACHE_CREATION_INPUT_TOKENS
@@ -376,10 +370,8 @@ describe("Test AI SDK Integration with Recording", function () {
       );
     }
 
-    // Reset exporter for second call
     memoryExporter.reset();
 
-    // Second call with same system prompt - should use cache
     const result2 = await traceloop.withWorkflow(
       { name: "test_cache_read" },
       async () => {
@@ -407,7 +399,6 @@ describe("Test AI SDK Integration with Recording", function () {
       secondCallSpan.attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS],
     );
 
-    // Verify no AI SDK cache attributes remain (should be transformed)
     assert.strictEqual(
       secondCallSpan.attributes["ai.usage.cachedInputTokens"],
       undefined,
@@ -421,7 +412,6 @@ describe("Test AI SDK Integration with Recording", function () {
       undefined,
     );
 
-    // Check for cache read tokens if OpenAI provided them
     if (
       secondCallSpan.attributes[
         SpanAttributes.LLM_USAGE_CACHE_READ_INPUT_TOKENS
@@ -436,7 +426,6 @@ describe("Test AI SDK Integration with Recording", function () {
         cacheReadTokens > 0,
         "Cache read tokens should be > 0 when cache is used",
       );
-      // With our test recording, we should see 6900 cached tokens on the second call
       assert.strictEqual(
         cacheReadTokens,
         6900,
