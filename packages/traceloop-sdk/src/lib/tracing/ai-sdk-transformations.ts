@@ -5,14 +5,22 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 
 const AI_GENERATE_TEXT = "ai.generateText";
+const AI_STREAM_TEXT = "ai.streamText";
+const AI_GENERATE_OBJECT = "ai.generateObject";
+const AI_STREAM_OBJECT = "ai.streamObject";
 const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
 const AI_STREAM_TEXT_DO_STREAM = "ai.streamText.doStream";
+const AI_STREAM_OBJECT_DO_STREAM = "ai.streamObject.doStream";
 const HANDLED_SPAN_NAMES: Record<string, string> = {
   [AI_GENERATE_TEXT]: "run.ai",
+  [AI_STREAM_TEXT]: "stream.ai",
+  [AI_GENERATE_OBJECT]: "object.ai",
+  [AI_STREAM_OBJECT]: "stream-object.ai",
   [AI_GENERATE_TEXT_DO_GENERATE]: "text.generate",
   [AI_GENERATE_OBJECT_DO_GENERATE]: "object.generate",
   [AI_STREAM_TEXT_DO_STREAM]: "text.stream",
+  [AI_STREAM_OBJECT_DO_STREAM]: "object.stream",
 };
 
 const TOOL_SPAN_NAME = "ai.toolCall";
@@ -53,6 +61,13 @@ const VENDOR_MAPPING: Record<string, string> = {
   ollama: "Ollama",
   huggingface: "HuggingFace",
   openrouter: "OpenRouter",
+};
+
+const getAgentNameFromAttributes = (
+  attributes: Record<string, any>,
+): string | null => {
+  const agentAttr = attributes[`${AI_TELEMETRY_METADATA_PREFIX}agent`];
+  return agentAttr && typeof agentAttr === "string" ? agentAttr : null;
 };
 
 const transformResponseText = (attributes: Record<string, any>): void => {
@@ -386,7 +401,8 @@ const transformTelemetryMetadata = (
 ): void => {
   const metadataAttributes: Record<string, string> = {};
   const keysToDelete: string[] = [];
-  let agentName: string | null = null;
+  // Use the helper function to extract agent name
+  const agentName = getAgentNameFromAttributes(attributes);
 
   // Find all ai.telemetry.metadata.* attributes
   for (const [key, value] of Object.entries(attributes)) {
@@ -401,11 +417,6 @@ const transformTelemetryMetadata = (
         const stringValue = typeof value === "string" ? value : String(value);
         metadataAttributes[metadataKey] = stringValue;
 
-        // Check for agent-specific metadata
-        if (metadataKey === "agent") {
-          agentName = stringValue;
-        }
-
         // Also set as traceloop association property attribute
         attributes[
           `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`
@@ -414,27 +425,29 @@ const transformTelemetryMetadata = (
     }
   }
 
-  // Set agent attributes if detected and this is the root AI span
   if (agentName) {
-    // Set agent name on all spans for context
     attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
 
-    // Only set span kind to "agent" for the root AI span (run.ai)
-    // Note: At this point, span names have already been transformed
-    if (spanName === HANDLED_SPAN_NAMES[AI_GENERATE_TEXT]) {
+    const topLevelSpanNames = [
+      AI_GENERATE_TEXT,
+      AI_STREAM_TEXT,
+      AI_GENERATE_OBJECT,
+      AI_STREAM_OBJECT,
+    ];
+
+    if (
+      spanName &&
+      (spanName === agentName || topLevelSpanNames.includes(spanName))
+    ) {
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
         TraceloopSpanKindValues.AGENT;
       attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
     }
   }
 
-  // Remove original ai.telemetry.metadata.* attributes
   keysToDelete.forEach((key) => {
     delete attributes[key];
   });
-
-  // Note: Context setting for child span inheritance should be done before span creation,
-  // not during transformation. Use `withTelemetryMetadataContext` function for context propagation.
 };
 
 export const transformLLMSpans = (
@@ -479,12 +492,26 @@ const shouldHandleSpan = (span: ReadableSpan): boolean => {
   return span.instrumentationScope?.name === "ai";
 };
 
+const TOP_LEVEL_AI_SPANS = [
+  AI_GENERATE_TEXT,
+  AI_STREAM_TEXT,
+  AI_GENERATE_OBJECT,
+  AI_STREAM_OBJECT,
+];
+
 export const transformAiSdkSpanNames = (span: Span): void => {
   if (span.name === TOOL_SPAN_NAME) {
     span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
   }
   if (span.name in HANDLED_SPAN_NAMES) {
-    span.updateName(HANDLED_SPAN_NAMES[span.name]);
+    const agentName = getAgentNameFromAttributes(span.attributes);
+    const isTopLevelSpan = TOP_LEVEL_AI_SPANS.includes(span.name);
+
+    if (agentName && isTopLevelSpan) {
+      span.updateName(agentName);
+    } else if (!isTopLevelSpan) {
+      span.updateName(HANDLED_SPAN_NAMES[span.name]);
+    }
   }
 };
 
