@@ -433,7 +433,8 @@ const transformTelemetryMetadata = (
 ): void => {
   const metadataAttributes: Record<string, string> = {};
   const keysToDelete: string[] = [];
-  let agentName: string | null = null;
+  // Use the helper function to extract agent name
+  const agentName = getAgentNameFromAttributes(attributes);
 
   // Find all ai.telemetry.metadata.* attributes
   for (const [key, value] of Object.entries(attributes)) {
@@ -447,11 +448,6 @@ const transformTelemetryMetadata = (
         // Convert value to string for association properties
         const stringValue = typeof value === "string" ? value : String(value);
         metadataAttributes[metadataKey] = stringValue;
-
-        // Check for agent-specific metadata
-        if (metadataKey === "agent") {
-          agentName = stringValue;
-        }
 
         // Also set as traceloop association property attribute
         attributes[
