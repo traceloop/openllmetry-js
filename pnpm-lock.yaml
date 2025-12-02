@@ -14,7 +14,7 @@ importers:
     devDependencies:
       '@commitlint/cli':
         specifier: ^19.8.1
-        version: 19.8.1(@types/node@24.0.15)(typescript@5.8.3)
+        version: 19.8.1(@types/node@24.0.15)(typescript@5.9.3)
       '@commitlint/config-conventional':
         specifier: ^19.8.1
         version: 19.8.1
@@ -29,7 +29,7 @@ importers:
         version: 5.7.1(@nx/devkit@21.3.2(nx@21.3.2))
       '@nx/eslint-plugin':
         specifier: ^21.3.0
-        version: 21.3.2(@babel/traverse@7.28.0)(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)(typescript@5.8.3)
+        version: 21.3.2(@babel/traverse@7.28.0)(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)(typescript@5.9.3)
       '@nx/js':
         specifier: ^21.3.0
         version: 21.3.2(@babel/traverse@7.28.0)(nx@21.3.2)
@@ -41,16 +41,16 @@ importers:
         version: 6.1.0(rollup@4.45.1)
       '@rollup/plugin-typescript':
         specifier: ^12.1.4
-        version: 12.1.4(rollup@4.45.1)(tslib@2.8.1)(typescript@5.8.3)
+        version: 12.1.4(rollup@4.45.1)(tslib@2.8.1)(typescript@5.9.3)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.37.0
-        version: 8.38.0(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
+        version: 8.38.0(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
       '@typescript-eslint/parser':
         specifier: ^8.37.0
-        version: 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
+        version: 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
       cz-conventional-changelog:
         specifier: ^3.3.0
-        version: 3.3.0(@types/node@24.0.15)(typescript@5.8.3)
+        version: 3.3.0(@types/node@24.0.15)(typescript@5.9.3)
       eslint:
         specifier: ^9.31.0
         version: 9.31.0(jiti@2.4.2)
@@ -83,10 +83,10 @@ importers:
         version: 4.45.1
       rollup-plugin-dts:
         specifier: ^6.2.1
-        version: 6.2.1(rollup@4.45.1)(typescript@5.8.3)
+        version: 6.2.1(rollup@4.45.1)(typescript@5.9.3)
       typescript:
         specifier: ^5.8.3
-        version: 5.8.3
+        version: 5.9.3
 
   packages/ai-semantic-conventions:
     dependencies:
@@ -107,7 +107,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -119,8 +119,8 @@ importers:
         version: 2.8.1
     devDependencies:
       '@anthropic-ai/sdk':
-        specifier: ^0.56.0
-        version: 0.56.0
+        specifier: ^0.71.0
+        version: 0.71.0(zod@3.25.76)
       '@opentelemetry/context-async-hooks':
         specifier: ^2.0.1
         version: 2.0.1(@opentelemetry/api@1.9.0)
@@ -132,19 +132,19 @@ importers:
         version: 6.0.7
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-bedrock:
     dependencies:
@@ -156,7 +156,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -181,19 +181,19 @@ importers:
         version: 6.0.7
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-chromadb:
     dependencies:
@@ -205,7 +205,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -224,13 +224,13 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
@@ -239,7 +239,7 @@ importers:
         version: 3.0.9
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-cohere:
     dependencies:
@@ -251,7 +251,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -270,13 +270,13 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
@@ -285,7 +285,7 @@ importers:
         version: 7.17.1(encoding@0.1.13)
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-langchain:
     dependencies:
@@ -300,7 +300,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -313,7 +313,7 @@ importers:
     devDependencies:
       '@langchain/community':
         specifier: ^0.3.50
-        version: 0.3.51(8374653941887ab69b3c1e069ad831a4)
+        version: 0.3.51(ff0bc764bdeb7c31ee61157b93391bc7)
       '@langchain/openai':
         specifier: ^0.6.2
         version: 0.6.2(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)
@@ -328,13 +328,13 @@ importers:
         version: 6.0.7
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@traceloop/instrumentation-bedrock':
         specifier: workspace:*
         version: link:../instrumentation-bedrock
@@ -346,13 +346,13 @@ importers:
         version: 24.0.15
       langchain:
         specifier: ^0.3.30
-        version: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.10.0)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
+        version: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.13.2)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
       mocha:
         specifier: ^11.7.1
         version: 11.7.1
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-llamaindex:
     dependencies:
@@ -364,7 +364,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -389,13 +389,13 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/lodash':
         specifier: ^4.14.0
         version: 4.17.20
@@ -404,10 +404,10 @@ importers:
         version: 10.0.10
       llamaindex:
         specifier: ^0.11.19
-        version: 0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        version: 0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.25.0(zod@3.25.76))(zod@3.25.76)
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-mcp:
     dependencies:
@@ -419,7 +419,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -432,7 +432,7 @@ importers:
     devDependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.4
-        version: 1.22.0(@cfworker/json-schema@4.1.1)
+        version: 1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0)
       '@opentelemetry/context-async-hooks':
         specifier: ^2.0.1
         version: 2.0.1(@opentelemetry/api@1.9.0)
@@ -444,19 +444,19 @@ importers:
         version: 6.0.7
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -471,7 +471,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -496,13 +496,13 @@ importers:
         version: 6.0.7
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
@@ -523,7 +523,7 @@ importers:
         version: 5.12.2(ws@8.18.3)(zod@3.25.76)
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-pinecone:
     dependencies:
@@ -535,7 +535,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -566,13 +566,13 @@ importers:
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-qdrant:
     dependencies:
@@ -584,7 +584,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@traceloop/ai-semantic-conventions':
         specifier: workspace:*
         version: link:../ai-semantic-conventions
@@ -603,22 +603,22 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@qdrant/js-client-rest':
         specifier: ^1.15.0
-        version: 1.15.0(typescript@5.8.3)
+        version: 1.15.0(typescript@5.9.3)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
       uuid:
         specifier: ^11.1.0
         version: 11.1.0
@@ -633,7 +633,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -655,13 +655,13 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@pollyjs/adapter-node-http':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@pollyjs/core':
         specifier: ^6.0.6
         version: 6.0.6
       '@pollyjs/persister-fs':
         specifier: ^6.0.6
-        version: 6.0.6
+        version: 6.0.6(supports-color@10.0.0)
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
@@ -673,7 +673,7 @@ importers:
         version: 0.20.0(encoding@0.1.13)
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/instrumentation-vertexai:
     dependencies:
@@ -685,7 +685,7 @@ importers:
         version: 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
         specifier: ^1.36.0
         version: 1.36.0
@@ -701,10 +701,10 @@ importers:
     devDependencies:
       '@google-cloud/aiplatform':
         specifier: ^4.4.0
-        version: 4.4.0
+        version: 4.4.0(supports-color@10.0.0)
       '@google-cloud/vertexai':
         specifier: ^1.10.0
-        version: 1.10.0(encoding@0.1.13)
+        version: 1.10.0(encoding@0.1.13)(supports-color@10.0.0)
       '@opentelemetry/context-async-hooks':
         specifier: ^2.0.1
         version: 2.0.1(@opentelemetry/api@1.9.0)
@@ -716,7 +716,7 @@ importers:
         version: 10.0.10
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
 
   packages/sample-app:
     dependencies:
@@ -734,16 +734,16 @@ importers:
         version: 4.10.2
       '@google-cloud/aiplatform':
         specifier: ^4.4.0
-        version: 4.4.0
+        version: 4.4.0(supports-color@10.0.0)
       '@google-cloud/vertexai':
         specifier: ^1.10.0
-        version: 1.10.0(encoding@0.1.13)
+        version: 1.10.0(encoding@0.1.13)(supports-color@10.0.0)
       '@langchain/aws':
         specifier: ^0.1.13
         version: 0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))
       '@langchain/community':
         specifier: ^0.3.50
-        version: 0.3.51(8374653941887ab69b3c1e069ad831a4)
+        version: 0.3.51(ff0bc764bdeb7c31ee61157b93391bc7)
       '@langchain/core':
         specifier: ^0.3.70
         version: 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))
@@ -755,13 +755,13 @@ importers:
         version: 0.4.12(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
       '@modelcontextprotocol/sdk':
         specifier: ^1.22.0
-        version: 1.22.0(@cfworker/json-schema@4.1.1)
+        version: 1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
       '@opentelemetry/sdk-node':
         specifier: ^0.203.0
-        version: 0.203.0(@opentelemetry/api@1.9.0)
+        version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/sdk-trace-base':
         specifier: ^2.0.1
         version: 2.0.1(@opentelemetry/api@1.9.0)
@@ -803,10 +803,10 @@ importers:
         version: 1.6.0
       langchain:
         specifier: ^0.3.30
-        version: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.10.0)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
+        version: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.13.2)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
       llamaindex:
         specifier: ^0.11.19
-        version: 0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        version: 0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.25.0(zod@3.25.76))(zod@3.25.76)
       openai:
         specifier: ^5.12.2
         version: 5.12.2(ws@8.18.3)(zod@3.25.76)
@@ -919,6 +919,9 @@ importers:
       '@ai-sdk/amazon-bedrock':
         specifier: ^3.0.10
         version: 3.0.10(zod@3.25.76)
+      '@ai-sdk/anthropic':
+        specifier: ^2.0.53
+        version: 2.0.53(zod@3.25.76)
       '@ai-sdk/google':
         specifier: ^2.0.8
         version: 2.0.8(zod@3.25.76)
@@ -926,8 +929,8 @@ importers:
         specifier: ^2.0.19
         version: 2.0.19(zod@3.25.76)
       '@anthropic-ai/sdk':
-        specifier: ^0.56.0
-        version: 0.56.0
+        specifier: ^0.71.0
+        version: 0.71.0(zod@3.25.76)
       '@aws-sdk/client-bedrock-runtime':
         specifier: ^3.848.0
         version: 3.848.0
@@ -939,7 +942,7 @@ importers:
         version: 1.10.0(encoding@0.1.13)(supports-color@10.0.0)
       '@langchain/core':
         specifier: ^0.3.58
-        version: 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
+        version: 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
       '@modelcontextprotocol/sdk':
         specifier: ^1.0.4
         version: 1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0)
@@ -960,7 +963,7 @@ importers:
         version: 6.0.6(supports-color@10.0.0)
       '@qdrant/js-client-rest':
         specifier: ^1.15.0
-        version: 1.15.0(typescript@5.8.3)
+        version: 1.15.0(typescript@5.9.3)
       '@types/mime-types':
         specifier: ^3.0.1
         version: 3.0.1
@@ -990,10 +993,10 @@ importers:
         version: 0.25.8
       langchain:
         specifier: ^0.3.30
-        version: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))))(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.10.0)(cheerio@1.1.2)(handlebars@4.7.8)(openai@4.38.3(encoding@0.1.13))(ws@8.18.3)
+        version: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.13.2)(cheerio@1.1.2)(handlebars@4.7.8)(openai@4.38.3(encoding@0.1.13))(ws@8.18.3)
       llamaindex:
         specifier: ^0.11.19
-        version: 0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+        version: 0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.25.0(zod@3.25.76))(zod@3.25.76)
       openai:
         specifier: 4.38.3
         version: 4.38.3(encoding@0.1.13)
@@ -1002,7 +1005,7 @@ importers:
         version: 0.20.0(encoding@0.1.13)
       ts-mocha:
         specifier: ^11.1.0
-        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0)
+        version: 11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -1014,6 +1017,12 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
+
+  '@ai-sdk/anthropic@2.0.53':
+    resolution: {integrity: sha512-ih7NV+OFSNWZCF+tYYD7ovvvM+gv7TRKQblpVohg2ipIwC9Y0TirzocJVREzZa/v9luxUwFbsPji++DUDWWxsg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   '@ai-sdk/anthropic@2.0.6':
     resolution: {integrity: sha512-ZSAU1xUebumWF1ldgkq9nz8iT7Ew9DGTX8Z4c2mvmlexifxzOMdj9cNLld5DlRD5dr4ULjSnTZywPKyMlAEcdQ==}
@@ -1050,6 +1059,12 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.23.8
+
+  '@ai-sdk/provider-utils@3.0.18':
+    resolution: {integrity: sha512-ypv1xXMsgGcNKUP+hglKqtdDuMg68nWHucPPAhIENrbFAI+xCHiqPVN8Zllxyv1TNZwGWUghPxJXU+Mqps0YRQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   '@ai-sdk/provider-utils@3.0.5':
     resolution: {integrity: sha512-HliwB/yzufw3iwczbFVE2Fiwf1XqROB/I6ng8EKUsPM5+2wnIa8f4VbljZcDx+grhFrPV+PnRZH7zBqi8WZM7Q==}
@@ -1091,6 +1106,15 @@ packages:
   '@anthropic-ai/sdk@0.56.0':
     resolution: {integrity: sha512-SLCB8M8+VMg1cpCucnA1XWHGWqVSZtIWzmOdDOEu3eTFZMB+A0sGZ1ESO5MHDnqrNTXz3safMrWx9x4rMZSOqA==}
     hasBin: true
+
+  '@anthropic-ai/sdk@0.71.0':
+    resolution: {integrity: sha512-go1XeWXmpxuiTkosSXpb8tokLk2ZLkIRcXpbWVwJM6gH5OBtHOVsfPfGuqI1oW7RRt4qc59EmYbrXRZ0Ng06Jw==}
+    hasBin: true
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   '@aws-crypto/crc32@3.0.0':
     resolution: {integrity: sha512-IzSgsrxUcsrejQbPVilIKy16kAT52EwB6zSaI+M3xxIhKh5+aldEyvI+z6erM7TCLB2BJsFrtHjp6/4/sr+3dA==}
@@ -1829,8 +1853,8 @@ packages:
     peerDependencies:
       '@babel/core': ^7.0.0-0
 
-  '@babel/runtime@7.27.6':
-    resolution: {integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==}
+  '@babel/runtime@7.28.4':
+    resolution: {integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==}
     engines: {node: '>=6.9.0'}
 
   '@babel/template@7.27.2':
@@ -2758,10 +2782,6 @@ packages:
         optional: true
       youtubei.js:
         optional: true
-
-  '@langchain/core@0.3.66':
-    resolution: {integrity: sha512-d3SgSDOlgOjdIbReIXVQl9HaQzKqO/5+E+o3kJwoKXLGP9dxi7+lMyaII7yv7G8/aUxMWLwFES9zc1jFoeJEZw==}
-    engines: {node: '>=18'}
 
   '@langchain/core@0.3.71':
     resolution: {integrity: sha512-ejArFmm/lZ9je2rbMLpkFZnva8jkvDhFCn370WAAVP8akbPOLgDA+S2e5jvj+G/oHraOwmviY8EnxbPXXcDvfw==}
@@ -3991,8 +4011,8 @@ packages:
   '@types/node@16.9.1':
     resolution: {integrity: sha512-QpLcX9ZSsq3YYUUnD3nFDY8H7wctAhQj/TFKL8Ya8v5fMm3CFXxo8zStsLAl780ltoYoo1WvKUVGBQK+1ifr7g==}
 
-  '@types/node@18.19.120':
-    resolution: {integrity: sha512-WtCGHFXnVI8WHLxDAt5TbnCM4eSE+nI0QN2NJtwzcgMhht2eNz6V9evJrk+lwC8bCY8OWV5Ym8Jz7ZEyGnKnMA==}
+  '@types/node@18.19.130':
+    resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
 
   '@types/node@24.0.15':
     resolution: {integrity: sha512-oaeTSbCef7U/z7rDeJA138xpG3NuKc64/rZ2qmUFkFJmnMsAPaluIifqyWd8hSSMxyP9oie3dLAqYPblag9KgA==}
@@ -4301,8 +4321,8 @@ packages:
   aws4fetch@1.0.20:
     resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
 
-  axios@1.10.0:
-    resolution: {integrity: sha512-/1xYAC4MP/HEG+3duIhFr4ZQXR4sQXOIe+o6sdqzeykGLx6Upp/1p8MHqhINOvGeP7xyNHe7tsiJByc4SSVUxw==}
+  axios@1.13.2:
+    resolution: {integrity: sha512-VPk9ebNqPcy5lRGuSlKx752IlDatOjT9paPlm8A7yOuW2Fbvp4X3JznJtT4f0GzGLLiWE9W8onz51SqLYwzGaA==}
 
   babel-plugin-const-enum@1.2.0:
     resolution: {integrity: sha512-o1m/6iyyFnp9MRsK1dHF3bneqyf3AlM2q3A/YbgQr2pCat6B6XJVDv2TXqzfY2RYUi4mak6WAksSBPlyYGx9dg==}
@@ -4869,8 +4889,8 @@ packages:
       supports-color:
         optional: true
 
-  debug@4.4.1:
-    resolution: {integrity: sha512-KcKCqiftBJcZr++7ykoDIEwSa3XWowTfNPo92BYxjXiyYEVrUQh2aLyhxBCwww+heortUFxEJYcRzosstTEBYQ==}
+  debug@4.4.3:
+    resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
     engines: {node: '>=6.0'}
     peerDependencies:
       supports-color: '*'
@@ -5232,9 +5252,9 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
 
-  eventsource-parser@3.0.5:
-    resolution: {integrity: sha512-bSRG85ZrMdmWtm7qkF9He9TNRzc/Bm99gEJMaQoHJ9E6Kv9QBbsldh2oMj7iXmYNEAVvNgvv5vPorG6W+XtBhQ==}
-    engines: {node: '>=20.0.0'}
+  eventsource-parser@3.0.6:
+    resolution: {integrity: sha512-Vo1ab+QXPzZ4tCa8SwIHJFaSzy4R6SHf7BY79rFBDf0idraZWAkYrDjDj8uWaSm3S2TK+hJ7/t1CEmZ7jXw+pg==}
+    engines: {node: '>=18.0.0'}
 
   eventsource@3.0.7:
     resolution: {integrity: sha512-CRT1WTyuQoD771GW56XEZFQ/ZoSfWid1alKGDYMmkt2yl8UXrVR4pspqWNEcqKvVIzg6PAltWjxcSSPrboA4iA==}
@@ -5394,8 +5414,8 @@ packages:
   flatted@3.3.3:
     resolution: {integrity: sha512-GX+ysw4PBCz0PzosHDepZGANEuFCMLrnRTiEy9McGjmkCQYwRq4A/X786G/fjM/+OjsWSU1ZrY5qyARZmO/uwg==}
 
-  follow-redirects@1.15.9:
-    resolution: {integrity: sha512-gew4GsXizNgdoRyqmyfMHyAmXsZDk6mHkSxZFCzW9gwlbtOW44CDtYavM+y+72qD/Vq2l550kMF52DT8fOLJqQ==}
+  follow-redirects@1.15.11:
+    resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -5418,8 +5438,8 @@ packages:
     resolution: {integrity: sha512-jqdObeR2rxZZbPSGL+3VckHMYtu+f9//KXBsVny6JSX/pa38Fy+bGjuG8eW/H6USNQWhLi8Num++cU2yOCNz4A==}
     engines: {node: '>= 0.12'}
 
-  form-data@4.0.4:
-    resolution: {integrity: sha512-KrGhL9Q4zjj0kiUt5OO4Mr/A/jlI2jDYs5eHBpYHPcBEVSiipAvn2Ko2HnPe20rmcuuvMHNdZFp+4IlGTMF0Ow==}
+  form-data@4.0.5:
+    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
     engines: {node: '>= 6'}
 
   formdata-node@4.4.1:
@@ -6072,6 +6092,10 @@ packages:
   json-parse-even-better-errors@3.0.2:
     resolution: {integrity: sha512-fi0NG4bPjCHunUJffmLd0gxssIgkNmArMvis4iNah6Owg1MCJjWhEcDLmsK6iGkJq3tHwbDkTlce70/tmXN4cQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  json-schema-to-ts@3.1.1:
+    resolution: {integrity: sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==}
+    engines: {node: '>=16'}
 
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
@@ -6846,18 +6870,6 @@ packages:
   openai@4.38.3:
     resolution: {integrity: sha512-mIL9WtrFNOanpx98mJ+X/wkoepcxdqqu0noWFoNQHl/yODQ47YM7NEYda7qp8JfjqpLFVxY9mQhshoS/Fqac0A==}
     hasBin: true
-
-  openai@5.10.1:
-    resolution: {integrity: sha512-fq6xVfv1/gpLbsj8fArEt3b6B9jBxdhAK+VJ+bDvbUvNd+KTLlA3bnDeYZaBsGH9LUhJ1M1yXfp9sEyBLMx6eA==}
-    hasBin: true
-    peerDependencies:
-      ws: ^8.18.0
-      zod: ^3.23.8
-    peerDependenciesMeta:
-      ws:
-        optional: true
-      zod:
-        optional: true
 
   openai@5.12.2:
     resolution: {integrity: sha512-xqzHHQch5Tws5PcKR2xsZGX9xtch+JQFz5zb14dGqlshmmDAFBFEWmeIpf7wVqWV+w7Emj7jRgkNJakyKE0tYQ==}
@@ -7864,6 +7876,9 @@ packages:
     resolution: {integrity: sha512-c1PTsA3tYrIsLGkJkzHF+w9F2EyxfXGo4UyJc4pFL++FMjnq0HJS69T3M7d//gKrFKwy429bouPescbjecU+Zw==}
     engines: {node: '>=8'}
 
+  ts-algebra@2.0.0:
+    resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
+
   ts-api-utils@2.1.0:
     resolution: {integrity: sha512-CUgTZL1irw8u29bzrOD/nH85jqyc74D6SshFgujOIA7osm2Rz7dYH77agkx7H4FBNxDq7Cjf+IjaX/8zwFW+ZQ==}
     engines: {node: '>=18.12'}
@@ -7961,8 +7976,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  typescript@5.8.3:
-    resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
+  typescript@5.9.3:
+    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -8273,10 +8288,10 @@ packages:
     resolution: {integrity: sha512-AyeEbWOu/TAXdxlV9wmGcR0+yh2j3vYPGOECcIj2S7MkrLyC7ne+oye2BKTItt0ii2PHk4cDy+95+LshzbXnGg==}
     engines: {node: '>=12.20'}
 
-  zod-to-json-schema@3.24.6:
-    resolution: {integrity: sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==}
+  zod-to-json-schema@3.25.0:
+    resolution: {integrity: sha512-HvWtU2UG41LALjajJrML6uQejQhNJx+JBO9IflpSja4R03iNWfKXrj6W2h7ljuLyc1nKS+9yDyL/9tD1U/yBnQ==}
     peerDependencies:
-      zod: ^3.24.1
+      zod: ^3.25 || ^4
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
@@ -8291,6 +8306,12 @@ snapshots:
       '@smithy/eventstream-codec': 4.0.4
       '@smithy/util-utf8': 4.0.0
       aws4fetch: 1.0.20
+      zod: 3.25.76
+
+  '@ai-sdk/anthropic@2.0.53(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.18(zod@3.25.76)
       zod: 3.25.76
 
   '@ai-sdk/anthropic@2.0.6(zod@3.25.76)':
@@ -8330,13 +8351,20 @@ snapshots:
       secure-json-parse: 2.7.0
       zod: 3.25.76
 
+  '@ai-sdk/provider-utils@3.0.18(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.6
+      zod: 3.25.76
+
   '@ai-sdk/provider-utils@3.0.5(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
-      eventsource-parser: 3.0.5
+      eventsource-parser: 3.0.6
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
 
   '@ai-sdk/provider@1.1.3':
     dependencies:
@@ -8361,7 +8389,7 @@ snapshots:
       '@ai-sdk/provider': 1.1.3
       '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
 
   '@ampproject/remapping@2.3.0':
     dependencies:
@@ -8370,7 +8398,7 @@ snapshots:
 
   '@anthropic-ai/sdk@0.27.3(encoding@0.1.13)':
     dependencies:
-      '@types/node': 18.19.120
+      '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
       abort-controller: 3.0.0
       agentkeepalive: 4.6.0
@@ -8381,6 +8409,12 @@ snapshots:
       - encoding
 
   '@anthropic-ai/sdk@0.56.0': {}
+
+  '@anthropic-ai/sdk@0.71.0(zod@3.25.76)':
+    dependencies:
+      json-schema-to-ts: 3.1.1
+    optionalDependencies:
+      zod: 3.25.76
 
   '@aws-crypto/crc32@3.0.0':
     dependencies:
@@ -9131,7 +9165,7 @@ snapshots:
       '@babel/traverse': 7.28.0
       '@babel/types': 7.28.1
       convert-source-map: 2.0.0
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -9183,7 +9217,7 @@ snapshots:
       '@babel/core': 7.28.0
       '@babel/helper-compilation-targets': 7.27.2
       '@babel/helper-plugin-utils': 7.27.1
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       lodash.debounce: 4.0.8
       resolve: 1.22.10
     transitivePeerDependencies:
@@ -9797,7 +9831,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/runtime@7.27.6': {}
+  '@babel/runtime@7.28.4': {}
 
   '@babel/template@7.27.2':
     dependencies:
@@ -9813,7 +9847,7 @@ snapshots:
       '@babel/parser': 7.28.0
       '@babel/template': 7.27.2
       '@babel/types': 7.28.1
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9824,7 +9858,7 @@ snapshots:
 
   '@browserbasehq/sdk@2.6.0(encoding@0.1.13)':
     dependencies:
-      '@types/node': 18.19.120
+      '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
       abort-controller: 3.0.0
       agentkeepalive: 4.6.0
@@ -9844,7 +9878,7 @@ snapshots:
       openai: 5.12.2(ws@8.18.3)(zod@3.25.76)
       ws: 8.18.3
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -9852,11 +9886,11 @@ snapshots:
 
   '@cfworker/json-schema@4.1.1': {}
 
-  '@commitlint/cli@19.8.1(@types/node@24.0.15)(typescript@5.8.3)':
+  '@commitlint/cli@19.8.1(@types/node@24.0.15)(typescript@5.9.3)':
     dependencies:
       '@commitlint/format': 19.8.1
       '@commitlint/lint': 19.8.1
-      '@commitlint/load': 19.8.1(@types/node@24.0.15)(typescript@5.8.3)
+      '@commitlint/load': 19.8.1(@types/node@24.0.15)(typescript@5.9.3)
       '@commitlint/read': 19.8.1
       '@commitlint/types': 19.8.1
       tinyexec: 1.0.1
@@ -9903,15 +9937,15 @@ snapshots:
       '@commitlint/rules': 19.8.1
       '@commitlint/types': 19.8.1
 
-  '@commitlint/load@19.8.1(@types/node@24.0.15)(typescript@5.8.3)':
+  '@commitlint/load@19.8.1(@types/node@24.0.15)(typescript@5.9.3)':
     dependencies:
       '@commitlint/config-validator': 19.8.1
       '@commitlint/execute-rule': 19.8.1
       '@commitlint/resolve-extends': 19.8.1
       '@commitlint/types': 19.8.1
       chalk: 5.4.1
-      cosmiconfig: 9.0.0(typescript@5.8.3)
-      cosmiconfig-typescript-loader: 6.1.0(@types/node@24.0.15)(cosmiconfig@9.0.0(typescript@5.8.3))(typescript@5.8.3)
+      cosmiconfig: 9.0.0(typescript@5.9.3)
+      cosmiconfig-typescript-loader: 6.1.0(@types/node@24.0.15)(cosmiconfig@9.0.0(typescript@5.9.3))(typescript@5.9.3)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -10067,7 +10101,7 @@ snapshots:
   '@eslint/config-array@0.21.0':
     dependencies:
       '@eslint/object-schema': 2.1.6
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -10081,7 +10115,7 @@ snapshots:
   '@eslint/eslintrc@3.3.1':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       espree: 10.4.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -10100,12 +10134,6 @@ snapshots:
     dependencies:
       '@eslint/core': 0.15.1
       levn: 0.4.1
-
-  '@google-cloud/aiplatform@4.4.0':
-    dependencies:
-      google-gax: 5.0.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@google-cloud/aiplatform@4.4.0(supports-color@10.0.0)':
     dependencies:
@@ -10133,13 +10161,6 @@ snapshots:
       '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.36.0
       gcp-metadata: 6.1.1(encoding@0.1.13)(supports-color@10.0.0)
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
-  '@google-cloud/vertexai@1.10.0(encoding@0.1.13)':
-    dependencies:
-      google-auth-library: 9.15.1(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -10193,7 +10214,7 @@ snapshots:
 
   '@ibm-cloud/watsonx-ai@1.6.8':
     dependencies:
-      '@types/node': 18.19.120
+      '@types/node': 18.19.130
       extend: 3.0.2
       ibm-cloud-sdk-core: 5.4.0
     transitivePeerDependencies:
@@ -10453,13 +10474,13 @@ snapshots:
       inquirer: 8.2.6
       rxjs: 7.8.2
 
-  '@langchain/aws@0.1.13(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))':
+  '@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))':
     dependencies:
       '@aws-sdk/client-bedrock-agent-runtime': 3.848.0
       '@aws-sdk/client-bedrock-runtime': 3.848.0
       '@aws-sdk/client-kendra': 3.848.0
       '@aws-sdk/credential-provider-node': 3.848.0
-      '@langchain/core': 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
+      '@langchain/core': 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
     transitivePeerDependencies:
       - aws-crt
     optional: true
@@ -10474,7 +10495,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@langchain/community@0.3.51(8374653941887ab69b3c1e069ad831a4)':
+  '@langchain/community@0.3.51(ff0bc764bdeb7c31ee61157b93391bc7)':
     dependencies:
       '@browserbasehq/stagehand': 1.14.0(@playwright/test@1.54.1)(deepmerge@4.3.1)(dotenv@17.2.1)(encoding@0.1.13)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(zod@3.25.76)
       '@ibm-cloud/watsonx-ai': 1.6.8
@@ -10486,7 +10507,7 @@ snapshots:
       flat: 5.0.2
       ibm-cloud-sdk-core: 5.4.0
       js-yaml: 4.1.0
-      langchain: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.10.0)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
+      langchain: 0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.13.2)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
       langsmith: 0.3.47(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))
       openai: 5.12.2(ws@8.18.3)(zod@3.25.76)
       uuid: 10.0.0
@@ -10499,13 +10520,13 @@ snapshots:
       '@aws-sdk/credential-provider-node': 3.848.0
       '@browserbasehq/sdk': 2.6.0(encoding@0.1.13)
       '@pinecone-database/pinecone': 6.1.1
-      '@qdrant/js-client-rest': 1.15.0(typescript@5.8.3)
+      '@qdrant/js-client-rest': 1.15.0(typescript@5.9.3)
       '@smithy/util-utf8': 2.3.0
       cheerio: 1.1.2
       chromadb: 3.0.9
       cohere-ai: 7.17.1(encoding@0.1.13)
       fast-xml-parser: 5.2.5
-      google-auth-library: 10.1.0
+      google-auth-library: 10.1.0(supports-color@10.0.0)
       hnswlib-node: 3.0.0
       html-to-text: 9.0.5
       ignore: 5.3.2
@@ -10535,7 +10556,7 @@ snapshots:
       - handlebars
       - peggy
 
-  '@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))':
+  '@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))':
     dependencies:
       '@cfworker/json-schema': 4.1.1
       ansi-styles: 5.2.0
@@ -10548,7 +10569,7 @@ snapshots:
       p-retry: 4.6.2
       uuid: 10.0.0
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
     transitivePeerDependencies:
       - '@opentelemetry/api'
       - '@opentelemetry/exporter-trace-otlp-proto'
@@ -10568,18 +10589,18 @@ snapshots:
       p-retry: 4.6.2
       uuid: 10.0.0
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
     transitivePeerDependencies:
       - '@opentelemetry/api'
       - '@opentelemetry/exporter-trace-otlp-proto'
       - '@opentelemetry/sdk-trace-base'
       - openai
 
-  '@langchain/openai@0.6.2(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(ws@8.18.3)':
+  '@langchain/openai@0.6.2(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(ws@8.18.3)':
     dependencies:
-      '@langchain/core': 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
+      '@langchain/core': 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
       js-tiktoken: 1.0.20
-      openai: 5.10.1(ws@8.18.3)(zod@3.25.76)
+      openai: 5.12.2(ws@8.18.3)(zod@3.25.76)
       zod: 3.25.76
     transitivePeerDependencies:
       - ws
@@ -10588,14 +10609,14 @@ snapshots:
     dependencies:
       '@langchain/core': 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))
       js-tiktoken: 1.0.20
-      openai: 5.10.1(ws@8.18.3)(zod@3.25.76)
+      openai: 5.12.2(ws@8.18.3)(zod@3.25.76)
       zod: 3.25.76
     transitivePeerDependencies:
       - ws
 
-  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))':
+  '@langchain/textsplitters@0.1.0(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))':
     dependencies:
-      '@langchain/core': 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
+      '@langchain/core': 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
       js-tiktoken: 1.0.20
 
   '@langchain/textsplitters@0.1.0(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))':
@@ -10611,7 +10632,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@lerna/create@8.2.3(babel-plugin-macros@3.1.0)(encoding@0.1.13)(typescript@5.8.3)':
+  '@lerna/create@8.2.3(babel-plugin-macros@3.1.0)(encoding@0.1.13)(typescript@5.9.3)':
     dependencies:
       '@npmcli/arborist': 7.5.4
       '@npmcli/package-json': 5.2.0
@@ -10629,7 +10650,7 @@ snapshots:
       console-control-strings: 1.1.0
       conventional-changelog-core: 5.0.1
       conventional-recommended-bump: 7.0.1
-      cosmiconfig: 9.0.0(typescript@5.8.3)
+      cosmiconfig: 9.0.0(typescript@5.9.3)
       dedent: 1.5.3(babel-plugin-macros@3.1.0)
       execa: 5.0.0
       fs-extra: 11.3.0
@@ -10700,24 +10721,9 @@ snapshots:
       rxjs: 7.8.2
       zod: 3.25.76
 
-  '@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76)':
-    optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.22.0(@cfworker/json-schema@4.1.1)
-      p-retry: 6.2.1
-      rxjs: 7.8.2
-      zod: 3.25.76
-
   '@llamaindex/cloud@4.0.26(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)':
     dependencies:
       '@llama-flow/core': 0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76)
-      '@llamaindex/core': 0.6.17
-      '@llamaindex/env': 0.1.30
-      p-retry: 6.2.1
-      zod: 3.25.76
-
-  '@llamaindex/cloud@4.0.26(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)':
-    dependencies:
-      '@llama-flow/core': 0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76)
       '@llamaindex/core': 0.6.17
       '@llamaindex/env': 0.1.30
       p-retry: 6.2.1
@@ -10729,7 +10735,7 @@ snapshots:
       '@types/node': 24.0.15
       magic-bytes.js: 1.12.1
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
     transitivePeerDependencies:
       - '@huggingface/transformers'
       - gpt-tokenizer
@@ -10765,60 +10771,19 @@ snapshots:
       rxjs: 7.8.2
       zod: 3.25.76
 
-  '@llamaindex/workflow-core@1.2.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76)':
-    optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.22.0(@cfworker/json-schema@4.1.1)
-      p-retry: 6.2.1
-      rxjs: 7.8.2
-      zod: 3.25.76
-
-  '@llamaindex/workflow@1.1.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
+  '@llamaindex/workflow@1.1.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod-to-json-schema@3.25.0(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@llamaindex/core': 0.6.17
       '@llamaindex/env': 0.1.30
       '@llamaindex/workflow-core': 1.2.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76)
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
     transitivePeerDependencies:
       - '@modelcontextprotocol/sdk'
       - hono
       - next
       - p-retry
       - rxjs
-
-  '@llamaindex/workflow@1.1.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)':
-    dependencies:
-      '@llamaindex/core': 0.6.17
-      '@llamaindex/env': 0.1.30
-      '@llamaindex/workflow-core': 1.2.0(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76)
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
-    transitivePeerDependencies:
-      - '@modelcontextprotocol/sdk'
-      - hono
-      - next
-      - p-retry
-      - rxjs
-
-  '@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)':
-    dependencies:
-      ajv: 8.17.1
-      ajv-formats: 3.0.1(ajv@8.17.1)
-      content-type: 1.0.5
-      cors: 2.8.5
-      cross-spawn: 7.0.6
-      eventsource: 3.0.7
-      eventsource-parser: 3.0.5
-      express: 5.1.0
-      express-rate-limit: 7.5.1(express@5.1.0)
-      pkce-challenge: 5.0.0
-      raw-body: 3.0.1
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
-    optionalDependencies:
-      '@cfworker/json-schema': 4.1.1
-    transitivePeerDependencies:
-      - supports-color
 
   '@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0)':
     dependencies:
@@ -10828,13 +10793,13 @@ snapshots:
       cors: 2.8.5
       cross-spawn: 7.0.6
       eventsource: 3.0.7
-      eventsource-parser: 3.0.5
+      eventsource-parser: 3.0.6
       express: 5.1.0(supports-color@10.0.0)
       express-rate-limit: 7.5.1(express@5.1.0(supports-color@10.0.0))
       pkce-challenge: 5.0.0
       raw-body: 3.0.1
       zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
     optionalDependencies:
       '@cfworker/json-schema': 4.1.1
     transitivePeerDependencies:
@@ -10862,7 +10827,7 @@ snapshots:
     dependencies:
       agent-base: 7.1.4
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      https-proxy-agent: 7.0.6(supports-color@10.0.0)
       lru-cache: 10.4.3
       socks-proxy-agent: 8.0.5
     transitivePeerDependencies:
@@ -11082,14 +11047,14 @@ snapshots:
       tslib: 2.8.1
       yargs-parser: 21.1.1
 
-  '@nx/eslint-plugin@21.3.2(@babel/traverse@7.28.0)(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)(typescript@5.8.3)':
+  '@nx/eslint-plugin@21.3.2(@babel/traverse@7.28.0)(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)(typescript@5.9.3)':
     dependencies:
       '@nx/devkit': 21.3.2(nx@21.3.2)
       '@nx/js': 21.3.2(@babel/traverse@7.28.0)(nx@21.3.2)
-      '@phenomnomnominal/tsquery': 5.0.1(typescript@5.8.3)
-      '@typescript-eslint/parser': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/type-utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
+      '@phenomnomnominal/tsquery': 5.0.1(typescript@5.9.3)
+      '@typescript-eslint/parser': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
+      '@typescript-eslint/type-utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
       chalk: 4.1.2
       confusing-browser-globals: 1.0.11
       globals: 15.15.0
@@ -11137,7 +11102,7 @@ snapshots:
       '@babel/plugin-transform-runtime': 7.28.0(@babel/core@7.28.0)
       '@babel/preset-env': 7.28.0(@babel/core@7.28.0)
       '@babel/preset-typescript': 7.27.1(@babel/core@7.28.0)
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       '@nrwl/js': 19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(nx@21.3.2)(typescript@5.4.5)
       '@nx/devkit': 19.8.4(nx@21.3.2)
       '@nx/workspace': 19.8.4
@@ -11180,7 +11145,7 @@ snapshots:
       '@babel/plugin-transform-runtime': 7.28.0(@babel/core@7.28.0)
       '@babel/preset-env': 7.28.0(@babel/core@7.28.0)
       '@babel/preset-typescript': 7.27.1(@babel/core@7.28.0)
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       '@nx/devkit': 21.3.2(nx@21.3.2)
       '@nx/workspace': 21.3.2
       '@zkochan/js-yaml': 0.0.7
@@ -11531,15 +11496,6 @@ snapshots:
       '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.36.0
 
-  '@opentelemetry/instrumentation@0.203.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/api-logs': 0.203.0
-      import-in-the-middle: 1.14.2
-      require-in-the-middle: 7.5.2
-    transitivePeerDependencies:
-      - supports-color
-
   '@opentelemetry/instrumentation@0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -11603,34 +11559,6 @@ snapshots:
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
 
-  '@opentelemetry/sdk-node@0.203.0(@opentelemetry/api@1.9.0)':
-    dependencies:
-      '@opentelemetry/api': 1.9.0
-      '@opentelemetry/api-logs': 0.203.0
-      '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-logs-otlp-grpc': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-logs-otlp-http': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-logs-otlp-proto': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-metrics-otlp-grpc': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-metrics-otlp-http': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-metrics-otlp-proto': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-prometheus': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-grpc': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-http': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-trace-otlp-proto': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/exporter-zipkin': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/instrumentation': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/propagator-b3': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/propagator-jaeger': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/resources': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-logs': 0.203.0(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-metrics': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-base': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/sdk-trace-node': 2.0.1(@opentelemetry/api@1.9.0)
-      '@opentelemetry/semantic-conventions': 1.36.0
-    transitivePeerDependencies:
-      - supports-color
-
   '@opentelemetry/sdk-node@0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)':
     dependencies:
       '@opentelemetry/api': 1.9.0
@@ -11675,10 +11603,10 @@ snapshots:
 
   '@opentelemetry/semantic-conventions@1.36.0': {}
 
-  '@phenomnomnominal/tsquery@5.0.1(typescript@5.8.3)':
+  '@phenomnomnominal/tsquery@5.0.1(typescript@5.9.3)':
     dependencies:
       esquery: 1.6.0
-      typescript: 5.8.3
+      typescript: 5.9.3
 
   '@pinecone-database/pinecone@6.1.1': {}
 
@@ -11696,15 +11624,6 @@ snapshots:
       '@pollyjs/adapter': 6.0.6
       '@pollyjs/utils': 6.0.6
       to-arraybuffer: 1.0.1
-
-  '@pollyjs/adapter-node-http@6.0.6':
-    dependencies:
-      '@pollyjs/adapter': 6.0.6
-      '@pollyjs/utils': 6.0.6
-      lodash-es: 4.17.21
-      nock: 13.5.6
-    transitivePeerDependencies:
-      - supports-color
 
   '@pollyjs/adapter-node-http@6.0.6(supports-color@10.0.0)':
     dependencies:
@@ -11731,19 +11650,6 @@ snapshots:
       route-recognizer: 0.3.4
       slugify: 1.6.6
 
-  '@pollyjs/node-server@6.0.6':
-    dependencies:
-      '@pollyjs/utils': 6.0.6
-      body-parser: 1.20.3(supports-color@10.0.0)
-      cors: 2.8.5
-      express: 4.21.2(supports-color@10.0.0)
-      fs-extra: 10.1.0
-      http-graceful-shutdown: 3.1.14
-      morgan: 1.10.1(supports-color@10.0.0)
-      nocache: 3.0.4
-    transitivePeerDependencies:
-      - supports-color
-
   '@pollyjs/node-server@6.0.6(supports-color@10.0.0)':
     dependencies:
       '@pollyjs/utils': 6.0.6
@@ -11754,13 +11660,6 @@ snapshots:
       http-graceful-shutdown: 3.1.14(supports-color@10.0.0)
       morgan: 1.10.1(supports-color@10.0.0)
       nocache: 3.0.4
-    transitivePeerDependencies:
-      - supports-color
-
-  '@pollyjs/persister-fs@6.0.6':
-    dependencies:
-      '@pollyjs/node-server': 6.0.6
-      '@pollyjs/persister': 6.0.6
     transitivePeerDependencies:
       - supports-color
 
@@ -11809,11 +11708,11 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
-  '@qdrant/js-client-rest@1.15.0(typescript@5.8.3)':
+  '@qdrant/js-client-rest@1.15.0(typescript@5.9.3)':
     dependencies:
       '@qdrant/openapi-typescript-fetch': 1.2.6
       '@sevinf/maybe': 0.5.0
-      typescript: 5.8.3
+      typescript: 5.9.3
       undici: 6.21.3
 
   '@qdrant/openapi-typescript-fetch@1.2.6': {}
@@ -11824,11 +11723,11 @@ snapshots:
     optionalDependencies:
       rollup: 4.45.1
 
-  '@rollup/plugin-typescript@12.1.4(rollup@4.45.1)(tslib@2.8.1)(typescript@5.8.3)':
+  '@rollup/plugin-typescript@12.1.4(rollup@4.45.1)(tslib@2.8.1)(typescript@5.9.3)':
     dependencies:
       '@rollup/pluginutils': 5.2.0(rollup@4.45.1)
       resolve: 1.22.10
-      typescript: 5.8.3
+      typescript: 5.9.3
     optionalDependencies:
       rollup: 4.45.1
       tslib: 2.8.1
@@ -12366,7 +12265,7 @@ snapshots:
   '@types/node-fetch@2.6.13':
     dependencies:
       '@types/node': 24.0.15
-      form-data: 4.0.4
+      form-data: 4.0.5
 
   '@types/node-int64@0.4.32':
     dependencies:
@@ -12374,7 +12273,7 @@ snapshots:
 
   '@types/node@16.9.1': {}
 
-  '@types/node@18.19.120':
+  '@types/node@18.19.130':
     dependencies:
       undici-types: 5.26.5
 
@@ -12421,41 +12320,41 @@ snapshots:
 
   '@types/uuid@9.0.8': {}
 
-  '@typescript-eslint/eslint-plugin@8.38.0(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/eslint-plugin@8.38.0(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)':
     dependencies:
       '@eslint-community/regexpp': 4.12.1
-      '@typescript-eslint/parser': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/parser': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
       '@typescript-eslint/scope-manager': 8.38.0
-      '@typescript-eslint/type-utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript-eslint/type-utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.38.0
       eslint: 9.31.0(jiti@2.4.2)
       graphemer: 1.4.0
       ignore: 7.0.5
       natural-compare: 1.4.0
-      ts-api-utils: 2.1.0(typescript@5.8.3)
-      typescript: 5.8.3
+      ts-api-utils: 2.1.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.38.0
       '@typescript-eslint/types': 8.38.0
-      '@typescript-eslint/typescript-estree': 8.38.0(typescript@5.8.3)
+      '@typescript-eslint/typescript-estree': 8.38.0(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.38.0
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       eslint: 9.31.0(jiti@2.4.2)
-      typescript: 5.8.3
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.38.0(typescript@5.8.3)':
+  '@typescript-eslint/project-service@8.38.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.38.0(typescript@5.8.3)
+      '@typescript-eslint/tsconfig-utils': 8.38.0(typescript@5.9.3)
       '@typescript-eslint/types': 8.38.0
-      debug: 4.4.1(supports-color@8.1.1)
-      typescript: 5.8.3
+      debug: 4.4.3(supports-color@10.0.0)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -12464,48 +12363,48 @@ snapshots:
       '@typescript-eslint/types': 8.38.0
       '@typescript-eslint/visitor-keys': 8.38.0
 
-  '@typescript-eslint/tsconfig-utils@8.38.0(typescript@5.8.3)':
+  '@typescript-eslint/tsconfig-utils@8.38.0(typescript@5.9.3)':
     dependencies:
-      typescript: 5.8.3
+      typescript: 5.9.3
 
-  '@typescript-eslint/type-utils@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/type-utils@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)':
     dependencies:
       '@typescript-eslint/types': 8.38.0
-      '@typescript-eslint/typescript-estree': 8.38.0(typescript@5.8.3)
-      '@typescript-eslint/utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)
-      debug: 4.4.1(supports-color@8.1.1)
+      '@typescript-eslint/typescript-estree': 8.38.0(typescript@5.9.3)
+      '@typescript-eslint/utils': 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
+      debug: 4.4.3(supports-color@10.0.0)
       eslint: 9.31.0(jiti@2.4.2)
-      ts-api-utils: 2.1.0(typescript@5.8.3)
-      typescript: 5.8.3
+      ts-api-utils: 2.1.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
   '@typescript-eslint/types@8.38.0': {}
 
-  '@typescript-eslint/typescript-estree@8.38.0(typescript@5.8.3)':
+  '@typescript-eslint/typescript-estree@8.38.0(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/project-service': 8.38.0(typescript@5.8.3)
-      '@typescript-eslint/tsconfig-utils': 8.38.0(typescript@5.8.3)
+      '@typescript-eslint/project-service': 8.38.0(typescript@5.9.3)
+      '@typescript-eslint/tsconfig-utils': 8.38.0(typescript@5.9.3)
       '@typescript-eslint/types': 8.38.0
       '@typescript-eslint/visitor-keys': 8.38.0
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
       semver: 7.7.2
-      ts-api-utils: 2.1.0(typescript@5.8.3)
-      typescript: 5.8.3
+      ts-api-utils: 2.1.0(typescript@5.9.3)
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3)':
+  '@typescript-eslint/utils@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.7.0(eslint@9.31.0(jiti@2.4.2))
       '@typescript-eslint/scope-manager': 8.38.0
       '@typescript-eslint/types': 8.38.0
-      '@typescript-eslint/typescript-estree': 8.38.0(typescript@5.8.3)
+      '@typescript-eslint/typescript-estree': 8.38.0(typescript@5.9.3)
       eslint: 9.31.0(jiti@2.4.2)
-      typescript: 5.8.3
+      typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
 
@@ -12517,7 +12416,7 @@ snapshots:
   '@typespec/ts-http-runtime@0.3.0':
     dependencies:
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6
+      https-proxy-agent: 7.0.6(supports-color@10.0.0)
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -12581,15 +12480,9 @@ snapshots:
 
   address@1.2.2: {}
 
-  agent-base@6.0.2:
-    dependencies:
-      debug: 4.4.1(supports-color@8.1.1)
-    transitivePeerDependencies:
-      - supports-color
-
   agent-base@6.0.2(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -12700,10 +12593,10 @@ snapshots:
 
   aws4fetch@1.0.20: {}
 
-  axios@1.10.0(debug@4.4.1):
+  axios@1.13.2(debug@4.4.3):
     dependencies:
-      follow-redirects: 1.15.9(debug@4.4.1)
-      form-data: 4.0.4
+      follow-redirects: 1.15.11(debug@4.4.3)
+      form-data: 4.0.5
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
@@ -12719,13 +12612,13 @@ snapshots:
 
   babel-plugin-macros@2.8.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       cosmiconfig: 6.0.0
       resolve: 1.22.10
 
   babel-plugin-macros@3.1.0:
     dependencies:
-      '@babel/runtime': 7.27.6
+      '@babel/runtime': 7.28.4
       cosmiconfig: 7.1.0
       resolve: 1.22.10
 
@@ -12815,25 +12708,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  body-parser@2.2.0:
-    dependencies:
-      bytes: 3.1.2
-      content-type: 1.0.5
-      debug: 4.4.1(supports-color@8.1.1)
-      http-errors: 2.0.0
-      iconv-lite: 0.6.3
-      on-finished: 2.4.1
-      qs: 6.14.0
-      raw-body: 3.0.1
-      type-is: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   body-parser@2.2.0(supports-color@10.0.0):
     dependencies:
       bytes: 3.1.2
       content-type: 1.0.5
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       http-errors: 2.0.0
       iconv-lite: 0.6.3
       on-finished: 2.4.1
@@ -13059,7 +12938,7 @@ snapshots:
       '@aws-sdk/protocol-http': 3.374.0
       '@aws-sdk/signature-v4': 3.374.0
       convict: 6.2.4
-      form-data: 4.0.4
+      form-data: 4.0.5
       form-data-encoder: 4.1.0
       formdata-node: 6.0.3
       js-base64: 3.7.2
@@ -13096,10 +12975,10 @@ snapshots:
 
   commander@5.1.0: {}
 
-  commitizen@4.3.1(@types/node@24.0.15)(typescript@5.8.3):
+  commitizen@4.3.1(@types/node@24.0.15)(typescript@5.9.3):
     dependencies:
       cachedir: 2.3.0
-      cz-conventional-changelog: 3.3.0(@types/node@24.0.15)(typescript@5.8.3)
+      cz-conventional-changelog: 3.3.0(@types/node@24.0.15)(typescript@5.9.3)
       dedent: 0.7.0
       detect-indent: 6.1.0
       find-node-modules: 2.1.3
@@ -13302,12 +13181,12 @@ snapshots:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  cosmiconfig-typescript-loader@6.1.0(@types/node@24.0.15)(cosmiconfig@9.0.0(typescript@5.8.3))(typescript@5.8.3):
+  cosmiconfig-typescript-loader@6.1.0(@types/node@24.0.15)(cosmiconfig@9.0.0(typescript@5.9.3))(typescript@5.9.3):
     dependencies:
       '@types/node': 24.0.15
-      cosmiconfig: 9.0.0(typescript@5.8.3)
+      cosmiconfig: 9.0.0(typescript@5.9.3)
       jiti: 2.4.2
-      typescript: 5.8.3
+      typescript: 5.9.3
 
   cosmiconfig@6.0.0:
     dependencies:
@@ -13325,14 +13204,14 @@ snapshots:
       path-type: 4.0.0
       yaml: 1.10.2
 
-  cosmiconfig@9.0.0(typescript@5.8.3):
+  cosmiconfig@9.0.0(typescript@5.9.3):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
       js-yaml: 4.1.0
       parse-json: 5.2.0
     optionalDependencies:
-      typescript: 5.8.3
+      typescript: 5.9.3
 
   create-require@1.1.1: {}
 
@@ -13366,16 +13245,16 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  cz-conventional-changelog@3.3.0(@types/node@24.0.15)(typescript@5.8.3):
+  cz-conventional-changelog@3.3.0(@types/node@24.0.15)(typescript@5.9.3):
     dependencies:
       chalk: 2.4.2
-      commitizen: 4.3.1(@types/node@24.0.15)(typescript@5.8.3)
+      commitizen: 4.3.1(@types/node@24.0.15)(typescript@5.9.3)
       conventional-commit-types: 3.0.0
       lodash.map: 4.6.0
       longest: 2.0.1
       word-wrap: 1.2.5
     optionalDependencies:
-      '@commitlint/load': 19.8.1(@types/node@24.0.15)(typescript@5.8.3)
+      '@commitlint/load': 19.8.1(@types/node@24.0.15)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
       - typescript
@@ -13394,13 +13273,13 @@ snapshots:
     optionalDependencies:
       supports-color: 10.0.0
 
-  debug@4.4.1(supports-color@10.0.0):
+  debug@4.4.3(supports-color@10.0.0):
     dependencies:
       ms: 2.1.3
     optionalDependencies:
       supports-color: 10.0.0
 
-  debug@4.4.1(supports-color@8.1.1):
+  debug@4.4.3(supports-color@8.1.1):
     dependencies:
       ms: 2.1.3
     optionalDependencies:
@@ -13459,7 +13338,7 @@ snapshots:
   detect-port@1.6.1:
     dependencies:
       address: 1.2.2
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -13684,7 +13563,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       escape-string-regexp: 4.0.0
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
@@ -13744,18 +13623,18 @@ snapshots:
 
   events@3.3.0: {}
 
-  eventsource-parser@3.0.5: {}
+  eventsource-parser@3.0.6: {}
 
   eventsource@3.0.7:
     dependencies:
-      eventsource-parser: 3.0.5
+      eventsource-parser: 3.0.6
 
   execa@5.0.0:
     dependencies:
       cross-spawn: 7.0.6
       get-stream: 6.0.0
       human-signals: 2.1.0
-      is-stream: 2.0.0
+      is-stream: 2.0.1
       merge-stream: 2.0.0
       npm-run-path: 4.0.1
       onetime: 5.1.2
@@ -13775,10 +13654,6 @@ snapshots:
   express-rate-limit@7.5.1(express@5.1.0(supports-color@10.0.0)):
     dependencies:
       express: 5.1.0(supports-color@10.0.0)
-
-  express-rate-limit@7.5.1(express@5.1.0):
-    dependencies:
-      express: 5.1.0
 
   express@4.21.2(supports-color@10.0.0):
     dependencies:
@@ -13816,38 +13691,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  express@5.1.0:
-    dependencies:
-      accepts: 2.0.0
-      body-parser: 2.2.0
-      content-disposition: 1.0.1
-      content-type: 1.0.5
-      cookie: 0.7.1
-      cookie-signature: 1.2.2
-      debug: 4.4.1(supports-color@8.1.1)
-      encodeurl: 2.0.0
-      escape-html: 1.0.3
-      etag: 1.8.1
-      finalhandler: 2.1.0
-      fresh: 2.0.0
-      http-errors: 2.0.0
-      merge-descriptors: 2.0.0
-      mime-types: 3.0.2
-      on-finished: 2.4.1
-      once: 1.4.0
-      parseurl: 1.3.3
-      proxy-addr: 2.0.7
-      qs: 6.14.0
-      range-parser: 1.2.1
-      router: 2.2.0
-      send: 1.2.0
-      serve-static: 2.2.0
-      statuses: 2.0.1
-      type-is: 2.0.1
-      vary: 1.1.2
-    transitivePeerDependencies:
-      - supports-color
-
   express@5.1.0(supports-color@10.0.0):
     dependencies:
       accepts: 2.0.0
@@ -13856,7 +13699,7 @@ snapshots:
       content-type: 1.0.5
       cookie: 0.7.1
       cookie-signature: 1.2.2
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       encodeurl: 2.0.0
       escape-html: 1.0.3
       etag: 1.8.1
@@ -13922,10 +13765,6 @@ snapshots:
     dependencies:
       reusify: 1.1.0
 
-  fdir@6.4.6(picomatch@4.0.2):
-    optionalDependencies:
-      picomatch: 4.0.2
-
   fdir@6.4.6(picomatch@4.0.3):
     optionalDependencies:
       picomatch: 4.0.3
@@ -13973,20 +13812,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  finalhandler@2.1.0:
-    dependencies:
-      debug: 4.4.1(supports-color@8.1.1)
-      encodeurl: 2.0.0
-      escape-html: 1.0.3
-      on-finished: 2.4.1
-      parseurl: 1.3.3
-      statuses: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   finalhandler@2.1.0(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       encodeurl: 2.0.0
       escape-html: 1.0.3
       on-finished: 2.4.1
@@ -14043,9 +13871,9 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  follow-redirects@1.15.9(debug@4.4.1):
+  follow-redirects@1.15.11(debug@4.4.3):
     optionalDependencies:
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
 
   foreground-child@3.3.1:
     dependencies:
@@ -14065,7 +13893,7 @@ snapshots:
       mime-types: 2.1.35
       safe-buffer: 5.2.1
 
-  form-data@4.0.4:
+  form-data@4.0.5:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
@@ -14133,17 +13961,6 @@ snapshots:
 
   function-bind@1.1.2: {}
 
-  gaxios@6.7.1(encoding@0.1.13):
-    dependencies:
-      extend: 3.0.2
-      https-proxy-agent: 7.0.6
-      is-stream: 2.0.1
-      node-fetch: 2.7.0(encoding@0.1.13)
-      uuid: 9.0.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
   gaxios@6.7.1(encoding@0.1.13)(supports-color@10.0.0):
     dependencies:
       extend: 3.0.2
@@ -14155,29 +13972,12 @@ snapshots:
       - encoding
       - supports-color
 
-  gaxios@7.1.1:
-    dependencies:
-      extend: 3.0.2
-      https-proxy-agent: 7.0.6
-      node-fetch: 3.3.2
-    transitivePeerDependencies:
-      - supports-color
-
   gaxios@7.1.1(supports-color@10.0.0):
     dependencies:
       extend: 3.0.2
       https-proxy-agent: 7.0.6(supports-color@10.0.0)
       node-fetch: 3.3.2
     transitivePeerDependencies:
-      - supports-color
-
-  gcp-metadata@6.1.1(encoding@0.1.13):
-    dependencies:
-      gaxios: 6.7.1(encoding@0.1.13)
-      google-logging-utils: 0.0.2
-      json-bigint: 1.0.0
-    transitivePeerDependencies:
-      - encoding
       - supports-color
 
   gcp-metadata@6.1.1(encoding@0.1.13)(supports-color@10.0.0):
@@ -14187,14 +13987,6 @@ snapshots:
       json-bigint: 1.0.0
     transitivePeerDependencies:
       - encoding
-      - supports-color
-
-  gcp-metadata@7.0.1:
-    dependencies:
-      gaxios: 7.1.1
-      google-logging-utils: 1.1.1
-      json-bigint: 1.0.0
-    transitivePeerDependencies:
       - supports-color
 
   gcp-metadata@7.0.1(supports-color@10.0.0):
@@ -14340,18 +14132,6 @@ snapshots:
 
   globals@16.3.0: {}
 
-  google-auth-library@10.1.0:
-    dependencies:
-      base64-js: 1.5.1
-      ecdsa-sig-formatter: 1.0.11
-      gaxios: 7.1.1
-      gcp-metadata: 7.0.1
-      google-logging-utils: 1.1.1
-      gtoken: 8.0.0
-      jws: 4.0.0
-    transitivePeerDependencies:
-      - supports-color
-
   google-auth-library@10.1.0(supports-color@10.0.0):
     dependencies:
       base64-js: 1.5.1
@@ -14362,18 +14142,6 @@ snapshots:
       gtoken: 8.0.0(supports-color@10.0.0)
       jws: 4.0.0
     transitivePeerDependencies:
-      - supports-color
-
-  google-auth-library@9.15.1(encoding@0.1.13):
-    dependencies:
-      base64-js: 1.5.1
-      ecdsa-sig-formatter: 1.0.11
-      gaxios: 6.7.1(encoding@0.1.13)
-      gcp-metadata: 6.1.1(encoding@0.1.13)
-      gtoken: 7.1.0(encoding@0.1.13)
-      jws: 4.0.0
-    transitivePeerDependencies:
-      - encoding
       - supports-color
 
   google-auth-library@9.15.1(encoding@0.1.13)(supports-color@10.0.0):
@@ -14395,7 +14163,7 @@ snapshots:
       '@types/long': 4.0.2
       abort-controller: 3.0.0
       duplexify: 4.1.3
-      google-auth-library: 9.15.1(encoding@0.1.13)
+      google-auth-library: 9.15.1(encoding@0.1.13)(supports-color@10.0.0)
       node-fetch: 2.7.0(encoding@0.1.13)
       object-hash: 3.0.0
       proto3-json-serializer: 2.0.2
@@ -14404,22 +14172,6 @@ snapshots:
       uuid: 9.0.1
     transitivePeerDependencies:
       - encoding
-      - supports-color
-
-  google-gax@5.0.1:
-    dependencies:
-      '@grpc/grpc-js': 1.13.4
-      '@grpc/proto-loader': 0.7.15
-      abort-controller: 3.0.0
-      duplexify: 4.1.3
-      google-auth-library: 10.1.0
-      google-logging-utils: 1.1.1
-      node-fetch: 3.3.2
-      object-hash: 3.0.0
-      proto3-json-serializer: 3.0.1
-      protobufjs: 7.5.3
-      retry-request: 8.0.0
-    transitivePeerDependencies:
       - supports-color
 
   google-gax@5.0.1(supports-color@10.0.0):
@@ -14458,27 +14210,12 @@ snapshots:
 
   graphql@16.11.0: {}
 
-  gtoken@7.1.0(encoding@0.1.13):
-    dependencies:
-      gaxios: 6.7.1(encoding@0.1.13)
-      jws: 4.0.0
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-
   gtoken@7.1.0(encoding@0.1.13)(supports-color@10.0.0):
     dependencies:
       gaxios: 6.7.1(encoding@0.1.13)(supports-color@10.0.0)
       jws: 4.0.0
     transitivePeerDependencies:
       - encoding
-      - supports-color
-
-  gtoken@8.0.0:
-    dependencies:
-      gaxios: 7.1.1
-      jws: 4.0.0
-    transitivePeerDependencies:
       - supports-color
 
   gtoken@8.0.0(supports-color@10.0.0):
@@ -14568,23 +14305,9 @@ snapshots:
       statuses: 2.0.1
       toidentifier: 1.0.1
 
-  http-graceful-shutdown@3.1.14:
-    dependencies:
-      debug: 4.4.1(supports-color@8.1.1)
-    transitivePeerDependencies:
-      - supports-color
-
   http-graceful-shutdown@3.1.14(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.1(supports-color@10.0.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  http-proxy-agent@5.0.0:
-    dependencies:
-      '@tootallnate/once': 2.0.0
-      agent-base: 6.0.2
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -14592,42 +14315,28 @@ snapshots:
     dependencies:
       '@tootallnate/once': 2.0.0
       agent-base: 6.0.2(supports-color@10.0.0)
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.1(supports-color@8.1.1)
-    transitivePeerDependencies:
-      - supports-color
-
-  https-proxy-agent@5.0.1:
-    dependencies:
-      agent-base: 6.0.2
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@5.0.1(supports-color@10.0.0):
     dependencies:
       agent-base: 6.0.2(supports-color@10.0.0)
-      debug: 4.4.1(supports-color@10.0.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  https-proxy-agent@7.0.6:
-    dependencies:
-      agent-base: 7.1.4
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
   https-proxy-agent@7.0.6(supports-color@10.0.0):
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -14642,19 +14351,19 @@ snapshots:
   ibm-cloud-sdk-core@5.4.0:
     dependencies:
       '@types/debug': 4.1.12
-      '@types/node': 18.19.120
+      '@types/node': 18.19.130
       '@types/tough-cookie': 4.0.5
-      axios: 1.10.0(debug@4.4.1)
+      axios: 1.13.2(debug@4.4.3)
       camelcase: 6.3.0
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       dotenv: 16.6.1
       extend: 3.0.2
       file-type: 16.5.4
-      form-data: 4.0.4
+      form-data: 4.0.5
       isstream: 0.1.2
       jsonwebtoken: 9.0.2
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.10.0)
+      retry-axios: 2.6.0(axios@1.13.2)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -14881,7 +14590,7 @@ snapshots:
 
   jest-diff@29.7.0:
     dependencies:
-      chalk: 4.1.0
+      chalk: 4.1.2
       diff-sequences: 29.6.3
       jest-get-type: 29.6.3
       pretty-format: 29.7.0
@@ -14963,6 +14672,11 @@ snapshots:
   json-parse-even-better-errors@2.3.1: {}
 
   json-parse-even-better-errors@3.0.2: {}
+
+  json-schema-to-ts@3.1.1:
+    dependencies:
+      '@babel/runtime': 7.28.4
+      ts-algebra: 2.0.0
 
   json-schema-traverse@0.4.1: {}
 
@@ -15048,11 +14762,11 @@ snapshots:
 
   kind-of@6.0.3: {}
 
-  langchain@0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))))(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.10.0)(cheerio@1.1.2)(handlebars@4.7.8)(openai@4.38.3(encoding@0.1.13))(ws@8.18.3):
+  langchain@0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.13.2)(cheerio@1.1.2)(handlebars@4.7.8)(openai@4.38.3(encoding@0.1.13))(ws@8.18.3):
     dependencies:
-      '@langchain/core': 0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
-      '@langchain/openai': 0.6.2(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(ws@8.18.3)
-      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))
+      '@langchain/core': 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13))
+      '@langchain/openai': 0.6.2(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))(ws@8.18.3)
+      '@langchain/textsplitters': 0.1.0(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))
       js-tiktoken: 1.0.20
       js-yaml: 4.1.0
       jsonpointer: 5.0.1
@@ -15063,8 +14777,8 @@ snapshots:
       yaml: 2.8.0
       zod: 3.25.76
     optionalDependencies:
-      '@langchain/aws': 0.1.13(@langchain/core@0.3.66(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))
-      axios: 1.10.0(debug@4.4.1)
+      '@langchain/aws': 0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@4.38.3(encoding@0.1.13)))
+      axios: 1.13.2(debug@4.4.3)
       cheerio: 1.1.2
       handlebars: 4.7.8
     transitivePeerDependencies:
@@ -15074,7 +14788,7 @@ snapshots:
       - openai
       - ws
 
-  langchain@0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.10.0)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3):
+  langchain@0.3.30(@langchain/aws@0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.13.2)(cheerio@1.1.2)(handlebars@4.7.8)(openai@5.12.2(ws@8.18.3)(zod@3.25.76))(ws@8.18.3):
     dependencies:
       '@langchain/core': 0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76))
       '@langchain/openai': 0.6.2(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))(ws@8.18.3)
@@ -15090,7 +14804,7 @@ snapshots:
       zod: 3.25.76
     optionalDependencies:
       '@langchain/aws': 0.1.13(@langchain/core@0.3.71(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@5.12.2(ws@8.18.3)(zod@3.25.76)))
-      axios: 1.10.0(debug@4.4.1)
+      axios: 1.13.2(debug@4.4.3)
       cheerio: 1.1.2
       handlebars: 4.7.8
     transitivePeerDependencies:
@@ -15134,7 +14848,7 @@ snapshots:
 
   lerna@8.2.3(babel-plugin-macros@3.1.0)(encoding@0.1.13):
     dependencies:
-      '@lerna/create': 8.2.3(babel-plugin-macros@3.1.0)(encoding@0.1.13)(typescript@5.8.3)
+      '@lerna/create': 8.2.3(babel-plugin-macros@3.1.0)(encoding@0.1.13)(typescript@5.9.3)
       '@npmcli/arborist': 7.5.4
       '@npmcli/package-json': 5.2.0
       '@npmcli/run-script': 8.1.0
@@ -15152,7 +14866,7 @@ snapshots:
       conventional-changelog-angular: 7.0.0
       conventional-changelog-core: 5.0.1
       conventional-recommended-bump: 7.0.1
-      cosmiconfig: 9.0.0(typescript@5.8.3)
+      cosmiconfig: 9.0.0(typescript@5.9.3)
       dedent: 1.5.3(babel-plugin-macros@3.1.0)
       envinfo: 7.13.0
       execa: 5.0.0
@@ -15204,7 +14918,7 @@ snapshots:
       temp-dir: 1.0.0
       through: 2.3.8
       tinyglobby: 0.2.12
-      typescript: 5.8.3
+      typescript: 5.9.3
       upath: 2.0.1
       uuid: 10.0.0
       validate-npm-package-license: 3.0.4
@@ -15254,38 +14968,13 @@ snapshots:
 
   lines-and-columns@2.0.4: {}
 
-  llamaindex@0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76):
+  llamaindex@0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.25.0(zod@3.25.76))(zod@3.25.76):
     dependencies:
       '@llamaindex/cloud': 4.0.26(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)
       '@llamaindex/core': 0.6.17
       '@llamaindex/env': 0.1.30
       '@llamaindex/node-parser': 2.0.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)
-      '@llamaindex/workflow': 1.1.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
-      '@types/lodash': 4.17.20
-      '@types/node': 24.0.15
-      lodash: 4.17.21
-      magic-bytes.js: 1.12.1
-    transitivePeerDependencies:
-      - '@huggingface/transformers'
-      - '@llama-flow/core'
-      - '@modelcontextprotocol/sdk'
-      - gpt-tokenizer
-      - hono
-      - next
-      - p-retry
-      - rxjs
-      - tree-sitter
-      - web-tree-sitter
-      - zod
-      - zod-to-json-schema
-
-  llamaindex@0.11.21(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76):
-    dependencies:
-      '@llamaindex/cloud': 4.0.26(@llama-flow/core@0.4.4(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod@3.25.76))(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)
-      '@llamaindex/core': 0.6.17
-      '@llamaindex/env': 0.1.30
-      '@llamaindex/node-parser': 2.0.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)
-      '@llamaindex/workflow': 1.1.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1))(p-retry@6.2.1)(rxjs@7.8.2)(zod-to-json-schema@3.24.6(zod@3.25.76))(zod@3.25.76)
+      '@llamaindex/workflow': 1.1.17(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(@modelcontextprotocol/sdk@1.22.0(@cfworker/json-schema@4.1.1)(supports-color@10.0.0))(p-retry@6.2.1)(rxjs@7.8.2)(zod-to-json-schema@3.25.0(zod@3.25.76))(zod@3.25.76)
       '@types/lodash': 4.17.20
       '@types/node': 24.0.15
       lodash: 4.17.21
@@ -15579,7 +15268,7 @@ snapshots:
     dependencies:
       browser-stdout: 1.3.1
       chokidar: 4.0.3
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
       diff: 7.0.0
       escape-string-regexp: 4.0.0
       find-up: 5.0.0
@@ -15622,7 +15311,7 @@ snapshots:
       array-differ: 3.0.0
       array-union: 2.1.0
       arrify: 2.0.1
-      minimatch: 3.0.5
+      minimatch: 3.1.2
 
   mustache@4.2.0: {}
 
@@ -15659,17 +15348,9 @@ snapshots:
 
   nocache@3.0.4: {}
 
-  nock@13.5.6:
-    dependencies:
-      debug: 4.4.1(supports-color@8.1.1)
-      json-stringify-safe: 5.0.1
-      propagate: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   nock@13.5.6(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       json-stringify-safe: 5.0.1
       propagate: 2.0.1
     transitivePeerDependencies:
@@ -15813,7 +15494,7 @@ snapshots:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.0-rc.46
       '@zkochan/js-yaml': 0.0.7
-      axios: 1.10.0(debug@4.4.1)
+      axios: 1.13.2(debug@4.4.3)
       chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
@@ -15862,8 +15543,8 @@ snapshots:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.2
       '@zkochan/js-yaml': 0.0.7
-      axios: 1.10.0(debug@4.4.1)
-      chalk: 4.1.0
+      axios: 1.13.2(debug@4.4.3)
+      chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
       cliui: 8.0.1
@@ -15912,7 +15593,7 @@ snapshots:
       '@yarnpkg/lockfile': 1.1.0
       '@yarnpkg/parsers': 3.0.2
       '@zkochan/js-yaml': 0.0.7
-      axios: 1.10.0(debug@4.4.1)
+      axios: 1.13.2(debug@4.4.3)
       chalk: 4.1.2
       cli-cursor: 3.1.0
       cli-spinners: 2.6.1
@@ -16000,7 +15681,7 @@ snapshots:
 
   openai@4.104.0(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76):
     dependencies:
-      '@types/node': 18.19.120
+      '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
       abort-controller: 3.0.0
       agentkeepalive: 4.6.0
@@ -16015,7 +15696,7 @@ snapshots:
 
   openai@4.38.3(encoding@0.1.13):
     dependencies:
-      '@types/node': 18.19.120
+      '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
       abort-controller: 3.0.0
       agentkeepalive: 4.6.0
@@ -16025,11 +15706,6 @@ snapshots:
       web-streams-polyfill: 3.3.3
     transitivePeerDependencies:
       - encoding
-
-  openai@5.10.1(ws@8.18.3)(zod@3.25.76):
-    optionalDependencies:
-      ws: 8.18.3
-      zod: 3.25.76
 
   openai@5.12.2(ws@8.18.3)(zod@3.25.76):
     optionalDependencies:
@@ -16575,17 +16251,9 @@ snapshots:
 
   require-from-string@2.0.2: {}
 
-  require-in-the-middle@7.5.2:
-    dependencies:
-      debug: 4.4.1(supports-color@8.1.1)
-      module-details-from-path: 1.0.4
-      resolve: 1.22.10
-    transitivePeerDependencies:
-      - supports-color
-
   require-in-the-middle@7.5.2(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       module-details-from-path: 1.0.4
       resolve: 1.22.10
     transitivePeerDependencies:
@@ -16619,9 +16287,9 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.10.0):
+  retry-axios@2.6.0(axios@1.13.2):
     dependencies:
-      axios: 1.10.0(debug@4.4.1)
+      axios: 1.13.2(debug@4.4.3)
 
   retry-request@7.0.2(encoding@0.1.13):
     dependencies:
@@ -16630,14 +16298,6 @@ snapshots:
       teeny-request: 9.0.0(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
-      - supports-color
-
-  retry-request@8.0.0:
-    dependencies:
-      '@types/request': 2.48.12
-      extend: 3.0.2
-      teeny-request: 10.1.0
-    transitivePeerDependencies:
       - supports-color
 
   retry-request@8.0.0(supports-color@10.0.0):
@@ -16658,11 +16318,11 @@ snapshots:
     dependencies:
       glob: 9.3.5
 
-  rollup-plugin-dts@6.2.1(rollup@4.45.1)(typescript@5.8.3):
+  rollup-plugin-dts@6.2.1(rollup@4.45.1)(typescript@5.9.3):
     dependencies:
       magic-string: 0.30.17
       rollup: 4.45.1
-      typescript: 5.8.3
+      typescript: 5.9.3
     optionalDependencies:
       '@babel/code-frame': 7.27.1
 
@@ -16694,19 +16354,9 @@ snapshots:
 
   route-recognizer@0.3.4: {}
 
-  router@2.2.0:
-    dependencies:
-      debug: 4.4.1(supports-color@8.1.1)
-      depd: 2.0.0
-      is-promise: 4.0.0
-      parseurl: 1.3.3
-      path-to-regexp: 8.3.0
-    transitivePeerDependencies:
-      - supports-color
-
   router@2.2.0(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       depd: 2.0.0
       is-promise: 4.0.0
       parseurl: 1.3.3
@@ -16764,25 +16414,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  send@1.2.0:
-    dependencies:
-      debug: 4.4.1(supports-color@8.1.1)
-      encodeurl: 2.0.0
-      escape-html: 1.0.3
-      etag: 1.8.1
-      fresh: 2.0.0
-      http-errors: 2.0.0
-      mime-types: 3.0.2
-      ms: 2.1.3
-      on-finished: 2.4.1
-      range-parser: 1.2.1
-      statuses: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   send@1.2.0(supports-color@10.0.0):
     dependencies:
-      debug: 4.4.1(supports-color@10.0.0)
+      debug: 4.4.3(supports-color@10.0.0)
       encodeurl: 2.0.0
       escape-html: 1.0.3
       etag: 1.8.1
@@ -16806,15 +16440,6 @@ snapshots:
       escape-html: 1.0.3
       parseurl: 1.3.3
       send: 0.19.0(supports-color@10.0.0)
-    transitivePeerDependencies:
-      - supports-color
-
-  serve-static@2.2.0:
-    dependencies:
-      encodeurl: 2.0.0
-      escape-html: 1.0.3
-      parseurl: 1.3.3
-      send: 1.2.0
     transitivePeerDependencies:
       - supports-color
 
@@ -16901,7 +16526,7 @@ snapshots:
   socks-proxy-agent@8.0.5:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       socks: 2.8.6
     transitivePeerDependencies:
       - supports-color
@@ -17062,15 +16687,6 @@ snapshots:
       mkdirp: 1.0.4
       yallist: 4.0.0
 
-  teeny-request@10.1.0:
-    dependencies:
-      http-proxy-agent: 5.0.0
-      https-proxy-agent: 5.0.1
-      node-fetch: 3.3.2
-      stream-events: 1.0.5
-    transitivePeerDependencies:
-      - supports-color
-
   teeny-request@10.1.0(supports-color@10.0.0):
     dependencies:
       http-proxy-agent: 5.0.0(supports-color@10.0.0)
@@ -17082,8 +16698,8 @@ snapshots:
 
   teeny-request@9.0.0(encoding@0.1.13):
     dependencies:
-      http-proxy-agent: 5.0.0
-      https-proxy-agent: 5.0.1
+      http-proxy-agent: 5.0.0(supports-color@10.0.0)
+      https-proxy-agent: 5.0.1(supports-color@10.0.0)
       node-fetch: 2.7.0(encoding@0.1.13)
       stream-events: 1.0.5
       uuid: 9.0.1
@@ -17126,8 +16742,8 @@ snapshots:
 
   tinyglobby@0.2.14:
     dependencies:
-      fdir: 6.4.6(picomatch@4.0.2)
-      picomatch: 4.0.2
+      fdir: 6.4.6(picomatch@4.0.3)
+      picomatch: 4.0.3
 
   tmp@0.2.5: {}
 
@@ -17139,13 +16755,13 @@ snapshots:
 
   together-ai@0.20.0(encoding@0.1.13):
     dependencies:
-      '@types/node': 18.19.120
+      '@types/node': 18.19.130
       '@types/node-fetch': 2.6.13
       '@types/parquetjs': 0.10.6
       '@types/progress-stream': 2.0.5
       abort-controller: 3.0.0
       agentkeepalive: 4.6.0
-      axios: 1.10.0(debug@4.4.1)
+      axios: 1.13.2(debug@4.4.3)
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
       node-fetch: 2.7.0(encoding@0.1.13)
@@ -17184,16 +16800,18 @@ snapshots:
 
   trim-newlines@3.0.1: {}
 
-  ts-api-utils@2.1.0(typescript@5.8.3):
+  ts-algebra@2.0.0: {}
+
+  ts-api-utils@2.1.0(typescript@5.9.3):
     dependencies:
-      typescript: 5.8.3
+      typescript: 5.9.3
 
   ts-error@1.0.6: {}
 
-  ts-mocha@11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3))(tsconfig-paths@4.2.0):
+  ts-mocha@11.1.0(mocha@11.7.1)(ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3))(tsconfig-paths@4.2.0):
     dependencies:
       mocha: 11.7.1
-      ts-node: 10.9.1(@types/node@24.0.15)(typescript@5.8.3)
+      ts-node: 10.9.1(@types/node@24.0.15)(typescript@5.9.3)
     optionalDependencies:
       tsconfig-paths: 4.2.0
 
@@ -17215,7 +16833,7 @@ snapshots:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
-  ts-node@10.9.1(@types/node@24.0.15)(typescript@5.8.3):
+  ts-node@10.9.1(@types/node@24.0.15)(typescript@5.9.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
@@ -17229,7 +16847,7 @@ snapshots:
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 5.8.3
+      typescript: 5.9.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
@@ -17246,7 +16864,7 @@ snapshots:
   tuf-js@2.2.1:
     dependencies:
       '@tufjs/models': 2.0.1
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.0.0)
       make-fetch-happen: 13.0.1
     transitivePeerDependencies:
       - supports-color
@@ -17284,7 +16902,7 @@ snapshots:
 
   typescript@5.4.5: {}
 
-  typescript@5.8.3: {}
+  typescript@5.9.3: {}
 
   uglify-js@3.19.3:
     optional: true
@@ -17550,7 +17168,7 @@ snapshots:
 
   yocto-queue@1.2.1: {}
 
-  zod-to-json-schema@3.24.6(zod@3.25.76):
+  zod-to-json-schema@3.25.0(zod@3.25.76):
     dependencies:
       zod: 3.25.76
 

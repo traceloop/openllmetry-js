@@ -18,6 +18,7 @@ import * as assert from "assert";
 
 import { openai as vercel_openai } from "@ai-sdk/openai";
 import { google as vercel_google } from "@ai-sdk/google";
+import { anthropic as vercel_anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
@@ -59,6 +60,7 @@ describe("Test AI SDK Integration with Recording", function () {
       // Set dummy API keys for replay mode
       process.env.OPENAI_API_KEY = "test";
       process.env.GOOGLE_GENERATIVE_AI_API_KEY = "test";
+      process.env.ANTHROPIC_API_KEY = "test";
       process.env.AWS_ACCESS_KEY_ID = "test";
       process.env.AWS_SECRET_ACCESS_KEY = "test";
       process.env.AWS_REGION = "us-east-1";
@@ -268,5 +270,168 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.strictEqual(outputMessages[0].parts[0].type, "text");
     assert.ok(outputMessages[0].parts[0].content);
     assert.ok(typeof outputMessages[0].parts[0].content === "string");
+  });
+
+  it("should capture and transform Anthropic cache tokens from providerMetadata", async function () {
+    this.timeout(30000);
+    memoryExporter.reset();
+
+    const result = await traceloop.withWorkflow(
+      { name: "test_anthropic_cache_workflow" },
+      async () => {
+        return await generateText({
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a helpful assistant. Here is some context that should be cached for efficiency: " +
+                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. ".repeat(
+                  100,
+                ),
+            },
+            { role: "user", content: "What is 2+2?" },
+          ],
+          model: vercel_anthropic("claude-3-haiku-20240307"),
+          experimental_telemetry: {
+            isEnabled: true,
+          },
+        });
+      },
+    );
+
+    await traceloop.forceFlush();
+
+    const spans = memoryExporter.getFinishedSpans();
+    const generateTextSpan = spans.find(
+      (span) =>
+        span.name === "text.generate" &&
+        span.attributes["traceloop.workflow.name"] ===
+          "test_anthropic_cache_workflow",
+    );
+
+    assert.ok(result);
+    assert.ok(result.text);
+    assert.ok(
+      generateTextSpan,
+      "Could not find Anthropic generateText span with cache tokens",
+    );
+
+    assert.strictEqual(
+      generateTextSpan.attributes["gen_ai.system"],
+      "Anthropic",
+    );
+
+    assert.ok(
+      (generateTextSpan.attributes["gen_ai.request.model"] as string).includes(
+        "claude",
+      ),
+    );
+
+    assert.ok(
+      generateTextSpan.attributes[
+        SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
+      ] !== undefined,
+      "cache_creation_input_tokens should be present",
+    );
+    assert.strictEqual(
+      typeof generateTextSpan.attributes[
+        SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
+      ],
+      "number",
+    );
+    assert.ok(
+      (generateTextSpan.attributes[
+        SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
+      ] as number) > 0,
+      "cache_creation_input_tokens should be greater than 0",
+    );
+  });
+
+  it("should capture and transform OpenAI cache tokens from providerMetadata", async function () {
+    this.timeout(30000);
+    memoryExporter.reset();
+
+    const result = await traceloop.withWorkflow(
+      { name: "test_openai_cache_workflow" },
+      async () => {
+        return await generateText({
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a helpful assistant. Here is some context: " +
+                "Lorem ipsum dolor sit amet. ".repeat(50),
+            },
+            { role: "user", content: "What is 2+2?" },
+          ],
+          model: vercel_openai("gpt-4o-mini"),
+          experimental_telemetry: {
+            isEnabled: true,
+          },
+        });
+      },
+    );
+
+    await traceloop.forceFlush();
+
+    const spans = memoryExporter.getFinishedSpans();
+    const generateTextSpan = spans.find(
+      (span) =>
+        span.name === "text.generate" &&
+        span.attributes["traceloop.workflow.name"] ===
+          "test_openai_cache_workflow",
+    );
+
+    assert.ok(result);
+    assert.ok(result.text);
+    assert.ok(
+      generateTextSpan,
+      "Could not find OpenAI generateText span with cache tokens",
+    );
+
+    assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "OpenAI");
+
+    assert.strictEqual(
+      generateTextSpan.attributes["gen_ai.request.model"],
+      "gpt-4o-mini",
+    );
+
+    if (
+      generateTextSpan.attributes[
+        SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
+      ] !== undefined
+    ) {
+      assert.strictEqual(
+        typeof generateTextSpan.attributes[
+          SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
+        ],
+        "number",
+      );
+      assert.ok(
+        (generateTextSpan.attributes[
+          SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
+        ] as number) >= 0,
+        "cache_read_input_tokens should be a valid number",
+      );
+    }
+
+    if (
+      generateTextSpan.attributes[
+        SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS
+      ] !== undefined
+    ) {
+      assert.strictEqual(
+        typeof generateTextSpan.attributes[
+          SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS
+        ],
+        "number",
+      );
+      assert.ok(
+        (generateTextSpan.attributes[
+          SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS
+        ] as number) >= 0,
+        "reasoning_tokens should be a valid number",
+      );
+    }
   });
 });
