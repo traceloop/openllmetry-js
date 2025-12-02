@@ -410,6 +410,7 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
 
       delete attributes[AI_RESPONSE_PROVIDER_METADATA];
     } catch {
+      // Ignore JSON parsing errors
     }
   }
 };
