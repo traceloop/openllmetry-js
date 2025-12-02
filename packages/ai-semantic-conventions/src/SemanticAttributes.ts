@@ -35,13 +35,9 @@ export const SpanAttributes = {
   LLM_USAGE_COMPLETION_TOKENS: "gen_ai.usage.completion_tokens",
   LLM_USAGE_INPUT_TOKENS: ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   LLM_USAGE_OUTPUT_TOKENS: ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
-
-  // Cache token usage
   GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS:
     "gen_ai.usage.cache_creation_input_tokens",
   GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: "gen_ai.usage.cache_read_input_tokens",
-
-  // Reasoning token usage
   GEN_AI_USAGE_REASONING_TOKENS: "gen_ai.usage.reasoning_tokens",
 
   GEN_AI_AGENT_NAME: "gen_ai.agent.name",

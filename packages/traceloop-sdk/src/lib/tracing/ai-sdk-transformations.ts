@@ -380,7 +380,6 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
         return;
       }
 
-      // Handle Anthropic provider metadata
       if (metadata.anthropic) {
         const anthropicMetadata = metadata.anthropic;
 
@@ -395,29 +394,22 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
         }
       }
 
-      // Handle OpenAI provider metadata
       if (metadata.openai) {
         const openaiMetadata = metadata.openai;
 
-        // OpenAI's cachedPromptTokens maps to cache read tokens
         if (openaiMetadata.cachedPromptTokens !== undefined) {
           attributes[SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS] =
             openaiMetadata.cachedPromptTokens;
         }
 
-        // OpenAI's reasoningTokens maps to reasoning tokens
         if (openaiMetadata.reasoningTokens !== undefined) {
           attributes[SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS] =
             openaiMetadata.reasoningTokens;
         }
-
-        // Note: OpenAI also provides acceptedPredictionTokens, rejectedPredictionTokens
-        // These can be added to semantic conventions if needed in the future
       }
 
       delete attributes[AI_RESPONSE_PROVIDER_METADATA];
     } catch {
-      // Ignore parsing errors
     }
   }
 };

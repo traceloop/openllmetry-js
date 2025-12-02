@@ -273,8 +273,7 @@ describe("Test AI SDK Integration with Recording", function () {
   });
 
   it("should capture and transform Anthropic cache tokens from providerMetadata", async function () {
-    this.timeout(30000); // 30 seconds for API call
-    // Clear any leftover spans from previous tests
+    this.timeout(30000);
     memoryExporter.reset();
 
     const result = await traceloop.withWorkflow(
@@ -300,7 +299,6 @@ describe("Test AI SDK Integration with Recording", function () {
       },
     );
 
-    // Force flush to ensure all spans are exported
     await traceloop.forceFlush();
 
     const spans = memoryExporter.getFinishedSpans();
@@ -318,22 +316,17 @@ describe("Test AI SDK Integration with Recording", function () {
       "Could not find Anthropic generateText span with cache tokens",
     );
 
-    // Verify vendor
     assert.strictEqual(
       generateTextSpan.attributes["gen_ai.system"],
       "Anthropic",
     );
 
-    // Verify model information
-    // The model name in attributes might include the full revision
     assert.ok(
       (generateTextSpan.attributes["gen_ai.request.model"] as string).includes(
         "claude",
       ),
     );
 
-    // Verify cache token attributes are properly transformed
-    // The cassette has cache_creation_input_tokens > 0
     assert.ok(
       generateTextSpan.attributes[
         SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
@@ -355,8 +348,7 @@ describe("Test AI SDK Integration with Recording", function () {
   });
 
   it("should capture and transform OpenAI cache tokens from providerMetadata", async function () {
-    this.timeout(30000); // 30 seconds for API call
-    // Clear any leftover spans from previous tests
+    this.timeout(30000);
     memoryExporter.reset();
 
     const result = await traceloop.withWorkflow(
@@ -380,7 +372,6 @@ describe("Test AI SDK Integration with Recording", function () {
       },
     );
 
-    // Force flush to ensure all spans are exported
     await traceloop.forceFlush();
 
     const spans = memoryExporter.getFinishedSpans();
@@ -398,18 +389,13 @@ describe("Test AI SDK Integration with Recording", function () {
       "Could not find OpenAI generateText span with cache tokens",
     );
 
-    // Verify vendor
     assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "OpenAI");
 
-    // Verify model information
     assert.strictEqual(
       generateTextSpan.attributes["gen_ai.request.model"],
       "gpt-4o-mini",
     );
 
-    // Verify cache token attributes are properly transformed if present
-    // OpenAI's cachedPromptTokens maps to cache read tokens
-    // Note: Vercel AI SDK support for OpenAI cache tokens may vary by version
     if (
       generateTextSpan.attributes[
         SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
@@ -421,7 +407,6 @@ describe("Test AI SDK Integration with Recording", function () {
         ],
         "number",
       );
-      // If present, it should be greater than 0 (from cassette)
       assert.ok(
         (generateTextSpan.attributes[
           SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
@@ -430,8 +415,6 @@ describe("Test AI SDK Integration with Recording", function () {
       );
     }
 
-    // Verify reasoning tokens are properly transformed if present
-    // OpenAI's reasoningTokens maps to reasoning tokens
     if (
       generateTextSpan.attributes[
         SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS
