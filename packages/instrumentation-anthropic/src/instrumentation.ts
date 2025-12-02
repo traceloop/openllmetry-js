@@ -317,8 +317,9 @@ export class AnthropicInstrumentation extends InstrumentationBase {
             usage: {
               input_tokens: 0,
               output_tokens: 0,
-              cache_creation_input_tokens: 0,
-              cache_read_input_tokens: 0,
+              cache_creation: null,
+              cache_creation_input_tokens: null,
+              cache_read_input_tokens: null,
               server_tool_use: null,
               service_tier: null,
             },
