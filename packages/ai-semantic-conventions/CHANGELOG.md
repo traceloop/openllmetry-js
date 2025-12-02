@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.2](https://github.com/traceloop/openllmetry-js/compare/v0.22.1...v0.22.2) (2025-12-02)
+
+### Bug Fixes
+
+- **ai-sdk:** report cached tokens usage ([#839](https://github.com/traceloop/openllmetry-js/issues/839)) ([546092d](https://github.com/traceloop/openllmetry-js/commit/546092dcf2dcbee6c0240bd6e005d1547cb9ef26))
+
 # [0.22.0](https://github.com/traceloop/openllmetry-js/compare/v0.21.1...v0.22.0) (2025-11-27)
 
 ### Bug Fixes

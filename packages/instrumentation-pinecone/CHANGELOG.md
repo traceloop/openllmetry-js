@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.2](https://github.com/traceloop/openllmetry-js/compare/v0.22.1...v0.22.2) (2025-12-02)
+
+**Note:** Version bump only for package @traceloop/instrumentation-pinecone
+
 # [0.22.0](https://github.com/traceloop/openllmetry-js/compare/v0.21.1...v0.22.0) (2025-11-27)
 
 **Note:** Version bump only for package @traceloop/instrumentation-pinecone
