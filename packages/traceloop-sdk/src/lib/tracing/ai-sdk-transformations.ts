@@ -28,6 +28,7 @@ const TOOL_SPAN_NAME = "ai.toolCall";
 const AI_RESPONSE_TEXT = "ai.response.text";
 const AI_RESPONSE_OBJECT = "ai.response.object";
 const AI_RESPONSE_TOOL_CALLS = "ai.response.toolCalls";
+const AI_RESPONSE_PROVIDER_METADATA = "ai.response.providerMetadata";
 const AI_PROMPT_MESSAGES = "ai.prompt.messages";
 const AI_PROMPT = "ai.prompt";
 const AI_USAGE_PROMPT_TOKENS = "ai.usage.promptTokens";
@@ -365,6 +366,57 @@ const transformCompletionTokens = (attributes: Record<string, any>): void => {
   delete attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS];
 };
 
+const transformProviderMetadata = (attributes: Record<string, any>): void => {
+  if (AI_RESPONSE_PROVIDER_METADATA in attributes) {
+    try {
+      const metadataStr = attributes[AI_RESPONSE_PROVIDER_METADATA];
+      let metadata: any;
+
+      if (typeof metadataStr === "string") {
+        metadata = JSON.parse(metadataStr);
+      } else if (typeof metadataStr === "object") {
+        metadata = metadataStr;
+      } else {
+        return;
+      }
+
+      // Handle Anthropic provider metadata
+      if (metadata.anthropic) {
+        const anthropicMetadata = metadata.anthropic;
+
+        if (anthropicMetadata.cacheCreationInputTokens !== undefined) {
+          attributes[SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS] =
+            anthropicMetadata.cacheCreationInputTokens;
+        }
+
+        if (anthropicMetadata.cacheReadInputTokens !== undefined) {
+          attributes[SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS] =
+            anthropicMetadata.cacheReadInputTokens;
+        }
+      }
+
+      // Handle OpenAI provider metadata
+      if (metadata.openai) {
+        const openaiMetadata = metadata.openai;
+
+        // OpenAI's cachedPromptTokens maps to cache read tokens
+        if (openaiMetadata.cachedPromptTokens !== undefined) {
+          attributes[SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS] =
+            openaiMetadata.cachedPromptTokens;
+        }
+
+        // Note: OpenAI also provides reasoningTokens, acceptedPredictionTokens, rejectedPredictionTokens
+        // These are stored but not part of the standard semantic conventions yet
+        // They remain in the raw metadata for now
+      }
+
+      delete attributes[AI_RESPONSE_PROVIDER_METADATA];
+    } catch {
+      // Ignore parsing errors
+    }
+  }
+};
+
 const calculateTotalTokens = (attributes: Record<string, any>): void => {
   const inputTokens = attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS];
   const outputTokens = attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS];
@@ -461,6 +513,7 @@ export const transformLLMSpans = (
   transformTools(attributes);
   transformPromptTokens(attributes);
   transformCompletionTokens(attributes);
+  transformProviderMetadata(attributes);
   calculateTotalTokens(attributes);
   transformVendor(attributes);
   transformTelemetryMetadata(attributes, spanName);

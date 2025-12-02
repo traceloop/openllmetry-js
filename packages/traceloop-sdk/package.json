@@ -93,9 +93,10 @@
   "gitHead": "ef1e70d6037f7b5c061056ef2be16e3f55f02ed5",
   "devDependencies": {
     "@ai-sdk/amazon-bedrock": "^3.0.10",
+    "@ai-sdk/anthropic": "^2.0.53",
     "@ai-sdk/google": "^2.0.8",
     "@ai-sdk/openai": "^2.0.19",
-    "@anthropic-ai/sdk": "^0.56.0",
+    "@anthropic-ai/sdk": "^0.71.0",
     "@aws-sdk/client-bedrock-runtime": "^3.848.0",
     "@google-cloud/aiplatform": "^4.4.0",
     "@google-cloud/vertexai": "^1.10.0",
