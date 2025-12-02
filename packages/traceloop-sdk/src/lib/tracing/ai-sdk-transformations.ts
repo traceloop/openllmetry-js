@@ -405,9 +405,14 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
             openaiMetadata.cachedPromptTokens;
         }
 
-        // Note: OpenAI also provides reasoningTokens, acceptedPredictionTokens, rejectedPredictionTokens
-        // These are stored but not part of the standard semantic conventions yet
-        // They remain in the raw metadata for now
+        // OpenAI's reasoningTokens maps to reasoning tokens
+        if (openaiMetadata.reasoningTokens !== undefined) {
+          attributes[SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS] =
+            openaiMetadata.reasoningTokens;
+        }
+
+        // Note: OpenAI also provides acceptedPredictionTokens, rejectedPredictionTokens
+        // These can be added to semantic conventions if needed in the future
       }
 
       delete attributes[AI_RESPONSE_PROVIDER_METADATA];

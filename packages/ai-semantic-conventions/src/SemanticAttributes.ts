@@ -41,6 +41,9 @@ export const SpanAttributes = {
     "gen_ai.usage.cache_creation_input_tokens",
   GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: "gen_ai.usage.cache_read_input_tokens",
 
+  // Reasoning token usage
+  GEN_AI_USAGE_REASONING_TOKENS: "gen_ai.usage.reasoning_tokens",
+
   GEN_AI_AGENT_NAME: "gen_ai.agent.name",
 
   // LLM

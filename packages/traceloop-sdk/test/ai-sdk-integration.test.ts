@@ -429,5 +429,26 @@ describe("Test AI SDK Integration with Recording", function () {
         "cache_read_input_tokens should be a valid number",
       );
     }
+
+    // Verify reasoning tokens are properly transformed if present
+    // OpenAI's reasoningTokens maps to reasoning tokens
+    if (
+      generateTextSpan.attributes[
+        SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS
+      ] !== undefined
+    ) {
+      assert.strictEqual(
+        typeof generateTextSpan.attributes[
+          SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS
+        ],
+        "number",
+      );
+      assert.ok(
+        (generateTextSpan.attributes[
+          SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS
+        ] as number) >= 0,
+        "reasoning_tokens should be a valid number",
+      );
+    }
   });
 });
