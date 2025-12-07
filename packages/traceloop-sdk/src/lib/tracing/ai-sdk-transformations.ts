@@ -492,6 +492,16 @@ const transformTelemetryMetadata = (
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
         TraceloopSpanKindValues.AGENT;
       attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
+
+      const inputMessages = attributes[SpanAttributes.LLM_INPUT_MESSAGES];
+      if (inputMessages) {
+        attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] = inputMessages;
+      }
+
+      const outputMessages = attributes[SpanAttributes.LLM_OUTPUT_MESSAGES];
+      if (outputMessages) {
+        attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] = outputMessages;
+      }
     }
   }
 
