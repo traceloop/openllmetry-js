@@ -494,13 +494,24 @@ const transformTelemetryMetadata = (
       attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
 
       const inputMessages = attributes[SpanAttributes.LLM_INPUT_MESSAGES];
-      if (inputMessages) {
-        attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] = inputMessages;
-      }
-
       const outputMessages = attributes[SpanAttributes.LLM_OUTPUT_MESSAGES];
-      if (outputMessages) {
-        attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] = outputMessages;
+      const toolArgs = attributes["ai.toolCall.args"];
+      const toolResult = attributes["ai.toolCall.result"];
+
+      if (inputMessages || outputMessages) {
+        if (inputMessages) {
+          attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] = inputMessages;
+        }
+        if (outputMessages) {
+          attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] = outputMessages;
+        }
+      } else if (toolArgs || toolResult) {
+        if (toolArgs) {
+          attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] = toolArgs;
+        }
+        if (toolResult) {
+          attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] = toolResult;
+        }
       }
     }
   }
