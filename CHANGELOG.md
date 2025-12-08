@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.3](https://github.com/traceloop/openllmetry-js/compare/v0.22.2...v0.22.3) (2025-12-08)
+
+### Bug Fixes
+
+- add entity input/output to agent spans ([#840](https://github.com/traceloop/openllmetry-js/issues/840)) ([ef152a9](https://github.com/traceloop/openllmetry-js/commit/ef152a90a576e727cc4eeeb5fd0fb0be6ce7c231))
+
 ## [0.22.2](https://github.com/traceloop/openllmetry-js/compare/v0.22.1...v0.22.2) (2025-12-02)
 
 ### Bug Fixes
