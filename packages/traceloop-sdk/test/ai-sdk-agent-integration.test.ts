@@ -437,18 +437,12 @@ describe("Test AI SDK Agent Integration with Recording", function () {
   });
 
   it("should properly scope agent names in nested agent scenarios", async () => {
-    // This test simulates a nested agent scenario where:
-    // - outer_agent calls a tool that internally uses inner_agent
-    // - Each agent's spans should have their respective agent names
-
-    // Define an inner agent tool that will be called by the outer agent
     const innerAgentTool = tool({
       description: "Calls an inner agent to perform a subtask",
       inputSchema: z.object({
         query: z.string().describe("Query for the inner agent"),
       }),
       execute: async ({ query }) => {
-        // Inner agent makes its own LLM call with different agent metadata
         const innerResult = await generateText({
           model: vercel_openai("gpt-4o-mini"),
           prompt: `Inner agent processing: ${query}`,
@@ -465,7 +459,6 @@ describe("Test AI SDK Agent Integration with Recording", function () {
       },
     });
 
-    // Outer agent that uses the inner agent as a tool
     const result = await traceloop.withWorkflow(
       { name: "nested_agent_test_workflow" },
       async () => {
@@ -488,18 +481,12 @@ describe("Test AI SDK Agent Integration with Recording", function () {
       },
     );
 
-    // Force flush to ensure all spans are exported
     await traceloop.forceFlush();
 
     const spans = memoryExporter.getFinishedSpans();
 
-    // Find spans for outer agent
     const outerAgentSpan = spans.find((span) => span.name === "outer_agent");
-
-    // Find spans for inner agent
     const innerAgentSpan = spans.find((span) => span.name === "inner_agent");
-
-    // Find tool call span (the innerAgentTool call)
     const toolSpan = spans.find(
       (span) =>
         span.name.endsWith(".tool") &&
@@ -510,21 +497,18 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     assert.ok(outerAgentSpan, "Outer agent span should exist");
     assert.ok(innerAgentSpan, "Inner agent span should exist");
 
-    // Verify outer agent span has outer_agent name
     assert.strictEqual(
       outerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
       "outer_agent",
       "Outer agent span should have outer_agent name",
     );
 
-    // Verify inner agent span has inner_agent name (NOT outer_agent)
     assert.strictEqual(
       innerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
       "inner_agent",
       "Inner agent span should have inner_agent name, not inherit from outer_agent",
     );
 
-    // Verify tool span inherits from outer agent (since it's called by outer agent)
     if (toolSpan) {
       assert.strictEqual(
         toolSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
@@ -533,9 +517,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
       );
     }
 
-    // Verify the inner agent's child spans have inner_agent name
     const innerAgentChildSpans = spans.filter((span) => {
-      // Find spans that are children of the inner agent span
       return (
         span.parentSpanContext?.spanId === innerAgentSpan.spanContext().spanId
       );
