@@ -92,28 +92,31 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.user`],
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      params.p,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -125,7 +128,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params.frequencyPenalty,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
@@ -134,11 +137,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       typeof response.meta?.billedUnits?.outputTokens === "number"
     ) {
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
         response.meta?.billedUnits?.inputTokens,
       );
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
         response.meta?.billedUnits?.outputTokens,
       );
       assert.strictEqual(
@@ -148,11 +151,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       );
     }
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
       response.generations[0].text,
     );
   });
@@ -169,28 +172,31 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.user`],
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      params.p,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -202,7 +208,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params.frequencyPenalty,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
@@ -214,11 +220,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
           typeof response.meta?.billedUnits?.outputTokens === "number"
         ) {
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+            attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
             response.meta?.billedUnits?.inputTokens,
           );
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+            attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
             response.meta?.billedUnits?.outputTokens,
           );
           assert.strictEqual(
@@ -228,11 +234,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
           );
         }
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+          attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
           "assistant",
         );
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+          attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
           response.generations[0].text,
         );
       }

@@ -62,7 +62,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
     const flatMessages = messages.flat();
     span.setAttributes({
-      [SpanAttributes.LLM_SYSTEM]: vendor,
+      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: vendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: "chat",
     });
 
@@ -71,8 +71,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       flatMessages.forEach((message, idx) => {
         const role = this.mapMessageTypeToRole(message._getType());
         span.setAttributes({
-          [`${SpanAttributes.LLM_PROMPTS}.${idx}.role`]: role,
-          [`${SpanAttributes.LLM_PROMPTS}.${idx}.content`]:
+          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.role`]: role,
+          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.content`]:
             typeof message.content === "string"
               ? message.content
               : JSON.stringify(message.content),
@@ -103,15 +103,15 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     });
 
     span.setAttributes({
-      [SpanAttributes.LLM_SYSTEM]: vendor,
+      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: vendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     });
 
     if (this.traceContent && prompts.length > 0) {
       prompts.forEach((prompt, idx) => {
         span.setAttributes({
-          [`${SpanAttributes.LLM_PROMPTS}.${idx}.role`]: "user",
-          [`${SpanAttributes.LLM_PROMPTS}.${idx}.content`]: prompt,
+          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.role`]: "user",
+          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.content`]: prompt,
         });
       });
     }
@@ -139,8 +139,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       output.generations.forEach((generation, idx) => {
         if (generation && generation.length > 0) {
           span.setAttributes({
-            [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.role`]: "assistant",
-            [`${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`]:
+            [`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${idx}.role`]:
+              "assistant",
+            [`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${idx}.content`]:
               generation[0].text,
           });
         }
@@ -152,8 +153,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
     // Set both request and response model attributes like Python implementation
     span.setAttributes({
-      [SpanAttributes.LLM_REQUEST_MODEL]: modelName || "unknown",
-      [SpanAttributes.LLM_RESPONSE_MODEL]: modelName || "unknown",
+      [SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL]: modelName || "unknown",
+      [SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL]: modelName || "unknown",
     });
 
     // Add usage metrics if available
@@ -161,12 +162,13 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       const usage = output.llmOutput.usage;
       if (usage.input_tokens) {
         span.setAttributes({
-          [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: usage.input_tokens,
+          [SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.input_tokens,
         });
       }
       if (usage.output_tokens) {
         span.setAttributes({
-          [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.output_tokens,
+          [SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
+            usage.output_tokens,
         });
       }
       const totalTokens =
@@ -183,12 +185,13 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       const usage = output.llmOutput.tokenUsage;
       if (usage.promptTokens) {
         span.setAttributes({
-          [SpanAttributes.LLM_USAGE_PROMPT_TOKENS]: usage.promptTokens,
+          [SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.promptTokens,
         });
       }
       if (usage.completionTokens) {
         span.setAttributes({
-          [SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]: usage.completionTokens,
+          [SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
+            usage.completionTokens,
         });
       }
       if (usage.totalTokens) {

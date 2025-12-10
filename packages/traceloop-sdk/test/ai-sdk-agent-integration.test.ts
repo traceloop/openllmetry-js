@@ -162,7 +162,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span has agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME],
       "test_calculator_agent",
       "Root span should have agent name",
     );
@@ -200,7 +200,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     // Verify tool call span inherits agent name
     if (toolSpan) {
       assert.strictEqual(
-        toolSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        toolSpan.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME],
         "test_calculator_agent",
         "Tool span should inherit agent name from parent",
       );
@@ -218,7 +218,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     // Verify child LLM span inherits agent name
     if (childLLMSpan) {
       assert.strictEqual(
-        childLLMSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        childLLMSpan.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME],
         "test_calculator_agent",
         "Child LLM span should inherit agent name from parent",
       );
@@ -306,7 +306,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span does NOT have agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME],
       undefined,
       "Root span should not have agent name when no agent metadata",
     );
@@ -361,7 +361,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span has agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME],
       "profile_generator_agent",
       "Root span should have agent name",
     );
@@ -420,7 +420,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span has agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME],
       "poetry_agent",
       "Root span should have agent name",
     );

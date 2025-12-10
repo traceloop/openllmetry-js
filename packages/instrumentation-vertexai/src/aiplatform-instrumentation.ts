@@ -157,7 +157,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
       | undefined;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_SYSTEM]: "Google",
+      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "Google",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
@@ -165,22 +165,22 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
       if (params !== undefined) {
         if (params.endpoint) {
           const model = params.endpoint.split("/").pop();
-          attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
-          attributes[SpanAttributes.LLM_RESPONSE_MODEL] = model;
+          attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = model;
+          attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL] = model;
         }
         if (params?.parameters) {
           if (
             params?.parameters.structValue?.fields?.maxOutputTokens.numberValue
           ) {
-            attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+            attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
               params?.parameters.structValue?.fields?.maxOutputTokens.numberValue;
           }
           if (params?.parameters.structValue?.fields?.temperature.numberValue) {
-            attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] =
+            attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
               params?.parameters.structValue?.fields?.temperature.numberValue;
           }
           if (params?.parameters.structValue?.fields?.topP.numberValue) {
-            attributes[SpanAttributes.LLM_REQUEST_TOP_P] =
+            attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] =
               params?.parameters.structValue?.fields?.topP.numberValue;
           }
           if (params?.parameters.structValue?.fields?.topK.numberValue) {
@@ -199,18 +199,18 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
             "prompt" in params.instances[0].structValue.fields &&
             params.instances[0].structValue?.fields?.prompt.stringValue
           ) {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
               params.instances[0].structValue?.fields?.prompt.stringValue;
           } else if (
             params.instances[0].structValue &&
             params.instances[0].structValue.fields?.messages.listValue
               ?.values?.[0].structValue?.fields?.content.stringValue
           ) {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] =
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] =
               params.instances[0].structValue.fields?.messages.listValue
                 ?.values?.[0].structValue?.fields?.author.stringValue ?? "user";
-            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
               params.instances[0].structValue.fields?.messages.listValue?.values?.[0].structValue?.fields?.content.stringValue;
           }
         }
@@ -271,7 +271,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
   }) {
     try {
       if (result[0].model)
-        span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result[0].model);
+        span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, result[0].model);
 
       if (result) {
         if (result[0].metadata) {
@@ -281,7 +281,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
               ?.totalTokens.numberValue === "number"
           )
             span.setAttribute(
-              SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+              SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
               result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
                 ?.fields?.outputTokenCount.structValue?.fields?.totalTokens
                 .numberValue,
@@ -293,7 +293,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
               ?.totalTokens.numberValue === "number"
           )
             span.setAttribute(
-              SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+              SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
               result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
                 ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
                 .numberValue,
@@ -326,12 +326,12 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
               !!prediction.structValue?.fields?.content.stringValue
             ) {
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
                 "assistant",
               );
 
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
                 prediction.structValue?.fields?.content.stringValue,
               );
             } else if (
@@ -341,12 +341,12 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
                 ?.values?.[0]?.structValue?.fields?.content.stringValue
             ) {
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
                 "assistant",
               );
 
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
                 prediction.structValue?.fields?.candidates.listValue
                   ?.values?.[0]?.structValue?.fields?.content.stringValue,
               );

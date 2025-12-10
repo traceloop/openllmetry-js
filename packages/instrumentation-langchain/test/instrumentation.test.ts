@@ -432,30 +432,32 @@ describe("Test Langchain instrumentation", async function () {
 
     // Look for LLM span created by Bedrock instrumentation
     const llmSpan = spans.find(
-      (span) => span.attributes[SpanAttributes.LLM_SYSTEM] === "AWS",
+      (span) => span.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM] === "AWS",
     );
 
     if (llmSpan) {
       // Test LLM span attributes like in amazon.test.ts
       const attributes = llmSpan.attributes;
-      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
+      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "AWS");
       assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
-      assert.ok(attributes[SpanAttributes.LLM_REQUEST_MODEL]);
+      assert.ok(attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL]);
       assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
         "user",
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
         "What is a popular landmark in the most populous city in the US?",
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
         "assistant",
       );
-      assert.ok(attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]);
-      assert.ok(attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
-      assert.ok(attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
+      assert.ok(
+        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
+      );
+      assert.ok(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS]);
+      assert.ok(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     } else {
       // Test LangChain callback handler spans - now only creates completion span
@@ -469,7 +471,7 @@ describe("Test Langchain instrumentation", async function () {
       // Test completion span attributes
       const completionAttributes = completionSpan.attributes;
       assert.strictEqual(
-        completionAttributes[SpanAttributes.LLM_SYSTEM],
+        completionAttributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
         "AWS",
       );
       assert.strictEqual(
@@ -477,12 +479,16 @@ describe("Test Langchain instrumentation", async function () {
         "chat",
       );
       assert.strictEqual(
-        completionAttributes[SpanAttributes.LLM_REQUEST_MODEL],
+        completionAttributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
         "claude-3-7-sonnet",
       );
-      assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
       assert.ok(
-        completionAttributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        completionAttributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
+      );
+      assert.ok(
+        completionAttributes[
+          SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS
+        ],
       );
       assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     }

@@ -105,19 +105,19 @@ describe.skip("Test Rerank with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "rerank");
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.user`],
       params.query,
     );
     assert.strictEqual(
@@ -127,15 +127,15 @@ describe.skip("Test Rerank with Cohere Instrumentation", () => {
         : params.documents[1].text,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.relevanceScore`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.relevanceScore`],
       response.results[0].relevanceScore,
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
       params.returnDocuments
         ? response.results[0].document?.text
         : response.results[0].index,

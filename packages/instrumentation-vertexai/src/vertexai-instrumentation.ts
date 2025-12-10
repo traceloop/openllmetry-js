@@ -137,20 +137,20 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     params: vertexAI.GenerateContentRequest;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_SYSTEM]: "Google",
+      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "Google",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
     try {
-      attributes[SpanAttributes.LLM_REQUEST_MODEL] = instance["model"];
-      attributes[SpanAttributes.LLM_RESPONSE_MODEL] = instance["model"];
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = instance["model"];
+      attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL] = instance["model"];
 
       if (instance["generationConfig"]) {
-        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           instance["generationConfig"].max_output_tokens;
-        attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] =
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
           instance["generationConfig"].temperature;
-        attributes[SpanAttributes.LLM_REQUEST_TOP_P] =
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] =
           instance["generationConfig"].top_p;
         attributes[SpanAttributes.LLM_TOP_K] =
           instance["generationConfig"].top_k;
@@ -160,17 +160,17 @@ export class VertexAIInstrumentation extends InstrumentationBase {
         let i = 0;
 
         if (instance["systemInstruction"]) {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.role`] = "system";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${i}.content`] =
+          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i}.role`] = "system";
+          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i}.content`] =
             this._formatPartsData(instance["systemInstruction"].parts);
 
           i++;
         }
 
         params.contents.forEach((content, j) => {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${i + j}.role`] =
+          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i + j}.role`] =
             content.role ?? "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${i + j}.content`] =
+          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i + j}.content`] =
             this._formatPartsData(content.parts);
         });
       }
@@ -230,13 +230,13 @@ export class VertexAIInstrumentation extends InstrumentationBase {
 
       if (streamResponse.usageMetadata?.candidatesTokenCount)
         span.setAttribute(
-          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
           streamResponse.usageMetadata.candidatesTokenCount,
         );
 
       if (streamResponse.usageMetadata?.promptTokenCount)
         span.setAttribute(
-          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
           streamResponse.usageMetadata.promptTokenCount,
         );
 
@@ -244,18 +244,18 @@ export class VertexAIInstrumentation extends InstrumentationBase {
         streamResponse.candidates?.forEach((candidate, index) => {
           if (candidate.finishReason)
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.finish_reason`,
+              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
               candidate.finishReason,
             );
 
           if (candidate.content) {
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.role`,
+              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
               candidate.content.role ?? "assistant",
             );
 
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${index}.content`,
+              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
               this._formatPartsData(candidate.content.parts),
             );
           }

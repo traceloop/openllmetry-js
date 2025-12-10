@@ -157,9 +157,9 @@ export class BedrockInstrumentation extends InstrumentationBase {
       );
 
       attributes = {
-        [SpanAttributes.LLM_SYSTEM]: "AWS",
-        [SpanAttributes.LLM_REQUEST_MODEL]: model,
-        [SpanAttributes.LLM_RESPONSE_MODEL]: input.modelId,
+        [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "AWS",
+        [SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL]: model,
+        [SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL]: input.modelId,
         [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
       };
 

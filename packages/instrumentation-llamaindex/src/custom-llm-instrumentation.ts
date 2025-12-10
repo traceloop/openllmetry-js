@@ -49,14 +49,14 @@ export class CustomLLMInstrumentation {
           });
 
         try {
-          span.setAttribute(SpanAttributes.LLM_SYSTEM, className);
+          span.setAttribute(SpanAttributes.ATTR_GEN_AI_SYSTEM, className);
           span.setAttribute(
-            SpanAttributes.LLM_REQUEST_MODEL,
+            SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL,
             this.metadata.model,
           );
           span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
           span.setAttribute(
-            SpanAttributes.LLM_REQUEST_TOP_P,
+            SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P,
             this.metadata.topP,
           );
           if (shouldSendPrompts(plugin.config)) {
@@ -64,7 +64,7 @@ export class CustomLLMInstrumentation {
               const content = messages[messageIdx].content;
               if (typeof content === "string") {
                 span.setAttribute(
-                  `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
+                  `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
                   content as string,
                 );
               } else if (
@@ -72,13 +72,13 @@ export class CustomLLMInstrumentation {
                 "text"
               ) {
                 span.setAttribute(
-                  `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.content`,
+                  `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
                   (content as llamaindex.MessageContentTextDetail[])[0].text,
                 );
               }
 
               span.setAttribute(
-                `${SpanAttributes.LLM_PROMPTS}.${messageIdx}.role`,
+                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${messageIdx}.role`,
                 messages[messageIdx].role,
               );
             }
@@ -134,7 +134,7 @@ export class CustomLLMInstrumentation {
     span: Span,
     metadata: llamaindex.LLMMetadata,
   ): T {
-    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, metadata.model);
+    span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
 
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
@@ -145,18 +145,18 @@ export class CustomLLMInstrumentation {
     try {
       if ((result as llamaindex.ChatResponse).message) {
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`,
           (result as llamaindex.ChatResponse).message.role,
         );
         const content = (result as llamaindex.ChatResponse).message.content;
         if (typeof content === "string") {
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
             content,
           );
         } else if (content[0].type === "text") {
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
             content[0].text,
           );
         }
@@ -178,7 +178,7 @@ export class CustomLLMInstrumentation {
     execContext: Context,
     metadata: llamaindex.LLMMetadata,
   ): T {
-    span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, metadata.model);
+    span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
@@ -186,7 +186,7 @@ export class CustomLLMInstrumentation {
     }
 
     return llmGeneratorWrapper(result, execContext, (message) => {
-      span.setAttribute(`${SpanAttributes.LLM_COMPLETIONS}.0.content`, message);
+      span.setAttribute(`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`, message);
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
     }) as any;

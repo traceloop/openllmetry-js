@@ -106,44 +106,49 @@ describe("Test Anthropic instrumentation", async function () {
     assert.ok(message);
     assert.ok(chatSpan);
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL}`],
       "claude-3-opus-20240229",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_RESPONSE_MODEL}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL}`],
       "claude-3-opus-20240229",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MAX_TOKENS}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS}`],
       1024,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       `Tell me a joke about OpenTelemetry`,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
       JSON.stringify(message.content),
     );
     assert.equal(
-      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       17,
     );
     assert.ok(
-      +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]! >
-        0,
+      +chatSpan.attributes[
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
     );
     assert.equal(
-      +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]! +
-        +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]!,
+      +chatSpan.attributes[
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+      ]! +
+        +chatSpan.attributes[
+          `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        ]!,
       chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
   }).timeout(30000);
@@ -164,44 +169,49 @@ describe("Test Anthropic instrumentation", async function () {
     assert.ok(message);
     assert.ok(chatSpan);
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL}`],
       "claude-3-opus-20240229",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_RESPONSE_MODEL}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL}`],
       "claude-3-opus-20240229",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MAX_TOKENS}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS}`],
       1024,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       `Tell me a joke about OpenTelemetry`,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
       JSON.stringify(message.content),
     );
     assert.equal(
-      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       17,
     );
     assert.ok(
-      +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]! >
-        0,
+      +chatSpan.attributes[
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+      ]! > 0,
     );
     assert.equal(
-      +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`]! +
-        +chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`]!,
+      +chatSpan.attributes[
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+      ]! +
+        +chatSpan.attributes[
+          `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        ]!,
       chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
   }).timeout(30000);
@@ -222,15 +232,15 @@ describe("Test Anthropic instrumentation", async function () {
 
     assert.ok(span);
     assert.strictEqual(
-      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "system",
     );
     assert.strictEqual(
-      span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "You are a helpful assistant",
     );
     assert.strictEqual(
-      span.attributes[`${SpanAttributes.LLM_PROMPTS}.1.role`],
+      span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.1.role`],
       "user",
     );
   }).timeout(30000);
@@ -258,15 +268,15 @@ describe("Test Anthropic instrumentation", async function () {
     assert.ok(message);
     assert.ok(chatSpan);
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL}`],
       "claude-opus-4-1-20250805",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_RESPONSE_MODEL}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL}`],
       "claude-opus-4-1-20250805",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_REQUEST_MAX_TOKENS}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS}`],
       2048,
     );
 
@@ -282,18 +292,18 @@ describe("Test Anthropic instrumentation", async function () {
 
     // Check prompts
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "What is 2+2? Think through this step by step.",
     );
 
     // Check that we capture both thinking and regular content blocks
     const content = JSON.parse(
       chatSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
       ] as string,
     );
     assert.ok(Array.isArray(content));
@@ -321,9 +331,11 @@ describe("Test Anthropic instrumentation", async function () {
 
     // Verify token usage includes thinking tokens
     const completionTokens =
-      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`];
+      chatSpan.attributes[
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+      ];
     const promptTokens =
-      chatSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`];
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`];
     const totalTokens =
       chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`];
 

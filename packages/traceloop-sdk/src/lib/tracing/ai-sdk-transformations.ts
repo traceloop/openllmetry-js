@@ -372,15 +372,14 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
 const transformPromptTokens = (attributes: Record<string, any>): void => {
   if (
-    !(SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS in attributes) &&
+    !(SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS in attributes) &&
     AI_USAGE_PROMPT_TOKENS in attributes
   ) {
-    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS] =
+    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS] =
       attributes[AI_USAGE_PROMPT_TOKENS];
   }
 
   delete attributes[AI_USAGE_PROMPT_TOKENS];
-  delete attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS];
 };
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
@@ -393,7 +392,6 @@ const transformCompletionTokens = (attributes: Record<string, any>): void => {
   }
 
   delete attributes[AI_USAGE_COMPLETION_TOKENS];
-  delete attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS];
 };
 
 const transformProviderMetadata = (attributes: Record<string, any>): void => {
@@ -463,18 +461,24 @@ const transformVendor = (attributes: Record<string, any>): void => {
     let mappedVendor = null;
     if (typeof vendor === "string" && vendor.length > 0) {
       const providerName = vendor.split(".")[0];
+
+      // Set the standard gen_ai.provider.name attribute with lowercase provider name
       attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME] = providerName;
 
+      // Find the mapped vendor for backward compatibility with deprecated gen_ai.system
       for (const prefix of Object.keys(VENDOR_MAPPING)) {
         if (vendor.startsWith(prefix)) {
           mappedVendor = VENDOR_MAPPING[prefix];
           break;
         }
       }
+
+      // Set deprecated gen_ai.system attribute for backward compatibility
+      if (mappedVendor) {
+        attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM] = mappedVendor;
+      }
     }
 
-    attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME] =
-      mappedVendor || vendor;
     delete attributes[AI_MODEL_PROVIDER];
   }
 };
