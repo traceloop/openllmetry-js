@@ -9,7 +9,6 @@ import {
   transformAiSdkSpanNames,
 } from "../src/lib/tracing/ai-sdk-transformations";
 
-
 describe("AI SDK Transformations", () => {
   describe("transformAiSdkAttributes - response text", () => {
     it("should transform ai.response.text to completion attributes", () => {
@@ -127,7 +126,9 @@ describe("AI SDK Transformations", () => {
 
       // Check first tool call
       assert.strictEqual(
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`],
+        attributes[
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
+        ],
         "getWeather",
       );
       assert.strictEqual(
@@ -139,7 +140,9 @@ describe("AI SDK Transformations", () => {
 
       // Check second tool call
       assert.strictEqual(
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`],
+        attributes[
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`
+        ],
         "searchRestaurants",
       );
       assert.strictEqual(
@@ -405,7 +408,8 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      const result = attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`];
+      const result =
+        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`];
 
       // The escape sequences should be properly unescaped
       assert.strictEqual(
@@ -857,7 +861,10 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS], 50);
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+        50,
+      );
       assert.strictEqual(attributes["ai.usage.promptTokens"], undefined);
       assert.strictEqual(
         attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
@@ -886,7 +893,10 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS], 0);
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+        0,
+      );
       assert.strictEqual(attributes["ai.usage.promptTokens"], undefined);
     });
   });
@@ -934,7 +944,10 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS], 0);
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
+        0,
+      );
       assert.strictEqual(attributes["ai.usage.completionTokens"], undefined);
     });
   });
@@ -1009,7 +1022,10 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "OpenAI");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "OpenAI",
+      );
       assert.strictEqual(attributes["ai.model.provider"], undefined);
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
@@ -1028,7 +1044,10 @@ describe("AI SDK Transformations", () => {
 
         transformLLMSpans(attributes);
 
-        assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "OpenAI");
+        assert.strictEqual(
+          attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+          "OpenAI",
+        );
         assert.strictEqual(attributes["ai.model.provider"], undefined);
       });
     });
@@ -1043,7 +1062,10 @@ describe("AI SDK Transformations", () => {
 
         transformLLMSpans(attributes);
 
-        assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "Azure");
+        assert.strictEqual(
+          attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+          "Azure",
+        );
         assert.strictEqual(attributes["ai.model.provider"], undefined);
       });
     });
@@ -1055,7 +1077,10 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "Anthropic");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "Anthropic",
+      );
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
 
@@ -1077,7 +1102,10 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "",
+      );
       assert.strictEqual(attributes["ai.model.provider"], undefined);
     });
   });
@@ -1118,12 +1146,21 @@ describe("AI SDK Transformations", () => {
       );
 
       // Check token transformations - should keep input/output tokens
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS], 10);
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS], 5);
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+        10,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
+        5,
+      );
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
 
       // Check vendor transformation
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "OpenAI");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "OpenAI",
+      );
 
       // Check original AI SDK attributes are removed
       assert.strictEqual(attributes["ai.response.text"], undefined);
@@ -1194,12 +1231,21 @@ describe("AI SDK Transformations", () => {
       );
 
       // Check token transformations - should keep input/output tokens
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS], 10);
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS], 5);
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+        10,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
+        5,
+      );
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
 
       // Check vendor transformation
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "Azure");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "Azure",
+      );
 
       // Check original AI SDK attributes are removed
       assert.strictEqual(attributes["ai.response.object"], undefined);
@@ -1813,7 +1859,10 @@ describe("AI SDK Transformations", () => {
         "Help me",
       );
       assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "OpenAI");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "OpenAI",
+      );
 
       // Check original attributes are removed
       assert.strictEqual(attributes["ai.telemetry.metadata.userId"], undefined);
@@ -2070,7 +2119,10 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
         "openai",
       );
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "OpenAI");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "OpenAI",
+      );
     });
 
     it("should extract provider name from complex provider string", () => {
@@ -2084,7 +2136,10 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
         "azure-openai",
       );
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "Azure");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "Azure",
+      );
     });
 
     it("should handle simple provider name without dots", () => {
@@ -2098,7 +2153,10 @@ describe("AI SDK Transformations", () => {
         attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
         "anthropic",
       );
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "Anthropic");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "Anthropic",
+      );
     });
 
     it("should not set provider name when ai.model.provider is not present", () => {
@@ -2445,7 +2503,10 @@ describe("AI SDK Transformations", () => {
       );
 
       // Check provider transformations
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "OpenAI");
+      assert.strictEqual(
+        attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
+        "OpenAI",
+      );
       assert.strictEqual(
         attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME],
         "openai",

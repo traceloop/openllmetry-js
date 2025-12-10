@@ -123,28 +123,28 @@ describe("Test Together instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "What's the weather like in Boston?",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
+        `${SpanAttributes.ATTR_GEN_AI_TOOL_NAME}.0.name`
       ],
       "get_current_weather",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
+        `${SpanAttributes.ATTR_GEN_AI_TOOL_NAME}.0.description`
       ],
       "Get the current weather in a given location",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
+        `${SpanAttributes.ATTR_GEN_AI_TOOL_NAME}.0.arguments`
       ],
       JSON.stringify({
         type: "object",
@@ -160,14 +160,14 @@ describe("Test Together instrumentation", async function () {
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.name`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.function_call.arguments`
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
         ]! as string,
       ),
       { location: "Boston, MA" },
@@ -176,12 +176,12 @@ describe("Test Together instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       333,
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
   });
@@ -204,23 +204,23 @@ describe("Test Together instrumentation", async function () {
       assert.ok(result);
       assert.ok(completionSpan);
       assert.strictEqual(
-        completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+        completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
         "user",
       );
       assert.strictEqual(
-        completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
         "Tell me a joke about OpenTelemetry",
       );
       assert.ok(
         completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
       );
       assert.equal(
-        completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+        completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
         37,
       );
       assert.ok(
         +completionSpan.attributes[
-          `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+          `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
         ]! > 0,
       );
     } catch (error) {
@@ -254,16 +254,16 @@ describe("Test Together instrumentation", async function () {
       assert.ok(result);
       assert.ok(completionSpan);
       assert.strictEqual(
-        completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+        completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
         "user",
       );
       assert.strictEqual(
-        completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
         "Tell me a joke about OpenTelemetry",
       );
       assert.strictEqual(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
         ],
         result,
       );
@@ -271,12 +271,12 @@ describe("Test Together instrumentation", async function () {
         completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
       );
       assert.equal(
-        completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+        completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
         37,
       );
       assert.ok(
         +completionSpan.attributes[
-          `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+          `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
         ]! > 0,
       );
     } catch (error) {
@@ -300,11 +300,11 @@ describe("Test Together instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.ok(
@@ -312,20 +312,20 @@ describe("Test Together instrumentation", async function () {
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.ok(
       typeof completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
       ] === "string" &&
         (
           completionSpan.attributes[
-            `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
           ] as string
         ).length > 0,
     );
@@ -356,12 +356,12 @@ describe("Test Together instrumentation", async function () {
     assert.ok(result, "Result should not be empty");
     assert.ok(completionSpan, "Completion span should exist");
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
       "Prompt role should be 'user'",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
       "Prompt content should match input",
     );
@@ -371,22 +371,22 @@ describe("Test Together instrumentation", async function () {
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
       "Completion tokens should be greater than 0",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
       "Completion role should be 'assistant'",
     );
     assert.ok(
       typeof completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
       ] === "string" &&
         (
           completionSpan.attributes[
-            `${SpanAttributes.LLM_COMPLETIONS}.0.content`
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
           ] as string
         ).length > 0,
       "Completion content should not be empty",
@@ -430,28 +430,28 @@ describe("Test Together instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "What's the weather like in Boston?",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
+        `${SpanAttributes.ATTR_GEN_AI_TOOL_NAME}.0.name`
       ],
       "get_current_weather",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
+        `${SpanAttributes.ATTR_GEN_AI_TOOL_NAME}.0.description`
       ],
       "Get the current weather in a given location",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
+        `${SpanAttributes.ATTR_GEN_AI_TOOL_NAME}.0.arguments`
       ],
       JSON.stringify({
         type: "object",
@@ -467,14 +467,14 @@ describe("Test Together instrumentation", async function () {
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
         ]! as string,
       ),
       { location: "Boston, MA" },
@@ -483,12 +483,12 @@ describe("Test Together instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       333,
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
+        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
   });
@@ -562,28 +562,28 @@ describe("Test Together instrumentation", async function () {
     assert.ok(completionSpan);
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.name`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.0.arguments`
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
         ]! as string,
       ),
       { location: "Boston, MA", unit: "fahrenheit" },
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.name`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.name`
       ],
       "get_tomorrow_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.1.arguments`
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
         ]! as string,
       ),
       { location: "Chicago, IL", unit: "fahrenheit" },

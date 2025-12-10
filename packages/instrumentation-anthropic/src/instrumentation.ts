@@ -204,14 +204,14 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         };
       }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_SYSTEM]: "Anthropic",
+      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "Anthropic",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
     try {
-      attributes[SpanAttributes.LLM_REQUEST_MODEL] = params.model;
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] = params.temperature;
-      attributes[SpanAttributes.LLM_REQUEST_TOP_P] = params.top_p;
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
       // Handle thinking parameters (for beta messages)
@@ -223,10 +223,10 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       }
 
       if (type === "completion") {
-        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] =
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           params.max_tokens_to_sample;
       } else {
-        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.max_tokens;
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_tokens;
       }
 
       if (
@@ -244,8 +244,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
           // If a system prompt is provided, it should always be first
           if ("system" in params && params.system !== undefined) {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "system";
-            attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "system";
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
               typeof params.system === "string"
                 ? params.system
                 : JSON.stringify(params.system);
@@ -254,21 +254,21 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
           params.messages.forEach((message, index) => {
             const currentIndex = index + promptIndex;
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${currentIndex}.role`] =
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.role`] =
               message.role;
             if (typeof message.content === "string") {
               attributes[
-                `${SpanAttributes.LLM_PROMPTS}.${currentIndex}.content`
+                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
               ] = (message.content as string) || "";
             } else {
               attributes[
-                `${SpanAttributes.LLM_PROMPTS}.${currentIndex}.content`
+                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
               ] = JSON.stringify(message.content);
             }
           });
         } else {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] = params.prompt;
+          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
         }
       }
     } catch (e) {
@@ -477,25 +477,25 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         result: Completion;
       }) {
     try {
-      span.setAttribute(SpanAttributes.LLM_RESPONSE_MODEL, result.model);
+      span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, result.model);
       if (type === "chat" && result.usage) {
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
           result.usage?.input_tokens + result.usage?.output_tokens,
         );
         span.setAttribute(
-          SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+          SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
           result.usage?.output_tokens,
         );
         span.setAttribute(
-          SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+          SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
           result.usage?.input_tokens,
         );
       }
 
       if (result.stop_reason) {
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.finish_reason`,
           result.stop_reason,
         );
       }
@@ -503,20 +503,20 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`,
             "assistant",
           );
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
             JSON.stringify(result.content),
           );
         } else {
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`,
             "assistant",
           );
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
             result.completion,
           );
         }
