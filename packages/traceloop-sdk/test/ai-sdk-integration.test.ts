@@ -118,11 +118,14 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.strictEqual(generateTextSpan.name, "text.generate");
 
     // Verify vendor
-    assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "OpenAI");
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
+      "OpenAI",
+    );
 
     // Verify model information
     assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.request.model"],
+      generateTextSpan.attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       "gpt-3.5-turbo",
     );
 
@@ -186,11 +189,14 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.strictEqual(generateTextSpan.name, "text.generate");
 
     // Verify vendor
-    assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "Google");
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
+      "Google",
+    );
 
     // Verify model information
     assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.request.model"],
+      generateTextSpan.attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       "gemini-1.5-flash",
     );
 
@@ -240,9 +246,9 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(aiSdkSpan);
 
     // Verify LLM_INPUT_MESSAGES attribute exists and is valid JSON
-    assert.ok(aiSdkSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES]);
+    assert.ok(aiSdkSpan.attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES]);
     const inputMessages = JSON.parse(
-      aiSdkSpan.attributes[SpanAttributes.LLM_INPUT_MESSAGES] as string,
+      aiSdkSpan.attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
     assert.ok(Array.isArray(inputMessages));
     assert.strictEqual(inputMessages.length, 1);
@@ -257,9 +263,11 @@ describe("Test AI SDK Integration with Recording", function () {
     );
 
     // Verify LLM_OUTPUT_MESSAGES attribute exists and is valid JSON
-    assert.ok(aiSdkSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES]);
+    assert.ok(aiSdkSpan.attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES]);
     const outputMessages = JSON.parse(
-      aiSdkSpan.attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] as string,
+      aiSdkSpan.attributes[
+        SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES
+      ] as string,
     );
     assert.ok(Array.isArray(outputMessages));
     assert.strictEqual(outputMessages.length, 1);
@@ -317,14 +325,16 @@ describe("Test AI SDK Integration with Recording", function () {
     );
 
     assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.system"],
+      generateTextSpan.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
       "Anthropic",
     );
 
     assert.ok(
-      (generateTextSpan.attributes["gen_ai.request.model"] as string).includes(
-        "claude",
-      ),
+      (
+        generateTextSpan.attributes[
+          SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL
+        ] as string
+      ).includes("claude"),
     );
 
     assert.ok(
@@ -389,10 +399,13 @@ describe("Test AI SDK Integration with Recording", function () {
       "Could not find OpenAI generateText span with cache tokens",
     );
 
-    assert.strictEqual(generateTextSpan.attributes["gen_ai.system"], "OpenAI");
+    assert.strictEqual(
+      generateTextSpan.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
+      "OpenAI",
+    );
 
     assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.request.model"],
+      generateTextSpan.attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       "gpt-4o-mini",
     );
 

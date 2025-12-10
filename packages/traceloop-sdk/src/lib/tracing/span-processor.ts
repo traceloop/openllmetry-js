@@ -186,7 +186,10 @@ const onSpanStart = (span: Span): void => {
 
   const agentName = context.active().getValue(AGENT_NAME_KEY);
   if (agentName) {
-    span.setAttribute(SpanAttributes.GEN_AI_AGENT_NAME, agentName as string);
+    span.setAttribute(
+      SpanAttributes.ATTR_GEN_AI_AGENT_NAME,
+      agentName as string,
+    );
   }
 
   const associationProperties = context
@@ -271,7 +274,7 @@ const onSpanEnd = (
 
     // Handle agent name propagation for AI SDK spans
     const traceId = span.spanContext().traceId;
-    const agentName = span.attributes[SpanAttributes.GEN_AI_AGENT_NAME];
+    const agentName = span.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME];
 
     if (agentName && typeof agentName === "string") {
       // Store agent name for this trace with current timestamp
@@ -281,7 +284,7 @@ const onSpanEnd = (
       });
     } else if (!agentName && traceAgentNames.has(traceId)) {
       // This span doesn't have agent name but trace does - propagate it
-      span.attributes[SpanAttributes.GEN_AI_AGENT_NAME] =
+      span.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME] =
         traceAgentNames.get(traceId)!.agentName;
     }
 

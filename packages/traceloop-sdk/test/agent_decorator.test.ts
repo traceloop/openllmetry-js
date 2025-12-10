@@ -136,15 +136,15 @@ describe("Test Agent Decorator", () => {
       "plan_trip",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.GEN_AI_AGENT_NAME}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_AGENT_NAME}`],
       "plan_trip",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -197,15 +197,15 @@ describe("Test Agent Decorator", () => {
       "travel_planner",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.GEN_AI_AGENT_NAME}`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_AGENT_NAME}`],
       "travel_planner",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -259,7 +259,7 @@ describe("Test Agent Decorator", () => {
       "123",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.GEN_AI_AGENT_NAME}`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_AGENT_NAME}`],
       "assistant",
     );
     assert.strictEqual(
@@ -267,15 +267,17 @@ describe("Test Agent Decorator", () => {
       "chat",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      completionSpan.attributes[
+        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+      ],
       "Tell me a joke about OpenTelemetry",
     );
   });

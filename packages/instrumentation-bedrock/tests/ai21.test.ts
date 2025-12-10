@@ -134,14 +134,17 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
+    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "AWS");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TOP_P],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      model,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
       params.topP,
     );
     assert.strictEqual(
@@ -153,32 +156,35 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
       params.frequencyPenalty.scale,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.maxTokens,
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
       prompt,
     );
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      model,
+    );
+    assert.strictEqual(
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
       parsedResponse["completions"][0]["finishReason"]["reason"],
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
       parsedResponse["completions"][0]["data"]["text"],
     );
   });

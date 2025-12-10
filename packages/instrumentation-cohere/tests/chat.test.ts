@@ -99,29 +99,32 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
     assert.strictEqual(
       attributes[
-        `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.role`
+        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.role`
       ],
       "user",
     );
     assert.strictEqual(
       attributes[
-        `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.user`
+        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
       ],
       params.message,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      params.p,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -133,7 +136,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       params.frequencyPenalty,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
@@ -149,11 +152,11 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       typeof response.token_count.total_tokens === "number"
     ) {
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
         response.token_count.prompt_tokens,
       );
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
         response.token_count.response_tokens,
       );
       assert.strictEqual(
@@ -162,16 +165,16 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       );
     }
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
       response.text,
     );
     if ("finishReason" in response && response.finishReason) {
       assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`],
+        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
         response.finishReason,
       );
     }
@@ -196,29 +199,32 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
     assert.strictEqual(
       attributes[
-        `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.role`
+        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.role`
       ],
       "user",
     );
     assert.strictEqual(
       attributes[
-        `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.user`
+        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
       ],
       params.message,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      params.p,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -230,7 +236,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       params.frequencyPenalty,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
@@ -250,11 +256,11 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
           typeof response.token_count.total_tokens === "number"
         ) {
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+            attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
             response.token_count.prompt_tokens,
           );
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+            attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
             response.token_count.response_tokens,
           );
           assert.strictEqual(
@@ -263,16 +269,18 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
           );
         }
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+          attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
           "assistant",
         );
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+          attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
           response.text,
         );
         if ("finishReason" in response && response.finishReason) {
           assert.strictEqual(
-            attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`],
+            attributes[
+              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.finish_reason`
+            ],
             response.finishReason,
           );
         }

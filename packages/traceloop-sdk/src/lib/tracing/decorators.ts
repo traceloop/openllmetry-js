@@ -102,7 +102,7 @@ function withEntity<
         const agentName = entityContext.getValue(AGENT_NAME_KEY);
         if (agentName) {
           span.setAttribute(
-            SpanAttributes.GEN_AI_AGENT_NAME,
+            SpanAttributes.ATTR_GEN_AI_AGENT_NAME,
             agentName as string,
           );
         }
