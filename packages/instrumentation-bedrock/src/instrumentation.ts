@@ -298,8 +298,10 @@ export class BedrockInstrumentation extends InstrumentationBase {
       case "ai21": {
         return {
           [SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["topP"],
-          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
-          [SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["maxTokens"],
+          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]:
+            requestBody["temperature"],
+          [SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS]:
+            requestBody["maxTokens"],
           [SpanAttributes.LLM_PRESENCE_PENALTY]:
             requestBody["presencePenalty"]["scale"],
           [SpanAttributes.LLM_FREQUENCY_PENALTY]:
@@ -338,7 +340,8 @@ export class BedrockInstrumentation extends InstrumentationBase {
         const baseAttributes = {
           [SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["top_p"],
           [SpanAttributes.LLM_TOP_K]: requestBody["top_k"],
-          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
+          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]:
+            requestBody["temperature"],
           [SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS]:
             requestBody["max_tokens_to_sample"] || requestBody["max_tokens"],
         };
@@ -351,9 +354,12 @@ export class BedrockInstrumentation extends InstrumentationBase {
         if (requestBody["messages"]) {
           const promptAttributes: Record<string, any> = {};
           requestBody["messages"].forEach((message: any, index: number) => {
-            promptAttributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] =
-              message.role;
-            promptAttributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`] =
+            promptAttributes[
+              `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`
+            ] = message.role;
+            promptAttributes[
+              `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`
+            ] =
               typeof message.content === "string"
                 ? message.content
                 : JSON.stringify(message.content);
@@ -366,7 +372,9 @@ export class BedrockInstrumentation extends InstrumentationBase {
           return {
             ...baseAttributes,
             [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`]: "user",
-            [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`]: requestBody["prompt"]
+            [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`]: requestBody[
+              "prompt"
+            ]
               // The format is removing when we are setting span attribute
               .replace("\n\nHuman:", "")
               .replace("\n\nAssistant:", ""),
@@ -379,8 +387,10 @@ export class BedrockInstrumentation extends InstrumentationBase {
         return {
           [SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["p"],
           [SpanAttributes.LLM_TOP_K]: requestBody["k"],
-          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
-          [SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["max_tokens"],
+          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]:
+            requestBody["temperature"],
+          [SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS]:
+            requestBody["max_tokens"],
 
           // Prompt & Role
           ...(this._shouldSendPrompts()
@@ -395,8 +405,10 @@ export class BedrockInstrumentation extends InstrumentationBase {
       case "meta": {
         return {
           [SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["top_p"],
-          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
-          [SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["max_gen_len"],
+          [SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE]:
+            requestBody["temperature"],
+          [SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS]:
+            requestBody["max_gen_len"],
 
           // Prompt & Role
           ...(this._shouldSendPrompts()

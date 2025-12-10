@@ -210,7 +210,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
     try {
       attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
+      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
+        params.temperature;
       attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
@@ -226,7 +227,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           params.max_tokens_to_sample;
       } else {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_tokens;
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
+          params.max_tokens;
       }
 
       if (
@@ -244,7 +246,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
           // If a system prompt is provided, it should always be first
           if ("system" in params && params.system !== undefined) {
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "system";
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] =
+              "system";
             attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
               typeof params.system === "string"
                 ? params.system
@@ -254,8 +257,9 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
           params.messages.forEach((message, index) => {
             const currentIndex = index + promptIndex;
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.role`] =
-              message.role;
+            attributes[
+              `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.role`
+            ] = message.role;
             if (typeof message.content === "string") {
               attributes[
                 `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
@@ -268,7 +272,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
           });
         } else {
           attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
+          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+            params.prompt;
         }
       }
     } catch (e) {
@@ -477,7 +482,10 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         result: Completion;
       }) {
     try {
-      span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, result.model);
+      span.setAttribute(
+        SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+        result.model,
+      );
       if (type === "chat" && result.usage) {
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,

@@ -161,7 +161,8 @@ export function setImageGenerationRequestAttributes(
   }
 
   if (params.prompt) {
-    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
+    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+      params.prompt;
     attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
   }
 
@@ -192,7 +193,8 @@ export async function setImageEditRequestAttributes(
   }
 
   if (params.prompt) {
-    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
+    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+      params.prompt;
     attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
   }
 
@@ -215,9 +217,8 @@ export async function setImageEditRequestAttributes(
     );
 
     if (imageUrl) {
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.1.content`] = JSON.stringify([
-        { type: "image_url", image_url: { url: imageUrl } },
-      ]);
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.1.content`] =
+        JSON.stringify([{ type: "image_url", image_url: { url: imageUrl } }]);
       attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.1.role`] = "user";
     }
   }
@@ -267,9 +268,8 @@ export async function setImageVariationRequestAttributes(
     );
 
     if (imageUrl) {
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] = JSON.stringify([
-        { type: "image_url", image_url: { url: imageUrl } },
-      ]);
+      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+        JSON.stringify([{ type: "image_url", image_url: { url: imageUrl } }]);
       attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
     }
   }
@@ -295,7 +295,8 @@ export async function setImageGenerationResponseAttributes(
       params,
       response.data.length,
     );
-    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS] = completionTokens;
+    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS] =
+      completionTokens;
 
     // Calculate prompt tokens if enrichTokens is enabled
     if (instrumentationConfig?.enrichTokens) {
@@ -342,7 +343,8 @@ export async function setImageGenerationResponseAttributes(
 
         attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
           JSON.stringify([{ type: "image_url", image_url: { url: imageUrl } }]);
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
+        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
+          "assistant";
       } catch (error) {
         console.error("Failed to upload generated image:", error);
       }
@@ -367,21 +369,24 @@ export async function setImageGenerationResponseAttributes(
           JSON.stringify([
             { type: "image_url", image_url: { url: uploadedUrl } },
           ]);
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
+        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
+          "assistant";
       } catch (error) {
         console.error("Failed to fetch and upload generated image:", error);
         attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
           JSON.stringify([
             { type: "image_url", image_url: { url: firstImage.url } },
           ]);
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
+        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
+          "assistant";
       }
     } else if (firstImage.url) {
       attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
         JSON.stringify([
           { type: "image_url", image_url: { url: firstImage.url } },
         ]);
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
+        "assistant";
     }
 
     if (firstImage.revised_prompt) {

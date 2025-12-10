@@ -194,10 +194,12 @@ export class TogetherInstrumentation extends InstrumentationBase {
     try {
       attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
       if (params.max_tokens) {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_tokens;
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
+          params.max_tokens;
       }
       if (params.temperature) {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
+        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
+          params.temperature;
       }
       if (params.top_p) {
         attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
@@ -226,11 +228,13 @@ export class TogetherInstrumentation extends InstrumentationBase {
             attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] =
               message.role;
             if (typeof message.content === "string") {
-              attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`] =
-                (message.content as string) || "";
+              attributes[
+                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`
+              ] = (message.content as string) || "";
             } else {
-              attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`] =
-                JSON.stringify(message.content);
+              attributes[
+                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`
+              ] = JSON.stringify(message.content);
             }
           });
 
@@ -495,7 +499,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
     | { span: Span; type: "chat"; result: ChatCompletion }
     | { span: Span; type: "completion"; result: Completion }) {
     try {
-      span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, result.model);
+      span.setAttribute(
+        SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+        result.model,
+      );
 
       if (result.usage) {
         span.setAttribute(

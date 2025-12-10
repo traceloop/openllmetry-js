@@ -134,7 +134,10 @@ export class CustomLLMInstrumentation {
     span: Span,
     metadata: llamaindex.LLMMetadata,
   ): T {
-    span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
+    span.setAttribute(
+      SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+      metadata.model,
+    );
 
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
@@ -178,7 +181,10 @@ export class CustomLLMInstrumentation {
     execContext: Context,
     metadata: llamaindex.LLMMetadata,
   ): T {
-    span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
+    span.setAttribute(
+      SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+      metadata.model,
+    );
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
@@ -186,7 +192,10 @@ export class CustomLLMInstrumentation {
     }
 
     return llmGeneratorWrapper(result, execContext, (message) => {
-      span.setAttribute(`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`, message);
+      span.setAttribute(
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
+        message,
+      );
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
     }) as any;
