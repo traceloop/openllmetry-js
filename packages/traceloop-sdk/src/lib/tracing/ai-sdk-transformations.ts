@@ -73,9 +73,9 @@ const getAgentNameFromAttributes = (
 
 const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
+    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
       attributes[AI_RESPONSE_TEXT];
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
+    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] = ROLE_ASSISTANT;
 
     const outputMessage = {
       role: ROLE_ASSISTANT,
@@ -86,7 +86,7 @@ const transformResponseText = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+    attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
 
@@ -96,9 +96,9 @@ const transformResponseText = (attributes: Record<string, any>): void => {
 
 const transformResponseObject = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_OBJECT in attributes) {
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`] =
+    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
       attributes[AI_RESPONSE_OBJECT];
-    attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
+    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] = ROLE_ASSISTANT;
 
     const outputMessage = {
       role: ROLE_ASSISTANT,
@@ -109,7 +109,7 @@ const transformResponseObject = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+    attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
 
@@ -124,16 +124,16 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
         attributes[AI_RESPONSE_TOOL_CALLS] as string,
       );
 
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`] = ROLE_ASSISTANT;
+      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] = ROLE_ASSISTANT;
 
       const toolCallParts: any[] = [];
       toolCalls.forEach((toolCall: any, index: number) => {
         if (toolCall.toolCallType === "function") {
           attributes[
-            `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.name`
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.name`
           ] = toolCall.toolName;
           attributes[
-            `${SpanAttributes.LLM_COMPLETIONS}.0.tool_calls.${index}.arguments`
+            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.arguments`
           ] = toolCall.args;
 
           toolCallParts.push({
@@ -151,7 +151,7 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
           role: ROLE_ASSISTANT,
           parts: toolCallParts,
         };
-        attributes[SpanAttributes.LLM_OUTPUT_MESSAGES] = JSON.stringify([
+        attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
           outputMessage,
         ]);
       }
@@ -279,9 +279,9 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
       messages.forEach((msg: { role: string; content: any }, index: number) => {
         const processedContent = processMessageContent(msg.content);
-        const contentKey = `${SpanAttributes.LLM_PROMPTS}.${index}.content`;
+        const contentKey = `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`;
         attributes[contentKey] = processedContent;
-        attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
+        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] = msg.role;
 
         // Add to OpenTelemetry standard gen_ai.input.messages format
         inputMessages.push({
@@ -297,7 +297,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
       // Set the OpenTelemetry standard input messages attribute
       if (inputMessages.length > 0) {
-        attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
+        attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] =
           JSON.stringify(inputMessages);
       }
 
@@ -319,9 +319,9 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         messages.forEach(
           (msg: { role: string; content: any }, index: number) => {
             const processedContent = processMessageContent(msg.content);
-            const contentKey = `${SpanAttributes.LLM_PROMPTS}.${index}.content`;
+            const contentKey = `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`;
             attributes[contentKey] = processedContent;
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] =
               msg.role;
 
             // Add to OpenTelemetry standard gen_ai.input.messages format
@@ -339,7 +339,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
         // Set the OpenTelemetry standard input messages attribute
         if (inputMessages.length > 0) {
-          attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
+          attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] =
             JSON.stringify(inputMessages);
         }
 
@@ -347,9 +347,9 @@ const transformPrompts = (attributes: Record<string, any>): void => {
       }
       // Handle case where promptData has a "prompt" string
       else if (promptData.prompt && typeof promptData.prompt === "string") {
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
+        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
           promptData.prompt;
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = ROLE_USER;
+        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = ROLE_USER;
 
         const inputMessage = {
           role: ROLE_USER,
@@ -360,7 +360,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
             },
           ],
         };
-        attributes[SpanAttributes.LLM_INPUT_MESSAGES] = JSON.stringify([
+        attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify([
           inputMessage,
         ]);
 
@@ -384,7 +384,7 @@ const transformPromptTokens = (attributes: Record<string, any>): void => {
 
   // Clean up legacy attributes
   delete attributes[AI_USAGE_PROMPT_TOKENS];
-  delete attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS];
+  delete attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS];
 };
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
@@ -399,7 +399,7 @@ const transformCompletionTokens = (attributes: Record<string, any>): void => {
 
   // Clean up legacy attributes
   delete attributes[AI_USAGE_COMPLETION_TOKENS];
-  delete attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS];
+  delete attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS];
 };
 
 const transformProviderMetadata = (attributes: Record<string, any>): void => {
@@ -470,7 +470,7 @@ const transformVendor = (attributes: Record<string, any>): void => {
     if (typeof vendor === "string" && vendor.length > 0) {
       // Extract base provider name for OpenTelemetry standard (e.g., "openai" from "openai.chat")
       const providerName = vendor.split(".")[0];
-      attributes[SpanAttributes.GEN_AI_PROVIDER_NAME] = providerName;
+      attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME] = providerName;
 
       for (const prefix of Object.keys(VENDOR_MAPPING)) {
         if (vendor.startsWith(prefix)) {
@@ -480,7 +480,7 @@ const transformVendor = (attributes: Record<string, any>): void => {
       }
     }
 
-    attributes[SpanAttributes.LLM_SYSTEM] = mappedVendor || vendor;
+    attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME] = mappedVendor || vendor;
     delete attributes[AI_MODEL_PROVIDER];
   }
 };
@@ -504,14 +504,14 @@ const transformOperationName = (
   }
 
   if (operationName) {
-    attributes[SpanAttributes.GEN_AI_OPERATION_NAME] = operationName;
+    attributes[SpanAttributes.ATTR_GEN_AI_OPERATION_NAME] = operationName;
   }
 };
 
 const transformModelId = (attributes: Record<string, any>): void => {
   const AI_MODEL_ID = "ai.model.id";
   if (AI_MODEL_ID in attributes) {
-    attributes[SpanAttributes.LLM_REQUEST_MODEL] = attributes[AI_MODEL_ID];
+    attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = attributes[AI_MODEL_ID];
     delete attributes[AI_MODEL_ID];
   }
 };
@@ -521,7 +521,7 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_FINISH_REASON in attributes) {
     const finishReason = attributes[AI_RESPONSE_FINISH_REASON];
     // Convert to array format for OTel standard
-    attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS] = Array.isArray(
+    attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_FINISH_REASONS] = Array.isArray(
       finishReason,
     )
       ? finishReason
@@ -533,28 +533,28 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
 const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   // Transform tool name
   if ("ai.toolCall.name" in attributes) {
-    attributes[SpanAttributes.GEN_AI_TOOL_NAME] =
+    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_NAME] =
       attributes["ai.toolCall.name"];
     // Keep ai.toolCall.name for now, will be deleted in transformToolCalls
   }
 
   // Transform tool call ID
   if ("ai.toolCall.id" in attributes) {
-    attributes[SpanAttributes.GEN_AI_TOOL_CALL_ID] =
+    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_ID] =
       attributes["ai.toolCall.id"];
     delete attributes["ai.toolCall.id"];
   }
 
   // Transform tool arguments (keep both OTel and Traceloop versions)
   if ("ai.toolCall.args" in attributes) {
-    attributes[SpanAttributes.GEN_AI_TOOL_CALL_ARGUMENTS] =
+    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_ARGUMENTS] =
       attributes["ai.toolCall.args"];
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
 
   // Transform tool result (keep both OTel and Traceloop versions)
   if ("ai.toolCall.result" in attributes) {
-    attributes[SpanAttributes.GEN_AI_TOOL_CALL_RESULT] =
+    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_RESULT] =
       attributes["ai.toolCall.result"];
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
@@ -566,9 +566,9 @@ const transformConversationId = (attributes: Record<string, any>): void => {
   const sessionId = attributes["ai.telemetry.metadata.sessionId"];
 
   if (conversationId) {
-    attributes[SpanAttributes.GEN_AI_CONVERSATION_ID] = conversationId;
+    attributes[SpanAttributes.ATTR_GEN_AI_CONVERSATION_ID] = conversationId;
   } else if (sessionId) {
-    attributes[SpanAttributes.GEN_AI_CONVERSATION_ID] = sessionId;
+    attributes[SpanAttributes.ATTR_GEN_AI_CONVERSATION_ID] = sessionId;
   }
 };
 
@@ -577,13 +577,13 @@ const transformResponseMetadata = (attributes: Record<string, any>): void => {
   const AI_RESPONSE_ID = "ai.response.id";
 
   if (AI_RESPONSE_MODEL in attributes) {
-    attributes[SpanAttributes.LLM_RESPONSE_MODEL] =
+    attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL] =
       attributes[AI_RESPONSE_MODEL];
     delete attributes[AI_RESPONSE_MODEL];
   }
 
   if (AI_RESPONSE_ID in attributes) {
-    attributes[SpanAttributes.GEN_AI_RESPONSE_ID] = attributes[AI_RESPONSE_ID];
+    attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_ID] = attributes[AI_RESPONSE_ID];
     delete attributes[AI_RESPONSE_ID];
   }
 };
@@ -619,7 +619,7 @@ const transformTelemetryMetadata = (
   }
 
   if (agentName) {
-    attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
+    attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME] = agentName;
 
     const topLevelSpanNames = [
       AI_GENERATE_TEXT,
@@ -636,8 +636,8 @@ const transformTelemetryMetadata = (
         TraceloopSpanKindValues.AGENT;
       attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
 
-      const inputMessages = attributes[SpanAttributes.LLM_INPUT_MESSAGES];
-      const outputMessages = attributes[SpanAttributes.LLM_OUTPUT_MESSAGES];
+      const inputMessages = attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES];
+      const outputMessages = attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES];
       const toolArgs = attributes["ai.toolCall.args"];
       const toolResult = attributes["ai.toolCall.result"];
 
