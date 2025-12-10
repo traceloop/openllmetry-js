@@ -9,33 +9,6 @@ import {
   transformAiSdkSpanNames,
 } from "../src/lib/tracing/ai-sdk-transformations";
 
-// Helper function to create a mock ReadableSpan
-const createMockSpan = (
-  name: string,
-  attributes: Record<string, any> = {},
-): ReadableSpan => {
-  return {
-    name,
-    attributes,
-    instrumentationScope: { name: "ai", version: "1.0.0" },
-  } as ReadableSpan;
-};
-
-// Helper function to create a mock span with updateName capability
-const createMockSpanWithUpdate = (
-  name: string,
-  attributes: Record<string, any> = {},
-) => {
-  const span = {
-    name,
-    attributes,
-    instrumentationScope: { name: "ai", version: "1.0.0" },
-    updateName: (newName: string) => {
-      span.name = newName;
-    },
-  };
-  return span as ReadableSpan & { updateName: (name: string) => void };
-};
 
 describe("AI SDK Transformations", () => {
   describe("transformAiSdkAttributes - response text", () => {
@@ -991,7 +964,7 @@ describe("AI SDK Transformations", () => {
 
     it("should not calculate total when input tokens are missing", () => {
       const attributes = {
-        [SpanAttributes.LLM_USAGE_OUTPUT_TOKENS]: 25,
+        [SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: 25,
       };
 
       transformLLMSpans(attributes);
@@ -1223,7 +1196,7 @@ describe("AI SDK Transformations", () => {
       // Check token transformations - should keep input/output tokens
       assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS], 10);
       assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS], 5);
-      assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_USAGE_TOTAL_TOKENS], 15);
+      assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 15);
 
       // Check vendor transformation
       assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME], "Azure");
