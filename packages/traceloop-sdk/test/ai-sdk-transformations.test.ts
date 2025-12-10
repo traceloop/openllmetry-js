@@ -471,6 +471,93 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(attributes.someOtherAttr, "value");
     });
 
+    it("should transform ai.prompt with messages array to prompt attributes", () => {
+      const promptData = {
+        messages: [{ role: "user", content: "What is the capital of France?" }],
+      };
+      const attributes = {
+        "ai.prompt": JSON.stringify(promptData),
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      // Check prompt attributes
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        "What is the capital of France?",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+        "user",
+      );
+
+      // Check gen_ai.input.messages is set
+      assert.strictEqual(
+        typeof attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+        "string",
+      );
+
+      const inputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+      );
+      assert.strictEqual(inputMessages.length, 1);
+      assert.strictEqual(inputMessages[0].role, "user");
+      assert.strictEqual(inputMessages[0].parts[0].type, "text");
+      assert.strictEqual(
+        inputMessages[0].parts[0].content,
+        "What is the capital of France?",
+      );
+
+      // Check original attribute is removed
+      assert.strictEqual(attributes["ai.prompt"], undefined);
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+
+    it("should transform ai.prompt with multiple messages", () => {
+      const promptData = {
+        messages: [
+          { role: "system", content: "You are a helpful assistant" },
+          { role: "user", content: "Hello!" },
+        ],
+      };
+      const attributes = {
+        "ai.prompt": JSON.stringify(promptData),
+      };
+
+      transformLLMSpans(attributes);
+
+      // Check first message
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        "You are a helpful assistant",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+        "system",
+      );
+
+      // Check second message
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.1.content`],
+        "Hello!",
+      );
+      assert.strictEqual(
+        attributes[`${SpanAttributes.LLM_PROMPTS}.1.role`],
+        "user",
+      );
+
+      // Check gen_ai.input.messages
+      const inputMessages = JSON.parse(
+        attributes[SpanAttributes.LLM_INPUT_MESSAGES],
+      );
+      assert.strictEqual(inputMessages.length, 2);
+      assert.strictEqual(inputMessages[0].role, "system");
+      assert.strictEqual(inputMessages[1].role, "user");
+
+      assert.strictEqual(attributes["ai.prompt"], undefined);
+    });
+
     it("should not modify attributes when ai.prompt is not present", () => {
       const attributes = {
         someOtherAttr: "value",

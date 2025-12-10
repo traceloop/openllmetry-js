@@ -310,7 +310,40 @@ const transformPrompts = (attributes: Record<string, any>): void => {
   if (AI_PROMPT in attributes) {
     try {
       const promptData = JSON.parse(attributes[AI_PROMPT] as string);
-      if (promptData.prompt && typeof promptData.prompt === "string") {
+
+      // Handle case where promptData has a "messages" array
+      if (promptData.messages && Array.isArray(promptData.messages)) {
+        const messages = promptData.messages;
+        const inputMessages: any[] = [];
+
+        messages.forEach((msg: { role: string; content: any }, index: number) => {
+          const processedContent = processMessageContent(msg.content);
+          const contentKey = `${SpanAttributes.LLM_PROMPTS}.${index}.content`;
+          attributes[contentKey] = processedContent;
+          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
+
+          // Add to OpenTelemetry standard gen_ai.input.messages format
+          inputMessages.push({
+            role: msg.role,
+            parts: [
+              {
+                type: TYPE_TEXT,
+                content: processedContent,
+              },
+            ],
+          });
+        });
+
+        // Set the OpenTelemetry standard input messages attribute
+        if (inputMessages.length > 0) {
+          attributes[SpanAttributes.LLM_INPUT_MESSAGES] =
+            JSON.stringify(inputMessages);
+        }
+
+        delete attributes[AI_PROMPT];
+      }
+      // Handle case where promptData has a "prompt" string
+      else if (promptData.prompt && typeof promptData.prompt === "string") {
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] =
           promptData.prompt;
         attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = ROLE_USER;
