@@ -375,10 +375,10 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 const transformPromptTokens = (attributes: Record<string, any>): void => {
   // Make sure we have the right naming convention
   if (
-    !(SpanAttributes.LLM_USAGE_INPUT_TOKENS in attributes) &&
+    !(SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS in attributes) &&
     AI_USAGE_PROMPT_TOKENS in attributes
   ) {
-    attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS] =
+    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS] =
       attributes[AI_USAGE_PROMPT_TOKENS];
   }
 
@@ -390,10 +390,10 @@ const transformPromptTokens = (attributes: Record<string, any>): void => {
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
   // Make sure we have the right naming convention
   if (
-    !(SpanAttributes.LLM_USAGE_OUTPUT_TOKENS in attributes) &&
+    !(SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS in attributes) &&
     AI_USAGE_COMPLETION_TOKENS in attributes
   ) {
-    attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS] =
+    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS] =
       attributes[AI_USAGE_COMPLETION_TOKENS];
   }
 
@@ -452,8 +452,8 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
 };
 
 const calculateTotalTokens = (attributes: Record<string, any>): void => {
-  const inputTokens = attributes[SpanAttributes.LLM_USAGE_INPUT_TOKENS];
-  const outputTokens = attributes[SpanAttributes.LLM_USAGE_OUTPUT_TOKENS];
+  const inputTokens = attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS];
+  const outputTokens = attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS];
 
   if (inputTokens && outputTokens) {
     attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =
