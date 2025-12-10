@@ -39,6 +39,15 @@ export const SpanAttributes = {
     "gen_ai.usage.cache_creation_input_tokens",
   GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: "gen_ai.usage.cache_read_input_tokens",
   GEN_AI_USAGE_REASONING_TOKENS: "gen_ai.usage.reasoning_tokens",
+  GEN_AI_OPERATION_NAME: "gen_ai.operation.name",
+  GEN_AI_PROVIDER_NAME: "gen_ai.provider.name",
+  GEN_AI_TOOL_NAME: "gen_ai.tool.name",
+  GEN_AI_TOOL_CALL_ID: "gen_ai.tool.call.id",
+  GEN_AI_TOOL_CALL_ARGUMENTS: "gen_ai.tool.call.arguments",
+  GEN_AI_TOOL_CALL_RESULT: "gen_ai.tool.call.result",
+  GEN_AI_RESPONSE_ID: "gen_ai.response.id",
+  GEN_AI_RESPONSE_FINISH_REASONS: "gen_ai.response.finish_reasons",
+  GEN_AI_CONVERSATION_ID: "gen_ai.conversation.id",
 
   GEN_AI_AGENT_NAME: "gen_ai.agent.name",
 

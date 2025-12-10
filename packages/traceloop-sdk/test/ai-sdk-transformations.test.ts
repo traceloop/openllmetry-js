@@ -1895,4 +1895,529 @@ describe("AI SDK Transformations", () => {
       assert.strictEqual(mockSpan.attributes["ai.toolCall.result"], undefined);
     });
   });
+
+  describe("transformLLMSpans - operation name", () => {
+    it("should transform generateText span to chat operation", () => {
+      const attributes = {
+        "ai.response.text": "Hello!",
+      };
+
+      transformLLMSpans(attributes, "ai.generateText");
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        "chat",
+      );
+    });
+
+    it("should transform streamText span to chat operation", () => {
+      const attributes = {
+        "ai.response.text": "Hello!",
+      };
+
+      transformLLMSpans(attributes, "ai.streamText");
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        "chat",
+      );
+    });
+
+    it("should transform generateObject span to chat operation", () => {
+      const attributes = {
+        "ai.response.object": '{"result":"test"}',
+      };
+
+      transformLLMSpans(attributes, "ai.generateObject");
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        "chat",
+      );
+    });
+
+    it("should transform streamObject span to chat operation", () => {
+      const attributes = {
+        "ai.response.object": '{"result":"test"}',
+      };
+
+      transformLLMSpans(attributes, "ai.streamObject");
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        "chat",
+      );
+    });
+
+    it("should transform toolCall span to execute_tool operation", () => {
+      const attributes = {
+        "ai.toolCall.name": "getWeather",
+      };
+
+      transformLLMSpans(attributes, "ai.toolCall");
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        "execute_tool",
+      );
+    });
+
+    it("should transform .tool span name to execute_tool operation", () => {
+      const attributes = {
+        "ai.toolCall.name": "calculate",
+      };
+
+      transformLLMSpans(attributes, "calculate.tool");
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        "execute_tool",
+      );
+    });
+
+    it("should not set operation name for unknown span names", () => {
+      const attributes = {};
+
+      transformLLMSpans(attributes, "unknown.span");
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        undefined,
+      );
+    });
+
+    it("should not set operation name when spanName is undefined", () => {
+      const attributes = {};
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        undefined,
+      );
+    });
+  });
+
+  describe("transformLLMSpans - provider name", () => {
+    it("should extract provider name from ai.model.provider", () => {
+      const attributes = {
+        "ai.model.provider": "openai.chat",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+        "openai",
+      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+    });
+
+    it("should extract provider name from complex provider string", () => {
+      const attributes = {
+        "ai.model.provider": "azure-openai.completions.v2",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+        "azure-openai",
+      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Azure");
+    });
+
+    it("should handle simple provider name without dots", () => {
+      const attributes = {
+        "ai.model.provider": "anthropic",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+        "anthropic",
+      );
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Anthropic");
+    });
+
+    it("should not set provider name when ai.model.provider is not present", () => {
+      const attributes = {};
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+        undefined,
+      );
+    });
+  });
+
+  describe("transformLLMSpans - model id", () => {
+    it("should transform ai.model.id to gen_ai.request.model", () => {
+      const attributes = {
+        "ai.model.id": "gpt-4o",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_REQUEST_MODEL],
+        "gpt-4o",
+      );
+      assert.strictEqual(attributes["ai.model.id"], undefined);
+    });
+
+    it("should not modify attributes when ai.model.id is not present", () => {
+      const attributes = {
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_REQUEST_MODEL],
+        undefined,
+      );
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+  });
+
+  describe("transformLLMSpans - finish reason", () => {
+    it("should transform ai.response.finishReason to array format", () => {
+      const attributes = {
+        "ai.response.finishReason": "stop",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.deepStrictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS],
+        ["stop"],
+      );
+      assert.strictEqual(attributes["ai.response.finishReason"], undefined);
+    });
+
+    it("should keep array if finishReason is already an array", () => {
+      const attributes = {
+        "ai.response.finishReason": ["stop", "length"],
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.deepStrictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS],
+        ["stop", "length"],
+      );
+      assert.strictEqual(attributes["ai.response.finishReason"], undefined);
+    });
+
+    it("should handle different finish reason values", () => {
+      const finishReasons = ["stop", "length", "content_filter", "tool_calls"];
+
+      finishReasons.forEach((reason) => {
+        const attributes = {
+          "ai.response.finishReason": reason,
+        };
+
+        transformLLMSpans(attributes);
+
+        assert.deepStrictEqual(
+          attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS],
+          [reason],
+        );
+      });
+    });
+
+    it("should not modify attributes when ai.response.finishReason is not present", () => {
+      const attributes = {
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS],
+        undefined,
+      );
+    });
+  });
+
+  describe("transformLLMSpans - tool call attributes", () => {
+    it("should transform all tool call attributes to OpenTelemetry format", () => {
+      const attributes = {
+        "ai.toolCall.name": "getWeather",
+        "ai.toolCall.id": "call_abc123",
+        "ai.toolCall.args": '{"location":"San Francisco"}',
+        "ai.toolCall.result": '{"temperature":72}',
+      };
+
+      transformLLMSpans(attributes);
+
+      // Check OpenTelemetry standard attributes
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_NAME],
+        "getWeather",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_CALL_ID],
+        "call_abc123",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_CALL_ARGUMENTS],
+        '{"location":"San Francisco"}',
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_CALL_RESULT],
+        '{"temperature":72}',
+      );
+
+      // Check that tool call ID is deleted but args/result remain for Traceloop
+      assert.strictEqual(attributes["ai.toolCall.id"], undefined);
+      assert.strictEqual(
+        attributes["ai.toolCall.args"],
+        '{"location":"San Francisco"}',
+      );
+      assert.strictEqual(
+        attributes["ai.toolCall.result"],
+        '{"temperature":72}',
+      );
+    });
+
+    it("should handle tool call without ID", () => {
+      const attributes = {
+        "ai.toolCall.name": "calculate",
+        "ai.toolCall.args": '{"a":5,"b":3}',
+        "ai.toolCall.result": '{"result":8}',
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_NAME],
+        "calculate",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_CALL_ID],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_CALL_ARGUMENTS],
+        '{"a":5,"b":3}',
+      );
+    });
+
+    it("should not modify attributes when no tool call attributes are present", () => {
+      const attributes = {
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(attributes[SpanAttributes.GEN_AI_TOOL_NAME], undefined);
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_CALL_ID],
+        undefined,
+      );
+      assert.strictEqual(attributes.someOtherAttr, "value");
+    });
+  });
+
+  describe("transformLLMSpans - conversation id", () => {
+    it("should transform conversationId from metadata", () => {
+      const attributes = {
+        "ai.telemetry.metadata.conversationId": "conv_123",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_CONVERSATION_ID],
+        "conv_123",
+      );
+    });
+
+    it("should use sessionId as fallback for conversation id", () => {
+      const attributes = {
+        "ai.telemetry.metadata.sessionId": "session_456",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_CONVERSATION_ID],
+        "session_456",
+      );
+    });
+
+    it("should prefer conversationId over sessionId", () => {
+      const attributes = {
+        "ai.telemetry.metadata.conversationId": "conv_123",
+        "ai.telemetry.metadata.sessionId": "session_456",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_CONVERSATION_ID],
+        "conv_123",
+      );
+    });
+
+    it("should not set conversation id when neither is present", () => {
+      const attributes = {
+        "ai.telemetry.metadata.userId": "user_789",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_CONVERSATION_ID],
+        undefined,
+      );
+    });
+  });
+
+  describe("transformLLMSpans - response metadata", () => {
+    it("should transform ai.response.model to gen_ai.response.model", () => {
+      const attributes = {
+        "ai.response.model": "gpt-4o-2024-05-13",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_RESPONSE_MODEL],
+        "gpt-4o-2024-05-13",
+      );
+      assert.strictEqual(attributes["ai.response.model"], undefined);
+    });
+
+    it("should transform ai.response.id to gen_ai.response.id", () => {
+      const attributes = {
+        "ai.response.id": "chatcmpl-abc123",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_ID],
+        "chatcmpl-abc123",
+      );
+      assert.strictEqual(attributes["ai.response.id"], undefined);
+    });
+
+    it("should transform both response.model and response.id", () => {
+      const attributes = {
+        "ai.response.model": "gpt-4o",
+        "ai.response.id": "chatcmpl-xyz789",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_RESPONSE_MODEL],
+        "gpt-4o",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_ID],
+        "chatcmpl-xyz789",
+      );
+      assert.strictEqual(attributes["ai.response.model"], undefined);
+      assert.strictEqual(attributes["ai.response.id"], undefined);
+    });
+
+    it("should not modify attributes when response metadata is not present", () => {
+      const attributes = {
+        someOtherAttr: "value",
+      };
+
+      transformLLMSpans(attributes);
+
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_RESPONSE_MODEL],
+        undefined,
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_ID],
+        undefined,
+      );
+    });
+  });
+
+  describe("transformLLMSpans - complete transformation with all new attributes", () => {
+    it("should transform all new AI SDK attributes in a complete scenario", () => {
+      const attributes = {
+        "ai.model.id": "gpt-4o",
+        "ai.model.provider": "openai.chat",
+        "ai.response.text": "The weather in San Francisco is sunny!",
+        "ai.response.finishReason": "stop",
+        "ai.response.model": "gpt-4o-2024-05-13",
+        "ai.response.id": "chatcmpl-abc123",
+        "ai.prompt.messages": JSON.stringify([
+          { role: "user", content: "What's the weather?" },
+        ]),
+        "ai.usage.promptTokens": 10,
+        "ai.usage.completionTokens": 15,
+        "ai.telemetry.metadata.conversationId": "conv_456",
+        "ai.telemetry.metadata.userId": "user_789",
+      };
+
+      transformLLMSpans(attributes, "ai.generateText");
+
+      // Check operation name
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_OPERATION_NAME],
+        "chat",
+      );
+
+      // Check model transformations
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_REQUEST_MODEL],
+        "gpt-4o",
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_RESPONSE_MODEL],
+        "gpt-4o-2024-05-13",
+      );
+
+      // Check provider transformations
+      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "OpenAI");
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_PROVIDER_NAME],
+        "openai",
+      );
+
+      // Check response transformations
+      assert.deepStrictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS],
+        ["stop"],
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_RESPONSE_ID],
+        "chatcmpl-abc123",
+      );
+
+      // Check conversation ID
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_CONVERSATION_ID],
+        "conv_456",
+      );
+
+      // Check that original AI SDK attributes are removed
+      assert.strictEqual(attributes["ai.model.id"], undefined);
+      assert.strictEqual(attributes["ai.model.provider"], undefined);
+      assert.strictEqual(attributes["ai.response.finishReason"], undefined);
+      assert.strictEqual(attributes["ai.response.model"], undefined);
+      assert.strictEqual(attributes["ai.response.id"], undefined);
+
+      // Check metadata transformation
+      assert.strictEqual(
+        attributes[
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
+        ],
+        "user_789",
+      );
+    });
+  });
 });

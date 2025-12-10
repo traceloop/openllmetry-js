@@ -432,6 +432,10 @@ const transformVendor = (attributes: Record<string, any>): void => {
     // Find matching vendor prefix in mapping
     let mappedVendor = null;
     if (typeof vendor === "string" && vendor.length > 0) {
+      // Extract base provider name for OpenTelemetry standard (e.g., "openai" from "openai.chat")
+      const providerName = vendor.split(".")[0];
+      attributes[SpanAttributes.GEN_AI_PROVIDER_NAME] = providerName;
+
       for (const prefix of Object.keys(VENDOR_MAPPING)) {
         if (vendor.startsWith(prefix)) {
           mappedVendor = VENDOR_MAPPING[prefix];
@@ -442,6 +446,111 @@ const transformVendor = (attributes: Record<string, any>): void => {
 
     attributes[SpanAttributes.LLM_SYSTEM] = mappedVendor || vendor;
     delete attributes[AI_MODEL_PROVIDER];
+  }
+};
+
+const transformOperationName = (
+  attributes: Record<string, any>,
+  spanName?: string,
+): void => {
+  if (!spanName) return;
+
+  let operationName: string | undefined;
+  if (
+    spanName.includes("generateText") ||
+    spanName.includes("streamText") ||
+    spanName.includes("generateObject") ||
+    spanName.includes("streamObject")
+  ) {
+    operationName = "chat";
+  } else if (spanName === "ai.toolCall" || spanName.endsWith(".tool")) {
+    operationName = "execute_tool";
+  }
+
+  if (operationName) {
+    attributes[SpanAttributes.GEN_AI_OPERATION_NAME] = operationName;
+  }
+};
+
+const transformModelId = (attributes: Record<string, any>): void => {
+  const AI_MODEL_ID = "ai.model.id";
+  if (AI_MODEL_ID in attributes) {
+    attributes[SpanAttributes.LLM_REQUEST_MODEL] = attributes[AI_MODEL_ID];
+    delete attributes[AI_MODEL_ID];
+  }
+};
+
+const transformFinishReason = (attributes: Record<string, any>): void => {
+  const AI_RESPONSE_FINISH_REASON = "ai.response.finishReason";
+  if (AI_RESPONSE_FINISH_REASON in attributes) {
+    const finishReason = attributes[AI_RESPONSE_FINISH_REASON];
+    // Convert to array format for OTel standard
+    attributes[SpanAttributes.GEN_AI_RESPONSE_FINISH_REASONS] = Array.isArray(
+      finishReason,
+    )
+      ? finishReason
+      : [finishReason];
+    delete attributes[AI_RESPONSE_FINISH_REASON];
+  }
+};
+
+const transformToolCallAttributes = (
+  attributes: Record<string, any>,
+): void => {
+  // Transform tool name
+  if ("ai.toolCall.name" in attributes) {
+    attributes[SpanAttributes.GEN_AI_TOOL_NAME] =
+      attributes["ai.toolCall.name"];
+    // Keep ai.toolCall.name for now, will be deleted in transformToolCalls
+  }
+
+  // Transform tool call ID
+  if ("ai.toolCall.id" in attributes) {
+    attributes[SpanAttributes.GEN_AI_TOOL_CALL_ID] =
+      attributes["ai.toolCall.id"];
+    delete attributes["ai.toolCall.id"];
+  }
+
+  // Transform tool arguments (keep both OTel and Traceloop versions)
+  if ("ai.toolCall.args" in attributes) {
+    attributes[SpanAttributes.GEN_AI_TOOL_CALL_ARGUMENTS] =
+      attributes["ai.toolCall.args"];
+    // Don't delete yet - transformToolCalls will handle entity input/output
+  }
+
+  // Transform tool result (keep both OTel and Traceloop versions)
+  if ("ai.toolCall.result" in attributes) {
+    attributes[SpanAttributes.GEN_AI_TOOL_CALL_RESULT] =
+      attributes["ai.toolCall.result"];
+    // Don't delete yet - transformToolCalls will handle entity input/output
+  }
+};
+
+const transformConversationId = (attributes: Record<string, any>): void => {
+  // Check for conversation/session ID in metadata
+  const conversationId = attributes["ai.telemetry.metadata.conversationId"];
+  const sessionId = attributes["ai.telemetry.metadata.sessionId"];
+
+  if (conversationId) {
+    attributes[SpanAttributes.GEN_AI_CONVERSATION_ID] = conversationId;
+  } else if (sessionId) {
+    attributes[SpanAttributes.GEN_AI_CONVERSATION_ID] = sessionId;
+  }
+};
+
+const transformResponseMetadata = (attributes: Record<string, any>): void => {
+  const AI_RESPONSE_MODEL = "ai.response.model";
+  const AI_RESPONSE_ID = "ai.response.id";
+
+  if (AI_RESPONSE_MODEL in attributes) {
+    attributes[SpanAttributes.LLM_RESPONSE_MODEL] =
+      attributes[AI_RESPONSE_MODEL];
+    delete attributes[AI_RESPONSE_MODEL];
+  }
+
+  if (AI_RESPONSE_ID in attributes) {
+    attributes[SpanAttributes.GEN_AI_RESPONSE_ID] = attributes[AI_RESPONSE_ID];
+    delete attributes[AI_RESPONSE_ID];
   }
 };
 
@@ -525,6 +634,8 @@ export const transformLLMSpans = (
   attributes: Record<string, any>,
   spanName?: string,
 ): void => {
+  transformOperationName(attributes, spanName);
+  transformModelId(attributes);
   transformResponseText(attributes);
   transformResponseObject(attributes);
   transformResponseToolCalls(attributes);
@@ -533,8 +644,12 @@ export const transformLLMSpans = (
   transformPromptTokens(attributes);
   transformCompletionTokens(attributes);
   transformProviderMetadata(attributes);
+  transformFinishReason(attributes);
+  transformResponseMetadata(attributes);
   calculateTotalTokens(attributes);
-  transformVendor(attributes);
+  transformVendor(attributes); // Also sets GEN_AI_PROVIDER_NAME
+  transformConversationId(attributes);
+  transformToolCallAttributes(attributes);
   transformTelemetryMetadata(attributes, spanName);
 };
 
