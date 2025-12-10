@@ -316,23 +316,26 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         const messages = promptData.messages;
         const inputMessages: any[] = [];
 
-        messages.forEach((msg: { role: string; content: any }, index: number) => {
-          const processedContent = processMessageContent(msg.content);
-          const contentKey = `${SpanAttributes.LLM_PROMPTS}.${index}.content`;
-          attributes[contentKey] = processedContent;
-          attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] = msg.role;
+        messages.forEach(
+          (msg: { role: string; content: any }, index: number) => {
+            const processedContent = processMessageContent(msg.content);
+            const contentKey = `${SpanAttributes.LLM_PROMPTS}.${index}.content`;
+            attributes[contentKey] = processedContent;
+            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
+              msg.role;
 
-          // Add to OpenTelemetry standard gen_ai.input.messages format
-          inputMessages.push({
-            role: msg.role,
-            parts: [
-              {
-                type: TYPE_TEXT,
-                content: processedContent,
-              },
-            ],
-          });
-        });
+            // Add to OpenTelemetry standard gen_ai.input.messages format
+            inputMessages.push({
+              role: msg.role,
+              parts: [
+                {
+                  type: TYPE_TEXT,
+                  content: processedContent,
+                },
+              ],
+            });
+          },
+        );
 
         // Set the OpenTelemetry standard input messages attribute
         if (inputMessages.length > 0) {
@@ -527,9 +530,7 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
   }
 };
 
-const transformToolCallAttributes = (
-  attributes: Record<string, any>,
-): void => {
+const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   // Transform tool name
   if ("ai.toolCall.name" in attributes) {
     attributes[SpanAttributes.GEN_AI_TOOL_NAME] =
@@ -704,6 +705,7 @@ const transformToolCalls = (span: ReadableSpan): void => {
     const toolName = span.attributes["ai.toolCall.name"];
     if (toolName) {
       span.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = toolName;
+      delete span.attributes["ai.toolCall.name"];
     }
   }
 };

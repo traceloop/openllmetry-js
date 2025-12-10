@@ -2301,7 +2301,10 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(attributes[SpanAttributes.GEN_AI_TOOL_NAME], undefined);
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_TOOL_NAME],
+        undefined,
+      );
       assert.strictEqual(
         attributes[SpanAttributes.GEN_AI_TOOL_CALL_ID],
         undefined,
@@ -2500,9 +2503,7 @@ describe("AI SDK Transformations", () => {
 
       // Check metadata transformation
       assert.strictEqual(
-        attributes[
-          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`
-        ],
+        attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`],
         "user_789",
       );
     });
