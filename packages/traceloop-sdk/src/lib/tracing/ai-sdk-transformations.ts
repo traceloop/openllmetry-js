@@ -310,8 +310,6 @@ const transformPrompts = (attributes: Record<string, any>): void => {
   if (AI_PROMPT in attributes) {
     try {
       const promptData = JSON.parse(attributes[AI_PROMPT] as string);
-
-      // Handle case where promptData has a "messages" array
       if (promptData.messages && Array.isArray(promptData.messages)) {
         const messages = promptData.messages;
         const inputMessages: any[] = [];
@@ -324,7 +322,6 @@ const transformPrompts = (attributes: Record<string, any>): void => {
             attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] =
               msg.role;
 
-            // Add to OpenTelemetry standard gen_ai.input.messages format
             inputMessages.push({
               role: msg.role,
               parts: [
@@ -337,7 +334,6 @@ const transformPrompts = (attributes: Record<string, any>): void => {
           },
         );
 
-        // Set the OpenTelemetry standard input messages attribute
         if (inputMessages.length > 0) {
           attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] =
             JSON.stringify(inputMessages);
@@ -345,7 +341,6 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
         delete attributes[AI_PROMPT];
       }
-      // Handle case where promptData has a "prompt" string
       else if (promptData.prompt && typeof promptData.prompt === "string") {
         attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
           promptData.prompt;
@@ -373,7 +368,6 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 };
 
 const transformPromptTokens = (attributes: Record<string, any>): void => {
-  // Make sure we have the right naming convention
   if (
     !(SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS in attributes) &&
     AI_USAGE_PROMPT_TOKENS in attributes
@@ -382,13 +376,11 @@ const transformPromptTokens = (attributes: Record<string, any>): void => {
       attributes[AI_USAGE_PROMPT_TOKENS];
   }
 
-  // Clean up legacy attributes
   delete attributes[AI_USAGE_PROMPT_TOKENS];
   delete attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS];
 };
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
-  // Make sure we have the right naming convention
   if (
     !(SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS in attributes) &&
     AI_USAGE_COMPLETION_TOKENS in attributes
@@ -397,7 +389,6 @@ const transformCompletionTokens = (attributes: Record<string, any>): void => {
       attributes[AI_USAGE_COMPLETION_TOKENS];
   }
 
-  // Clean up legacy attributes
   delete attributes[AI_USAGE_COMPLETION_TOKENS];
   delete attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS];
 };
@@ -465,10 +456,8 @@ const transformVendor = (attributes: Record<string, any>): void => {
   if (AI_MODEL_PROVIDER in attributes) {
     const vendor = attributes[AI_MODEL_PROVIDER];
 
-    // Find matching vendor prefix in mapping
     let mappedVendor = null;
     if (typeof vendor === "string" && vendor.length > 0) {
-      // Extract base provider name for OpenTelemetry standard (e.g., "openai" from "openai.chat")
       const providerName = vendor.split(".")[0];
       attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME] = providerName;
 
@@ -520,7 +509,6 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
   const AI_RESPONSE_FINISH_REASON = "ai.response.finishReason";
   if (AI_RESPONSE_FINISH_REASON in attributes) {
     const finishReason = attributes[AI_RESPONSE_FINISH_REASON];
-    // Convert to array format for OTel standard
     attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_FINISH_REASONS] = Array.isArray(
       finishReason,
     )
@@ -531,28 +519,24 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
 };
 
 const transformToolCallAttributes = (attributes: Record<string, any>): void => {
-  // Transform tool name
   if ("ai.toolCall.name" in attributes) {
     attributes[SpanAttributes.ATTR_GEN_AI_TOOL_NAME] =
       attributes["ai.toolCall.name"];
     // Keep ai.toolCall.name for now, will be deleted in transformToolCalls
   }
 
-  // Transform tool call ID
   if ("ai.toolCall.id" in attributes) {
     attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_ID] =
       attributes["ai.toolCall.id"];
     delete attributes["ai.toolCall.id"];
   }
 
-  // Transform tool arguments (keep both OTel and Traceloop versions)
   if ("ai.toolCall.args" in attributes) {
     attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_ARGUMENTS] =
       attributes["ai.toolCall.args"];
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
 
-  // Transform tool result (keep both OTel and Traceloop versions)
   if ("ai.toolCall.result" in attributes) {
     attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_RESULT] =
       attributes["ai.toolCall.result"];
@@ -561,7 +545,6 @@ const transformToolCallAttributes = (attributes: Record<string, any>): void => {
 };
 
 const transformConversationId = (attributes: Record<string, any>): void => {
-  // Check for conversation/session ID in metadata
   const conversationId = attributes["ai.telemetry.metadata.conversationId"];
   const sessionId = attributes["ai.telemetry.metadata.sessionId"];
 
