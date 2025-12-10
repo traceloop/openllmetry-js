@@ -590,28 +590,28 @@ describe("Test Together instrumentation", async function () {
     assert.ok(completionSpan);
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.name`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`
         ]! as string,
       ),
       { location: "Boston, MA", unit: "fahrenheit" },
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.name`
+        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`
       ],
       "get_tomorrow_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
+          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.arguments`
         ]! as string,
       ),
       { location: "Chicago, IL", unit: "fahrenheit" },
