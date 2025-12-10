@@ -78,9 +78,7 @@ class InteractiveChatbot {
       content: userMessage,
     });
 
-    console.log(
-      `\n${colors.green}${colors.bright}Assistant: ${colors.reset}`,
-    );
+    console.log(`\n${colors.green}${colors.bright}Assistant: ${colors.reset}`);
 
     // Stream the response
     const result = await streamText({
@@ -124,10 +122,18 @@ class InteractiveChatbot {
   }
 
   async start(): Promise<void> {
-    console.log(`${colors.bright}${colors.blue}╔════════════════════════════════════════════════════════════╗`);
-    console.log(`║          Interactive AI Chatbot with Traceloop            ║`);
-    console.log(`╚════════════════════════════════════════════════════════════╝${colors.reset}\n`);
-    console.log(`${colors.dim}Commands: /exit (quit) | /clear (clear history)${colors.reset}\n`);
+    console.log(
+      `${colors.bright}${colors.blue}╔════════════════════════════════════════════════════════════╗`,
+    );
+    console.log(
+      `║          Interactive AI Chatbot with Traceloop            ║`,
+    );
+    console.log(
+      `╚════════════════════════════════════════════════════════════╝${colors.reset}\n`,
+    );
+    console.log(
+      `${colors.dim}Commands: /exit (quit) | /clear (clear history)${colors.reset}\n`,
+    );
 
     this.rl.prompt();
 
@@ -140,9 +146,7 @@ class InteractiveChatbot {
       }
 
       if (trimmedInput === "/exit") {
-        console.log(
-          `\n${colors.magenta}Goodbye! 👋${colors.reset}\n`,
-        );
+        console.log(`\n${colors.magenta}Goodbye! 👋${colors.reset}\n`);
         this.rl.close();
         process.exit(0);
       }

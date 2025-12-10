@@ -223,7 +223,6 @@ export class CohereInstrumentation extends InstrumentationBase {
     try {
       const model = params.model ?? "command";
       attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = model;
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = model;
 
       if (!("query" in params)) {
         attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] = params.p;
