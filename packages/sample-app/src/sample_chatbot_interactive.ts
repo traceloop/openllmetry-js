@@ -1,7 +1,8 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { streamText, CoreMessage } from "ai";
+import { streamText, CoreMessage, tool } from "ai";
 import * as readline from "readline";
+import { z } from "zod";
 
 import "dotenv/config";
 
@@ -25,6 +26,8 @@ const colors = {
 class InteractiveChatbot {
   private conversationHistory: CoreMessage[] = [];
   private rl: readline.Interface;
+  private conversationId: string;
+  private userId: string;
 
   constructor() {
     this.rl = readline.createInterface({
@@ -32,6 +35,9 @@ class InteractiveChatbot {
       output: process.stdout,
       prompt: `${colors.cyan}${colors.bright}You: ${colors.reset}`,
     });
+    // Generate unique IDs for this session
+    this.conversationId = `conv-${Date.now()}`;
+    this.userId = `user-${Math.random().toString(36).substring(7)}`;
   }
 
   @traceloop.task({ name: "summarize_interaction" })
@@ -72,6 +78,12 @@ class InteractiveChatbot {
 
   @traceloop.workflow({ name: "chat_interaction" })
   async processMessage(userMessage: string): Promise<string> {
+    // Set associations for tracing
+    traceloop.Associations.set([
+      [traceloop.AssociationProperty.CONVERSATION_ID, this.conversationId],
+      [traceloop.AssociationProperty.USER_ID, this.userId],
+    ]);
+
     // Add user message to history
     this.conversationHistory.push({
       role: "user",
@@ -87,10 +99,85 @@ class InteractiveChatbot {
         {
           role: "system",
           content:
-            "You are a helpful AI assistant. Provide clear, concise, and friendly responses.",
+            "You are a helpful AI assistant with access to tools. Use the available tools when appropriate to provide accurate information. Provide clear, concise, and friendly responses.",
         },
         ...this.conversationHistory,
       ],
+      tools: {
+        calculator: tool({
+          description:
+            "Perform mathematical calculations. Supports basic arithmetic operations.",
+          parameters: z.object({
+            expression: z
+              .string()
+              .describe("The mathematical expression to evaluate (e.g., '2 + 2' or '10 * 5')"),
+          }),
+          execute: async ({ expression }) => {
+            try {
+              // Simple safe eval for basic math (only allow numbers and operators)
+              const sanitized = expression.replace(/[^0-9+\-*/().\s]/g, "");
+              const result = eval(sanitized);
+              console.log(
+                `\n${colors.yellow}🔧 Calculator: ${expression} = ${result}${colors.reset}`,
+              );
+              return { result, expression };
+            } catch (error) {
+              return { error: "Invalid mathematical expression" };
+            }
+          },
+        }),
+        getCurrentWeather: tool({
+          description:
+            "Get the current weather for a location. Use this when users ask about weather conditions.",
+          parameters: z.object({
+            location: z.string().describe("The city and country, e.g., 'London, UK'"),
+          }),
+          execute: async ({ location }) => {
+            console.log(
+              `\n${colors.yellow}🔧 Weather: Checking weather for ${location}${colors.reset}`,
+            );
+            // Simulated weather data
+            const weatherConditions = ["sunny", "cloudy", "rainy", "partly cloudy"];
+            const condition =
+              weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+            const temperature = Math.floor(Math.random() * 30) + 10; // 10-40°C
+            return {
+              location,
+              temperature: `${temperature}°C`,
+              condition,
+              humidity: `${Math.floor(Math.random() * 40) + 40}%`,
+            };
+          },
+        }),
+        getTime: tool({
+          description:
+            "Get the current date and time. Use this when users ask about the current time or date.",
+          parameters: z.object({
+            timezone: z
+              .string()
+              .optional()
+              .describe("Optional timezone (e.g., 'America/New_York')"),
+          }),
+          execute: async ({ timezone }) => {
+            const now = new Date();
+            const options: Intl.DateTimeFormatOptions = {
+              timeZone: timezone,
+              dateStyle: "full",
+              timeStyle: "long",
+            };
+            const formatted = now.toLocaleString("en-US", options);
+            console.log(
+              `\n${colors.yellow}🔧 Time: ${formatted}${colors.reset}`,
+            );
+            return {
+              datetime: formatted,
+              timestamp: now.toISOString(),
+              timezone: timezone || "local",
+            };
+          },
+        }),
+      },
+      maxSteps: 5,
       experimental_telemetry: { isEnabled: true },
     });
 
@@ -102,11 +189,14 @@ class InteractiveChatbot {
 
     console.log("\n");
 
-    // Add assistant response to history
-    this.conversationHistory.push({
-      role: "assistant",
-      content: fullResponse,
-    });
+    // Wait for the full response to complete to get all messages including tool calls
+    const finalResult = await result.response;
+
+    // Add all response messages (including tool calls and results) to history
+    // This ensures the conversation history includes the complete interaction
+    for (const message of finalResult.messages) {
+      this.conversationHistory.push(message);
+    }
 
     // Generate summary for this interaction
     await this.generateSummary(userMessage, fullResponse);
