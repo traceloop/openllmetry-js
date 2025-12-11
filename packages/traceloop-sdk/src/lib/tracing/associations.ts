@@ -77,8 +77,8 @@ export class Associations {
       }
     }
 
-    // Also set directly on the current span
-    const span = trace.getSpan(otelContext.active());
+    // Also set directly on the current span (use newContext after enterWith)
+    const span = trace.getSpan(newContext);
     if (span && span.isRecording()) {
       for (const [prop, value] of associations) {
         span.setAttribute(prop, value);
