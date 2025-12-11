@@ -13,6 +13,14 @@ export enum AssociationProperty {
 }
 
 /**
+ * Set of standard association property keys (without prefix).
+ * Use this to check if a property should be set directly or with the TRACELOOP_ASSOCIATION_PROPERTIES prefix.
+ */
+export const STANDARD_ASSOCIATION_PROPERTIES = new Set<string>(
+  Object.values(AssociationProperty)
+);
+
+/**
  * Type alias for a single association
  */
 export type Association = [AssociationProperty, string];

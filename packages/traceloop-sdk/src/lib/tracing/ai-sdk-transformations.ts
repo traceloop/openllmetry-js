@@ -3,6 +3,7 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
+import { STANDARD_ASSOCIATION_PROPERTIES } from "./associations";
 
 const AI_GENERATE_TEXT = "ai.generateText";
 const AI_STREAM_TEXT = "ai.streamText";
@@ -601,8 +602,11 @@ const transformTelemetryMetadata = (
         const stringValue = typeof value === "string" ? value : String(value);
         metadataAttributes[metadataKey] = stringValue;
 
-        // Also set as association property attribute
-        attributes[metadataKey] = stringValue;
+        // Standard properties are set directly, custom properties get prefix
+        const attributeKey = STANDARD_ASSOCIATION_PROPERTIES.has(metadataKey)
+          ? metadataKey
+          : `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`;
+        attributes[attributeKey] = stringValue;
       }
     }
   }

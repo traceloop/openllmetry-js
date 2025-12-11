@@ -20,6 +20,7 @@ import {
   transformAiSdkSpanNames,
 } from "./ai-sdk-transformations";
 import { parseKeyPairsIntoRecord } from "./baggage-utils";
+import { STANDARD_ASSOCIATION_PROPERTIES } from "./associations";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
@@ -197,7 +198,11 @@ const onSpanStart = (span: Span): void => {
     .getValue(ASSOCATION_PROPERTIES_KEY);
   if (associationProperties) {
     for (const [key, value] of Object.entries(associationProperties)) {
-      span.setAttribute(key, value);
+      // Standard properties are set directly, custom properties get prefix
+      const attributeKey = STANDARD_ASSOCIATION_PROPERTIES.has(key)
+        ? key
+        : `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`;
+      span.setAttribute(attributeKey, value);
     }
   }
 

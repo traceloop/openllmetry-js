@@ -32,7 +32,7 @@ class ChatbotWithAssociations {
     console.log(`User ID: ${this.userId}`);
     console.log(`Session ID: ${this.sessionId}\n`);
 
-    // Set associations at the beginning of the conversation
+    // Set standard associations at the beginning of the conversation
     // These will be automatically attached to all spans within this context
     traceloop.Associations.set([
       [traceloop.AssociationProperty.CONVERSATION_ID, this.conversationId],
@@ -40,27 +40,34 @@ class ChatbotWithAssociations {
       [traceloop.AssociationProperty.SESSION_ID, this.sessionId],
     ]);
 
-    // First message
-    const greeting = await this.sendMessage(
-      "Hello! What's the weather like today?",
+    // Use withAssociationProperties to add custom properties
+    // Custom properties (like chat_subject) will be prefixed with traceloop.association.properties
+    return traceloop.withAssociationProperties(
+      { chat_subject: "general" },
+      async () => {
+        // First message
+        const greeting = await this.sendMessage(
+          "Hello! What's the weather like today?",
+        );
+        console.log(`Bot: ${greeting}\n`);
+
+        // Second message in the same conversation
+        const followup = await this.sendMessage(
+          "What should I wear for that weather?",
+        );
+        console.log(`Bot: ${followup}\n`);
+
+        // Third message
+        const final = await this.sendMessage("Thanks for the advice!");
+        console.log(`Bot: ${final}\n`);
+
+        return {
+          greeting,
+          followup,
+          final,
+        };
+      },
     );
-    console.log(`Bot: ${greeting}\n`);
-
-    // Second message in the same conversation
-    const followup = await this.sendMessage(
-      "What should I wear for that weather?",
-    );
-    console.log(`Bot: ${followup}\n`);
-
-    // Third message
-    const final = await this.sendMessage("Thanks for the advice!");
-    console.log(`Bot: ${final}\n`);
-
-    return {
-      greeting,
-      followup,
-      final,
-    };
   }
 
   /**
@@ -138,7 +145,7 @@ async function main() {
   console.log("============================================");
 
   try {
-    // Example 1: Multi-turn chatbot conversation
+    // Example 1: Multi-turn chatbot conversation with custom properties
     const chatbot = new ChatbotWithAssociations(
       "conv-abc-123", // conversation_id
       "user-alice-456", // user_id
@@ -155,7 +162,7 @@ async function main() {
       "Check your Traceloop dashboard to see the associations attached to traces!",
     );
     console.log(
-      "You can filter and search by conversation_id, user_id, session_id, or customer_id.",
+      "You can filter and search by conversation_id, user_id, session_id, customer_id, or custom properties like chat_subject.",
     );
   } catch (error) {
     console.error("Error running demo:", error);
