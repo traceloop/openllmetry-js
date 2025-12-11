@@ -33,7 +33,9 @@ const searchAgentTool = tool({
     searchQuery: z.string().describe("What to search for"),
   }),
   execute: async ({ searchQuery }) => {
-    console.log(`  [research_agent] Delegating to search_agent: ${searchQuery}`);
+    console.log(
+      `  [research_agent] Delegating to search_agent: ${searchQuery}`,
+    );
 
     const result = await generateText({
       model: openai("gpt-4o-mini"),

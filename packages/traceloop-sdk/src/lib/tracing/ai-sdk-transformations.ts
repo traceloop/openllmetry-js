@@ -487,7 +487,8 @@ const transformTelemetryMetadata = (
 
     if (
       spanName &&
-      (spanName === `${agentName}.agent` || topLevelSpanNames.includes(spanName))
+      (spanName === `${agentName}.agent` ||
+        topLevelSpanNames.includes(spanName))
     ) {
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
         TraceloopSpanKindValues.AGENT;
