@@ -1775,8 +1775,8 @@ describe("AI SDK Transformations", () => {
       };
 
       // Simulate root span (agent name - after transformation)
-      // Note: In production, span names are transformed to agent name before attribute transformation
-      transformLLMSpans(attributes, "research_assistant");
+      // Note: In production, span names are transformed to <agent_name>.agent before attribute transformation
+      transformLLMSpans(attributes, "research_assistant.agent");
 
       // Check that agent attributes are set
       assert.strictEqual(
