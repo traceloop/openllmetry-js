@@ -22,6 +22,7 @@
     "run:vercel_tools": "npm run build && node dist/src/sample_vercel_ai_tools.js",
     "run:vercel_agent": "npm run build && node dist/src/sample_vercel_ai_agent.js",
     "run:vercel_agent_simple": "npm run build && node dist/src/sample_vercel_ai_agent_simple.js",
+    "run:nested_agents": "npm run build && node dist/src/sample_nested_agents.js",
     "run:sample_vision": "npm run build && node dist/src/sample_vision_prompt.js",
     "run:sample_azure": "npm run build && node dist/src/sample_azure.js",
     "run:openai_streaming": "npm run build && node dist/src/sample_openai_streaming.js",

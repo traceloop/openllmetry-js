@@ -487,7 +487,7 @@ const transformTelemetryMetadata = (
 
     if (
       spanName &&
-      (spanName === agentName || topLevelSpanNames.includes(spanName))
+      (spanName === `${agentName}.agent` || topLevelSpanNames.includes(spanName))
     ) {
       attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
         TraceloopSpanKindValues.AGENT;
@@ -580,7 +580,7 @@ export const transformAiSdkSpanNames = (span: Span): void => {
     const isTopLevelSpan = TOP_LEVEL_AI_SPANS.includes(span.name);
 
     if (agentName && isTopLevelSpan) {
-      span.updateName(agentName);
+      span.updateName(`${agentName}.agent`);
     } else if (!isTopLevelSpan) {
       span.updateName(HANDLED_SPAN_NAMES[span.name]);
     }
