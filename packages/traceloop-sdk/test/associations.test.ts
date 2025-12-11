@@ -268,30 +268,119 @@ describe("Test Associations API", () => {
     assert.ok(result);
     assert.ok(chatSpan);
 
-    // Check all property types are set
-    assert.strictEqual(
-      chatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.conversation_id`
-      ],
-      "conv-abc",
+    // Check all property types are set (standard properties without prefix)
+    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-abc");
+    assert.strictEqual(chatSpan.attributes["customer_id"], "customer-def");
+    assert.strictEqual(chatSpan.attributes["user_id"], "user-ghi");
+    assert.strictEqual(chatSpan.attributes["session_id"], "session-jkl");
+  });
+
+  it("should propagate associations to all child spans", async () => {
+    @traceloop.task({ name: "subtask" })
+    async function subtask() {
+      const chatCompletion = await openai.chat.completions.create({
+        messages: [{ role: "user", content: "Child task message" }],
+        model: "gpt-3.5-turbo",
+      });
+      return chatCompletion.choices[0].message.content;
+    }
+
+    const result = await traceloop.withWorkflow(
+      { name: "test_child_propagation" },
+      async () => {
+        // Set associations at the workflow level
+        traceloop.Associations.set([
+          [traceloop.AssociationProperty.CONVERSATION_ID, "conv-propagate"],
+          [traceloop.AssociationProperty.USER_ID, "user-propagate"],
+        ]);
+
+        // Call a child task
+        const taskResult = await subtask();
+
+        return taskResult;
+      },
     );
-    assert.strictEqual(
-      chatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.customer_id`
-      ],
-      "customer-def",
+
+    await traceloop.forceFlush();
+    const spans = memoryExporter.getFinishedSpans();
+
+    const workflowSpan = spans.find(
+      (span) => span.name === "test_child_propagation.workflow",
     );
-    assert.strictEqual(
-      chatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.user_id`
-      ],
-      "user-ghi",
+    const taskSpan = spans.find((span) => span.name === "subtask.task");
+    const chatSpan = spans.find(
+      (span) =>
+        span.name === "openai.chat" &&
+        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+          "Child task message",
     );
+
+    assert.ok(result);
+    assert.ok(workflowSpan);
+    assert.ok(taskSpan);
+    assert.ok(chatSpan);
+
+    // All spans should have the associations (standard properties without prefix)
+    assert.strictEqual(
+      workflowSpan.attributes["conversation_id"],
+      "conv-propagate",
+    );
+    assert.strictEqual(workflowSpan.attributes["user_id"], "user-propagate");
+
+    assert.strictEqual(taskSpan.attributes["conversation_id"], "conv-propagate");
+    assert.strictEqual(taskSpan.attributes["user_id"], "user-propagate");
+
+    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-propagate");
+    assert.strictEqual(chatSpan.attributes["user_id"], "user-propagate");
+  });
+
+  it("should merge associations from Associations.set() and withAssociationProperties()", async () => {
+    const result = await traceloop.withWorkflow(
+      { name: "test_merge_associations" },
+      async () => {
+        // Set standard associations
+        traceloop.Associations.set([
+          [traceloop.AssociationProperty.CONVERSATION_ID, "conv-merge"],
+          [traceloop.AssociationProperty.USER_ID, "user-merge"],
+        ]);
+
+        // Add custom properties via withAssociationProperties
+        return await traceloop.withAssociationProperties(
+          { custom_field: "custom-value" },
+          async () => {
+            const chatCompletion = await openai.chat.completions.create({
+              messages: [{ role: "user", content: "Test merge" }],
+              model: "gpt-3.5-turbo",
+            });
+            return chatCompletion.choices[0].message.content;
+          },
+        );
+      },
+    );
+
+    await traceloop.forceFlush();
+    const spans = memoryExporter.getFinishedSpans();
+
+    const chatSpan = spans.find(
+      (span) =>
+        span.name === "openai.chat" &&
+        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+          "Test merge",
+    );
+
+    assert.ok(result);
+    assert.ok(chatSpan);
+
+    // Standard properties should be without prefix
+    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-merge");
+    assert.strictEqual(chatSpan.attributes["user_id"], "user-merge");
+
+    // Custom property should have prefix
     assert.strictEqual(
       chatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.session_id`
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.custom_field`
       ],
-      "session-jkl",
+      "custom-value",
     );
   });
 });
