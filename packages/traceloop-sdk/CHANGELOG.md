@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.4](https://github.com/traceloop/openllmetry-js/compare/v0.22.3...v0.22.4) (2025-12-11)
+
+### Bug Fixes
+
+- **ai-sdk:** nest agent spans attribution ([#844](https://github.com/traceloop/openllmetry-js/issues/844)) ([b8ff3d5](https://github.com/traceloop/openllmetry-js/commit/b8ff3d5191d506162c54b2210d6a23987660af27))
+
 ## [0.22.3](https://github.com/traceloop/openllmetry-js/compare/v0.22.2...v0.22.3) (2025-12-08)
 
 ### Bug Fixes
