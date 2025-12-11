@@ -26,6 +26,15 @@ import {
 import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_SYSTEM,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
@@ -134,17 +143,17 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "AWS");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       model,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
       params.topP,
     );
     assert.strictEqual(
@@ -156,35 +165,35 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
       params.frequencyPenalty.scale,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE],
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS],
+      attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.maxTokens,
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       prompt,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       model,
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
       parsedResponse["completions"][0]["finishReason"]["reason"],
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       parsedResponse["completions"][0]["data"]["text"],
     );
   });

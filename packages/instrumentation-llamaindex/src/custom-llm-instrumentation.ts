@@ -14,6 +14,14 @@ import {
 import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 import { LlamaIndexInstrumentationConfig } from "./types";
 import { shouldSendPrompts, llmGeneratorWrapper } from "./utils";
@@ -49,14 +57,14 @@ export class CustomLLMInstrumentation {
           });
 
         try {
-          span.setAttribute(SpanAttributes.ATTR_GEN_AI_SYSTEM, className);
+          span.setAttribute(ATTR_GEN_AI_SYSTEM, className);
           span.setAttribute(
-            SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL,
+            ATTR_GEN_AI_REQUEST_MODEL,
             this.metadata.model,
           );
           span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
           span.setAttribute(
-            SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P,
+            ATTR_GEN_AI_REQUEST_TOP_P,
             this.metadata.topP,
           );
           if (shouldSendPrompts(plugin.config)) {
@@ -64,7 +72,7 @@ export class CustomLLMInstrumentation {
               const content = messages[messageIdx].content;
               if (typeof content === "string") {
                 span.setAttribute(
-                  `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
+                  `${ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
                   content as string,
                 );
               } else if (
@@ -72,13 +80,13 @@ export class CustomLLMInstrumentation {
                 "text"
               ) {
                 span.setAttribute(
-                  `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
+                  `${ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
                   (content as llamaindex.MessageContentTextDetail[])[0].text,
                 );
               }
 
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${messageIdx}.role`,
+                `${ATTR_GEN_AI_PROMPT}.${messageIdx}.role`,
                 messages[messageIdx].role,
               );
             }
@@ -135,7 +143,7 @@ export class CustomLLMInstrumentation {
     metadata: llamaindex.LLMMetadata,
   ): T {
     span.setAttribute(
-      SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+      ATTR_GEN_AI_RESPONSE_MODEL,
       metadata.model,
     );
 
@@ -148,18 +156,18 @@ export class CustomLLMInstrumentation {
     try {
       if ((result as llamaindex.ChatResponse).message) {
         span.setAttribute(
-          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`,
+          `${ATTR_GEN_AI_COMPLETION}.0.role`,
           (result as llamaindex.ChatResponse).message.role,
         );
         const content = (result as llamaindex.ChatResponse).message.content;
         if (typeof content === "string") {
           span.setAttribute(
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
+            `${ATTR_GEN_AI_COMPLETION}.0.content`,
             content,
           );
         } else if (content[0].type === "text") {
           span.setAttribute(
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
+            `${ATTR_GEN_AI_COMPLETION}.0.content`,
             content[0].text,
           );
         }
@@ -182,7 +190,7 @@ export class CustomLLMInstrumentation {
     metadata: llamaindex.LLMMetadata,
   ): T {
     span.setAttribute(
-      SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+      ATTR_GEN_AI_RESPONSE_MODEL,
       metadata.model,
     );
     if (!shouldSendPrompts(this.config)) {
@@ -193,7 +201,7 @@ export class CustomLLMInstrumentation {
 
     return llmGeneratorWrapper(result, execContext, (message) => {
       span.setAttribute(
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
+        `${ATTR_GEN_AI_COMPLETION}.0.content`,
         message,
       );
       span.setStatus({ code: SpanStatusCode.OK });

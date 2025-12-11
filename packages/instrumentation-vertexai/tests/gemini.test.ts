@@ -84,20 +84,20 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Google");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       model,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
       0.9,
     );
     assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt);
     assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL],
+      attributes[ATTR_GEN_AI_RESPONSE_MODEL],
       model,
     );
     assert.strictEqual(attributes["gen_ai.completion.0.role"], "model");
@@ -146,24 +146,24 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Google");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       model,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
       0.9,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS],
+      attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       256,
     );
     assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt);
     assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL],
+      attributes[ATTR_GEN_AI_RESPONSE_MODEL],
       model,
     );
     assert.strictEqual(attributes["gen_ai.completion.0.role"], "model");

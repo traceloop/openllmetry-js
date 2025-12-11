@@ -31,6 +31,18 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { AnthropicInstrumentationConfig } from "./types";
 import { version } from "../package.json";
 import type * as anthropic from "@anthropic-ai/sdk";
@@ -204,15 +216,15 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         };
       }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "Anthropic",
+      [ATTR_GEN_AI_SYSTEM]: "Anthropic",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
     try {
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
+      attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] =
         params.temperature;
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
+      attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
       // Handle thinking parameters (for beta messages)
@@ -224,10 +236,10 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       }
 
       if (type === "completion") {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           params.max_tokens_to_sample;
       } else {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           params.max_tokens;
       }
 
@@ -246,9 +258,9 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
           // If a system prompt is provided, it should always be first
           if ("system" in params && params.system !== undefined) {
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] =
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] =
               "system";
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
               typeof params.system === "string"
                 ? params.system
                 : JSON.stringify(params.system);
@@ -258,21 +270,21 @@ export class AnthropicInstrumentation extends InstrumentationBase {
           params.messages.forEach((message, index) => {
             const currentIndex = index + promptIndex;
             attributes[
-              `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.role`
+              `${ATTR_GEN_AI_PROMPT}.${currentIndex}.role`
             ] = message.role;
             if (typeof message.content === "string") {
               attributes[
-                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
+                `${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
               ] = (message.content as string) || "";
             } else {
               attributes[
-                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
+                `${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
               ] = JSON.stringify(message.content);
             }
           });
         } else {
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
             params.prompt;
         }
       }
@@ -483,7 +495,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       }) {
     try {
       span.setAttribute(
-        SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+        ATTR_GEN_AI_RESPONSE_MODEL,
         result.model,
       );
       if (type === "chat" && result.usage) {
@@ -492,18 +504,18 @@ export class AnthropicInstrumentation extends InstrumentationBase {
           result.usage?.input_tokens + result.usage?.output_tokens,
         );
         span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+          ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
           result.usage?.output_tokens,
         );
         span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+          ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
           result.usage?.input_tokens,
         );
       }
 
       if (result.stop_reason) {
         span.setAttribute(
-          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.finish_reason`,
+          `${ATTR_GEN_AI_COMPLETION}.0.finish_reason`,
           result.stop_reason,
         );
       }
@@ -511,20 +523,20 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           span.setAttribute(
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`,
+            `${ATTR_GEN_AI_COMPLETION}.0.role`,
             "assistant",
           );
           span.setAttribute(
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
+            `${ATTR_GEN_AI_COMPLETION}.0.content`,
             JSON.stringify(result.content),
           );
         } else {
           span.setAttribute(
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`,
+            `${ATTR_GEN_AI_COMPLETION}.0.role`,
             "assistant",
           );
           span.setAttribute(
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`,
+            `${ATTR_GEN_AI_COMPLETION}.0.content`,
             result.completion,
           );
         }

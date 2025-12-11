@@ -3,6 +3,27 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_AGENT_NAME,
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_CONVERSATION_ID,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_PROVIDER_NAME,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_RESPONSE_ID,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_TOOL_CALL_ARGUMENTS,
+  ATTR_GEN_AI_TOOL_CALL_ID,
+  ATTR_GEN_AI_TOOL_CALL_RESULT,
+  ATTR_GEN_AI_TOOL_NAME,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 const AI_GENERATE_TEXT = "ai.generateText";
 const AI_STREAM_TEXT = "ai.streamText";
@@ -73,9 +94,9 @@ const getAgentNameFromAttributes = (
 
 const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
-    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
+    attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] =
       attributes[AI_RESPONSE_TEXT];
-    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
+    attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] =
       ROLE_ASSISTANT;
 
     const outputMessage = {
@@ -87,7 +108,7 @@ const transformResponseText = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
+    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
 
@@ -97,9 +118,9 @@ const transformResponseText = (attributes: Record<string, any>): void => {
 
 const transformResponseObject = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_OBJECT in attributes) {
-    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
+    attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] =
       attributes[AI_RESPONSE_OBJECT];
-    attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
+    attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] =
       ROLE_ASSISTANT;
 
     const outputMessage = {
@@ -111,7 +132,7 @@ const transformResponseObject = (attributes: Record<string, any>): void => {
         },
       ],
     };
-    attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
+    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
       outputMessage,
     ]);
 
@@ -126,17 +147,17 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
         attributes[AI_RESPONSE_TOOL_CALLS] as string,
       );
 
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] =
         ROLE_ASSISTANT;
 
       const toolCallParts: any[] = [];
       toolCalls.forEach((toolCall: any, index: number) => {
         if (toolCall.toolCallType === "function") {
           attributes[
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.name`
+            `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.name`
           ] = toolCall.toolName;
           attributes[
-            `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.arguments`
+            `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.arguments`
           ] = toolCall.args;
 
           toolCallParts.push({
@@ -154,7 +175,7 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
           role: ROLE_ASSISTANT,
           parts: toolCallParts,
         };
-        attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify(
+        attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify(
           [outputMessage],
         );
       }
@@ -282,9 +303,9 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
       messages.forEach((msg: { role: string; content: any }, index: number) => {
         const processedContent = processMessageContent(msg.content);
-        const contentKey = `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`;
+        const contentKey = `${ATTR_GEN_AI_PROMPT}.${index}.content`;
         attributes[contentKey] = processedContent;
-        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] =
+        attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] =
           msg.role;
 
         // Add to OpenTelemetry standard gen_ai.input.messages format
@@ -301,7 +322,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
       // Set the OpenTelemetry standard input messages attribute
       if (inputMessages.length > 0) {
-        attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] =
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
           JSON.stringify(inputMessages);
       }
 
@@ -321,9 +342,9 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         messages.forEach(
           (msg: { role: string; content: any }, index: number) => {
             const processedContent = processMessageContent(msg.content);
-            const contentKey = `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`;
+            const contentKey = `${ATTR_GEN_AI_PROMPT}.${index}.content`;
             attributes[contentKey] = processedContent;
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] =
+            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] =
               msg.role;
 
             inputMessages.push({
@@ -339,15 +360,15 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         );
 
         if (inputMessages.length > 0) {
-          attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] =
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
             JSON.stringify(inputMessages);
         }
 
         delete attributes[AI_PROMPT];
       } else if (promptData.prompt && typeof promptData.prompt === "string") {
-        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+        attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
           promptData.prompt;
-        attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = ROLE_USER;
+        attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = ROLE_USER;
 
         const inputMessage = {
           role: ROLE_USER,
@@ -358,7 +379,7 @@ const transformPrompts = (attributes: Record<string, any>): void => {
             },
           ],
         };
-        attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify([
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify([
           inputMessage,
         ]);
 
@@ -372,10 +393,10 @@ const transformPrompts = (attributes: Record<string, any>): void => {
 
 const transformPromptTokens = (attributes: Record<string, any>): void => {
   if (
-    !(SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS in attributes) &&
+    !(ATTR_GEN_AI_USAGE_INPUT_TOKENS in attributes) &&
     AI_USAGE_PROMPT_TOKENS in attributes
   ) {
-    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS] =
+    attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS] =
       attributes[AI_USAGE_PROMPT_TOKENS];
   }
 
@@ -384,10 +405,10 @@ const transformPromptTokens = (attributes: Record<string, any>): void => {
 
 const transformCompletionTokens = (attributes: Record<string, any>): void => {
   if (
-    !(SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS in attributes) &&
+    !(ATTR_GEN_AI_USAGE_OUTPUT_TOKENS in attributes) &&
     AI_USAGE_COMPLETION_TOKENS in attributes
   ) {
-    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS] =
+    attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS] =
       attributes[AI_USAGE_COMPLETION_TOKENS];
   }
 
@@ -444,9 +465,9 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
 };
 
 const calculateTotalTokens = (attributes: Record<string, any>): void => {
-  const inputTokens = attributes[SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS];
+  const inputTokens = attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS];
   const outputTokens =
-    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS];
+    attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS];
 
   if (inputTokens && outputTokens) {
     attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =
@@ -463,7 +484,7 @@ const transformVendor = (attributes: Record<string, any>): void => {
       const providerName = vendor.split(".")[0];
 
       // Set the standard gen_ai.provider.name attribute with lowercase provider name
-      attributes[SpanAttributes.ATTR_GEN_AI_PROVIDER_NAME] = providerName;
+      attributes[ATTR_GEN_AI_PROVIDER_NAME] = providerName;
 
       // Find the mapped vendor for backward compatibility with deprecated gen_ai.system
       for (const prefix of Object.keys(VENDOR_MAPPING)) {
@@ -475,7 +496,7 @@ const transformVendor = (attributes: Record<string, any>): void => {
 
       // Set deprecated gen_ai.system attribute for backward compatibility
       if (mappedVendor) {
-        attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM] = mappedVendor;
+        attributes[ATTR_GEN_AI_SYSTEM] = mappedVendor;
       }
     }
 
@@ -502,14 +523,14 @@ const transformOperationName = (
   }
 
   if (operationName) {
-    attributes[SpanAttributes.ATTR_GEN_AI_OPERATION_NAME] = operationName;
+    attributes[ATTR_GEN_AI_OPERATION_NAME] = operationName;
   }
 };
 
 const transformModelId = (attributes: Record<string, any>): void => {
   const AI_MODEL_ID = "ai.model.id";
   if (AI_MODEL_ID in attributes) {
-    attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] =
+    attributes[ATTR_GEN_AI_REQUEST_MODEL] =
       attributes[AI_MODEL_ID];
     delete attributes[AI_MODEL_ID];
   }
@@ -519,7 +540,7 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
   const AI_RESPONSE_FINISH_REASON = "ai.response.finishReason";
   if (AI_RESPONSE_FINISH_REASON in attributes) {
     const finishReason = attributes[AI_RESPONSE_FINISH_REASON];
-    attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_FINISH_REASONS] =
+    attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS] =
       Array.isArray(finishReason) ? finishReason : [finishReason];
     delete attributes[AI_RESPONSE_FINISH_REASON];
   }
@@ -527,25 +548,25 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
 
 const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   if ("ai.toolCall.name" in attributes) {
-    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_NAME] =
+    attributes[ATTR_GEN_AI_TOOL_NAME] =
       attributes["ai.toolCall.name"];
     // Keep ai.toolCall.name for now, will be deleted in transformToolCalls
   }
 
   if ("ai.toolCall.id" in attributes) {
-    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_ID] =
+    attributes[ATTR_GEN_AI_TOOL_CALL_ID] =
       attributes["ai.toolCall.id"];
     delete attributes["ai.toolCall.id"];
   }
 
   if ("ai.toolCall.args" in attributes) {
-    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_ARGUMENTS] =
+    attributes[ATTR_GEN_AI_TOOL_CALL_ARGUMENTS] =
       attributes["ai.toolCall.args"];
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
 
   if ("ai.toolCall.result" in attributes) {
-    attributes[SpanAttributes.ATTR_GEN_AI_TOOL_CALL_RESULT] =
+    attributes[ATTR_GEN_AI_TOOL_CALL_RESULT] =
       attributes["ai.toolCall.result"];
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
@@ -556,9 +577,9 @@ const transformConversationId = (attributes: Record<string, any>): void => {
   const sessionId = attributes["ai.telemetry.metadata.sessionId"];
 
   if (conversationId) {
-    attributes[SpanAttributes.ATTR_GEN_AI_CONVERSATION_ID] = conversationId;
+    attributes[ATTR_GEN_AI_CONVERSATION_ID] = conversationId;
   } else if (sessionId) {
-    attributes[SpanAttributes.ATTR_GEN_AI_CONVERSATION_ID] = sessionId;
+    attributes[ATTR_GEN_AI_CONVERSATION_ID] = sessionId;
   }
 };
 
@@ -567,13 +588,13 @@ const transformResponseMetadata = (attributes: Record<string, any>): void => {
   const AI_RESPONSE_ID = "ai.response.id";
 
   if (AI_RESPONSE_MODEL in attributes) {
-    attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL] =
+    attributes[ATTR_GEN_AI_RESPONSE_MODEL] =
       attributes[AI_RESPONSE_MODEL];
     delete attributes[AI_RESPONSE_MODEL];
   }
 
   if (AI_RESPONSE_ID in attributes) {
-    attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_ID] =
+    attributes[ATTR_GEN_AI_RESPONSE_ID] =
       attributes[AI_RESPONSE_ID];
     delete attributes[AI_RESPONSE_ID];
   }
@@ -610,7 +631,7 @@ const transformTelemetryMetadata = (
   }
 
   if (agentName) {
-    attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME] = agentName;
+    attributes[ATTR_GEN_AI_AGENT_NAME] = agentName;
 
     const topLevelSpanNames = [
       AI_GENERATE_TEXT,
@@ -628,9 +649,9 @@ const transformTelemetryMetadata = (
       attributes[SpanAttributes.TRACELOOP_ENTITY_NAME] = agentName;
 
       const inputMessages =
-        attributes[SpanAttributes.ATTR_GEN_AI_INPUT_MESSAGES];
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES];
       const outputMessages =
-        attributes[SpanAttributes.ATTR_GEN_AI_OUTPUT_MESSAGES];
+        attributes[ATTR_GEN_AI_OUTPUT_MESSAGES];
       const toolArgs = attributes["ai.toolCall.args"];
       const toolResult = attributes["ai.toolCall.result"];
 

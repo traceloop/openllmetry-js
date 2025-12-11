@@ -16,6 +16,9 @@ import {
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
+  ATTR_GEN_AI_AGENT_NAME,
+} from "@opentelemetry/semantic-conventions/incubating";
+import {
   transformAiSdkSpanAttributes,
   transformAiSdkSpanNames,
 } from "./ai-sdk-transformations";
@@ -187,7 +190,7 @@ const onSpanStart = (span: Span): void => {
   const agentName = context.active().getValue(AGENT_NAME_KEY);
   if (agentName) {
     span.setAttribute(
-      SpanAttributes.ATTR_GEN_AI_AGENT_NAME,
+      ATTR_GEN_AI_AGENT_NAME,
       agentName as string,
     );
   }
@@ -274,7 +277,7 @@ const onSpanEnd = (
 
     // Handle agent name propagation for AI SDK spans
     const traceId = span.spanContext().traceId;
-    const agentName = span.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME];
+    const agentName = span.attributes[ATTR_GEN_AI_AGENT_NAME];
 
     if (agentName && typeof agentName === "string") {
       // Store agent name for this trace with current timestamp
@@ -284,7 +287,7 @@ const onSpanEnd = (
       });
     } else if (!agentName && traceAgentNames.has(traceId)) {
       // This span doesn't have agent name but trace does - propagate it
-      span.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME] =
+      span.attributes[ATTR_GEN_AI_AGENT_NAME] =
         traceAgentNames.get(traceId)!.agentName;
     }
 

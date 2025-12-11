@@ -21,6 +21,15 @@ import { Serialized } from "@langchain/core/load/serializable";
 import { ChainValues } from "@langchain/core/utils/types";
 import { Tracer, SpanKind, SpanStatusCode } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 interface SpanData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,7 +71,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
     const flatMessages = messages.flat();
     span.setAttributes({
-      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: vendor,
+      [ATTR_GEN_AI_SYSTEM]: vendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: "chat",
     });
 
@@ -71,8 +80,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       flatMessages.forEach((message, idx) => {
         const role = this.mapMessageTypeToRole(message._getType());
         span.setAttributes({
-          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.role`]: role,
-          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.content`]:
+          [`${ATTR_GEN_AI_PROMPT}.${idx}.role`]: role,
+          [`${ATTR_GEN_AI_PROMPT}.${idx}.content`]:
             typeof message.content === "string"
               ? message.content
               : JSON.stringify(message.content),
@@ -103,15 +112,15 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     });
 
     span.setAttributes({
-      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: vendor,
+      [ATTR_GEN_AI_SYSTEM]: vendor,
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     });
 
     if (this.traceContent && prompts.length > 0) {
       prompts.forEach((prompt, idx) => {
         span.setAttributes({
-          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.role`]: "user",
-          [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${idx}.content`]: prompt,
+          [`${ATTR_GEN_AI_PROMPT}.${idx}.role`]: "user",
+          [`${ATTR_GEN_AI_PROMPT}.${idx}.content`]: prompt,
         });
       });
     }
@@ -139,9 +148,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       output.generations.forEach((generation, idx) => {
         if (generation && generation.length > 0) {
           span.setAttributes({
-            [`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${idx}.role`]:
+            [`${ATTR_GEN_AI_COMPLETION}.${idx}.role`]:
               "assistant",
-            [`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${idx}.content`]:
+            [`${ATTR_GEN_AI_COMPLETION}.${idx}.content`]:
               generation[0].text,
           });
         }
@@ -153,8 +162,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
     // Set both request and response model attributes like Python implementation
     span.setAttributes({
-      [SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL]: modelName || "unknown",
-      [SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL]: modelName || "unknown",
+      [ATTR_GEN_AI_REQUEST_MODEL]: modelName || "unknown",
+      [ATTR_GEN_AI_RESPONSE_MODEL]: modelName || "unknown",
     });
 
     // Add usage metrics if available
@@ -162,12 +171,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       const usage = output.llmOutput.usage;
       if (usage.input_tokens) {
         span.setAttributes({
-          [SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.input_tokens,
+          [ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.input_tokens,
         });
       }
       if (usage.output_tokens) {
         span.setAttributes({
-          [SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
+          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
             usage.output_tokens,
         });
       }
@@ -185,12 +194,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       const usage = output.llmOutput.tokenUsage;
       if (usage.promptTokens) {
         span.setAttributes({
-          [SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.promptTokens,
+          [ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.promptTokens,
         });
       }
       if (usage.completionTokens) {
         span.setAttributes({
-          [SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
+          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
             usage.completionTokens,
         });
       }

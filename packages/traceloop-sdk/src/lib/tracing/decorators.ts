@@ -13,6 +13,9 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_AGENT_NAME,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { shouldSendTraces } from ".";
 
 export type DecoratorConfig = {
@@ -102,7 +105,7 @@ function withEntity<
         const agentName = entityContext.getValue(AGENT_NAME_KEY);
         if (agentName) {
           span.setAttribute(
-            SpanAttributes.ATTR_GEN_AI_AGENT_NAME,
+            ATTR_GEN_AI_AGENT_NAME,
             agentName as string,
           );
         }

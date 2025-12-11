@@ -32,6 +32,18 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import type * as aiplatform from "@google-cloud/aiplatform";
 import type { CallOptions, Callback } from "google-gax";
 import { version } from "../package.json";
@@ -157,7 +169,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
       | undefined;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "Google",
+      [ATTR_GEN_AI_SYSTEM]: "Google",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
@@ -165,22 +177,22 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
       if (params !== undefined) {
         if (params.endpoint) {
           const model = params.endpoint.split("/").pop();
-          attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = model;
-          attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL] = model;
+          attributes[ATTR_GEN_AI_REQUEST_MODEL] = model;
+          attributes[ATTR_GEN_AI_RESPONSE_MODEL] = model;
         }
         if (params?.parameters) {
           if (
             params?.parameters.structValue?.fields?.maxOutputTokens.numberValue
           ) {
-            attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
+            attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
               params?.parameters.structValue?.fields?.maxOutputTokens.numberValue;
           }
           if (params?.parameters.structValue?.fields?.temperature.numberValue) {
-            attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
+            attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] =
               params?.parameters.structValue?.fields?.temperature.numberValue;
           }
           if (params?.parameters.structValue?.fields?.topP.numberValue) {
-            attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] =
+            attributes[ATTR_GEN_AI_REQUEST_TOP_P] =
               params?.parameters.structValue?.fields?.topP.numberValue;
           }
           if (params?.parameters.structValue?.fields?.topK.numberValue) {
@@ -199,18 +211,18 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
             "prompt" in params.instances[0].structValue.fields &&
             params.instances[0].structValue?.fields?.prompt.stringValue
           ) {
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
               params.instances[0].structValue?.fields?.prompt.stringValue;
           } else if (
             params.instances[0].structValue &&
             params.instances[0].structValue.fields?.messages.listValue
               ?.values?.[0].structValue?.fields?.content.stringValue
           ) {
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] =
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] =
               params.instances[0].structValue.fields?.messages.listValue
                 ?.values?.[0].structValue?.fields?.author.stringValue ?? "user";
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
               params.instances[0].structValue.fields?.messages.listValue?.values?.[0].structValue?.fields?.content.stringValue;
           }
         }
@@ -272,7 +284,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
     try {
       if (result[0].model)
         span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
+          ATTR_GEN_AI_RESPONSE_MODEL,
           result[0].model,
         );
 
@@ -284,7 +296,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
               ?.totalTokens.numberValue === "number"
           )
             span.setAttribute(
-              SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+              ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
               result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
                 ?.fields?.outputTokenCount.structValue?.fields?.totalTokens
                 .numberValue,
@@ -296,7 +308,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
               ?.totalTokens.numberValue === "number"
           )
             span.setAttribute(
-              SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+              ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
               result[0].metadata?.structValue?.fields?.tokenMetadata.structValue
                 ?.fields?.inputTokenCount.structValue?.fields?.totalTokens
                 .numberValue,
@@ -329,12 +341,12 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
               !!prediction.structValue?.fields?.content.stringValue
             ) {
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.role`,
                 "assistant",
               );
 
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.content`,
                 prediction.structValue?.fields?.content.stringValue,
               );
             } else if (
@@ -344,12 +356,12 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
                 ?.values?.[0]?.structValue?.fields?.content.stringValue
             ) {
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.role`,
                 "assistant",
               );
 
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.content`,
                 prediction.structValue?.fields?.candidates.listValue
                   ?.values?.[0]?.structValue?.fields?.content.stringValue,
               );

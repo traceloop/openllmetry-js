@@ -92,21 +92,21 @@ describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Google");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       model,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
       parameter.topP,
     );
     assert.strictEqual(attributes["llm.top_k"], parameter.topK);
     assert.strictEqual(attributes["gen_ai.prompt.0.content"], prompt.prompt);
     assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL],
+      attributes[ATTR_GEN_AI_RESPONSE_MODEL],
       model,
     );
     assert.strictEqual(attributes["gen_ai.completion.0.role"], "assistant");
@@ -174,14 +174,14 @@ describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
 
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Google");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Google");
     assert.strictEqual(attributes["llm.request.type"], "completion");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       model,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P],
+      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
       parameter.topP,
     );
     assert.strictEqual(attributes["llm.top_k"], parameter.topK);
@@ -191,7 +191,7 @@ describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
     );
     assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL],
+      attributes[ATTR_GEN_AI_RESPONSE_MODEL],
       model,
     );
     assert.strictEqual(attributes["gen_ai.completion.0.role"], "assistant");

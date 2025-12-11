@@ -35,6 +35,14 @@ import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -148,12 +156,12 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+        `${ATTR_GEN_AI_PROMPT}.0.content`
       ],
       "Tell me a joke about OpenTelemetry",
     );
@@ -162,13 +170,13 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.equal(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
       ],
       "15",
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
   });
@@ -193,18 +201,18 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+        `${ATTR_GEN_AI_PROMPT}.0.content`
       ],
       "Tell me a joke about OpenTelemetry",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
+        `${ATTR_GEN_AI_COMPLETION}.0.content`
       ],
       result,
     );
@@ -213,13 +221,13 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.equal(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
       ],
       "8",
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
   });
@@ -244,29 +252,29 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+        `${ATTR_GEN_AI_PROMPT}.0.content`
       ],
       "Tell me a joke about OpenTelemetry",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
+        `${ATTR_GEN_AI_COMPLETION}.0.content`
       ],
       result,
     );
     assert.ok(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
       ],
     );
     assert.ok(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ],
     );
     assert.ok(
@@ -274,13 +282,13 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.equal(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
       ],
       "8",
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
   });
@@ -299,12 +307,12 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+        `${ATTR_GEN_AI_PROMPT}.0.content`
       ],
       "Tell me a joke about OpenTelemetry",
     );
@@ -330,12 +338,12 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+        `${ATTR_GEN_AI_PROMPT}.0.content`
       ],
       "Tell me a joke about OpenTelemetry",
     );
@@ -420,12 +428,12 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+        `${ATTR_GEN_AI_PROMPT}.0.content`
       ],
       "What's the weather like in Boston?",
     );
@@ -459,14 +467,14 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.name`
+        `${ATTR_GEN_AI_COMPLETION}.0.function_call.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
+          `${ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
         ]! as string,
       ),
       { location: "Boston" },
@@ -476,13 +484,13 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.equal(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
       ],
       82,
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
   });
@@ -524,12 +532,12 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`
+        `${ATTR_GEN_AI_PROMPT}.0.content`
       ],
       "What's the weather like in Boston?",
     );
@@ -563,13 +571,13 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
+        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
       ],
       "get_current_weather",
     );
     const parsedArgs = JSON.parse(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`
+        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`
       ]! as string,
     );
     // API returns either "Boston" or "Boston, MA" depending on the call
@@ -581,13 +589,13 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.equal(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
       ],
       82,
     );
     assert.ok(
       +completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
+        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
       ]! > 0,
     );
   });
@@ -661,28 +669,28 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(completionSpan);
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
+        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
       ],
       "get_current_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`
+          `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`
         ]! as string,
       ),
       { location: "Boston, MA" },
     );
     assert.strictEqual(
       completionSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`
+        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`
       ],
       "get_tomorrow_weather",
     );
     assert.deepEqual(
       JSON.parse(
         completionSpan.attributes[
-          `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.arguments`
+          `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.arguments`
         ]! as string,
       ),
       { location: "Chicago, IL" },
@@ -706,7 +714,7 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(imageSpan);
 
     assert.strictEqual(
-      imageSpan.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
+      imageSpan.attributes[ATTR_GEN_AI_SYSTEM],
       "OpenAI",
     );
     assert.strictEqual(
@@ -714,7 +722,7 @@ describe("Test OpenAI instrumentation", async function () {
       "image_generation",
     );
     assert.strictEqual(
-      imageSpan.attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      imageSpan.attributes[ATTR_GEN_AI_REQUEST_MODEL],
       "dall-e-2",
     );
     assert.strictEqual(
@@ -723,28 +731,28 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.strictEqual(imageSpan.attributes["gen_ai.request.image.count"], 1);
     assert.strictEqual(
-      imageSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
+      imageSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "A test image",
     );
     assert.strictEqual(
-      imageSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      imageSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
 
     // Check token usage calculation (dall-e-2 1024x1024 should be ~1056 tokens)
     assert.ok(
-      imageSpan.attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      imageSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
     );
     assert.ok(imageSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
 
     // Check response content
     assert.ok(
       imageSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
+        `${ATTR_GEN_AI_COMPLETION}.0.content`
       ],
     );
     assert.strictEqual(
-      imageSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
+      imageSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
   });
@@ -770,7 +778,7 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(editSpan);
 
     assert.strictEqual(
-      editSpan.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
+      editSpan.attributes[ATTR_GEN_AI_SYSTEM],
       "OpenAI",
     );
     assert.strictEqual(
@@ -784,27 +792,27 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.strictEqual(editSpan.attributes["gen_ai.request.image.count"], 1);
     assert.strictEqual(
-      editSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`],
+      editSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Add a red hat",
     );
     assert.strictEqual(
-      editSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
+      editSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
 
     // Check token usage calculation
     assert.strictEqual(
-      editSpan.attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      editSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
       4160,
     );
     assert.ok(editSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include prompt tokens
 
     // Check response content
     assert.ok(
-      editSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
+      editSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
     );
     assert.strictEqual(
-      editSpan.attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`],
+      editSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
   });
@@ -831,7 +839,7 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(variationSpan);
 
     assert.strictEqual(
-      variationSpan.attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM],
+      variationSpan.attributes[ATTR_GEN_AI_SYSTEM],
       "OpenAI",
     );
     assert.strictEqual(
@@ -851,7 +859,7 @@ describe("Test OpenAI instrumentation", async function () {
     // Check token usage calculation (DALL-E 2 1024x1024 = 1056 tokens)
     assert.strictEqual(
       variationSpan.attributes[
-        SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS
+        ATTR_GEN_AI_USAGE_COMPLETION_TOKENS
       ],
       1056,
     );
@@ -860,12 +868,12 @@ describe("Test OpenAI instrumentation", async function () {
     // Check response content
     assert.ok(
       variationSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`
+        `${ATTR_GEN_AI_COMPLETION}.0.content`
       ],
     );
     assert.strictEqual(
       variationSpan.attributes[
-        `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`
+        `${ATTR_GEN_AI_COMPLETION}.0.role`
       ],
       "assistant",
     );
@@ -893,13 +901,13 @@ describe("Test OpenAI instrumentation", async function () {
     const dalle2Span = spans.find(
       (span) =>
         span.name === "openai.images.generate" &&
-        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
           "Test standard quality",
     );
     const dalle3Span = spans.find(
       (span) =>
         span.name === "openai.images.generate" &&
-        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
           "Test HD quality",
     );
 
@@ -908,13 +916,13 @@ describe("Test OpenAI instrumentation", async function () {
 
     // DALL-E 2 standard should be 1056 tokens
     assert.strictEqual(
-      dalle2Span.attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      dalle2Span.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
       1056,
     );
 
     // DALL-E 3 HD should be 4160 tokens
     assert.strictEqual(
-      dalle3Span.attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      dalle3Span.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
       4160,
     );
   });
