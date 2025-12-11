@@ -197,10 +197,7 @@ const onSpanStart = (span: Span): void => {
     .getValue(ASSOCATION_PROPERTIES_KEY);
   if (associationProperties) {
     for (const [key, value] of Object.entries(associationProperties)) {
-      span.setAttribute(
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
-        value,
-      );
+      span.setAttribute(key, value);
     }
   }
 

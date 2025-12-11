@@ -15,6 +15,7 @@
     "run:gemini": "npm run build && node dist/src/vertexai/gemini.js",
     "run:palm2": "npm run build && node dist/src/vertexai/palm2.js",
     "run:decorators": "npm run build && node dist/src/sample_decorators.js",
+    "run:associations": "npm run build && node dist/src/sample_associations.js",
     "run:with": "npm run build && node dist/src/sample_with.js",
     "run:prompt_mgmt": "npm run build && node dist/src/sample_prompt_mgmt.js",
     "run:vercel": "npm run build && node dist/src/sample_vercel_ai.js",

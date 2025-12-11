@@ -601,10 +601,8 @@ const transformTelemetryMetadata = (
         const stringValue = typeof value === "string" ? value : String(value);
         metadataAttributes[metadataKey] = stringValue;
 
-        // Also set as traceloop association property attribute
-        attributes[
-          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${metadataKey}`
-        ] = stringValue;
+        // Also set as association property attribute
+        attributes[metadataKey] = stringValue;
       }
     }
   }
