@@ -1,6 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { trace, Span, SpanKind, Attributes } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import type { ImageUploadCallback } from "./types";
 import type {
   ImageGenerateParams,
@@ -141,7 +149,7 @@ export function setImageGenerationRequestAttributes(
   const attributes: Attributes = {};
 
   if (params.model) {
-    attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
+    attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
   }
 
   if (params.size) {
@@ -161,9 +169,8 @@ export function setImageGenerationRequestAttributes(
   }
 
   if (params.prompt) {
-    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
-      params.prompt;
-    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+    attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
+    attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
   }
 
   Object.entries(attributes).forEach(([key, value]) => {
@@ -181,7 +188,7 @@ export async function setImageEditRequestAttributes(
   const attributes: Attributes = {};
 
   if (params.model) {
-    attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
+    attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
   }
 
   if (params.size) {
@@ -193,9 +200,8 @@ export async function setImageEditRequestAttributes(
   }
 
   if (params.prompt) {
-    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
-      params.prompt;
-    attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+    attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
+    attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
   }
 
   // Process input image if upload callback is available
@@ -217,9 +223,10 @@ export async function setImageEditRequestAttributes(
     );
 
     if (imageUrl) {
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.1.content`] =
-        JSON.stringify([{ type: "image_url", image_url: { url: imageUrl } }]);
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.1.role`] = "user";
+      attributes[`${ATTR_GEN_AI_PROMPT}.1.content`] = JSON.stringify([
+        { type: "image_url", image_url: { url: imageUrl } },
+      ]);
+      attributes[`${ATTR_GEN_AI_PROMPT}.1.role`] = "user";
     }
   }
 
@@ -238,7 +245,7 @@ export async function setImageVariationRequestAttributes(
   const attributes: Attributes = {};
 
   if (params.model) {
-    attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
+    attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
   }
 
   if (params.size) {
@@ -268,9 +275,10 @@ export async function setImageVariationRequestAttributes(
     );
 
     if (imageUrl) {
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
-        JSON.stringify([{ type: "image_url", image_url: { url: imageUrl } }]);
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = JSON.stringify([
+        { type: "image_url", image_url: { url: imageUrl } },
+      ]);
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
     }
   }
 
@@ -295,8 +303,7 @@ export async function setImageGenerationResponseAttributes(
       params,
       response.data.length,
     );
-    attributes[SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS] =
-      completionTokens;
+    attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS] = completionTokens;
 
     // Calculate prompt tokens if enrichTokens is enabled
     if (instrumentationConfig?.enrichTokens) {
@@ -312,8 +319,7 @@ export async function setImageGenerationResponseAttributes(
         }
 
         if (estimatedPromptTokens > 0) {
-          attributes[SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS] =
-            estimatedPromptTokens;
+          attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS] = estimatedPromptTokens;
         }
 
         attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS] =
@@ -341,10 +347,10 @@ export async function setImageGenerationResponseAttributes(
           firstImage.b64_json,
         );
 
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
-          JSON.stringify([{ type: "image_url", image_url: { url: imageUrl } }]);
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
-          "assistant";
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] = JSON.stringify([
+          { type: "image_url", image_url: { url: imageUrl } },
+        ]);
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
       } catch (error) {
         console.error("Failed to upload generated image:", error);
       }
@@ -365,28 +371,22 @@ export async function setImageGenerationResponseAttributes(
           base64Data,
         );
 
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
-          JSON.stringify([
-            { type: "image_url", image_url: { url: uploadedUrl } },
-          ]);
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
-          "assistant";
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] = JSON.stringify([
+          { type: "image_url", image_url: { url: uploadedUrl } },
+        ]);
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
       } catch (error) {
         console.error("Failed to fetch and upload generated image:", error);
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
-          JSON.stringify([
-            { type: "image_url", image_url: { url: firstImage.url } },
-          ]);
-        attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
-          "assistant";
-      }
-    } else if (firstImage.url) {
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`] =
-        JSON.stringify([
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] = JSON.stringify([
           { type: "image_url", image_url: { url: firstImage.url } },
         ]);
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.role`] =
-        "assistant";
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
+      }
+    } else if (firstImage.url) {
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] = JSON.stringify([
+        { type: "image_url", image_url: { url: firstImage.url } },
+      ]);
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] = "assistant";
     }
 
     if (firstImage.revised_prompt) {
@@ -413,7 +413,7 @@ export function wrapImageGeneration(
       const span = tracer.startSpan("openai.images.generate", {
         kind: SpanKind.CLIENT,
         attributes: {
-          [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "OpenAI",
+          [ATTR_GEN_AI_SYSTEM]: "OpenAI",
           "gen_ai.request.type": "image_generation",
         },
       });
@@ -472,7 +472,7 @@ export function wrapImageEdit(
       const span = tracer.startSpan("openai.images.edit", {
         kind: SpanKind.CLIENT,
         attributes: {
-          [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "OpenAI",
+          [ATTR_GEN_AI_SYSTEM]: "OpenAI",
           "gen_ai.request.type": "image_edit",
         },
       });
@@ -539,7 +539,7 @@ export function wrapImageVariation(
       const span = tracer.startSpan("openai.images.createVariation", {
         kind: SpanKind.CLIENT,
         attributes: {
-          [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "OpenAI",
+          [ATTR_GEN_AI_SYSTEM]: "OpenAI",
           "gen_ai.request.type": "image_variation",
         },
       });

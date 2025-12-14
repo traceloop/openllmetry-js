@@ -25,6 +25,18 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { TogetherAIInstrumentationConfig } from "./types";
 import type { Completion } from "together-ai/resources";
 
@@ -187,22 +199,20 @@ export class TogetherInstrumentation extends InstrumentationBase {
         };
       }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "TogetherAI",
+      [ATTR_GEN_AI_SYSTEM]: "TogetherAI",
       [SpanAttributes.LLM_REQUEST_TYPE]: type,
     };
 
     try {
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = params.model;
+      attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
       if (params.max_tokens) {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
-          params.max_tokens;
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_tokens;
       }
       if (params.temperature) {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
-          params.temperature;
+        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
       }
       if (params.top_p) {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
+        attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       }
       if (params.frequency_penalty) {
         attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
@@ -225,16 +235,13 @@ export class TogetherInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           params.messages.forEach((message, index) => {
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`] =
-              message.role;
+            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = message.role;
             if (typeof message.content === "string") {
-              attributes[
-                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`
-              ] = (message.content as string) || "";
+              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
+                (message.content as string) || "";
             } else {
-              attributes[
-                `${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`
-              ] = JSON.stringify(message.content);
+              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
+                JSON.stringify(message.content);
             }
           });
 
@@ -265,13 +272,13 @@ export class TogetherInstrumentation extends InstrumentationBase {
             ] = JSON.stringify(tool.function.parameters);
           });
         } else {
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
           if (typeof params.prompt === "string") {
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
-              params.prompt;
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
           } else {
-            attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] =
-              JSON.stringify(params.prompt);
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = JSON.stringify(
+              params.prompt,
+            );
           }
         }
       }
@@ -499,10 +506,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
     | { span: Span; type: "chat"; result: ChatCompletion }
     | { span: Span; type: "completion"; result: Completion }) {
     try {
-      span.setAttribute(
-        SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL,
-        result.model,
-      );
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
 
       if (result.usage) {
         span.setAttribute(
@@ -510,11 +514,11 @@ export class TogetherInstrumentation extends InstrumentationBase {
           result.usage?.total_tokens,
         );
         span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+          ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
           result.usage?.completion_tokens,
         );
         span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+          ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
           result.usage?.prompt_tokens,
         );
       }
@@ -523,34 +527,34 @@ export class TogetherInstrumentation extends InstrumentationBase {
         if (type === "chat") {
           result.choices.forEach((choice, index) => {
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
               choice.finish_reason ?? "",
             );
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.role`,
               choice.message?.role ?? "",
             );
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.content`,
               choice.message?.content ?? "",
             );
 
             if (choice.message?.function_call) {
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.function_call.name`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.function_call.name`,
                 choice.message?.function_call?.name ?? "",
               );
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.function_call.arguments`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.function_call.arguments`,
                 choice.message?.function_call?.arguments ?? "",
               );
             } else if (choice.message?.tool_calls?.[0]) {
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.function_call.name`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.function_call.name`,
                 choice.message.tool_calls[0].function.name ?? "",
               );
               span.setAttribute(
-                `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.function_call.arguments`,
+                `${ATTR_GEN_AI_COMPLETION}.${index}.function_call.arguments`,
                 choice.message.tool_calls[0].function.arguments ?? "",
               );
             }
@@ -561,11 +565,11 @@ export class TogetherInstrumentation extends InstrumentationBase {
                 toolCall,
               ] of choice.message.tool_calls.entries()) {
                 span.setAttribute(
-                  `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.tool_calls.${toolIndex}.name`,
+                  `${ATTR_GEN_AI_COMPLETION}.${index}.tool_calls.${toolIndex}.name`,
                   toolCall.function.name,
                 );
                 span.setAttribute(
-                  `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.tool_calls.${toolIndex}.arguments`,
+                  `${ATTR_GEN_AI_COMPLETION}.${index}.tool_calls.${toolIndex}.arguments`,
                   toolCall.function.arguments,
                 );
               }
@@ -574,15 +578,15 @@ export class TogetherInstrumentation extends InstrumentationBase {
         } else {
           result.choices.forEach((choice, index) => {
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
               choice.finish_reason ?? "",
             );
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.role`,
               "assistant",
             );
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.content`,
               choice.text ?? "",
             );
           });

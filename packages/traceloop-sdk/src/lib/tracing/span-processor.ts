@@ -15,48 +15,32 @@ import {
   AGENT_NAME_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import {
   transformAiSdkSpanAttributes,
   transformAiSdkSpanNames,
 } from "./ai-sdk-transformations";
 import { parseKeyPairsIntoRecord } from "./baggage-utils";
-import { STANDARD_ASSOCIATION_PROPERTIES } from "./associations";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
 
-// Store agent names per trace for propagation to child spans (tool calls)
-// Maps trace ID to {agentName, timestamp} for TTL-based cleanup
-const traceAgentNames = new Map<
+const spanAgentNames = new Map<
   string,
   { agentName: string; timestamp: number }
 >();
 
-// TTL for trace agent names (5 minutes)
-const TRACE_AGENT_NAME_TTL = 5 * 60 * 1000;
+const SPAN_AGENT_NAME_TTL = 5 * 60 * 1000;
 
-/**
- * Cleans up expired trace agent name entries based on TTL
- */
-const cleanupExpiredTraceAgentNames = (): void => {
+const AI_TELEMETRY_METADATA_AGENT = "ai.telemetry.metadata.agent";
+
+const cleanupExpiredSpanAgentNames = (): void => {
   const now = Date.now();
-  for (const [traceId, entry] of traceAgentNames.entries()) {
-    if (now - entry.timestamp > TRACE_AGENT_NAME_TTL) {
-      traceAgentNames.delete(traceId);
+  for (const [spanId, entry] of spanAgentNames.entries()) {
+    if (now - entry.timestamp > SPAN_AGENT_NAME_TTL) {
+      spanAgentNames.delete(spanId);
     }
   }
-};
-
-/**
- * Checks if a span is a root span (has no parent)
- */
-const isRootSpan = (span: ReadableSpan): boolean => {
-  const parentContext = span.parentSpanContext;
-  return (
-    !parentContext ||
-    !parentContext.spanId ||
-    parentContext.spanId === "0000000000000000"
-  );
 };
 
 export interface SpanProcessorOptions {
@@ -165,9 +149,6 @@ export const traceloopInstrumentationLibraries = [
   "@traceloop/instrumentation-mcp",
 ];
 
-/**
- * Handles span start event, enriching it with workflow and entity information
- */
 const onSpanStart = (span: Span): void => {
   const workflowName = context.active().getValue(WORKFLOW_NAME_KEY);
   if (workflowName) {
@@ -185,12 +166,33 @@ const onSpanStart = (span: Span): void => {
     );
   }
 
-  const agentName = context.active().getValue(AGENT_NAME_KEY);
+  let agentName = context.active().getValue(AGENT_NAME_KEY) as
+    | string
+    | undefined;
+
+  if (!agentName) {
+    const aiSdkAgent = span.attributes[AI_TELEMETRY_METADATA_AGENT];
+    if (aiSdkAgent && typeof aiSdkAgent === "string") {
+      agentName = aiSdkAgent;
+    }
+  }
+
+  if (!agentName) {
+    const parentSpanContext = (span as any).parentSpanContext;
+    const parentSpanId = parentSpanContext?.spanId;
+    if (
+      parentSpanId &&
+      parentSpanId !== "0000000000000000" &&
+      spanAgentNames.has(parentSpanId)
+    ) {
+      agentName = spanAgentNames.get(parentSpanId)!.agentName;
+    }
+  }
+
   if (agentName) {
-    span.setAttribute(
-      SpanAttributes.ATTR_GEN_AI_AGENT_NAME,
-      agentName as string,
-    );
+    span.setAttribute(ATTR_GEN_AI_AGENT_NAME, agentName);
+    const spanId = span.spanContext().spanId;
+    spanAgentNames.set(spanId, { agentName, timestamp: Date.now() });
   }
 
   const associationProperties = context
@@ -198,11 +200,10 @@ const onSpanStart = (span: Span): void => {
     .getValue(ASSOCATION_PROPERTIES_KEY);
   if (associationProperties) {
     for (const [key, value] of Object.entries(associationProperties)) {
-      // Standard properties are set directly, custom properties get prefix
-      const attributeKey = STANDARD_ASSOCIATION_PROPERTIES.has(key)
-        ? key
-        : `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`;
-      span.setAttribute(attributeKey, value);
+      span.setAttribute(
+        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
+        value,
+      );
     }
   }
 
@@ -252,10 +253,6 @@ const ensureSpanCompatibility = (span: ReadableSpan): ReadableSpan => {
   }) as ReadableSpan;
 };
 
-/**
- * Handles span end event, adapting attributes for Vercel AI compatibility
- * and ensuring OTLP transformer compatibility
- */
 const onSpanEnd = (
   originalOnEnd: (span: ReadableSpan) => void,
   instrumentationLibraries?: string[],
@@ -271,36 +268,34 @@ const onSpanEnd = (
       return;
     }
 
-    // Apply AI SDK transformations (if needed)
     transformAiSdkSpanAttributes(span);
 
-    // Handle agent name propagation for AI SDK spans
-    const traceId = span.spanContext().traceId;
-    const agentName = span.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME];
+    const spanId = span.spanContext().spanId;
+    const parentSpanId = span.parentSpanContext?.spanId;
+    let agentName = span.attributes[ATTR_GEN_AI_AGENT_NAME];
 
     if (agentName && typeof agentName === "string") {
-      // Store agent name for this trace with current timestamp
-      traceAgentNames.set(traceId, {
+      spanAgentNames.set(spanId, {
         agentName,
         timestamp: Date.now(),
       });
-    } else if (!agentName && traceAgentNames.has(traceId)) {
-      // This span doesn't have agent name but trace does - propagate it
-      span.attributes[SpanAttributes.ATTR_GEN_AI_AGENT_NAME] =
-        traceAgentNames.get(traceId)!.agentName;
+    } else if (
+      parentSpanId &&
+      parentSpanId !== "0000000000000000" &&
+      spanAgentNames.has(parentSpanId)
+    ) {
+      agentName = spanAgentNames.get(parentSpanId)!.agentName;
+      span.attributes[ATTR_GEN_AI_AGENT_NAME] = agentName;
+      spanAgentNames.set(spanId, {
+        agentName,
+        timestamp: Date.now(),
+      });
     }
 
-    // Clean up trace agent name when root span ends
-    if (isRootSpan(span) && traceAgentNames.has(traceId)) {
-      traceAgentNames.delete(traceId);
-    }
-
-    // Periodically clean up expired entries (every 100 spans as a safety net)
     if (Math.random() < 0.01) {
-      cleanupExpiredTraceAgentNames();
+      cleanupExpiredSpanAgentNames();
     }
 
-    // Ensure OTLP transformer compatibility
     const compatibleSpan = ensureSpanCompatibility(span);
 
     originalOnEnd(compatibleSpan);

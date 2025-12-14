@@ -5,6 +5,15 @@ import {
   EventAttributes,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_AGENT_NAME,
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { shouldSendTraces } from ".";
 
 type VectorDBCallConfig = {
@@ -79,13 +88,13 @@ export class LLMSpan {
     }[];
   }) {
     this.span.setAttributes({
-      [SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL]: model,
+      [ATTR_GEN_AI_REQUEST_MODEL]: model,
     });
 
     messages.forEach((message, index) => {
       this.span.setAttributes({
-        [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.role`]: message.role,
-        [`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${index}.content`]:
+        [`${ATTR_GEN_AI_PROMPT}.${index}.role`]: message.role,
+        [`${ATTR_GEN_AI_PROMPT}.${index}.content`]:
           typeof message.content === "string"
             ? message.content
             : JSON.stringify(message.content),
@@ -112,24 +121,22 @@ export class LLMSpan {
       };
     }[];
   }) {
-    this.span.setAttribute(SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL, model);
+    this.span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, model);
 
     if (usage) {
       this.span.setAttributes({
-        [SpanAttributes.ATTR_GEN_AI_USAGE_INPUT_TOKENS]: usage.prompt_tokens,
-        [SpanAttributes.ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]:
-          usage.completion_tokens,
+        [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: usage.prompt_tokens,
+        [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage.completion_tokens,
         [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: usage.total_tokens,
       });
     }
 
     completions?.forEach((completion, index) => {
       this.span.setAttributes({
-        [`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`]:
+        [`${ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`]:
           completion.finish_reason,
-        [`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`]:
-          completion.message.role,
-        [`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`]:
+        [`${ATTR_GEN_AI_COMPLETION}.${index}.role`]: completion.message.role,
+        [`${ATTR_GEN_AI_COMPLETION}.${index}.content`]:
           completion.message.content || "",
       });
     });
@@ -149,10 +156,7 @@ export function withVectorDBCall<
       // Set agent name if there's an active agent context
       const agentName = entityContext.getValue(AGENT_NAME_KEY);
       if (agentName) {
-        span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_AGENT_NAME,
-          agentName as string,
-        );
+        span.setAttribute(ATTR_GEN_AI_AGENT_NAME, agentName as string);
       }
 
       const res = fn.apply(thisArg, [{ span: new VectorSpan(span) }]);
@@ -179,10 +183,7 @@ export function withLLMCall<
   // Set agent name if there's an active agent context
   const agentName = currentContext.getValue(AGENT_NAME_KEY);
   if (agentName) {
-    span.setAttribute(
-      SpanAttributes.ATTR_GEN_AI_AGENT_NAME,
-      agentName as string,
-    );
+    span.setAttribute(ATTR_GEN_AI_AGENT_NAME, agentName as string);
   }
 
   trace.setSpan(currentContext, span);

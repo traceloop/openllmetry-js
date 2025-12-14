@@ -32,6 +32,18 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import type * as vertexAI from "@google-cloud/vertexai";
 import { version } from "../package.json";
 
@@ -137,20 +149,20 @@ export class VertexAIInstrumentation extends InstrumentationBase {
     params: vertexAI.GenerateContentRequest;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.ATTR_GEN_AI_SYSTEM]: "Google",
+      [ATTR_GEN_AI_SYSTEM]: "Google",
       [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
     };
 
     try {
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL] = instance["model"];
-      attributes[SpanAttributes.ATTR_GEN_AI_RESPONSE_MODEL] = instance["model"];
+      attributes[ATTR_GEN_AI_REQUEST_MODEL] = instance["model"];
+      attributes[ATTR_GEN_AI_RESPONSE_MODEL] = instance["model"];
 
       if (instance["generationConfig"]) {
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           instance["generationConfig"].max_output_tokens;
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TEMPERATURE] =
+        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] =
           instance["generationConfig"].temperature;
-        attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_TOP_P] =
+        attributes[ATTR_GEN_AI_REQUEST_TOP_P] =
           instance["generationConfig"].top_p;
         attributes[SpanAttributes.LLM_TOP_K] =
           instance["generationConfig"].top_k;
@@ -160,18 +172,17 @@ export class VertexAIInstrumentation extends InstrumentationBase {
         let i = 0;
 
         if (instance["systemInstruction"]) {
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i}.role`] =
-            "system";
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i}.content`] =
+          attributes[`${ATTR_GEN_AI_PROMPT}.${i}.role`] = "system";
+          attributes[`${ATTR_GEN_AI_PROMPT}.${i}.content`] =
             this._formatPartsData(instance["systemInstruction"].parts);
 
           i++;
         }
 
         params.contents.forEach((content, j) => {
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i + j}.role`] =
+          attributes[`${ATTR_GEN_AI_PROMPT}.${i + j}.role`] =
             content.role ?? "user";
-          attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.${i + j}.content`] =
+          attributes[`${ATTR_GEN_AI_PROMPT}.${i + j}.content`] =
             this._formatPartsData(content.parts);
         });
       }
@@ -231,13 +242,13 @@ export class VertexAIInstrumentation extends InstrumentationBase {
 
       if (streamResponse.usageMetadata?.candidatesTokenCount)
         span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+          ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
           streamResponse.usageMetadata.candidatesTokenCount,
         );
 
       if (streamResponse.usageMetadata?.promptTokenCount)
         span.setAttribute(
-          SpanAttributes.ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+          ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
           streamResponse.usageMetadata.promptTokenCount,
         );
 
@@ -245,18 +256,18 @@ export class VertexAIInstrumentation extends InstrumentationBase {
         streamResponse.candidates?.forEach((candidate, index) => {
           if (candidate.finishReason)
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
               candidate.finishReason,
             );
 
           if (candidate.content) {
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.role`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.role`,
               candidate.content.role ?? "assistant",
             );
 
             span.setAttribute(
-              `${SpanAttributes.ATTR_GEN_AI_COMPLETION}.${index}.content`,
+              `${ATTR_GEN_AI_COMPLETION}.${index}.content`,
               this._formatPartsData(candidate.content.parts),
             );
           }

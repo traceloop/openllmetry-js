@@ -25,6 +25,12 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import * as cohereModule from "cohere-ai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import FetchAdapter from "@pollyjs/adapter-fetch";
@@ -105,19 +111,16 @@ describe.skip("Test Rerank with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.ATTR_GEN_AI_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "rerank");
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.user`],
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.user`],
       params.query,
     );
     assert.strictEqual(
@@ -127,15 +130,15 @@ describe.skip("Test Rerank with Cohere Instrumentation", () => {
         : params.documents[1].text,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.ATTR_GEN_AI_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.relevanceScore`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.relevanceScore`],
       response.results[0].relevanceScore,
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.ATTR_GEN_AI_COMPLETION}.0.content`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       params.returnDocuments
         ? response.results[0].document?.text
         : response.results[0].index,
