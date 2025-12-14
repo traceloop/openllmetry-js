@@ -479,27 +479,18 @@ const transformVendor = (attributes: Record<string, any>): void => {
   if (AI_MODEL_PROVIDER in attributes) {
     const vendor = attributes[AI_MODEL_PROVIDER];
 
+    // Find matching vendor prefix in mapping
     let mappedVendor = null;
     if (typeof vendor === "string" && vendor.length > 0) {
-      const providerName = vendor.split(".")[0];
-
-      // Set the standard gen_ai.provider.name attribute with lowercase provider name
-      attributes[ATTR_GEN_AI_PROVIDER_NAME] = providerName;
-
-      // Find the mapped vendor for backward compatibility with deprecated gen_ai.system
       for (const prefix of Object.keys(VENDOR_MAPPING)) {
         if (vendor.startsWith(prefix)) {
           mappedVendor = VENDOR_MAPPING[prefix];
           break;
         }
       }
-
-      // Set deprecated gen_ai.system attribute for backward compatibility
-      if (mappedVendor) {
-        attributes[ATTR_GEN_AI_SYSTEM] = mappedVendor;
-      }
     }
 
+    attributes[ATTR_GEN_AI_SYSTEM] = mappedVendor || vendor;
     delete attributes[AI_MODEL_PROVIDER];
   }
 };
