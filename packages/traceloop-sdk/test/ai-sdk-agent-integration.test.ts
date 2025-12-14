@@ -146,7 +146,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Find the root AI span (should now be named with agent name)
     const rootSpan = spans.find(
-      (span) => span.name === "test_calculator_agent",
+      (span) => span.name === "test_calculator_agent.agent",
     );
 
     // Find tool call span
@@ -353,7 +353,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Find the root AI span (should be named with agent name)
     const rootSpan = spans.find(
-      (span) => span.name === "profile_generator_agent",
+      (span) => span.name === "profile_generator_agent.agent",
     );
 
     assert.ok(result);
@@ -413,7 +413,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     const spans = memoryExporter.getFinishedSpans();
 
     // Find the root AI span (should be named with agent name)
-    const rootSpan = spans.find((span) => span.name === "poetry_agent");
+    const rootSpan = spans.find((span) => span.name === "poetry_agent.agent");
 
     assert.ok(result);
     assert.ok(
@@ -437,5 +437,105 @@ describe("Test AI SDK Agent Integration with Recording", function () {
       "poetry_agent",
       "Root span should have entity name = agent name",
     );
+  });
+
+  it("should properly scope agent names in nested agent scenarios", async () => {
+    const innerAgentTool = tool({
+      description: "Calls an inner agent to perform a subtask",
+      inputSchema: z.object({
+        query: z.string().describe("Query for the inner agent"),
+      }),
+      execute: async ({ query }) => {
+        const innerResult = await generateText({
+          model: vercel_openai("gpt-4o-mini"),
+          prompt: `Inner agent processing: ${query}`,
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId: "inner_agent_function",
+            metadata: {
+              agent: "inner_agent",
+              sessionId: "nested_test_session",
+            },
+          },
+        });
+        return { innerResponse: innerResult.text };
+      },
+    });
+
+    const result = await traceloop.withWorkflow(
+      { name: "nested_agent_test_workflow" },
+      async () => {
+        return await generateText({
+          model: vercel_openai("gpt-4o-mini"),
+          prompt: "Use the inner agent tool to help answer: What is 2+2?",
+          tools: {
+            innerAgentTool,
+          },
+          maxSteps: 5,
+          experimental_telemetry: {
+            isEnabled: true,
+            functionId: "outer_agent_function",
+            metadata: {
+              agent: "outer_agent",
+              sessionId: "nested_test_session",
+            },
+          },
+        });
+      },
+    );
+
+    await traceloop.forceFlush();
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    const outerAgentSpan = spans.find(
+      (span) => span.name === "outer_agent.agent",
+    );
+    const innerAgentSpan = spans.find(
+      (span) => span.name === "inner_agent.agent",
+    );
+    const toolSpan = spans.find(
+      (span) =>
+        span.name.endsWith(".tool") &&
+        span.attributes["traceloop.entity.name"] === "innerAgentTool",
+    );
+
+    assert.ok(result);
+    assert.ok(outerAgentSpan, "Outer agent span should exist");
+    assert.ok(innerAgentSpan, "Inner agent span should exist");
+
+    assert.strictEqual(
+      outerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      "outer_agent",
+      "Outer agent span should have outer_agent name",
+    );
+
+    assert.strictEqual(
+      innerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      "inner_agent",
+      "Inner agent span should have inner_agent name, not inherit from outer_agent",
+    );
+
+    if (toolSpan) {
+      assert.strictEqual(
+        toolSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        "outer_agent",
+        "Tool span should inherit agent name from outer_agent",
+      );
+    }
+
+    const innerAgentChildSpans = spans.filter((span) => {
+      return (
+        span.parentSpanContext?.spanId === innerAgentSpan.spanContext().spanId
+      );
+    });
+
+    for (const childSpan of innerAgentChildSpans) {
+      assert.strictEqual(
+        childSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        "inner_agent",
+        `Child span "${childSpan.name}" of inner agent should have inner_agent name`,
+      );
+    }
   });
 });
