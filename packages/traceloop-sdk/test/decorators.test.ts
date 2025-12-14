@@ -512,30 +512,22 @@ describe("Test SDK Decorators", () => {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       result.choices[0].message.content,
     );
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       "15",
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -669,51 +661,35 @@ describe("Test SDK Decorators", () => {
     assert.ok(result);
     assert.ok(generateTextSpan);
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.role`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "What is the capital of France?",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_REQUEST_MODEL}`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_RESPONSE_MODEL}`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_RESPONSE_MODEL}`],
       "gpt-3.5-turbo-0125",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.role`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.content`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       result.text,
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`],
       14,
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`],
       8,
     );
     assert.strictEqual(

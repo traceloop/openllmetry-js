@@ -160,24 +160,18 @@ describe("Test OpenAI instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       "15",
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -205,30 +199,22 @@ describe("Test OpenAI instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       result,
     );
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       "8",
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -256,40 +242,26 @@ describe("Test OpenAI instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       result,
     );
+    assert.ok(completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`]);
     assert.ok(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
-    );
-    assert.ok(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`],
     );
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       "8",
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -311,9 +283,7 @@ describe("Test OpenAI instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -342,9 +312,7 @@ describe("Test OpenAI instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -432,9 +400,7 @@ describe("Test OpenAI instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "What's the weather like in Boston?",
     );
     assert.strictEqual(
@@ -483,15 +449,11 @@ describe("Test OpenAI instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       82,
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -536,9 +498,7 @@ describe("Test OpenAI instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "What's the weather like in Boston?",
     );
     assert.strictEqual(
@@ -588,15 +548,11 @@ describe("Test OpenAI instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       82,
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -713,10 +669,7 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.ok(imageSpan);
 
-    assert.strictEqual(
-      imageSpan.attributes[ATTR_GEN_AI_SYSTEM],
-      "OpenAI",
-    );
+    assert.strictEqual(imageSpan.attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
     assert.strictEqual(
       imageSpan.attributes["gen_ai.request.type"],
       "image_generation",
@@ -740,17 +693,11 @@ describe("Test OpenAI instrumentation", async function () {
     );
 
     // Check token usage calculation (dall-e-2 1024x1024 should be ~1056 tokens)
-    assert.ok(
-      imageSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
-    );
+    assert.ok(imageSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
     assert.ok(imageSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
 
     // Check response content
-    assert.ok(
-      imageSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.content`
-      ],
-    );
+    assert.ok(imageSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
     assert.strictEqual(
       imageSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
@@ -777,10 +724,7 @@ describe("Test OpenAI instrumentation", async function () {
     const editSpan = spans.find((span) => span.name === "openai.images.edit");
     assert.ok(editSpan);
 
-    assert.strictEqual(
-      editSpan.attributes[ATTR_GEN_AI_SYSTEM],
-      "OpenAI",
-    );
+    assert.strictEqual(editSpan.attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
     assert.strictEqual(
       editSpan.attributes["gen_ai.request.type"],
       "image_edit",
@@ -808,9 +752,7 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(editSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include prompt tokens
 
     // Check response content
-    assert.ok(
-      editSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-    );
+    assert.ok(editSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
     assert.strictEqual(
       editSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
@@ -838,10 +780,7 @@ describe("Test OpenAI instrumentation", async function () {
     );
     assert.ok(variationSpan);
 
-    assert.strictEqual(
-      variationSpan.attributes[ATTR_GEN_AI_SYSTEM],
-      "OpenAI",
-    );
+    assert.strictEqual(variationSpan.attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
     assert.strictEqual(
       variationSpan.attributes["gen_ai.request.type"],
       "image_variation",
@@ -858,23 +797,15 @@ describe("Test OpenAI instrumentation", async function () {
 
     // Check token usage calculation (DALL-E 2 1024x1024 = 1056 tokens)
     assert.strictEqual(
-      variationSpan.attributes[
-        ATTR_GEN_AI_USAGE_COMPLETION_TOKENS
-      ],
+      variationSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
       1056,
     );
     assert.ok(variationSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include estimated input tokens
 
     // Check response content
-    assert.ok(
-      variationSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.content`
-      ],
-    );
+    assert.ok(variationSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
     assert.strictEqual(
-      variationSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.role`
-      ],
+      variationSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
   });

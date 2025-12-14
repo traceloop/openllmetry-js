@@ -280,9 +280,7 @@ describe("Test Agent Decorator", () => {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });

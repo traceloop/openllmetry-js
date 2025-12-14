@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 export const SpanAttributes = {
   // Attributes not yet in @opentelemetry/semantic-conventions
   GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS:

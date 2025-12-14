@@ -222,8 +222,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
     try {
       attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
-      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] =
-        params.temperature;
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
       attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
 
@@ -239,8 +238,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           params.max_tokens_to_sample;
       } else {
-        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
-          params.max_tokens;
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_tokens;
       }
 
       if (
@@ -258,8 +256,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
           // If a system prompt is provided, it should always be first
           if ("system" in params && params.system !== undefined) {
-            attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] =
-              "system";
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "system";
             attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
               typeof params.system === "string"
                 ? params.system
@@ -269,23 +266,19 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
           params.messages.forEach((message, index) => {
             const currentIndex = index + promptIndex;
-            attributes[
-              `${ATTR_GEN_AI_PROMPT}.${currentIndex}.role`
-            ] = message.role;
+            attributes[`${ATTR_GEN_AI_PROMPT}.${currentIndex}.role`] =
+              message.role;
             if (typeof message.content === "string") {
-              attributes[
-                `${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
-              ] = (message.content as string) || "";
+              attributes[`${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`] =
+                (message.content as string) || "";
             } else {
-              attributes[
-                `${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`
-              ] = JSON.stringify(message.content);
+              attributes[`${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`] =
+                JSON.stringify(message.content);
             }
           });
         } else {
           attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
-            params.prompt;
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
         }
       }
     } catch (e) {
@@ -494,10 +487,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         result: Completion;
       }) {
     try {
-      span.setAttribute(
-        ATTR_GEN_AI_RESPONSE_MODEL,
-        result.model,
-      );
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
       if (type === "chat" && result.usage) {
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
@@ -522,19 +512,13 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
-          span.setAttribute(
-            `${ATTR_GEN_AI_COMPLETION}.0.role`,
-            "assistant",
-          );
+          span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
           span.setAttribute(
             `${ATTR_GEN_AI_COMPLETION}.0.content`,
             JSON.stringify(result.content),
           );
         } else {
-          span.setAttribute(
-            `${ATTR_GEN_AI_COMPLETION}.0.role`,
-            "assistant",
-          );
+          span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
           span.setAttribute(
             `${ATTR_GEN_AI_COMPLETION}.0.content`,
             result.completion,

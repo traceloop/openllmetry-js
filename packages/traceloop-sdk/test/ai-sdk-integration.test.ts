@@ -271,9 +271,7 @@ describe("Test AI SDK Integration with Recording", function () {
     // Verify LLM_OUTPUT_MESSAGES attribute exists and is valid JSON
     assert.ok(aiSdkSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
     const outputMessages = JSON.parse(
-      aiSdkSpan.attributes[
-        ATTR_GEN_AI_OUTPUT_MESSAGES
-      ] as string,
+      aiSdkSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
     assert.ok(Array.isArray(outputMessages));
     assert.strictEqual(outputMessages.length, 1);
@@ -337,9 +335,7 @@ describe("Test AI SDK Integration with Recording", function () {
 
     assert.ok(
       (
-        generateTextSpan.attributes[
-          ATTR_GEN_AI_REQUEST_MODEL
-        ] as string
+        generateTextSpan.attributes[ATTR_GEN_AI_REQUEST_MODEL] as string
       ).includes("claude"),
     );
 

@@ -151,10 +151,7 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      model,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TOP_P],
       params.textGenerationConfig.topP,
@@ -167,18 +164,9 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
       attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.textGenerationConfig.maxTokenCount,
     );
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-      prompt,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      model,
-    );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.content`], prompt);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(
       attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
@@ -237,18 +225,12 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_SYSTEM],
-          "AWS",
-        );
+        assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
         assert.strictEqual(
           attributes[SpanAttributes.LLM_REQUEST_TYPE],
           "completion",
         );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_MODEL],
-          model,
-        );
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(
           attributes[ATTR_GEN_AI_REQUEST_TOP_P],
           params.textGenerationConfig.topP,
@@ -261,18 +243,12 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
           attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
           params.textGenerationConfig.maxTokenCount,
         );
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-          "user",
-        );
+        assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
         assert.strictEqual(
           attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
           prompt,
         );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_MODEL],
-          model,
-        );
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(
           attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
           "assistant",
@@ -291,9 +267,7 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
             parsedResponse["totalOutputTextTokenCount"],
         );
         assert.strictEqual(
-          attributes[
-            `${ATTR_GEN_AI_COMPLETION}.0.finish_reason`
-          ],
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
           parsedResponse["completionReason"],
         );
         assert.strictEqual(

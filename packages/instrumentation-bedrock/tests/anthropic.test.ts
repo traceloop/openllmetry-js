@@ -149,14 +149,8 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      model,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
-      params.top_p,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
@@ -166,18 +160,9 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
       attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.max_tokens_to_sample,
     );
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-      prompt,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      model,
-    );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.content`], prompt);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(
       attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
@@ -224,22 +209,13 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_SYSTEM],
-          "AWS",
-        );
+        assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
         assert.strictEqual(
           attributes[SpanAttributes.LLM_REQUEST_TYPE],
           "completion",
         );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_MODEL],
-          model,
-        );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_TOP_P],
-          params.top_p,
-        );
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
         assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
         assert.strictEqual(
           attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
@@ -249,18 +225,12 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
           attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
           params.max_tokens_to_sample,
         );
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-          "user",
-        );
+        assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
         assert.strictEqual(
           attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
           prompt,
         );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_MODEL],
-          model,
-        );
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(
           attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
           "assistant",

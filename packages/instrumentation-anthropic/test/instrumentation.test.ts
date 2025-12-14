@@ -142,22 +142,13 @@ describe("Test Anthropic instrumentation", async function () {
       chatSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       JSON.stringify(message.content),
     );
-    assert.equal(
-      chatSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
-      17,
-    );
+    assert.equal(chatSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`], 17);
     assert.ok(
-      +chatSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
     assert.equal(
-      +chatSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ]! +
-        +chatSpan.attributes[
-          `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-        ]!,
+      +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`]! +
+        +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]!,
       chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
   }).timeout(30000);
@@ -205,22 +196,13 @@ describe("Test Anthropic instrumentation", async function () {
       chatSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       JSON.stringify(message.content),
     );
-    assert.equal(
-      chatSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
-      17,
-    );
+    assert.equal(chatSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`], 17);
     assert.ok(
-      +chatSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
     assert.equal(
-      +chatSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ]! +
-        +chatSpan.attributes[
-          `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-        ]!,
+      +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`]! +
+        +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]!,
       chatSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
   }).timeout(30000);
@@ -248,10 +230,7 @@ describe("Test Anthropic instrumentation", async function () {
       span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "You are a helpful assistant",
     );
-    assert.strictEqual(
-      span.attributes[`${ATTR_GEN_AI_PROMPT}.1.role`],
-      "user",
-    );
+    assert.strictEqual(span.attributes[`${ATTR_GEN_AI_PROMPT}.1.role`], "user");
   }).timeout(30000);
 
   it("should set attributes in span for beta messages with thinking", async () => {
@@ -311,9 +290,7 @@ describe("Test Anthropic instrumentation", async function () {
 
     // Check that we capture both thinking and regular content blocks
     const content = JSON.parse(
-      chatSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.content`
-      ] as string,
+      chatSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] as string,
     );
     assert.ok(Array.isArray(content));
 
@@ -340,9 +317,7 @@ describe("Test Anthropic instrumentation", async function () {
 
     // Verify token usage includes thinking tokens
     const completionTokens =
-      chatSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ];
+      chatSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`];
     const promptTokens =
       chatSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`];
     const totalTokens =

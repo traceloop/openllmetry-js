@@ -118,10 +118,7 @@ describe.skip("Test Rerank with Cohere Instrumentation", () => {
       params?.model ?? "command",
     );
 
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
     assert.strictEqual(
       attributes[`${ATTR_GEN_AI_PROMPT}.0.user`],
       params.query,

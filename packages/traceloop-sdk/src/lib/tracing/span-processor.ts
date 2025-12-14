@@ -15,9 +15,7 @@ import {
   AGENT_NAME_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import {
-  ATTR_GEN_AI_AGENT_NAME,
-} from "@opentelemetry/semantic-conventions/incubating";
+import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import {
   transformAiSdkSpanAttributes,
   transformAiSdkSpanNames,

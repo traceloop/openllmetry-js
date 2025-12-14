@@ -148,14 +148,8 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      model,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
-      params.topP,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.topP);
     assert.strictEqual(
       attributes[SpanAttributes.LLM_PRESENCE_PENALTY],
       params.presencePenalty.scale,
@@ -172,18 +166,9 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
       attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.maxTokens,
     );
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-      prompt,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      model,
-    );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.content`], prompt);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(
       attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",

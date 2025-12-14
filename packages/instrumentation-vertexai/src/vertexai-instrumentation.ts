@@ -172,8 +172,7 @@ export class VertexAIInstrumentation extends InstrumentationBase {
         let i = 0;
 
         if (instance["systemInstruction"]) {
-          attributes[`${ATTR_GEN_AI_PROMPT}.${i}.role`] =
-            "system";
+          attributes[`${ATTR_GEN_AI_PROMPT}.${i}.role`] = "system";
           attributes[`${ATTR_GEN_AI_PROMPT}.${i}.content`] =
             this._formatPartsData(instance["systemInstruction"].parts);
 

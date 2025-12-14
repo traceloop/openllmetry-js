@@ -58,15 +58,9 @@ export class CustomLLMInstrumentation {
 
         try {
           span.setAttribute(ATTR_GEN_AI_SYSTEM, className);
-          span.setAttribute(
-            ATTR_GEN_AI_REQUEST_MODEL,
-            this.metadata.model,
-          );
+          span.setAttribute(ATTR_GEN_AI_REQUEST_MODEL, this.metadata.model);
           span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
-          span.setAttribute(
-            ATTR_GEN_AI_REQUEST_TOP_P,
-            this.metadata.topP,
-          );
+          span.setAttribute(ATTR_GEN_AI_REQUEST_TOP_P, this.metadata.topP);
           if (shouldSendPrompts(plugin.config)) {
             for (const messageIdx in messages) {
               const content = messages[messageIdx].content;
@@ -142,10 +136,7 @@ export class CustomLLMInstrumentation {
     span: Span,
     metadata: llamaindex.LLMMetadata,
   ): T {
-    span.setAttribute(
-      ATTR_GEN_AI_RESPONSE_MODEL,
-      metadata.model,
-    );
+    span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
 
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
@@ -161,10 +152,7 @@ export class CustomLLMInstrumentation {
         );
         const content = (result as llamaindex.ChatResponse).message.content;
         if (typeof content === "string") {
-          span.setAttribute(
-            `${ATTR_GEN_AI_COMPLETION}.0.content`,
-            content,
-          );
+          span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.content`, content);
         } else if (content[0].type === "text") {
           span.setAttribute(
             `${ATTR_GEN_AI_COMPLETION}.0.content`,
@@ -189,10 +177,7 @@ export class CustomLLMInstrumentation {
     execContext: Context,
     metadata: llamaindex.LLMMetadata,
   ): T {
-    span.setAttribute(
-      ATTR_GEN_AI_RESPONSE_MODEL,
-      metadata.model,
-    );
+    span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
     if (!shouldSendPrompts(this.config)) {
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
@@ -200,10 +185,7 @@ export class CustomLLMInstrumentation {
     }
 
     return llmGeneratorWrapper(result, execContext, (message) => {
-      span.setAttribute(
-        `${ATTR_GEN_AI_COMPLETION}.0.content`,
-        message,
-      );
+      span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.content`, message);
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
     }) as any;

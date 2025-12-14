@@ -449,10 +449,7 @@ describe("Test Langchain instrumentation", async function () {
       assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
       assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
       assert.ok(attributes[ATTR_GEN_AI_REQUEST_MODEL]);
-      assert.strictEqual(
-        attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-        "user",
-      );
+      assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
       assert.strictEqual(
         attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
         "What is a popular landmark in the most populous city in the US?",
@@ -461,9 +458,7 @@ describe("Test Langchain instrumentation", async function () {
         attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
         "assistant",
       );
-      assert.ok(
-        attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-      );
+      assert.ok(attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
       assert.ok(attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS]);
       assert.ok(attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
@@ -478,10 +473,7 @@ describe("Test Langchain instrumentation", async function () {
 
       // Test completion span attributes
       const completionAttributes = completionSpan.attributes;
-      assert.strictEqual(
-        completionAttributes[ATTR_GEN_AI_SYSTEM],
-        "AWS",
-      );
+      assert.strictEqual(completionAttributes[ATTR_GEN_AI_SYSTEM], "AWS");
       assert.strictEqual(
         completionAttributes[SpanAttributes.LLM_REQUEST_TYPE],
         "chat",
@@ -490,14 +482,8 @@ describe("Test Langchain instrumentation", async function () {
         completionAttributes[ATTR_GEN_AI_REQUEST_MODEL],
         "claude-3-7-sonnet",
       );
-      assert.ok(
-        completionAttributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
-      );
-      assert.ok(
-        completionAttributes[
-          ATTR_GEN_AI_USAGE_COMPLETION_TOKENS
-        ],
-      );
+      assert.ok(completionAttributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS]);
+      assert.ok(completionAttributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
       assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     }
   }).timeout(300000);

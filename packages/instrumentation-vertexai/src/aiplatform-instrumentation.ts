@@ -283,10 +283,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
   }) {
     try {
       if (result[0].model)
-        span.setAttribute(
-          ATTR_GEN_AI_RESPONSE_MODEL,
-          result[0].model,
-        );
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result[0].model);
 
       if (result) {
         if (result[0].metadata) {

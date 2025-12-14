@@ -317,12 +317,10 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     try {
       attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
       if (params.max_tokens) {
-        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
-          params.max_tokens;
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_tokens;
       }
       if (params.temperature) {
-        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] =
-          params.temperature;
+        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
       }
       if (params.top_p) {
         attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
@@ -349,16 +347,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "chat") {
           params.messages.forEach((message, index) => {
-            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] =
-              message.role;
+            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = message.role;
             if (typeof message.content === "string") {
-              attributes[
-                `${ATTR_GEN_AI_PROMPT}.${index}.content`
-              ] = (message.content as string) || "";
+              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
+                (message.content as string) || "";
             } else {
-              attributes[
-                `${ATTR_GEN_AI_PROMPT}.${index}.content`
-              ] = JSON.stringify(message.content);
+              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
+                JSON.stringify(message.content);
             }
           });
           params.functions?.forEach((func, index) => {
@@ -394,11 +389,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         } else {
           attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
           if (typeof params.prompt === "string") {
-            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
-              params.prompt;
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
           } else {
-            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
-              JSON.stringify(params.prompt);
+            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = JSON.stringify(
+              params.prompt,
+            );
           }
         }
       }
@@ -669,10 +664,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     | { span: Span; type: "chat"; result: ChatCompletion }
     | { span: Span; type: "completion"; result: Completion }) {
     try {
-      span.setAttribute(
-        ATTR_GEN_AI_RESPONSE_MODEL,
-        result.model,
-      );
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
       if (result.usage) {
         span.setAttribute(
           SpanAttributes.LLM_USAGE_TOTAL_TOKENS,

@@ -112,19 +112,13 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params?.model ?? "command",
     );
 
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
     assert.strictEqual(
       attributes[`${ATTR_GEN_AI_PROMPT}.0.user`],
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
-      params.p,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
@@ -192,19 +186,13 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params?.model ?? "command",
     );
 
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
     assert.strictEqual(
       attributes[`${ATTR_GEN_AI_PROMPT}.0.user`],
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
-      params.p,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,

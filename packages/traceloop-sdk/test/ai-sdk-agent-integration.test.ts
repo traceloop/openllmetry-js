@@ -20,9 +20,7 @@ import { openai as vercel_openai } from "@ai-sdk/openai";
 import { generateText, generateObject, streamText, tool } from "ai";
 import { z } from "zod";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import {
-  ATTR_GEN_AI_AGENT_NAME,
-} from "@opentelemetry/semantic-conventions/incubating";
+import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 
 import * as traceloop from "../src";
 

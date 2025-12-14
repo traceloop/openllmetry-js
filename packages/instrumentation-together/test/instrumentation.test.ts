@@ -133,9 +133,7 @@ describe("Test Together instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "What's the weather like in Boston?",
     );
     assert.strictEqual(
@@ -184,15 +182,11 @@ describe("Test Together instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       333,
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -214,30 +208,23 @@ describe("Test Together instrumentation", async function () {
       assert.ok(result);
       assert.ok(completionSpan);
       assert.strictEqual(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_PROMPT}.0.role`
-        ],
+        completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
         "user",
       );
       assert.strictEqual(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_PROMPT}.0.content`
-        ],
+        completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
         "Tell me a joke about OpenTelemetry",
       );
       assert.ok(
         completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
       );
       assert.equal(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-        ],
+        completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
         37,
       );
       assert.ok(
-        +completionSpan.attributes[
-          `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-        ]! > 0,
+        +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! >
+          0,
       );
     } catch (error) {
       console.error("Error in test:", error);
@@ -270,36 +257,27 @@ describe("Test Together instrumentation", async function () {
       assert.ok(result);
       assert.ok(completionSpan);
       assert.strictEqual(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_PROMPT}.0.role`
-        ],
+        completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
         "user",
       );
       assert.strictEqual(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_PROMPT}.0.content`
-        ],
+        completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
         "Tell me a joke about OpenTelemetry",
       );
       assert.strictEqual(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_COMPLETION}.0.content`
-        ],
+        completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
         result,
       );
       assert.ok(
         completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
       );
       assert.equal(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-        ],
+        completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
         37,
       );
       assert.ok(
-        +completionSpan.attributes[
-          `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-        ]! > 0,
+        +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! >
+          0,
       );
     } catch (error) {
       console.error("Error in streaming test:", error);
@@ -326,23 +304,17 @@ describe("Test Together instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.role`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.ok(
@@ -387,9 +359,7 @@ describe("Test Together instrumentation", async function () {
       "Prompt role should be 'user'",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
       "Prompt content should match input",
     );
@@ -398,15 +368,11 @@ describe("Test Together instrumentation", async function () {
       "Total tokens should be set",
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
       "Completion tokens should be greater than 0",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.role`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
       "Completion role should be 'assistant'",
     );
@@ -464,9 +430,7 @@ describe("Test Together instrumentation", async function () {
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_PROMPT}.0.content`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "What's the weather like in Boston?",
     );
     assert.strictEqual(
@@ -515,15 +479,11 @@ describe("Test Together instrumentation", async function () {
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`
-      ],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       333,
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 

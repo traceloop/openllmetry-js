@@ -238,14 +238,12 @@ export class CohereInstrumentation extends InstrumentationBase {
       if (!("query" in params)) {
         attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.p;
         attributes[SpanAttributes.LLM_TOP_K] = params.k;
-        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] =
-          params.temperature;
+        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
         attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
           params.frequencyPenalty;
         attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =
           params.presencePenalty;
-        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
-          params.maxTokens;
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.maxTokens;
       } else {
         attributes["topN"] = params["topN"];
         attributes["maxChunksPerDoc"] = params["maxChunksPerDoc"];
@@ -254,16 +252,13 @@ export class CohereInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === "completion" && "prompt" in params) {
           attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.user`] =
-            params.prompt;
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.user`] = params.prompt;
         } else if (type === "chat" && "message" in params) {
           params.chatHistory?.forEach((msg, index) => {
-            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] =
-              msg.role;
+            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = msg.role;
             if (msg.role !== "TOOL") {
-              attributes[
-                `${ATTR_GEN_AI_PROMPT}.${index}.content`
-              ] = msg.message;
+              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
+                msg.message;
             }
           });
 
@@ -275,8 +270,7 @@ export class CohereInstrumentation extends InstrumentationBase {
           ] = params.message;
         } else if (type === "rerank" && "query" in params) {
           attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.user`] =
-            params.query;
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.user`] = params.query;
           params.documents.forEach((doc, index) => {
             attributes[`documents.${index}.index`] =
               typeof doc === "string" ? doc : doc.text;
@@ -451,14 +445,8 @@ export class CohereInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts()) {
-        span.setAttribute(
-          `${ATTR_GEN_AI_COMPLETION}.0.role`,
-          "assistant",
-        );
-        span.setAttribute(
-          `${ATTR_GEN_AI_COMPLETION}.0.content`,
-          result.text,
-        );
+        span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
+        span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.content`, result.text);
 
         if (result.searchQueries?.[0].text) {
           span.setAttribute(
@@ -528,10 +516,7 @@ export class CohereInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts() && result.generations) {
-        span.setAttribute(
-          `${ATTR_GEN_AI_COMPLETION}.0.role`,
-          "assistant",
-        );
+        span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
         span.setAttribute(
           `${ATTR_GEN_AI_COMPLETION}.0.content`,
           result.generations[0].text,

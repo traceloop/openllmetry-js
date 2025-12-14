@@ -129,10 +129,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       params.message,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
-      params.p,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
@@ -229,10 +226,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       params.message,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
-      params.p,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
@@ -288,9 +282,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
         );
         if ("finishReason" in response && response.finishReason) {
           assert.strictEqual(
-            attributes[
-              `${ATTR_GEN_AI_COMPLETION}.0.finish_reason`
-            ],
+            attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
             response.finishReason,
           );
         }

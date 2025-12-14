@@ -148,10 +148,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       output.generations.forEach((generation, idx) => {
         if (generation && generation.length > 0) {
           span.setAttributes({
-            [`${ATTR_GEN_AI_COMPLETION}.${idx}.role`]:
-              "assistant",
-            [`${ATTR_GEN_AI_COMPLETION}.${idx}.content`]:
-              generation[0].text,
+            [`${ATTR_GEN_AI_COMPLETION}.${idx}.role`]: "assistant",
+            [`${ATTR_GEN_AI_COMPLETION}.${idx}.content`]: generation[0].text,
           });
         }
       });
@@ -176,8 +174,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       }
       if (usage.output_tokens) {
         span.setAttributes({
-          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
-            usage.output_tokens,
+          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]: usage.output_tokens,
         });
       }
       const totalTokens =
@@ -199,8 +196,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       }
       if (usage.completionTokens) {
         span.setAttributes({
-          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
-            usage.completionTokens,
+          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]: usage.completionTokens,
         });
       }
       if (usage.totalTokens) {
