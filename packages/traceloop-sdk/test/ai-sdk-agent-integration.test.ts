@@ -503,20 +503,20 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     assert.ok(innerAgentSpan, "Inner agent span should exist");
 
     assert.strictEqual(
-      outerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      outerAgentSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       "outer_agent",
       "Outer agent span should have outer_agent name",
     );
 
     assert.strictEqual(
-      innerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      innerAgentSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       "inner_agent",
       "Inner agent span should have inner_agent name, not inherit from outer_agent",
     );
 
     if (toolSpan) {
       assert.strictEqual(
-        toolSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        toolSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
         "outer_agent",
         "Tool span should inherit agent name from outer_agent",
       );
@@ -530,7 +530,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     for (const childSpan of innerAgentChildSpans) {
       assert.strictEqual(
-        childSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        childSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
         "inner_agent",
         `Child span "${childSpan.name}" of inner agent should have inner_agent name`,
       );
