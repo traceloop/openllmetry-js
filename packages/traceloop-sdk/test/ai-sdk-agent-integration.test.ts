@@ -20,6 +20,7 @@ import { openai as vercel_openai } from "@ai-sdk/openai";
 import { generateText, generateObject, streamText, tool } from "ai";
 import { z } from "zod";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 
 import * as traceloop from "../src";
 
@@ -162,7 +163,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span has agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       "test_calculator_agent",
       "Root span should have agent name",
     );
@@ -200,7 +201,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     // Verify tool call span inherits agent name
     if (toolSpan) {
       assert.strictEqual(
-        toolSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        toolSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
         "test_calculator_agent",
         "Tool span should inherit agent name from parent",
       );
@@ -218,7 +219,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     // Verify child LLM span inherits agent name
     if (childLLMSpan) {
       assert.strictEqual(
-        childLLMSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        childLLMSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
         "test_calculator_agent",
         "Child LLM span should inherit agent name from parent",
       );
@@ -306,7 +307,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span does NOT have agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       undefined,
       "Root span should not have agent name when no agent metadata",
     );
@@ -361,7 +362,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span has agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       "profile_generator_agent",
       "Root span should have agent name",
     );
@@ -420,7 +421,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     // Verify root span has agent attributes
     assert.strictEqual(
-      rootSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      rootSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       "poetry_agent",
       "Root span should have agent name",
     );
@@ -502,20 +503,20 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     assert.ok(innerAgentSpan, "Inner agent span should exist");
 
     assert.strictEqual(
-      outerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      outerAgentSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       "outer_agent",
       "Outer agent span should have outer_agent name",
     );
 
     assert.strictEqual(
-      innerAgentSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+      innerAgentSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
       "inner_agent",
       "Inner agent span should have inner_agent name, not inherit from outer_agent",
     );
 
     if (toolSpan) {
       assert.strictEqual(
-        toolSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        toolSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
         "outer_agent",
         "Tool span should inherit agent name from outer_agent",
       );
@@ -529,7 +530,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
 
     for (const childSpan of innerAgentChildSpans) {
       assert.strictEqual(
-        childSpan.attributes[SpanAttributes.GEN_AI_AGENT_NAME],
+        childSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
         "inner_agent",
         `Child span "${childSpan.name}" of inner agent should have inner_agent name`,
       );

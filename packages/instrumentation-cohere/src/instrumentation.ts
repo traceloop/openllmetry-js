@@ -34,6 +34,17 @@ import {
   LLMRequestTypeValues,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { version } from "../package.json";
 
 type LLM_COMPLETION_TYPE = "chat" | "completion" | "rerank";
@@ -216,24 +227,23 @@ export class CohereInstrumentation extends InstrumentationBase {
     type: LLM_COMPLETION_TYPE;
   }): Span {
     const attributes: Attributes = {
-      [SpanAttributes.LLM_SYSTEM]: "Cohere",
+      [ATTR_GEN_AI_SYSTEM]: "Cohere",
       [SpanAttributes.LLM_REQUEST_TYPE]: this._getLlmRequestTypeByMethod(type),
     };
 
     try {
       const model = params.model ?? "command";
-      attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
-      attributes[SpanAttributes.LLM_REQUEST_MODEL] = model;
+      attributes[ATTR_GEN_AI_REQUEST_MODEL] = model;
 
       if (!("query" in params)) {
-        attributes[SpanAttributes.LLM_REQUEST_TOP_P] = params.p;
+        attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.p;
         attributes[SpanAttributes.LLM_TOP_K] = params.k;
-        attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE] = params.temperature;
+        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
         attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
           params.frequencyPenalty;
         attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =
           params.presencePenalty;
-        attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS] = params.maxTokens;
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.maxTokens;
       } else {
         attributes["topN"] = params["topN"];
         attributes["maxChunksPerDoc"] = params["maxChunksPerDoc"];
@@ -241,27 +251,26 @@ export class CohereInstrumentation extends InstrumentationBase {
 
       if (this._shouldSendPrompts()) {
         if (type === "completion" && "prompt" in params) {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.prompt;
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.user`] = params.prompt;
         } else if (type === "chat" && "message" in params) {
           params.chatHistory?.forEach((msg, index) => {
-            attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.role`] =
-              msg.role;
+            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = msg.role;
             if (msg.role !== "TOOL") {
-              attributes[`${SpanAttributes.LLM_PROMPTS}.${index}.content`] =
+              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
                 msg.message;
             }
           });
 
           attributes[
-            `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.role`
+            `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.role`
           ] = "user";
           attributes[
-            `${SpanAttributes.LLM_PROMPTS}.${params.chatHistory?.length ?? 0}.user`
+            `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
           ] = params.message;
         } else if (type === "rerank" && "query" in params) {
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`] = "user";
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`] = params.query;
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.user`] = params.query;
           params.documents.forEach((doc, index) => {
             attributes[`documents.${index}.index`] =
               typeof doc === "string" ? doc : doc.text;
@@ -364,13 +373,13 @@ export class CohereInstrumentation extends InstrumentationBase {
         if (this._shouldSendPrompts()) {
           result.results.forEach((each, idx) => {
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
+              `${ATTR_GEN_AI_COMPLETION}.${idx}.relevanceScore`,
               each.relevanceScore,
             );
 
             if (each.document && each.document?.text) {
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`,
+                `${ATTR_GEN_AI_COMPLETION}.${idx}.content`,
                 each.document.text,
               );
             }
@@ -378,12 +387,12 @@ export class CohereInstrumentation extends InstrumentationBase {
         } else {
           result.results.forEach((each, idx) => {
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${idx}.content`,
+              `${ATTR_GEN_AI_COMPLETION}.${idx}.content`,
               each.index,
             );
 
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.${idx}.relevanceScore`,
+              `${ATTR_GEN_AI_COMPLETION}.${idx}.relevanceScore`,
               each.relevanceScore,
             );
           });
@@ -407,7 +416,7 @@ export class CohereInstrumentation extends InstrumentationBase {
           typeof result.token_count.prompt_tokens === "number"
         ) {
           span.setAttribute(
-            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+            ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
             result.token_count?.prompt_tokens,
           );
         }
@@ -418,7 +427,7 @@ export class CohereInstrumentation extends InstrumentationBase {
           typeof result.token_count.response_tokens === "number"
         ) {
           span.setAttribute(
-            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+            ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
             result.token_count?.response_tokens,
           );
         }
@@ -436,18 +445,12 @@ export class CohereInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts()) {
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-          "assistant",
-        );
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
-          result.text,
-        );
+        span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
+        span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.content`, result.text);
 
         if (result.searchQueries?.[0].text) {
           span.setAttribute(
-            `${SpanAttributes.LLM_COMPLETIONS}.0.searchQuery`,
+            `${ATTR_GEN_AI_COMPLETION}.0.searchQuery`,
             result.searchQueries?.[0].text,
           );
         }
@@ -456,12 +459,12 @@ export class CohereInstrumentation extends InstrumentationBase {
           result.searchResults.forEach((searchResult, index) => {
             if (searchResult.searchQuery) {
               span.setAttribute(
-                `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.text`,
+                `${ATTR_GEN_AI_COMPLETION}.0.searchResult.${index}.text`,
                 searchResult.searchQuery.text,
               );
             }
             span.setAttribute(
-              `${SpanAttributes.LLM_COMPLETIONS}.0.searchResult.${index}.connector`,
+              `${ATTR_GEN_AI_COMPLETION}.0.searchResult.${index}.connector`,
               searchResult.connector.id,
             );
           });
@@ -470,7 +473,7 @@ export class CohereInstrumentation extends InstrumentationBase {
 
       if ("finishReason" in result && typeof result.finishReason === "string") {
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          `${ATTR_GEN_AI_COMPLETION}.0.finish_reason`,
           result.finishReason,
         );
       }
@@ -488,14 +491,14 @@ export class CohereInstrumentation extends InstrumentationBase {
       if (result && "meta" in result) {
         if (typeof result.meta?.billedUnits?.inputTokens === "number") {
           span.setAttribute(
-            SpanAttributes.LLM_USAGE_PROMPT_TOKENS,
+            ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
             result.meta?.billedUnits?.inputTokens,
           );
         }
 
         if (typeof result.meta?.billedUnits?.outputTokens === "number") {
           span.setAttribute(
-            SpanAttributes.LLM_USAGE_COMPLETION_TOKENS,
+            ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
             result.meta?.billedUnits?.outputTokens,
           );
         }
@@ -513,12 +516,9 @@ export class CohereInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts() && result.generations) {
+        span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.role`,
-          "assistant",
-        );
-        span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.content`,
+          `${ATTR_GEN_AI_COMPLETION}.0.content`,
           result.generations[0].text,
         );
       }
@@ -529,7 +529,7 @@ export class CohereInstrumentation extends InstrumentationBase {
         typeof result.generations[0].finish_reason === "string"
       ) {
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          `${ATTR_GEN_AI_COMPLETION}.0.finish_reason`,
           result.generations[0].finish_reason,
         );
       }
@@ -540,7 +540,7 @@ export class CohereInstrumentation extends InstrumentationBase {
         typeof result.generations[0].finishReason === "string"
       ) {
         span.setAttribute(
-          `${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`,
+          `${ATTR_GEN_AI_COMPLETION}.0.finish_reason`,
           result.generations[0].finishReason,
         );
       }

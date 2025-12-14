@@ -25,6 +25,16 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import * as cohereModule from "cohere-ai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import FetchAdapter from "@pollyjs/adapter-fetch";
@@ -92,28 +102,25 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`],
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.user`],
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -125,7 +132,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params.frequencyPenalty,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
@@ -134,11 +141,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       typeof response.meta?.billedUnits?.outputTokens === "number"
     ) {
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+        attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
         response.meta?.billedUnits?.inputTokens,
       );
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+        attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
         response.meta?.billedUnits?.outputTokens,
       );
       assert.strictEqual(
@@ -148,11 +155,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       );
     }
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       response.generations[0].text,
     );
   });
@@ -169,28 +176,25 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
     const attributes = spans[0].attributes;
 
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "Cohere");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Cohere");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.user`],
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.user`],
       params.prompt,
     );
     assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TOP_P], params.p);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
     );
     assert.strictEqual(
@@ -202,7 +206,7 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
       params.frequencyPenalty,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MODEL],
+      attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
@@ -214,11 +218,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
           typeof response.meta?.billedUnits?.outputTokens === "number"
         ) {
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
             response.meta?.billedUnits?.inputTokens,
           );
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
             response.meta?.billedUnits?.outputTokens,
           );
           assert.strictEqual(
@@ -228,11 +232,11 @@ describe.skip("Test Generate with Cohere Instrumentation", () => {
           );
         }
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
           "assistant",
         );
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
           response.generations[0].text,
         );
       }

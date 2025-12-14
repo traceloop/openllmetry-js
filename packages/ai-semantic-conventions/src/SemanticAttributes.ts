@@ -14,33 +14,12 @@
  * limitations under the License.
  */
 
-import {
-  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
-  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
-  // @ts-expect-error - Using exports path that TypeScript doesn't recognize but works at runtime
-} from "@opentelemetry/semantic-conventions/incubating";
-
 export const SpanAttributes = {
-  LLM_SYSTEM: "gen_ai.system",
-  LLM_REQUEST_MODEL: "gen_ai.request.model",
-  LLM_REQUEST_MAX_TOKENS: "gen_ai.request.max_tokens",
-  LLM_REQUEST_TEMPERATURE: "gen_ai.request.temperature",
-  LLM_REQUEST_TOP_P: "gen_ai.request.top_p",
-  LLM_PROMPTS: "gen_ai.prompt",
-  LLM_COMPLETIONS: "gen_ai.completion",
-  LLM_INPUT_MESSAGES: "gen_ai.input.messages",
-  LLM_OUTPUT_MESSAGES: "gen_ai.output.messages",
-  LLM_RESPONSE_MODEL: "gen_ai.response.model",
-  LLM_USAGE_PROMPT_TOKENS: "gen_ai.usage.prompt_tokens",
-  LLM_USAGE_COMPLETION_TOKENS: "gen_ai.usage.completion_tokens",
-  LLM_USAGE_INPUT_TOKENS: ATTR_GEN_AI_USAGE_INPUT_TOKENS,
-  LLM_USAGE_OUTPUT_TOKENS: ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  // Attributes not yet in @opentelemetry/semantic-conventions
   GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS:
     "gen_ai.usage.cache_creation_input_tokens",
   GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: "gen_ai.usage.cache_read_input_tokens",
   GEN_AI_USAGE_REASONING_TOKENS: "gen_ai.usage.reasoning_tokens",
-
-  GEN_AI_AGENT_NAME: "gen_ai.agent.name",
 
   // LLM
   LLM_REQUEST_TYPE: "llm.request.type",

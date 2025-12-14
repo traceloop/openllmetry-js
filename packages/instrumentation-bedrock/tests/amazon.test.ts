@@ -26,6 +26,17 @@ import {
 import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
@@ -135,43 +146,37 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
     );
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TOP_P],
+      attributes[ATTR_GEN_AI_REQUEST_TOP_P],
       params.textGenerationConfig.topP,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.textGenerationConfig.temperature,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS],
+      attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.textGenerationConfig.maxTokenCount,
     );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.content`], prompt);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
-      prompt,
-    );
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
-    assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+      attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
       parsedResponse["inputTextTokenCount"],
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+      attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
       parsedResponse["results"][0]["tokenCount"],
     );
     assert.strictEqual(
@@ -180,11 +185,11 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
         parsedResponse["results"][0]["tokenCount"],
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
       parsedResponse["results"][0]["completionReason"],
     );
     assert.strictEqual(
-      attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       parsedResponse["results"][0]["outputText"],
     );
   });
@@ -220,43 +225,40 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
+        assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
         assert.strictEqual(
           attributes[SpanAttributes.LLM_REQUEST_TYPE],
           "completion",
         );
-        assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_REQUEST_TOP_P],
+          attributes[ATTR_GEN_AI_REQUEST_TOP_P],
           params.textGenerationConfig.topP,
         );
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_REQUEST_TEMPERATURE],
+          attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
           params.textGenerationConfig.temperature,
         );
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_REQUEST_MAX_TOKENS],
+          attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
           params.textGenerationConfig.maxTokenCount,
         );
+        assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-          "user",
-        );
-        assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+          attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
           prompt,
         );
-        assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_MODEL], model);
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
           "assistant",
         );
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+          attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
           parsedResponse["inputTextTokenCount"],
         );
         assert.strictEqual(
-          attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+          attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
           parsedResponse["totalOutputTextTokenCount"],
         );
         assert.strictEqual(
@@ -265,23 +267,23 @@ describe("Test Amazon Titan with AWS Bedrock Instrumentation", () => {
             parsedResponse["totalOutputTextTokenCount"],
         );
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.finish_reason`],
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
           parsedResponse["completionReason"],
         );
         assert.strictEqual(
-          attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
           parsedResponse["outputText"],
         );
 
         if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
             parsedResponse["amazon-bedrock-invocationMetrics"][
               "inputTokenCount"
             ],
           );
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
             parsedResponse["amazon-bedrock-invocationMetrics"][
               "outputTokenCount"
             ],

@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".",
+    "moduleResolution": "node16",
+    "module": "node16"
   },
   "files": [],
   "include": ["src/**/*.ts", "test/**/*.ts"],

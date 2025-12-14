@@ -10,7 +10,7 @@
     "build": "rollup -c",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "ts-mocha -p tsconfig.json 'test/**/*.test.ts' --timeout 40000"
+    "test": "ts-mocha -p tsconfig.test.json 'test/**/*.test.ts' --timeout 40000"
   },
   "keywords": [
     "opentelemetry",
@@ -40,7 +40,7 @@
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/core": "^2.0.1",
     "@opentelemetry/instrumentation": "^0.203.0",
-    "@opentelemetry/semantic-conventions": "^1.36.0",
+    "@opentelemetry/semantic-conventions": "^1.38.0",
     "@traceloop/ai-semantic-conventions": "workspace:*",
     "js-tiktoken": "^1.0.20",
     "tslib": "^2.8.1"

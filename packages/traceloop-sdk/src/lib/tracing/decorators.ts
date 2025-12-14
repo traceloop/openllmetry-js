@@ -13,6 +13,7 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
+import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import { shouldSendTraces } from ".";
 
 export type DecoratorConfig = {
@@ -101,10 +102,7 @@ function withEntity<
         // Set agent name on all spans when there's an active agent context
         const agentName = entityContext.getValue(AGENT_NAME_KEY);
         if (agentName) {
-          span.setAttribute(
-            SpanAttributes.GEN_AI_AGENT_NAME,
-            agentName as string,
-          );
+          span.setAttribute(ATTR_GEN_AI_AGENT_NAME, agentName as string);
         }
 
         if (version) {

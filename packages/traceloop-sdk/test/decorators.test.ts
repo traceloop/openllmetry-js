@@ -28,6 +28,16 @@ import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { initializeSharedTraceloop, getSharedExporter } from "./test-setup";
 
@@ -149,11 +159,11 @@ describe("Test SDK Decorators", () => {
       "sample_chat",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -264,11 +274,11 @@ describe("Test SDK Decorators", () => {
       "sample_chat",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -353,11 +363,11 @@ describe("Test SDK Decorators", () => {
       workflowName,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -414,15 +424,15 @@ describe("Test SDK Decorators", () => {
       "sample_chat",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       undefined,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       undefined,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      chatSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       undefined,
     );
   });
@@ -490,36 +500,34 @@ describe("Test SDK Decorators", () => {
       "chat",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      completionSpan.attributes[`${ATTR_GEN_AI_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_RESPONSE_MODEL}`],
+      completionSpan.attributes[`${ATTR_GEN_AI_RESPONSE_MODEL}`],
       "gpt-3.5-turbo-0125",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`],
+      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       result.choices[0].message.content,
     );
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
     assert.equal(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_PROMPT_TOKENS}`],
+      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
       "15",
     );
     assert.ok(
-      +completionSpan.attributes[
-        `${SpanAttributes.LLM_USAGE_COMPLETION_TOKENS}`
-      ]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
     );
   });
 
@@ -553,12 +561,12 @@ describe("Test SDK Decorators", () => {
 
     const openAI1Span = spans.find(
       (span) =>
-        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
         "Tell me a joke about OpenTelemetry",
     );
     const openAI2Span = spans.find(
       (span) =>
-        span.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
         "Tell me a joke about Typescript",
     );
 
@@ -653,37 +661,35 @@ describe("Test SDK Decorators", () => {
     assert.ok(result);
     assert.ok(generateTextSpan);
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
       "user",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
       "What is the capital of France?",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_REQUEST_MODEL}`],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_RESPONSE_MODEL}`],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_RESPONSE_MODEL}`],
       "gpt-3.5-turbo-0125",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
       "assistant",
     );
     assert.strictEqual(
-      generateTextSpan.attributes[
-        `${SpanAttributes.LLM_COMPLETIONS}.0.content`
-      ],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       result.text,
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_INPUT_TOKENS}`],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`],
       14,
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_OUTPUT_TOKENS}`],
+      generateTextSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`],
       8,
     );
     assert.strictEqual(

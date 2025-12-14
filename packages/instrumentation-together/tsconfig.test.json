@@ -2,10 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "moduleResolution": "bundler",
     "rootDir": "."
   },
-  "files": [],
-  "include": ["src/**/*.ts", "tests/**/*.ts", "package.json"],
+  "include": ["src/**/*.ts", "test/**/*.ts"],
   "references": []
 }

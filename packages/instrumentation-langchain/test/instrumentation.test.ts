@@ -35,6 +35,14 @@ import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_ru
 
 import { LangChainInstrumentation } from "../src/instrumentation";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
@@ -432,30 +440,27 @@ describe("Test Langchain instrumentation", async function () {
 
     // Look for LLM span created by Bedrock instrumentation
     const llmSpan = spans.find(
-      (span) => span.attributes[SpanAttributes.LLM_SYSTEM] === "AWS",
+      (span) => span.attributes[ATTR_GEN_AI_SYSTEM] === "AWS",
     );
 
     if (llmSpan) {
       // Test LLM span attributes like in amazon.test.ts
       const attributes = llmSpan.attributes;
-      assert.strictEqual(attributes[SpanAttributes.LLM_SYSTEM], "AWS");
+      assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
       assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
-      assert.ok(attributes[SpanAttributes.LLM_REQUEST_MODEL]);
+      assert.ok(attributes[ATTR_GEN_AI_REQUEST_MODEL]);
+      assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
       assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.role`],
-        "user",
-      );
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_PROMPTS}.0.content`],
+        attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
         "What is a popular landmark in the most populous city in the US?",
       );
       assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.role`],
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
         "assistant",
       );
-      assert.ok(attributes[`${SpanAttributes.LLM_COMPLETIONS}.0.content`]);
-      assert.ok(attributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
-      assert.ok(attributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS]);
+      assert.ok(attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
+      assert.ok(attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS]);
+      assert.ok(attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
       assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     } else {
       // Test LangChain callback handler spans - now only creates completion span
@@ -468,22 +473,17 @@ describe("Test Langchain instrumentation", async function () {
 
       // Test completion span attributes
       const completionAttributes = completionSpan.attributes;
-      assert.strictEqual(
-        completionAttributes[SpanAttributes.LLM_SYSTEM],
-        "AWS",
-      );
+      assert.strictEqual(completionAttributes[ATTR_GEN_AI_SYSTEM], "AWS");
       assert.strictEqual(
         completionAttributes[SpanAttributes.LLM_REQUEST_TYPE],
         "chat",
       );
       assert.strictEqual(
-        completionAttributes[SpanAttributes.LLM_REQUEST_MODEL],
+        completionAttributes[ATTR_GEN_AI_REQUEST_MODEL],
         "claude-3-7-sonnet",
       );
-      assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_PROMPT_TOKENS]);
-      assert.ok(
-        completionAttributes[SpanAttributes.LLM_USAGE_COMPLETION_TOKENS],
-      );
+      assert.ok(completionAttributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS]);
+      assert.ok(completionAttributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
       assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     }
   }).timeout(300000);

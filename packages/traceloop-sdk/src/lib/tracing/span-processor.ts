@@ -15,6 +15,7 @@ import {
   AGENT_NAME_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import {
   transformAiSdkSpanAttributes,
   transformAiSdkSpanNames,
@@ -189,7 +190,7 @@ const onSpanStart = (span: Span): void => {
   }
 
   if (agentName) {
-    span.setAttribute(SpanAttributes.GEN_AI_AGENT_NAME, agentName);
+    span.setAttribute(ATTR_GEN_AI_AGENT_NAME, agentName);
     const spanId = span.spanContext().spanId;
     spanAgentNames.set(spanId, { agentName, timestamp: Date.now() });
   }
@@ -271,7 +272,7 @@ const onSpanEnd = (
 
     const spanId = span.spanContext().spanId;
     const parentSpanId = span.parentSpanContext?.spanId;
-    let agentName = span.attributes[SpanAttributes.GEN_AI_AGENT_NAME];
+    let agentName = span.attributes[ATTR_GEN_AI_AGENT_NAME];
 
     if (agentName && typeof agentName === "string") {
       spanAgentNames.set(spanId, {
@@ -284,7 +285,7 @@ const onSpanEnd = (
       spanAgentNames.has(parentSpanId)
     ) {
       agentName = spanAgentNames.get(parentSpanId)!.agentName;
-      span.attributes[SpanAttributes.GEN_AI_AGENT_NAME] = agentName;
+      span.attributes[ATTR_GEN_AI_AGENT_NAME] = agentName;
       spanAgentNames.set(spanId, {
         agentName,
         timestamp: Date.now(),
