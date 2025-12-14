@@ -110,7 +110,9 @@ class InteractiveChatbot {
           parameters: z.object({
             expression: z
               .string()
-              .describe("The mathematical expression to evaluate (e.g., '2 + 2' or '10 * 5')"),
+              .describe(
+                "The mathematical expression to evaluate (e.g., '2 + 2' or '10 * 5')",
+              ),
           }),
           execute: async ({ expression }) => {
             try {
@@ -130,16 +132,25 @@ class InteractiveChatbot {
           description:
             "Get the current weather for a location. Use this when users ask about weather conditions.",
           parameters: z.object({
-            location: z.string().describe("The city and country, e.g., 'London, UK'"),
+            location: z
+              .string()
+              .describe("The city and country, e.g., 'London, UK'"),
           }),
           execute: async ({ location }) => {
             console.log(
               `\n${colors.yellow}🔧 Weather: Checking weather for ${location}${colors.reset}`,
             );
             // Simulated weather data
-            const weatherConditions = ["sunny", "cloudy", "rainy", "partly cloudy"];
+            const weatherConditions = [
+              "sunny",
+              "cloudy",
+              "rainy",
+              "partly cloudy",
+            ];
             const condition =
-              weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+              weatherConditions[
+                Math.floor(Math.random() * weatherConditions.length)
+              ];
             const temperature = Math.floor(Math.random() * 30) + 10; // 10-40°C
             return {
               location,

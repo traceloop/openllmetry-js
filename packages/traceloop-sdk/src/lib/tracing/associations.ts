@@ -17,7 +17,7 @@ export enum AssociationProperty {
  * Use this to check if a property should be set directly or with the TRACELOOP_ASSOCIATION_PROPERTIES prefix.
  */
 export const STANDARD_ASSOCIATION_PROPERTIES = new Set<string>(
-  Object.values(AssociationProperty)
+  Object.values(AssociationProperty),
 );
 
 /**
@@ -48,7 +48,9 @@ export class Associations {
     // Get current associations from context or create empty object
     const existingAssociations = otelContext
       .active()
-      .getValue(ASSOCATION_PROPERTIES_KEY) as Record<string, string> | undefined;
+      .getValue(ASSOCATION_PROPERTIES_KEY) as
+      | Record<string, string>
+      | undefined;
     const currentAssociations: Record<string, string> = existingAssociations
       ? { ...existingAssociations }
       : {};
@@ -65,7 +67,7 @@ export class Associations {
 
     // Set the new context as active using the context manager
     // This is the equivalent of Python's attach(set_value(...))
-    const contextManager = (otelContext as any)['_getContextManager']();
+    const contextManager = (otelContext as any)["_getContextManager"]();
     if (
       contextManager &&
       contextManager instanceof AsyncLocalStorageContextManager

@@ -112,7 +112,9 @@ async function customerServiceDemo() {
       });
 
       console.log("Customer 1 (cust-001):");
-      console.log(`Response: ${customer1Response.choices[0].message.content}\n`);
+      console.log(
+        `Response: ${customer1Response.choices[0].message.content}\n`,
+      );
 
       // Customer 2 - Update associations for new customer
       traceloop.Associations.set([
@@ -131,7 +133,9 @@ async function customerServiceDemo() {
       });
 
       console.log("Customer 2 (cust-002):");
-      console.log(`Response: ${customer2Response.choices[0].message.content}\n`);
+      console.log(
+        `Response: ${customer2Response.choices[0].message.content}\n`,
+      );
     },
   );
 }

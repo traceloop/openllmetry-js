@@ -111,10 +111,7 @@ describe("Test Associations API", () => {
     assert.ok(chatSpan);
 
     // Check that the association is set on both workflow and LLM spans
-    assert.strictEqual(
-      workflowSpan.attributes["conversation_id"],
-      "conv-123",
-    );
+    assert.strictEqual(workflowSpan.attributes["conversation_id"], "conv-123");
     assert.strictEqual(
       chatSpan.attributes[
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.conversation_id`
@@ -276,15 +273,6 @@ describe("Test Associations API", () => {
   });
 
   it("should propagate associations to all child spans", async () => {
-    @traceloop.task({ name: "subtask" })
-    async function subtask() {
-      const chatCompletion = await openai.chat.completions.create({
-        messages: [{ role: "user", content: "Child task message" }],
-        model: "gpt-3.5-turbo",
-      });
-      return chatCompletion.choices[0].message.content;
-    }
-
     const result = await traceloop.withWorkflow(
       { name: "test_child_propagation" },
       async () => {
@@ -295,7 +283,16 @@ describe("Test Associations API", () => {
         ]);
 
         // Call a child task
-        const taskResult = await subtask();
+        const taskResult = await traceloop.withTask(
+          { name: "subtask" },
+          async () => {
+            const chatCompletion = await openai.chat.completions.create({
+              messages: [{ role: "user", content: "Child task message" }],
+              model: "gpt-3.5-turbo",
+            });
+            return chatCompletion.choices[0].message.content;
+          },
+        );
 
         return taskResult;
       },
@@ -327,10 +324,16 @@ describe("Test Associations API", () => {
     );
     assert.strictEqual(workflowSpan.attributes["user_id"], "user-propagate");
 
-    assert.strictEqual(taskSpan.attributes["conversation_id"], "conv-propagate");
+    assert.strictEqual(
+      taskSpan.attributes["conversation_id"],
+      "conv-propagate",
+    );
     assert.strictEqual(taskSpan.attributes["user_id"], "user-propagate");
 
-    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-propagate");
+    assert.strictEqual(
+      chatSpan.attributes["conversation_id"],
+      "conv-propagate",
+    );
     assert.strictEqual(chatSpan.attributes["user_id"], "user-propagate");
   });
 
