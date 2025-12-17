@@ -2855,10 +2855,14 @@ describe("AI SDK Transformations", () => {
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], "gpt-4o");
         assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
         assert.strictEqual(attributes[ATTR_GEN_AI_OPERATION_NAME], "chat");
-        assert.deepStrictEqual(attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS], [
-          "tool_calls",
-        ]);
-        assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 75);
+        assert.deepStrictEqual(
+          attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS],
+          ["tool_calls"],
+        );
+        assert.strictEqual(
+          attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
+          75,
+        );
       });
     });
   });

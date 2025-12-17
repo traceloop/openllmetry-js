@@ -270,8 +270,7 @@ const transformTools = (attributes: Record<string, any>): void => {
             if (schema) {
               attributes[
                 `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.parameters`
-              ] =
-                typeof schema === "string" ? schema : JSON.stringify(schema);
+              ] = typeof schema === "string" ? schema : JSON.stringify(schema);
             }
           }
         });
