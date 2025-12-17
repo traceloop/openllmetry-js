@@ -5,9 +5,7 @@ import {
   ATTR_GEN_AI_AGENT_NAME,
   ATTR_GEN_AI_COMPLETION,
   ATTR_GEN_AI_CONVERSATION_ID,
-  ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OPERATION_NAME,
-  ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
@@ -15,15 +13,19 @@ import {
   ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_TOOL_CALL_ARGUMENTS,
   ATTR_GEN_AI_TOOL_CALL_ID,
-  ATTR_GEN_AI_TOOL_CALL_RESULT,
   ATTR_GEN_AI_TOOL_NAME,
   ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
+
+// These constants are not yet available in semantic-conventions, define locally
+const ATTR_GEN_AI_INPUT_MESSAGES = "gen_ai.input.messages";
+const ATTR_GEN_AI_OUTPUT_MESSAGES = "gen_ai.output.messages";
+const ATTR_GEN_AI_TOOL_CALL_ARGUMENTS = "gen_ai.tool.call.arguments";
+const ATTR_GEN_AI_TOOL_CALL_RESULT = "gen_ai.tool.call.result";
 import { context } from "@opentelemetry/api";
 import { ASSOCATION_PROPERTIES_KEY } from "../src/lib/tracing/tracing";
 import {
@@ -2347,6 +2349,519 @@ describe("AI SDK Transformations", () => {
         attributes[`${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.userId`],
         "user_789",
       );
+    });
+  });
+
+  describe("AI SDK v5 Compatibility", () => {
+    describe("tools - inputSchema support (v5 renamed parameters to inputSchema)", () => {
+      it("should transform ai.prompt.tools with inputSchema (v5 format) to LLM request functions", () => {
+        // AI SDK v5 uses inputSchema instead of parameters
+        const attributes = {
+          "ai.prompt.tools": [
+            {
+              name: "getWeather",
+              description: "Get the current weather for a specified location",
+              inputSchema: {
+                type: "object",
+                properties: {
+                  location: {
+                    type: "string",
+                    description: "The location to get weather for",
+                  },
+                },
+                required: ["location"],
+              },
+            },
+            {
+              name: "searchRestaurants",
+              description: "Search for restaurants in a city",
+              inputSchema: {
+                type: "object",
+                properties: {
+                  city: { type: "string" },
+                  cuisine: { type: "string" },
+                },
+              },
+            },
+          ],
+          someOtherAttr: "value",
+        };
+
+        transformLLMSpans(attributes);
+
+        // Check that inputSchema is transformed to parameters
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
+          "getWeather",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`],
+          "Get the current weather for a specified location",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
+          JSON.stringify({
+            type: "object",
+            properties: {
+              location: {
+                type: "string",
+                description: "The location to get weather for",
+              },
+            },
+            required: ["location"],
+          }),
+        );
+
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.name`],
+          "searchRestaurants",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.parameters`],
+          JSON.stringify({
+            type: "object",
+            properties: {
+              city: { type: "string" },
+              cuisine: { type: "string" },
+            },
+          }),
+        );
+
+        // Original attribute should be removed
+        assert.strictEqual(attributes["ai.prompt.tools"], undefined);
+        assert.strictEqual(attributes.someOtherAttr, "value");
+      });
+
+      it("should handle AI SDK v5 string format tools with inputSchema", () => {
+        // AI SDK v5 may serialize tools as JSON strings with inputSchema
+        const attributes = {
+          "ai.prompt.tools": [
+            '{"type":"function","name":"getWeather","description":"Get weather","inputSchema":{"type":"object","properties":{"location":{"type":"string"}}}}',
+            '{"type":"function","name":"searchRestaurants","description":"Find restaurants","inputSchema":{"type":"object","properties":{"city":{"type":"string"}}}}',
+          ],
+        };
+
+        transformLLMSpans(attributes);
+
+        // Should parse and transform the first tool with inputSchema
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
+          "getWeather",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`],
+          "Get weather",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
+          JSON.stringify({
+            type: "object",
+            properties: { location: { type: "string" } },
+          }),
+        );
+
+        // Should parse and transform the second tool
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.name`],
+          "searchRestaurants",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.parameters`],
+          JSON.stringify({
+            type: "object",
+            properties: { city: { type: "string" } },
+          }),
+        );
+
+        assert.strictEqual(attributes["ai.prompt.tools"], undefined);
+      });
+
+      it("should prefer parameters over inputSchema for backward compatibility", () => {
+        // If both parameters and inputSchema exist (unlikely but possible),
+        // prefer parameters for backward compatibility with v4
+        const attributes = {
+          "ai.prompt.tools": [
+            {
+              name: "testTool",
+              description: "Test tool",
+              parameters: { type: "object", from: "v4" },
+              inputSchema: { type: "object", from: "v5" },
+            },
+          ],
+        };
+
+        transformLLMSpans(attributes);
+
+        // Should use parameters (v4) over inputSchema (v5)
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
+          JSON.stringify({ type: "object", from: "v4" }),
+        );
+      });
+
+      it("should handle mixed v4 and v5 tool formats", () => {
+        const attributes = {
+          "ai.prompt.tools": [
+            {
+              name: "v4Tool",
+              description: "v4 format tool",
+              parameters: { type: "object", version: "v4" },
+            },
+            {
+              name: "v5Tool",
+              description: "v5 format tool",
+              inputSchema: { type: "object", version: "v5" },
+            },
+          ],
+        };
+
+        transformLLMSpans(attributes);
+
+        // Both should be properly transformed
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
+          "v4Tool",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
+          JSON.stringify({ type: "object", version: "v4" }),
+        );
+
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.name`],
+          "v5Tool",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.parameters`],
+          JSON.stringify({ type: "object", version: "v5" }),
+        );
+      });
+    });
+
+    describe("tool calls - input support (v5 renamed args to input)", () => {
+      it("should transform ai.response.toolCalls with input (v5 format)", () => {
+        // AI SDK v5 uses input instead of args
+        const toolCallsData = [
+          {
+            toolCallType: "function",
+            toolCallId: "call_v5_weather",
+            toolName: "getWeather",
+            input: '{"location": "San Francisco"}',
+          },
+          {
+            toolCallType: "function",
+            toolCallId: "call_v5_restaurants",
+            toolName: "searchRestaurants",
+            input: '{"city": "San Francisco", "cuisine": "italian"}',
+          },
+        ];
+
+        const attributes = {
+          "ai.response.toolCalls": JSON.stringify(toolCallsData),
+          someOtherAttr: "value",
+        };
+
+        transformLLMSpans(attributes);
+
+        // Check that role is set
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
+          "assistant",
+        );
+
+        // Check first tool call - should use input as arguments
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`],
+          "getWeather",
+        );
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`],
+          '{"location": "San Francisco"}',
+        );
+
+        // Check second tool call
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`],
+          "searchRestaurants",
+        );
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.arguments`],
+          '{"city": "San Francisco", "cuisine": "italian"}',
+        );
+
+        // Check gen_ai.output.messages
+        const outputMessages = JSON.parse(
+          attributes[ATTR_GEN_AI_OUTPUT_MESSAGES],
+        );
+        assert.strictEqual(outputMessages.length, 1);
+        assert.strictEqual(outputMessages[0].parts.length, 2);
+        assert.strictEqual(
+          outputMessages[0].parts[0].tool_call.arguments,
+          '{"location": "San Francisco"}',
+        );
+
+        // Check original attribute is removed
+        assert.strictEqual(attributes["ai.response.toolCalls"], undefined);
+        assert.strictEqual(attributes.someOtherAttr, "value");
+      });
+
+      it("should prefer args over input for backward compatibility", () => {
+        // If both args and input exist, prefer args for v4 compatibility
+        const toolCallsData = [
+          {
+            toolCallType: "function",
+            toolCallId: "call_mixed",
+            toolName: "testTool",
+            args: '{"from": "v4"}',
+            input: '{"from": "v5"}',
+          },
+        ];
+
+        const attributes = {
+          "ai.response.toolCalls": JSON.stringify(toolCallsData),
+        };
+
+        transformLLMSpans(attributes);
+
+        // Should use args (v4) over input (v5)
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`],
+          '{"from": "v4"}',
+        );
+      });
+
+      it("should handle mixed v4 and v5 tool call formats", () => {
+        const toolCallsData = [
+          {
+            toolCallType: "function",
+            toolCallId: "call_v4",
+            toolName: "v4Tool",
+            args: '{"version": "v4"}',
+          },
+          {
+            toolCallType: "function",
+            toolCallId: "call_v5",
+            toolName: "v5Tool",
+            input: '{"version": "v5"}',
+          },
+        ];
+
+        const attributes = {
+          "ai.response.toolCalls": JSON.stringify(toolCallsData),
+        };
+
+        transformLLMSpans(attributes);
+
+        // Both should be properly transformed
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`],
+          "v4Tool",
+        );
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`],
+          '{"version": "v4"}',
+        );
+
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`],
+          "v5Tool",
+        );
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.arguments`],
+          '{"version": "v5"}',
+        );
+      });
+    });
+
+    describe("tool call spans - input support (v5 renamed args to input)", () => {
+      it("should transform ai.toolCall.input (v5 format) to entity input", () => {
+        const mockSpan = {
+          name: "calculate.tool",
+          instrumentationScope: { name: "ai" },
+          attributes: {
+            "ai.toolCall.name": "calculate",
+            "ai.toolCall.input": JSON.stringify({ a: 5, b: 3 }),
+            "ai.toolCall.output": JSON.stringify({ result: 8 }),
+          },
+        } as any;
+
+        transformAiSdkSpanAttributes(mockSpan);
+
+        // Check that v5 format tool call attributes were transformed
+        assert.strictEqual(
+          mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT],
+          JSON.stringify({ a: 5, b: 3 }),
+        );
+        assert.strictEqual(
+          mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT],
+          JSON.stringify({ result: 8 }),
+        );
+
+        // Check that span kind was set to tool
+        assert.strictEqual(
+          mockSpan.attributes[SpanAttributes.TRACELOOP_SPAN_KIND],
+          "tool",
+        );
+
+        // Check that entity name was set from tool name
+        assert.strictEqual(
+          mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_NAME],
+          "calculate",
+        );
+      });
+
+      it("should prefer args/result over input/output for backward compatibility", () => {
+        const mockSpan = {
+          name: "test.tool",
+          instrumentationScope: { name: "ai" },
+          attributes: {
+            "ai.toolCall.name": "test",
+            "ai.toolCall.args": JSON.stringify({ from: "v4-args" }),
+            "ai.toolCall.input": JSON.stringify({ from: "v5-input" }),
+            "ai.toolCall.result": JSON.stringify({ from: "v4-result" }),
+            "ai.toolCall.output": JSON.stringify({ from: "v5-output" }),
+          },
+        } as any;
+
+        transformAiSdkSpanAttributes(mockSpan);
+
+        // Should prefer v4 format (args/result) over v5 (input/output)
+        assert.strictEqual(
+          mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT],
+          JSON.stringify({ from: "v4-args" }),
+        );
+        assert.strictEqual(
+          mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT],
+          JSON.stringify({ from: "v4-result" }),
+        );
+      });
+
+      it("should transform OpenTelemetry tool call attributes from v5 format", () => {
+        const attributes = {
+          "ai.toolCall.name": "getWeather",
+          "ai.toolCall.id": "call_v5_123",
+          "ai.toolCall.input": '{"location":"Paris"}',
+          "ai.toolCall.output": '{"temperature":18}',
+        };
+
+        transformLLMSpans(attributes);
+
+        // Check OpenTelemetry standard attributes
+        assert.strictEqual(attributes[ATTR_GEN_AI_TOOL_NAME], "getWeather");
+        assert.strictEqual(attributes[ATTR_GEN_AI_TOOL_CALL_ID], "call_v5_123");
+        assert.strictEqual(
+          attributes[ATTR_GEN_AI_TOOL_CALL_ARGUMENTS],
+          '{"location":"Paris"}',
+        );
+        assert.strictEqual(
+          attributes[ATTR_GEN_AI_TOOL_CALL_RESULT],
+          '{"temperature":18}',
+        );
+      });
+    });
+
+    describe("complete v5 scenario", () => {
+      it("should handle a complete AI SDK v5 request with tools", () => {
+        const inputMessages = [
+          {
+            role: "system",
+            content: "You are a helpful travel assistant with access to tools.",
+          },
+          {
+            role: "user",
+            content: "What's the weather in San Francisco?",
+          },
+        ];
+
+        const toolCallsData = [
+          {
+            toolCallType: "function",
+            toolCallId: "call_v5_weather_123",
+            toolName: "getWeather",
+            input: '{"location": "San Francisco", "units": "celsius"}',
+          },
+        ];
+
+        const attributes = {
+          "ai.model.id": "gpt-4o",
+          "ai.model.provider": "openai.chat",
+          "ai.prompt.messages": JSON.stringify(inputMessages),
+          "ai.prompt.tools": [
+            {
+              name: "getWeather",
+              description: "Get current weather for a location",
+              inputSchema: {
+                type: "object",
+                properties: {
+                  location: { type: "string", description: "City name" },
+                  units: {
+                    type: "string",
+                    enum: ["celsius", "fahrenheit"],
+                    default: "celsius",
+                  },
+                },
+                required: ["location"],
+              },
+            },
+          ],
+          "ai.response.toolCalls": JSON.stringify(toolCallsData),
+          "ai.response.finishReason": "tool_calls",
+          "ai.usage.promptTokens": 50,
+          "ai.usage.completionTokens": 25,
+          "ai.telemetry.metadata.userId": "user_v5_test",
+        };
+
+        transformLLMSpans(attributes, "ai.generateText");
+
+        // Check tool definition transformation (inputSchema -> parameters)
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
+          "getWeather",
+        );
+        assert.strictEqual(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`],
+          "Get current weather for a location",
+        );
+        const toolParams = JSON.parse(
+          attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
+        );
+        assert.strictEqual(toolParams.type, "object");
+        assert.strictEqual(toolParams.properties.location.type, "string");
+        assert.deepStrictEqual(toolParams.required, ["location"]);
+
+        // Check tool call transformation (input -> arguments)
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`],
+          "getWeather",
+        );
+        assert.strictEqual(
+          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`],
+          '{"location": "San Francisco", "units": "celsius"}',
+        );
+
+        // Check output messages
+        const outputMessages = JSON.parse(
+          attributes[ATTR_GEN_AI_OUTPUT_MESSAGES],
+        );
+        assert.strictEqual(outputMessages[0].parts[0].type, "tool_call");
+        assert.strictEqual(
+          outputMessages[0].parts[0].tool_call.name,
+          "getWeather",
+        );
+        assert.strictEqual(
+          outputMessages[0].parts[0].tool_call.arguments,
+          '{"location": "San Francisco", "units": "celsius"}',
+        );
+
+        // Check other transformations
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], "gpt-4o");
+        assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
+        assert.strictEqual(attributes[ATTR_GEN_AI_OPERATION_NAME], "chat");
+        assert.deepStrictEqual(attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS], [
+          "tool_calls",
+        ]);
+        assert.strictEqual(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS], 75);
+      });
     });
   });
 });
