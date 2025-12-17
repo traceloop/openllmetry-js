@@ -22,13 +22,11 @@ import { anthropic as vercel_anthropic } from "@ai-sdk/anthropic";
 import { generateText } from "ai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_SYSTEM,
 } from "@opentelemetry/semantic-conventions/incubating";
-
-// These constants are not yet available in semantic-conventions, define locally
-const ATTR_GEN_AI_INPUT_MESSAGES = "gen_ai.input.messages";
-const ATTR_GEN_AI_OUTPUT_MESSAGES = "gen_ai.output.messages";
 
 import * as traceloop from "../src";
 

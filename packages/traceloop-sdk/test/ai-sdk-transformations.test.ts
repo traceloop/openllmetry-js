@@ -5,7 +5,9 @@ import {
   ATTR_GEN_AI_AGENT_NAME,
   ATTR_GEN_AI_COMPLETION,
   ATTR_GEN_AI_CONVERSATION_ID,
+  ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
@@ -13,19 +15,15 @@ import {
   ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_TOOL_CALL_ARGUMENTS,
   ATTR_GEN_AI_TOOL_CALL_ID,
+  ATTR_GEN_AI_TOOL_CALL_RESULT,
   ATTR_GEN_AI_TOOL_NAME,
   ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
-
-// These constants are not yet available in semantic-conventions, define locally
-const ATTR_GEN_AI_INPUT_MESSAGES = "gen_ai.input.messages";
-const ATTR_GEN_AI_OUTPUT_MESSAGES = "gen_ai.output.messages";
-const ATTR_GEN_AI_TOOL_CALL_ARGUMENTS = "gen_ai.tool.call.arguments";
-const ATTR_GEN_AI_TOOL_CALL_RESULT = "gen_ai.tool.call.result";
 import { context } from "@opentelemetry/api";
 import { ASSOCATION_PROPERTIES_KEY } from "../src/lib/tracing/tracing";
 import {
@@ -2476,9 +2474,9 @@ describe("AI SDK Transformations", () => {
         assert.strictEqual(attributes["ai.prompt.tools"], undefined);
       });
 
-      it("should prefer parameters over inputSchema for backward compatibility", () => {
+      it("should prefer inputSchema over parameters when both exist", () => {
         // If both parameters and inputSchema exist (unlikely but possible),
-        // prefer parameters for backward compatibility with v4
+        // prefer inputSchema (v5) as it's the newer format
         const attributes = {
           "ai.prompt.tools": [
             {
@@ -2492,10 +2490,10 @@ describe("AI SDK Transformations", () => {
 
         transformLLMSpans(attributes);
 
-        // Should use parameters (v4) over inputSchema (v5)
+        // Should use inputSchema (v5) over parameters (v4)
         assert.strictEqual(
           attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
-          JSON.stringify({ type: "object", from: "v4" }),
+          JSON.stringify({ type: "object", from: "v5" }),
         );
       });
 
@@ -2605,8 +2603,8 @@ describe("AI SDK Transformations", () => {
         assert.strictEqual(attributes.someOtherAttr, "value");
       });
 
-      it("should prefer args over input for backward compatibility", () => {
-        // If both args and input exist, prefer args for v4 compatibility
+      it("should prefer input over args when both exist", () => {
+        // If both args and input exist, prefer input (v5) as it's the newer format
         const toolCallsData = [
           {
             toolCallType: "function",
@@ -2623,10 +2621,10 @@ describe("AI SDK Transformations", () => {
 
         transformLLMSpans(attributes);
 
-        // Should use args (v4) over input (v5)
+        // Should use input (v5) over args (v4)
         assert.strictEqual(
           attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`],
-          '{"from": "v4"}',
+          '{"from": "v5"}',
         );
       });
 
@@ -2710,7 +2708,7 @@ describe("AI SDK Transformations", () => {
         );
       });
 
-      it("should prefer args/result over input/output for backward compatibility", () => {
+      it("should prefer input/output over args/result when both exist", () => {
         const mockSpan = {
           name: "test.tool",
           instrumentationScope: { name: "ai" },
@@ -2725,14 +2723,14 @@ describe("AI SDK Transformations", () => {
 
         transformAiSdkSpanAttributes(mockSpan);
 
-        // Should prefer v4 format (args/result) over v5 (input/output)
+        // Should prefer v5 format (input/output) over v4 (args/result)
         assert.strictEqual(
           mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT],
-          JSON.stringify({ from: "v4-args" }),
+          JSON.stringify({ from: "v5-input" }),
         );
         assert.strictEqual(
           mockSpan.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT],
-          JSON.stringify({ from: "v4-result" }),
+          JSON.stringify({ from: "v5-output" }),
         );
       });
 
