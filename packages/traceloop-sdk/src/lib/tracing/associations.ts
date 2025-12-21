@@ -6,7 +6,6 @@ import { ASSOCIATION_PROPERTIES_KEY } from "./tracing";
  * Standard association properties for tracing.
  */
 export enum AssociationProperty {
-  CONVERSATION_ID = "conversation_id",
   CUSTOMER_ID = "customer_id",
   USER_ID = "user_id",
   SESSION_ID = "session_id",
@@ -36,7 +35,7 @@ export class Associations {
    *
    * @example
    * // Single association
-   * Associations.set([[AssociationProperty.CONVERSATION_ID, "conv-123"]]);
+   * Associations.set([[AssociationProperty.SESSION_ID, "session-123"]]);
    *
    * // Multiple associations
    * Associations.set([

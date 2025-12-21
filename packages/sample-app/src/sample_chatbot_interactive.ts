@@ -26,7 +26,7 @@ const colors = {
 class InteractiveChatbot {
   private conversationHistory: CoreMessage[] = [];
   private rl: readline.Interface;
-  private conversationId: string;
+  private sessionId: string;
   private userId: string;
 
   constructor() {
@@ -36,7 +36,7 @@ class InteractiveChatbot {
       prompt: `${colors.cyan}${colors.bright}You: ${colors.reset}`,
     });
     // Generate unique IDs for this session
-    this.conversationId = `conv-${Date.now()}`;
+    this.sessionId = `session-${Date.now()}`;
     this.userId = `user-${Math.random().toString(36).substring(7)}`;
   }
 
@@ -80,7 +80,7 @@ class InteractiveChatbot {
   async processMessage(userMessage: string): Promise<string> {
     // Set associations for tracing
     traceloop.Associations.set([
-      [traceloop.AssociationProperty.CONVERSATION_ID, this.conversationId],
+      [traceloop.AssociationProperty.SESSION_ID, this.sessionId],
       [traceloop.AssociationProperty.USER_ID, this.userId],
     ]);
 

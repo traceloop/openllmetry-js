@@ -87,7 +87,7 @@ describe("Test Associations API", () => {
       async () => {
         // Set a single association
         traceloop.Associations.set([
-          [traceloop.AssociationProperty.CONVERSATION_ID, "conv-123"],
+          [traceloop.AssociationProperty.SESSION_ID, "session-123"],
         ]);
 
         const chatCompletion = await openai.chat.completions.create({
@@ -112,8 +112,8 @@ describe("Test Associations API", () => {
     assert.ok(chatSpan);
 
     // Check that the association is set on both workflow and LLM spans (standard properties without prefix)
-    assert.strictEqual(workflowSpan.attributes["conversation_id"], "conv-123");
-    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-123");
+    assert.strictEqual(workflowSpan.attributes["session_id"], "session-123");
+    assert.strictEqual(chatSpan.attributes["session_id"], "session-123");
   });
 
   it("should set multiple associations on spans", async () => {
@@ -222,7 +222,6 @@ describe("Test Associations API", () => {
       async () => {
         // Set all association property types
         traceloop.Associations.set([
-          [traceloop.AssociationProperty.CONVERSATION_ID, "conv-abc"],
           [traceloop.AssociationProperty.CUSTOMER_ID, "customer-def"],
           [traceloop.AssociationProperty.USER_ID, "user-ghi"],
           [traceloop.AssociationProperty.SESSION_ID, "session-jkl"],
@@ -246,7 +245,6 @@ describe("Test Associations API", () => {
     assert.ok(chatSpan);
 
     // Check all property types are set (standard properties without prefix)
-    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-abc");
     assert.strictEqual(chatSpan.attributes["customer_id"], "customer-def");
     assert.strictEqual(chatSpan.attributes["user_id"], "user-ghi");
     assert.strictEqual(chatSpan.attributes["session_id"], "session-jkl");
@@ -258,7 +256,7 @@ describe("Test Associations API", () => {
       async () => {
         // Set associations at the workflow level
         traceloop.Associations.set([
-          [traceloop.AssociationProperty.CONVERSATION_ID, "conv-propagate"],
+          [traceloop.AssociationProperty.SESSION_ID, "session-propagate"],
           [traceloop.AssociationProperty.USER_ID, "user-propagate"],
         ]);
 
@@ -299,20 +297,20 @@ describe("Test Associations API", () => {
 
     // All spans should have the associations (standard properties without prefix)
     assert.strictEqual(
-      workflowSpan.attributes["conversation_id"],
-      "conv-propagate",
+      workflowSpan.attributes["session_id"],
+      "session-propagate",
     );
     assert.strictEqual(workflowSpan.attributes["user_id"], "user-propagate");
 
     assert.strictEqual(
-      taskSpan.attributes["conversation_id"],
-      "conv-propagate",
+      taskSpan.attributes["session_id"],
+      "session-propagate",
     );
     assert.strictEqual(taskSpan.attributes["user_id"], "user-propagate");
 
     assert.strictEqual(
-      chatSpan.attributes["conversation_id"],
-      "conv-propagate",
+      chatSpan.attributes["session_id"],
+      "session-propagate",
     );
     assert.strictEqual(chatSpan.attributes["user_id"], "user-propagate");
   });
@@ -323,7 +321,7 @@ describe("Test Associations API", () => {
       async () => {
         // Set standard associations
         traceloop.Associations.set([
-          [traceloop.AssociationProperty.CONVERSATION_ID, "conv-merge"],
+          [traceloop.AssociationProperty.SESSION_ID, "session-merge"],
           [traceloop.AssociationProperty.USER_ID, "user-merge"],
         ]);
 
@@ -354,7 +352,7 @@ describe("Test Associations API", () => {
     assert.ok(chatSpan);
 
     // Standard properties should be without prefix
-    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-merge");
+    assert.strictEqual(chatSpan.attributes["session_id"], "session-merge");
     assert.strictEqual(chatSpan.attributes["user_id"], "user-merge");
 
     // Custom property should have prefix

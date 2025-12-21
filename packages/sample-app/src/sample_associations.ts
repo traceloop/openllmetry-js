@@ -12,12 +12,11 @@ const openai = new OpenAI();
 
 /**
  * Sample chatbot that demonstrates the Associations API.
- * This example shows how to track conversations, users, and sessions
+ * This example shows how to track users and sessions
  * across multiple LLM interactions.
  */
 class ChatbotWithAssociations {
   constructor(
-    private conversationId: string,
     private userId: string,
     private sessionId: string,
   ) {}
@@ -28,14 +27,12 @@ class ChatbotWithAssociations {
   @traceloop.workflow({ name: "chatbot_conversation" })
   async handleConversation() {
     console.log("\n=== Starting Chatbot Conversation ===");
-    console.log(`Conversation ID: ${this.conversationId}`);
     console.log(`User ID: ${this.userId}`);
     console.log(`Session ID: ${this.sessionId}\n`);
 
     // Set standard associations at the beginning of the conversation
     // These will be automatically attached to all spans within this context
     traceloop.Associations.set([
-      [traceloop.AssociationProperty.CONVERSATION_ID, this.conversationId],
       [traceloop.AssociationProperty.USER_ID, this.userId],
       [traceloop.AssociationProperty.SESSION_ID, this.sessionId],
     ]);
@@ -151,7 +148,6 @@ async function main() {
   try {
     // Example 1: Multi-turn chatbot conversation with custom properties
     const chatbot = new ChatbotWithAssociations(
-      "conv-abc-123", // conversation_id
       "user-alice-456", // user_id
       "session-xyz-789", // session_id
     );
@@ -166,7 +162,7 @@ async function main() {
       "Check your Traceloop dashboard to see the associations attached to traces!",
     );
     console.log(
-      "You can filter and search by conversation_id, user_id, session_id, customer_id, or custom properties like chat_subject.",
+      "You can filter and search by user_id, session_id, customer_id, or custom properties like chat_subject.",
     );
   } catch (error) {
     console.error("Error running demo:", error);
