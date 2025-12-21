@@ -1,5 +1,5 @@
 import { context } from "@opentelemetry/api";
-import { ASSOCATION_PROPERTIES_KEY } from "./tracing";
+import { ASSOCIATION_PROPERTIES_KEY } from "./tracing";
 
 export function withAssociationProperties<
   A extends unknown[],
@@ -17,13 +17,13 @@ export function withAssociationProperties<
   // Get existing associations from context and merge with new properties
   const existingAssociations = context
     .active()
-    .getValue(ASSOCATION_PROPERTIES_KEY) as Record<string, string> | undefined;
+    .getValue(ASSOCIATION_PROPERTIES_KEY) as Record<string, string> | undefined;
   const mergedAssociations = existingAssociations
     ? { ...existingAssociations, ...properties }
     : properties;
 
   const newContext = context
     .active()
-    .setValue(ASSOCATION_PROPERTIES_KEY, mergedAssociations);
+    .setValue(ASSOCIATION_PROPERTIES_KEY, mergedAssociations);
   return context.with(newContext, fn, thisArg, ...args);
 }

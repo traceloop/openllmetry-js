@@ -1,6 +1,6 @@
 import { trace, context as otelContext } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
-import { ASSOCATION_PROPERTIES_KEY } from "./tracing";
+import { ASSOCIATION_PROPERTIES_KEY } from "./tracing";
 
 /**
  * Standard association properties for tracing.
@@ -48,7 +48,7 @@ export class Associations {
     // Get current associations from context or create empty object
     const existingAssociations = otelContext
       .active()
-      .getValue(ASSOCATION_PROPERTIES_KEY) as
+      .getValue(ASSOCIATION_PROPERTIES_KEY) as
       | Record<string, string>
       | undefined;
     const currentAssociations: Record<string, string> = existingAssociations
@@ -63,7 +63,7 @@ export class Associations {
     // Store associations in context
     const newContext = otelContext
       .active()
-      .setValue(ASSOCATION_PROPERTIES_KEY, currentAssociations);
+      .setValue(ASSOCIATION_PROPERTIES_KEY, currentAssociations);
 
     // Set the new context as active using the context manager
     // This is the equivalent of Python's attach(set_value(...))
