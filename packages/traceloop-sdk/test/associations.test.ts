@@ -302,16 +302,10 @@ describe("Test Associations API", () => {
     );
     assert.strictEqual(workflowSpan.attributes["user_id"], "user-propagate");
 
-    assert.strictEqual(
-      taskSpan.attributes["session_id"],
-      "session-propagate",
-    );
+    assert.strictEqual(taskSpan.attributes["session_id"], "session-propagate");
     assert.strictEqual(taskSpan.attributes["user_id"], "user-propagate");
 
-    assert.strictEqual(
-      chatSpan.attributes["session_id"],
-      "session-propagate",
-    );
+    assert.strictEqual(chatSpan.attributes["session_id"], "session-propagate");
     assert.strictEqual(chatSpan.attributes["user_id"], "user-propagate");
   });
 
