@@ -25,6 +25,7 @@ import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ATTR_GEN_AI_PROMPT } from "@opentelemetry/semantic-conventions/incubating";
 import { initializeSharedTraceloop, getSharedExporter } from "./test-setup";
 
 const memoryExporter = getSharedExporter();
@@ -110,14 +111,9 @@ describe("Test Associations API", () => {
     assert.ok(workflowSpan);
     assert.ok(chatSpan);
 
-    // Check that the association is set on both workflow and LLM spans
+    // Check that the association is set on both workflow and LLM spans (standard properties without prefix)
     assert.strictEqual(workflowSpan.attributes["conversation_id"], "conv-123");
-    assert.strictEqual(
-      chatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.conversation_id`
-      ],
-      "conv-123",
-    );
+    assert.strictEqual(chatSpan.attributes["conversation_id"], "conv-123");
   });
 
   it("should set multiple associations on spans", async () => {
@@ -151,21 +147,11 @@ describe("Test Associations API", () => {
     assert.ok(workflowSpan);
     assert.ok(chatSpan);
 
-    // Check that both associations are set
+    // Check that both associations are set (standard properties without prefix)
     assert.strictEqual(workflowSpan.attributes["user_id"], "user-456");
     assert.strictEqual(workflowSpan.attributes["session_id"], "session-789");
-    assert.strictEqual(
-      chatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.user_id`
-      ],
-      "user-456",
-    );
-    assert.strictEqual(
-      chatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.session_id`
-      ],
-      "session-789",
-    );
+    assert.strictEqual(chatSpan.attributes["user_id"], "user-456");
+    assert.strictEqual(chatSpan.attributes["session_id"], "session-789");
   });
 
   it("should allow updating associations mid-workflow", async () => {
@@ -205,13 +191,13 @@ describe("Test Associations API", () => {
     const firstChatSpan = spans.find(
       (span) =>
         span.name === "openai.chat" &&
-        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
           "First message",
     );
     const secondChatSpan = spans.find(
       (span) =>
         span.name === "openai.chat" &&
-        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
           "Second message",
     );
 
@@ -219,21 +205,11 @@ describe("Test Associations API", () => {
     assert.ok(firstChatSpan);
     assert.ok(secondChatSpan);
 
-    // First span should have initial value
-    assert.strictEqual(
-      firstChatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.session_id`
-      ],
-      "session-initial",
-    );
+    // First span should have initial value (standard properties without prefix)
+    assert.strictEqual(firstChatSpan.attributes["session_id"], "session-initial");
 
-    // Second span should have updated value
-    assert.strictEqual(
-      secondChatSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.session_id`
-      ],
-      "session-updated",
-    );
+    // Second span should have updated value (standard properties without prefix)
+    assert.strictEqual(secondChatSpan.attributes["session_id"], "session-updated");
   });
 
   it("should work with all AssociationProperty types", async () => {
@@ -308,7 +284,7 @@ describe("Test Associations API", () => {
     const chatSpan = spans.find(
       (span) =>
         span.name === "openai.chat" &&
-        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
           "Child task message",
     );
 
@@ -367,7 +343,7 @@ describe("Test Associations API", () => {
     const chatSpan = spans.find(
       (span) =>
         span.name === "openai.chat" &&
-        span.attributes[`${SpanAttributes.ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
           "Test merge",
     );
 

@@ -15,6 +15,7 @@ import {
   AGENT_NAME_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { STANDARD_ASSOCIATION_PROPERTIES } from "./associations";
 import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import {
   transformAiSdkSpanAttributes,
@@ -200,10 +201,16 @@ const onSpanStart = (span: Span): void => {
     .getValue(ASSOCATION_PROPERTIES_KEY);
   if (associationProperties) {
     for (const [key, value] of Object.entries(associationProperties)) {
-      span.setAttribute(
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
-        value,
-      );
+      // Standard association properties are set without prefix on all spans
+      if (STANDARD_ASSOCIATION_PROPERTIES.has(key)) {
+        span.setAttribute(key, value);
+      } else {
+        // Custom properties use the TRACELOOP_ASSOCIATION_PROPERTIES prefix
+        span.setAttribute(
+          `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
+          value,
+        );
+      }
     }
   }
 
