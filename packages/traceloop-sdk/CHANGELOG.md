@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.5](https://github.com/traceloop/openllmetry-js/compare/v0.22.4...v0.22.5) (2025-12-17)
+
+### Bug Fixes
+
+- **ai-sdk:** Add conversion to opentelemetry semantic convention ([#845](https://github.com/traceloop/openllmetry-js/issues/845)) ([8e05349](https://github.com/traceloop/openllmetry-js/commit/8e05349a2a09425020beb65c68ea9eb6cb4bc2ca))
+- **ai-sdk:** support AI SDK v5 renamed tool attributes (inputSchema, input, output) ([#849](https://github.com/traceloop/openllmetry-js/issues/849)) ([46d8993](https://github.com/traceloop/openllmetry-js/commit/46d89937f9989937de54e72cbb734a46c77d4123))
+
 ## [0.22.4](https://github.com/traceloop/openllmetry-js/compare/v0.22.3...v0.22.4) (2025-12-11)
 
 ### Bug Fixes

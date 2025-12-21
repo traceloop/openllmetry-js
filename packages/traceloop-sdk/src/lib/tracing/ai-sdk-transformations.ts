@@ -146,17 +146,21 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
       const toolCallParts: any[] = [];
       toolCalls.forEach((toolCall: any, index: number) => {
         if (toolCall.toolCallType === "function") {
+          // Support both v4 (args) and v5 (input) formats
+          // Prefer v5 (input) if present
+          const toolArgs = toolCall.input ?? toolCall.args;
+
           attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.name`] =
             toolCall.toolName;
           attributes[
             `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.arguments`
-          ] = toolCall.args;
+          ] = toolArgs;
 
           toolCallParts.push({
             type: TYPE_TOOL_CALL,
             tool_call: {
               name: toolCall.toolName,
-              arguments: toolCall.args,
+              arguments: toolArgs,
             },
           });
         }
@@ -260,13 +264,13 @@ const transformTools = (attributes: Record<string, any>): void => {
               ] = tool.description;
             }
 
-            if (tool.parameters) {
+            // Support both v4 (parameters) and v5 (inputSchema) formats
+            // Prefer v5 (inputSchema) if present
+            const schema = tool.inputSchema ?? tool.parameters;
+            if (schema) {
               attributes[
                 `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.parameters`
-              ] =
-                typeof tool.parameters === "string"
-                  ? tool.parameters
-                  : JSON.stringify(tool.parameters);
+              ] = typeof schema === "string" ? schema : JSON.stringify(schema);
             }
           }
         });
@@ -542,14 +546,21 @@ const transformToolCallAttributes = (attributes: Record<string, any>): void => {
     delete attributes["ai.toolCall.id"];
   }
 
-  if ("ai.toolCall.args" in attributes) {
-    attributes[ATTR_GEN_AI_TOOL_CALL_ARGUMENTS] =
-      attributes["ai.toolCall.args"];
+  // Support both v4 (args) and v5 (input) formats
+  // Prefer v5 (input) if present
+  const toolArgs =
+    attributes["ai.toolCall.input"] ?? attributes["ai.toolCall.args"];
+  if (toolArgs !== undefined) {
+    attributes[ATTR_GEN_AI_TOOL_CALL_ARGUMENTS] = toolArgs;
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
 
-  if ("ai.toolCall.result" in attributes) {
-    attributes[ATTR_GEN_AI_TOOL_CALL_RESULT] = attributes["ai.toolCall.result"];
+  // Support both v4 (result) and v5 (output) formats
+  // Prefer v5 (output) if present
+  const toolResult =
+    attributes["ai.toolCall.output"] ?? attributes["ai.toolCall.result"];
+  if (toolResult !== undefined) {
+    attributes[ATTR_GEN_AI_TOOL_CALL_RESULT] = toolResult;
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
 };
@@ -681,16 +692,21 @@ export const transformLLMSpans = (
 };
 
 const transformToolCalls = (span: ReadableSpan): void => {
-  if (
-    span.attributes["ai.toolCall.args"] &&
-    span.attributes["ai.toolCall.result"]
-  ) {
-    span.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] =
-      span.attributes["ai.toolCall.args"];
+  // Support both v4 (args/result) and v5 (input/output) formats
+  // Prefer v5 (input/output) if present
+  const toolInput =
+    span.attributes["ai.toolCall.input"] ?? span.attributes["ai.toolCall.args"];
+  const toolOutput =
+    span.attributes["ai.toolCall.output"] ??
+    span.attributes["ai.toolCall.result"];
+
+  if (toolInput && toolOutput) {
+    span.attributes[SpanAttributes.TRACELOOP_ENTITY_INPUT] = toolInput;
     delete span.attributes["ai.toolCall.args"];
-    span.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] =
-      span.attributes["ai.toolCall.result"];
+    delete span.attributes["ai.toolCall.input"];
+    span.attributes[SpanAttributes.TRACELOOP_ENTITY_OUTPUT] = toolOutput;
     delete span.attributes["ai.toolCall.result"];
+    delete span.attributes["ai.toolCall.output"];
     span.attributes[SpanAttributes.TRACELOOP_SPAN_KIND] =
       TraceloopSpanKindValues.TOOL;
 
