@@ -191,14 +191,12 @@ describe("Test Associations API", () => {
     const firstChatSpan = spans.find(
       (span) =>
         span.name === "openai.chat" &&
-        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
-          "First message",
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] === "First message",
     );
     const secondChatSpan = spans.find(
       (span) =>
         span.name === "openai.chat" &&
-        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
-          "Second message",
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] === "Second message",
     );
 
     assert.ok(result);
@@ -206,10 +204,16 @@ describe("Test Associations API", () => {
     assert.ok(secondChatSpan);
 
     // First span should have initial value (standard properties without prefix)
-    assert.strictEqual(firstChatSpan.attributes["session_id"], "session-initial");
+    assert.strictEqual(
+      firstChatSpan.attributes["session_id"],
+      "session-initial",
+    );
 
     // Second span should have updated value (standard properties without prefix)
-    assert.strictEqual(secondChatSpan.attributes["session_id"], "session-updated");
+    assert.strictEqual(
+      secondChatSpan.attributes["session_id"],
+      "session-updated",
+    );
   });
 
   it("should work with all AssociationProperty types", async () => {
@@ -343,8 +347,7 @@ describe("Test Associations API", () => {
     const chatSpan = spans.find(
       (span) =>
         span.name === "openai.chat" &&
-        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
-          "Test merge",
+        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] === "Test merge",
     );
 
     assert.ok(result);
