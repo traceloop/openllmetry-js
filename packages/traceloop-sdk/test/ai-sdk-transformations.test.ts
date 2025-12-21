@@ -4,7 +4,6 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_AGENT_NAME,
   ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_CONVERSATION_ID,
   ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_OUTPUT_MESSAGES,
@@ -2185,52 +2184,6 @@ describe("AI SDK Transformations", () => {
     });
   });
 
-  describe("transformLLMSpans - conversation id", () => {
-    it("should transform conversationId from metadata", () => {
-      const attributes = {
-        "ai.telemetry.metadata.conversationId": "conv_123",
-      };
-
-      transformLLMSpans(attributes);
-
-      assert.strictEqual(attributes[ATTR_GEN_AI_CONVERSATION_ID], "conv_123");
-    });
-
-    it("should use sessionId as fallback for conversation id", () => {
-      const attributes = {
-        "ai.telemetry.metadata.sessionId": "session_456",
-      };
-
-      transformLLMSpans(attributes);
-
-      assert.strictEqual(
-        attributes[ATTR_GEN_AI_CONVERSATION_ID],
-        "session_456",
-      );
-    });
-
-    it("should prefer conversationId over sessionId", () => {
-      const attributes = {
-        "ai.telemetry.metadata.conversationId": "conv_123",
-        "ai.telemetry.metadata.sessionId": "session_456",
-      };
-
-      transformLLMSpans(attributes);
-
-      assert.strictEqual(attributes[ATTR_GEN_AI_CONVERSATION_ID], "conv_123");
-    });
-
-    it("should not set conversation id when neither is present", () => {
-      const attributes = {
-        "ai.telemetry.metadata.userId": "user_789",
-      };
-
-      transformLLMSpans(attributes);
-
-      assert.strictEqual(attributes[ATTR_GEN_AI_CONVERSATION_ID], undefined);
-    });
-  });
-
   describe("transformLLMSpans - response metadata", () => {
     it("should transform ai.response.model to gen_ai.response.model", () => {
       const attributes = {
@@ -2303,7 +2256,6 @@ describe("AI SDK Transformations", () => {
         ]),
         "ai.usage.promptTokens": 10,
         "ai.usage.completionTokens": 15,
-        "ai.telemetry.metadata.conversationId": "conv_456",
         "ai.telemetry.metadata.userId": "user_789",
       };
 
@@ -2331,9 +2283,6 @@ describe("AI SDK Transformations", () => {
         attributes[ATTR_GEN_AI_RESPONSE_ID],
         "chatcmpl-abc123",
       );
-
-      // Check conversation ID
-      assert.strictEqual(attributes[ATTR_GEN_AI_CONVERSATION_ID], "conv_456");
 
       // Check that original AI SDK attributes are removed
       assert.strictEqual(attributes["ai.model.id"], undefined);

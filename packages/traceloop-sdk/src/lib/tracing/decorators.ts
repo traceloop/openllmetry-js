@@ -2,7 +2,7 @@ import { Span, context } from "@opentelemetry/api";
 import { suppressTracing } from "@opentelemetry/core";
 import {
   AGENT_NAME_KEY,
-  ASSOCATION_PROPERTIES_KEY,
+  ASSOCIATION_PROPERTIES_KEY,
   ENTITY_NAME_KEY,
   getEntityPath,
   getTracer,
@@ -71,7 +71,7 @@ function withEntity<
   }
   if (associationProperties) {
     entityContext = entityContext.setValue(
-      ASSOCATION_PROPERTIES_KEY,
+      ASSOCIATION_PROPERTIES_KEY,
       associationProperties,
     );
   }

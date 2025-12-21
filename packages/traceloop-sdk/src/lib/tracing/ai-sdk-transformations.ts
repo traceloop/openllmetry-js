@@ -6,7 +6,6 @@ import {
 import {
   ATTR_GEN_AI_AGENT_NAME,
   ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_CONVERSATION_ID,
   ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_OUTPUT_MESSAGES,
@@ -565,17 +564,6 @@ const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   }
 };
 
-const transformConversationId = (attributes: Record<string, any>): void => {
-  const conversationId = attributes["ai.telemetry.metadata.conversationId"];
-  const sessionId = attributes["ai.telemetry.metadata.sessionId"];
-
-  if (conversationId) {
-    attributes[ATTR_GEN_AI_CONVERSATION_ID] = conversationId;
-  } else if (sessionId) {
-    attributes[ATTR_GEN_AI_CONVERSATION_ID] = sessionId;
-  }
-};
-
 const transformResponseMetadata = (attributes: Record<string, any>): void => {
   const AI_RESPONSE_MODEL = "ai.response.model";
   const AI_RESPONSE_ID = "ai.response.id";
@@ -686,7 +674,6 @@ export const transformLLMSpans = (
   transformResponseMetadata(attributes);
   calculateTotalTokens(attributes);
   transformVendor(attributes); // Also sets GEN_AI_PROVIDER_NAME
-  transformConversationId(attributes);
   transformToolCallAttributes(attributes);
   transformTelemetryMetadata(attributes, spanName);
 };
