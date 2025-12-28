@@ -16,6 +16,16 @@ export function getSpanAssociationProperties(
   return spanAssociationProperties.get(spanId)?.properties;
 }
 
+export function setSpanAssociationPropertiesForInheritance(
+  spanId: string,
+  properties: { [name: string]: string },
+): void {
+  spanAssociationProperties.set(spanId, {
+    properties,
+    timestamp: Date.now(),
+  });
+}
+
 export function cleanupExpiredSpanAssociationProperties(): void {
   const now = Date.now();
   for (const [spanId, entry] of spanAssociationProperties.entries()) {

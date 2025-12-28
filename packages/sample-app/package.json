@@ -43,6 +43,7 @@
     "run:mcp": "npm run build && node dist/src/sample_mcp.js",
     "run:mcp:real": "npm run build && node dist/src/sample_mcp_real.js",
     "run:mcp:working": "npm run build && node dist/src/sample_mcp_working.js",
+    "run:chatbot_interactive": "npm run build && node dist/src/sample_chatbot_interactive.js",
     "dev:image_generation": "pnpm --filter @traceloop/instrumentation-openai build && pnpm --filter @traceloop/node-server-sdk build && npm run build && node dist/src/sample_openai_image_generation.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

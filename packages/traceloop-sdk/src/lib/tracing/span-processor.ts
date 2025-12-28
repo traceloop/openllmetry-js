@@ -21,6 +21,11 @@ import {
   transformAiSdkSpanNames,
 } from "./ai-sdk-transformations";
 import { parseKeyPairsIntoRecord } from "./baggage-utils";
+import {
+  getSpanAssociationProperties,
+  setSpanAssociationPropertiesForInheritance,
+  cleanupExpiredSpanAssociationProperties,
+} from "./association";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
@@ -198,24 +203,29 @@ const onSpanStart = (span: Span): void => {
   // Check for association properties in context (set by decorators)
   const contextAssociationProperties = context
     .active()
-    .getValue(ASSOCATION_PROPERTIES_KEY);
+    .getValue(ASSOCATION_PROPERTIES_KEY) as { [name: string]: string } | undefined;
 
   // Check for association properties from parent span (set by setAssociationProperties)
   let inheritedAssociationProperties: { [name: string]: string } | undefined;
   const parentSpanContext = (span as any).parentSpanContext;
   const parentSpanId = parentSpanContext?.spanId;
   if (parentSpanId && parentSpanId !== "0000000000000000") {
-    const { getSpanAssociationProperties } = require("./association");
     inheritedAssociationProperties = getSpanAssociationProperties(parentSpanId);
   }
 
   // Merge association properties from both sources
   const mergedAssociationProperties = {
-    ...inheritedAssociationProperties,
-    ...contextAssociationProperties,
+    ...(inheritedAssociationProperties || {}),
+    ...(contextAssociationProperties || {}),
   };
 
   if (Object.keys(mergedAssociationProperties).length > 0) {
+    const spanId = span.spanContext().spanId;
+
+    // Store merged properties on this span so its children can inherit them
+    setSpanAssociationPropertiesForInheritance(spanId, mergedAssociationProperties);
+
+    // Set attributes on the span
     for (const [key, value] of Object.entries(mergedAssociationProperties)) {
       span.setAttribute(
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
@@ -311,7 +321,6 @@ const onSpanEnd = (
 
     if (Math.random() < 0.01) {
       cleanupExpiredSpanAgentNames();
-      const { cleanupExpiredSpanAssociationProperties } = require("./association");
       cleanupExpiredSpanAssociationProperties();
     }
 
