@@ -243,12 +243,8 @@ class InteractiveChatbot {
     console.log(
       `${colors.dim}Commands: /exit (quit) | /clear (clear history)${colors.reset}\n`,
     );
-    console.log(
-      `${colors.dim}Session ID: ${this.sessionId}${colors.reset}`,
-    );
-    console.log(
-      `${colors.dim}User ID: ${this.userId}${colors.reset}\n`,
-    );
+    console.log(`${colors.dim}Session ID: ${this.sessionId}${colors.reset}`);
+    console.log(`${colors.dim}User ID: ${this.userId}${colors.reset}\n`);
 
     this.rl.prompt();
 

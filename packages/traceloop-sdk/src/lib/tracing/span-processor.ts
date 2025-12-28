@@ -203,7 +203,9 @@ const onSpanStart = (span: Span): void => {
   // Check for association properties in context (set by decorators)
   const contextAssociationProperties = context
     .active()
-    .getValue(ASSOCATION_PROPERTIES_KEY) as { [name: string]: string } | undefined;
+    .getValue(ASSOCATION_PROPERTIES_KEY) as
+    | { [name: string]: string }
+    | undefined;
 
   // Check for association properties from parent span (set by setAssociationProperties)
   let inheritedAssociationProperties: { [name: string]: string } | undefined;
@@ -223,7 +225,10 @@ const onSpanStart = (span: Span): void => {
     const spanId = span.spanContext().spanId;
 
     // Store merged properties on this span so its children can inherit them
-    setSpanAssociationPropertiesForInheritance(spanId, mergedAssociationProperties);
+    setSpanAssociationPropertiesForInheritance(
+      spanId,
+      mergedAssociationProperties,
+    );
 
     // Set attributes on the span
     for (const [key, value] of Object.entries(mergedAssociationProperties)) {
