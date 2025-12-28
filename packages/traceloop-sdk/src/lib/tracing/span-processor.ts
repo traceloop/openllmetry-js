@@ -195,11 +195,28 @@ const onSpanStart = (span: Span): void => {
     spanAgentNames.set(spanId, { agentName, timestamp: Date.now() });
   }
 
-  const associationProperties = context
+  // Check for association properties in context (set by decorators)
+  const contextAssociationProperties = context
     .active()
     .getValue(ASSOCATION_PROPERTIES_KEY);
-  if (associationProperties) {
-    for (const [key, value] of Object.entries(associationProperties)) {
+
+  // Check for association properties from parent span (set by setAssociationProperties)
+  let inheritedAssociationProperties: { [name: string]: string } | undefined;
+  const parentSpanContext = (span as any).parentSpanContext;
+  const parentSpanId = parentSpanContext?.spanId;
+  if (parentSpanId && parentSpanId !== "0000000000000000") {
+    const { getSpanAssociationProperties } = require("./association");
+    inheritedAssociationProperties = getSpanAssociationProperties(parentSpanId);
+  }
+
+  // Merge association properties from both sources
+  const mergedAssociationProperties = {
+    ...inheritedAssociationProperties,
+    ...contextAssociationProperties,
+  };
+
+  if (Object.keys(mergedAssociationProperties).length > 0) {
+    for (const [key, value] of Object.entries(mergedAssociationProperties)) {
       span.setAttribute(
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
         value,
@@ -294,6 +311,8 @@ const onSpanEnd = (
 
     if (Math.random() < 0.01) {
       cleanupExpiredSpanAgentNames();
+      const { cleanupExpiredSpanAssociationProperties } = require("./association");
+      cleanupExpiredSpanAssociationProperties();
     }
 
     const compatibleSpan = ensureSpanCompatibility(span);

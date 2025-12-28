@@ -4,6 +4,7 @@ import { UserFeedback } from "./annotation/user-feedback";
 import { Datasets } from "./dataset/datasets";
 import { Experiment } from "./experiment/experiment";
 import { Evaluator } from "./evaluator/evaluator";
+import { Associations } from "../associations/associations";
 
 /**
  * The main client for interacting with Traceloop's API.
@@ -29,6 +30,7 @@ export class TraceloopClient {
   public datasets: Datasets;
   public experiment: Experiment;
   public evaluator: Evaluator;
+  public associations: Associations;
 
   /**
    * Creates a new instance of the TraceloopClient.
@@ -48,6 +50,7 @@ export class TraceloopClient {
     this.datasets = new Datasets(this);
     this.experiment = new Experiment(this);
     this.evaluator = new Evaluator(this);
+    this.associations = new Associations();
   }
 
   async post(path: string, body: Record<string, unknown> | any) {
