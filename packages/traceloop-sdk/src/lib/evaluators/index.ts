@@ -23,4 +23,7 @@ export {
   isValidEvaluatorSlug,
 } from "../generated/evaluators/registry";
 
-export type { EvaluatorSlug, EvaluatorSchema } from "../generated/evaluators/registry";
+export type {
+  EvaluatorSlug,
+  EvaluatorSchema,
+} from "../generated/evaluators/registry";

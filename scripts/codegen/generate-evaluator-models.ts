@@ -316,7 +316,9 @@ function generateInterface(
       if (propSchema.description) {
         lines.push(`  /** ${propSchema.description} */`);
       }
-      lines.push(`  ${propName}${isRequired ? "" : "?"}: ${tsType}${nullable};`);
+      lines.push(
+        `  ${propName}${isRequired ? "" : "?"}: ${tsType}${nullable};`,
+      );
     }
     lines.push(`}`);
   } else {
@@ -374,7 +376,9 @@ function generateRequestFile(
 
     if (evaluator.requestSchema) {
       lines.push("");
-      lines.push(generateInterface(className, evaluator.requestSchema, allSchemas));
+      lines.push(
+        generateInterface(className, evaluator.requestSchema, allSchemas),
+      );
       generatedSchemas.add(className);
     } else if (evaluator.requestSchemaRef) {
       // Reference to another schema - create a type alias
@@ -419,7 +423,9 @@ function generateResponseFile(
 
     if (evaluator.responseSchema) {
       lines.push("");
-      lines.push(generateInterface(className, evaluator.responseSchema, allSchemas));
+      lines.push(
+        generateInterface(className, evaluator.responseSchema, allSchemas),
+      );
       generatedSchemas.add(className);
     } else if (evaluator.responseSchemaRef) {
       const refName = resolveRefName(evaluator.responseSchemaRef);
@@ -479,9 +485,7 @@ function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
   lines.push("");
 
   // Generate REQUEST_MODELS mapping
-  lines.push(
-    "export const REQUEST_MODELS: Record<EvaluatorSlug, unknown> = {",
-  );
+  lines.push("export const REQUEST_MODELS: Record<EvaluatorSlug, unknown> = {");
   for (const evaluator of evaluators) {
     const className = `${slugToClassName(evaluator.slug)}Request`;
     lines.push(`  '${evaluator.slug}': {} as Request.${className},`);
@@ -501,7 +505,9 @@ function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
   lines.push("");
 
   // Generate EVALUATOR_SCHEMAS
-  lines.push("export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {");
+  lines.push(
+    "export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {",
+  );
   for (const evaluator of evaluators) {
     const { required, optional } = evaluator.requestSchema
       ? extractFieldsFromSchema(evaluator.requestSchema)
@@ -509,8 +515,12 @@ function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
 
     lines.push(`  '${evaluator.slug}': {`);
     lines.push(`    slug: '${evaluator.slug}',`);
-    lines.push(`    requiredInputFields: [${required.map((f) => `'${f}'`).join(", ")}],`);
-    lines.push(`    optionalConfigFields: [${optional.map((f) => `'${f}'`).join(", ")}],`);
+    lines.push(
+      `    requiredInputFields: [${required.map((f) => `'${f}'`).join(", ")}],`,
+    );
+    lines.push(
+      `    optionalConfigFields: [${optional.map((f) => `'${f}'`).join(", ")}],`,
+    );
     if (evaluator.description) {
       lines.push(`    description: ${JSON.stringify(evaluator.description)},`);
     }
@@ -553,7 +563,9 @@ function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
   lines.push("/**");
   lines.push(" * Check if a slug is a valid MBT evaluator");
   lines.push(" */");
-  lines.push("export function isValidEvaluatorSlug(slug: string): slug is EvaluatorSlug {");
+  lines.push(
+    "export function isValidEvaluatorSlug(slug: string): slug is EvaluatorSlug {",
+  );
   lines.push("  return slug in EVALUATOR_SCHEMAS;");
   lines.push("}");
 
@@ -567,7 +579,9 @@ function slugToCamelCase(slug: string): string {
   return slug
     .split("-")
     .map((part, index) =>
-      index === 0 ? part.toLowerCase() : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+      index === 0
+        ? part.toLowerCase()
+        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
     )
     .join("");
 }
@@ -595,7 +609,9 @@ function generateConfigInterface(
   const properties = optional.map((propName) => {
     const propSchema = schemaProps[propName];
     const tsType = openApiTypeToTs(propSchema, allSchemas);
-    const docComment = propSchema.description ? `  /** ${propSchema.description} */\n` : "";
+    const docComment = propSchema.description
+      ? `  /** ${propSchema.description} */\n`
+      : "";
     return `${docComment}  ${propName}?: ${tsType};`;
   });
 
@@ -637,15 +653,21 @@ function generateMbtEvaluatorsFile(
 
   // Generate createEvaluator function
   lines.push("/**");
-  lines.push(" * Create an EvaluatorWithConfig for the given slug with optional config.");
+  lines.push(
+    " * Create an EvaluatorWithConfig for the given slug with optional config.",
+  );
   lines.push(" *");
   lines.push(" * @param slug - The evaluator slug (e.g., 'pii-detector')");
   lines.push(" * @param options - Optional version and config");
-  lines.push(" * @returns EvaluatorWithConfig configured for the specified evaluator");
+  lines.push(
+    " * @returns EvaluatorWithConfig configured for the specified evaluator",
+  );
   lines.push(" *");
   lines.push(" * @example");
   lines.push(" * ```typescript");
-  lines.push(" * import { createEvaluator } from '@traceloop/node-server-sdk';");
+  lines.push(
+    " * import { createEvaluator } from '@traceloop/node-server-sdk';",
+  );
   lines.push(" *");
   lines.push(" * const evaluator = createEvaluator('pii-detector', {");
   lines.push(" *   config: { probability_threshold: 0.8 }");
@@ -660,8 +682,12 @@ function generateMbtEvaluatorsFile(
   lines.push("  },");
   lines.push("): EvaluatorWithConfig {");
   lines.push("  if (!isValidEvaluatorSlug(slug)) {");
-  lines.push("    const availableSlugs = Object.keys(EVALUATOR_SCHEMAS).join(', ');");
-  lines.push("    throw new Error(`Unknown evaluator slug: '${slug}'. Available: ${availableSlugs}`);");
+  lines.push(
+    "    const availableSlugs = Object.keys(EVALUATOR_SCHEMAS).join(', ');",
+  );
+  lines.push(
+    "    throw new Error(`Unknown evaluator slug: '${slug}'. Available: ${availableSlugs}`);",
+  );
   lines.push("  }");
   lines.push("");
   lines.push("  const schema = EVALUATOR_SCHEMAS[slug];");
@@ -673,7 +699,9 @@ function generateMbtEvaluatorsFile(
   lines.push("");
   lines.push("  if (options?.config) {");
   lines.push("    result.config = Object.fromEntries(");
-  lines.push("      Object.entries(options.config).filter(([, v]) => v !== undefined),");
+  lines.push(
+    "      Object.entries(options.config).filter(([, v]) => v !== undefined),",
+  );
   lines.push("    );");
   lines.push("  }");
   lines.push("");
@@ -706,7 +734,9 @@ function generateMbtEvaluatorsFile(
   lines.push("  const errors: string[] = [];");
   lines.push("");
   lines.push("  for (const field of schema.requiredInputFields) {");
-  lines.push("    if (!(field in input) || input[field] === undefined || input[field] === null) {");
+  lines.push(
+    "    if (!(field in input) || input[field] === undefined || input[field] === null) {",
+  );
   lines.push("      errors.push(`Missing required input field: ${field}`);");
   lines.push("    }");
   lines.push("  }");
@@ -730,7 +760,9 @@ function generateMbtEvaluatorsFile(
   lines.push(" */");
   lines.push("export function getEvaluatorSchemaInfo(");
   lines.push("  slug: string,");
-  lines.push("): { requiredInputFields: string[]; optionalConfigFields: string[] } | undefined {");
+  lines.push(
+    "): { requiredInputFields: string[]; optionalConfigFields: string[] } | undefined {",
+  );
   lines.push("  if (!isValidEvaluatorSlug(slug)) {");
   lines.push("    return undefined;");
   lines.push("  }");
@@ -740,14 +772,20 @@ function generateMbtEvaluatorsFile(
 
   // Generate EvaluatorMadeByTraceloop class
   lines.push("/**");
-  lines.push(" * Factory class for creating type-safe MBT evaluator configurations.");
+  lines.push(
+    " * Factory class for creating type-safe MBT evaluator configurations.",
+  );
   lines.push(" *");
   lines.push(" * @example");
   lines.push(" * ```typescript");
-  lines.push(" * import { EvaluatorMadeByTraceloop } from '@traceloop/node-server-sdk';");
+  lines.push(
+    " * import { EvaluatorMadeByTraceloop } from '@traceloop/node-server-sdk';",
+  );
   lines.push(" *");
   lines.push(" * const evaluators = [");
-  lines.push(" *   EvaluatorMadeByTraceloop.piiDetector({ probability_threshold: 0.8 }),");
+  lines.push(
+    " *   EvaluatorMadeByTraceloop.piiDetector({ probability_threshold: 0.8 }),",
+  );
   lines.push(" *   EvaluatorMadeByTraceloop.faithfulness(),");
   lines.push(" * ];");
   lines.push(" * ```");
@@ -758,7 +796,9 @@ function generateMbtEvaluatorsFile(
   lines.push("   */");
   lines.push("  static create(");
   lines.push("    slug: EvaluatorSlug,");
-  lines.push("    options?: { version?: string; config?: Record<string, unknown> },");
+  lines.push(
+    "    options?: { version?: string; config?: Record<string, unknown> },",
+  );
   lines.push("  ): EvaluatorWithConfig {");
   lines.push("    return createEvaluator(slug, options);");
   lines.push("  }");
@@ -802,8 +842,12 @@ function generateMbtEvaluatorsFile(
     lines.push("   */");
 
     if (configInterface) {
-      lines.push(`  static ${methodName}(config?: ${configInterface}): EvaluatorWithConfig {`);
-      lines.push(`    return createEvaluator('${evaluator.slug}', { config: config as Record<string, unknown> });`);
+      lines.push(
+        `  static ${methodName}(config?: ${configInterface}): EvaluatorWithConfig {`,
+      );
+      lines.push(
+        `    return createEvaluator('${evaluator.slug}', { config: config as Record<string, unknown> });`,
+      );
     } else {
       lines.push(`  static ${methodName}(): EvaluatorWithConfig {`);
       lines.push(`    return createEvaluator('${evaluator.slug}');`);
@@ -866,8 +910,12 @@ function main(): void {
   const args = process.argv.slice(2);
 
   if (args.length !== 2) {
-    console.log("Usage: npx ts-node generate-evaluator-models.ts <swagger_path> <output_dir>");
-    console.log("Example: npx ts-node generate-evaluator-models.ts ./swagger.json ./output");
+    console.log(
+      "Usage: npx ts-node generate-evaluator-models.ts <swagger_path> <output_dir>",
+    );
+    console.log(
+      "Example: npx ts-node generate-evaluator-models.ts ./swagger.json ./output",
+    );
     process.exit(1);
   }
 
@@ -888,7 +936,9 @@ function main(): void {
   console.log(`Found ${evaluators.length} evaluator endpoints`);
 
   if (evaluators.length === 0) {
-    console.log("No evaluator endpoints found matching /v2/evaluators/execute/{slug}");
+    console.log(
+      "No evaluator endpoints found matching /v2/evaluators/execute/{slug}",
+    );
     console.log("Available paths:");
     for (const pathUrl of Object.keys(spec.paths).slice(0, 20)) {
       console.log(`  ${pathUrl}`);
@@ -920,8 +970,14 @@ function main(): void {
   fs.writeFileSync(path.join(outputDir, "registry.ts"), registryContent);
   console.log(`  - registry.ts`);
 
-  const mbtEvaluatorsContent = generateMbtEvaluatorsFile(evaluators, allSchemas);
-  fs.writeFileSync(path.join(outputDir, "mbt-evaluators.ts"), mbtEvaluatorsContent);
+  const mbtEvaluatorsContent = generateMbtEvaluatorsFile(
+    evaluators,
+    allSchemas,
+  );
+  fs.writeFileSync(
+    path.join(outputDir, "mbt-evaluators.ts"),
+    mbtEvaluatorsContent,
+  );
   console.log(`  - mbt-evaluators.ts`);
 
   const indexContent = generateIndexFile(evaluators);

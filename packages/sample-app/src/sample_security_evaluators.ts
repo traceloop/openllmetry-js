@@ -75,10 +75,18 @@ async function runSecurityExperiment(): Promise<void> {
   console.log("SECURITY EVALUATORS EXPERIMENT");
   console.log("=".repeat(80) + "\n");
 
-  console.log("This experiment will test three critical security evaluators:\n");
-  console.log("1. PII Detector - Identifies personal information (names, emails, SSN, etc.)");
-  console.log("2. Secrets Detector - Finds API keys, passwords, and credentials");
-  console.log("3. Prompt Injection - Detects attempts to manipulate the AI system");
+  console.log(
+    "This experiment will test three critical security evaluators:\n",
+  );
+  console.log(
+    "1. PII Detector - Identifies personal information (names, emails, SSN, etc.)",
+  );
+  console.log(
+    "2. Secrets Detector - Finds API keys, passwords, and credentials",
+  );
+  console.log(
+    "3. Prompt Injection - Detects attempts to manipulate the AI system",
+  );
   console.log("\n" + "-".repeat(80) + "\n");
 
   // Configure security evaluators using the generated factory methods
@@ -110,7 +118,9 @@ async function runSecurityExperiment(): Promise<void> {
     console.log("Security experiment completed!");
     console.log(`Experiment ID: ${experimentId}`);
     console.log(`Run ID: ${runId}`);
-    console.log(`Task Results: ${taskResults.length}, Errors: ${errors.length}`);
+    console.log(
+      `Task Results: ${taskResults.length}, Errors: ${errors.length}`,
+    );
     console.log("=".repeat(80) + "\n");
 
     // Print results summary
@@ -118,8 +128,12 @@ async function runSecurityExperiment(): Promise<void> {
       console.log("Results summary:");
       taskResults.forEach((taskResult: TaskResponse, idx: number) => {
         console.log(`\nTask ${idx + 1}:`);
-        console.log(`  Input: ${JSON.stringify(taskResult.input).substring(0, 100)}...`);
-        console.log(`  Output: ${JSON.stringify(taskResult.output || {}).substring(0, 100)}...`);
+        console.log(
+          `  Input: ${JSON.stringify(taskResult.input).substring(0, 100)}...`,
+        );
+        console.log(
+          `  Output: ${JSON.stringify(taskResult.output || {}).substring(0, 100)}...`,
+        );
         if (taskResult.error) {
           console.log(`  Error: ${taskResult.error}`);
         }
