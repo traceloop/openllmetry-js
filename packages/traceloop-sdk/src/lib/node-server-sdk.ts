@@ -25,6 +25,8 @@ export {
   TaskResponse,
   ExecutionResponse,
   EvaluatorDetails,
+  EvaluatorWithConfig,
+  EvaluatorWithVersion,
   GithubContext,
   TaskResult,
   RunInGithubOptions,
@@ -58,6 +60,13 @@ export type {
 } from "./client/dataset";
 export { Experiment } from "./client/experiment";
 export { Evaluator } from "./client/evaluator";
+export {
+  EvaluatorMadeByTraceloop,
+  createEvaluator,
+  validateEvaluatorInput,
+  getAvailableEvaluatorSlugs,
+  getEvaluatorSchemaInfo,
+} from "./evaluators";
 export { initialize, getClient } from "./configuration";
 export { forceFlush } from "./tracing";
 export { getTraceloopTracer } from "./tracing/tracing";
