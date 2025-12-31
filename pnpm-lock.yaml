@@ -14,7 +14,7 @@ importers:
     devDependencies:
       '@commitlint/cli':
         specifier: ^19.8.1
-        version: 19.8.1(@types/node@20.19.27)(typescript@5.9.3)
+        version: 19.8.1(@types/node@24.0.15)(typescript@5.9.3)
       '@commitlint/config-conventional':
         specifier: ^19.8.1
         version: 19.8.1
@@ -35,7 +35,7 @@ importers:
         version: 21.3.2(@babel/traverse@7.28.0)(nx@21.3.2)
       '@nx/linter':
         specifier: ^19.8.4
-        version: 19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)
+        version: 19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)
       '@rollup/plugin-json':
         specifier: ^6.1.0
         version: 6.1.0(rollup@4.45.1)
@@ -43,8 +43,8 @@ importers:
         specifier: ^12.1.4
         version: 12.1.4(rollup@4.45.1)(tslib@2.8.1)(typescript@5.9.3)
       '@types/node':
-        specifier: ^20.10.0
-        version: 20.19.27
+        specifier: ^24.0.15
+        version: 24.0.15
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.37.0
         version: 8.38.0(@typescript-eslint/parser@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3))(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
@@ -53,7 +53,7 @@ importers:
         version: 8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.9.3)
       cz-conventional-changelog:
         specifier: ^3.3.0
-        version: 3.3.0(@types/node@20.19.27)(typescript@5.9.3)
+        version: 3.3.0(@types/node@24.0.15)(typescript@5.9.3)
       eslint:
         specifier: ^9.31.0
         version: 9.31.0(jiti@2.4.2)
@@ -92,7 +92,7 @@ importers:
         version: 6.2.1(rollup@4.45.1)(typescript@5.9.3)
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@20.19.27)(typescript@5.9.3)
+        version: 10.9.2(@types/node@24.0.15)(typescript@5.9.3)
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -4032,9 +4032,6 @@ packages:
 
   '@types/node@18.19.130':
     resolution: {integrity: sha512-GRaXQx6jGfL8sKfaIDD6OupbIHBr9jv7Jnaml9tB7l4v068PAOXqfcujMMo5PhbIs6ggR1XODELqahT2R8v0fg==}
-
-  '@types/node@20.19.27':
-    resolution: {integrity: sha512-N2clP5pJhB2YnZJ3PIHFk5RkygRX5WO/5f0WC08tp0wd+sv0rsJk3MqWn3CbNmT2J505a5336jaQj4ph1AdMug==}
 
   '@types/node@24.0.15':
     resolution: {integrity: sha512-oaeTSbCef7U/z7rDeJA138xpG3NuKc64/rZ2qmUFkFJmnMsAPaluIifqyWd8hSSMxyP9oie3dLAqYPblag9KgA==}
@@ -8069,9 +8066,6 @@ packages:
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
-  undici-types@6.21.0:
-    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
-
   undici-types@7.8.0:
     resolution: {integrity: sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==}
 
@@ -9972,11 +9966,11 @@ snapshots:
 
   '@cfworker/json-schema@4.1.1': {}
 
-  '@commitlint/cli@19.8.1(@types/node@20.19.27)(typescript@5.9.3)':
+  '@commitlint/cli@19.8.1(@types/node@24.0.15)(typescript@5.9.3)':
     dependencies:
       '@commitlint/format': 19.8.1
       '@commitlint/lint': 19.8.1
-      '@commitlint/load': 19.8.1(@types/node@20.19.27)(typescript@5.9.3)
+      '@commitlint/load': 19.8.1(@types/node@24.0.15)(typescript@5.9.3)
       '@commitlint/read': 19.8.1
       '@commitlint/types': 19.8.1
       tinyexec: 1.0.1
@@ -10023,7 +10017,7 @@ snapshots:
       '@commitlint/rules': 19.8.1
       '@commitlint/types': 19.8.1
 
-  '@commitlint/load@19.8.1(@types/node@20.19.27)(typescript@5.9.3)':
+  '@commitlint/load@19.8.1(@types/node@24.0.15)(typescript@5.9.3)':
     dependencies:
       '@commitlint/config-validator': 19.8.1
       '@commitlint/execute-rule': 19.8.1
@@ -10031,7 +10025,7 @@ snapshots:
       '@commitlint/types': 19.8.1
       chalk: 5.4.1
       cosmiconfig: 9.0.0(typescript@5.9.3)
-      cosmiconfig-typescript-loader: 6.1.0(@types/node@20.19.27)(cosmiconfig@9.0.0(typescript@5.9.3))(typescript@5.9.3)
+      cosmiconfig-typescript-loader: 6.1.0(@types/node@24.0.15)(cosmiconfig@9.0.0(typescript@5.9.3))(typescript@5.9.3)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -11051,9 +11045,9 @@ snapshots:
     transitivePeerDependencies:
       - nx
 
-  '@nrwl/js@19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(nx@21.3.2)(typescript@5.4.5)':
+  '@nrwl/js@19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(nx@21.3.2)(typescript@5.4.5)':
     dependencies:
-      '@nx/js': 19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(nx@21.3.2)(typescript@5.4.5)
+      '@nx/js': 19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(nx@21.3.2)(typescript@5.4.5)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -11158,11 +11152,11 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/eslint@19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)':
+  '@nx/eslint@19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)':
     dependencies:
       '@nx/devkit': 19.8.4(nx@21.3.2)
-      '@nx/js': 19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(nx@21.3.2)(typescript@5.4.5)
-      '@nx/linter': 19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)
+      '@nx/js': 19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(nx@21.3.2)(typescript@5.4.5)
+      '@nx/linter': 19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)
       eslint: 9.31.0(jiti@2.4.2)
       semver: 7.7.2
       tslib: 2.8.1
@@ -11180,7 +11174,7 @@ snapshots:
       - supports-color
       - verdaccio
 
-  '@nx/js@19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(nx@21.3.2)(typescript@5.4.5)':
+  '@nx/js@19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(nx@21.3.2)(typescript@5.4.5)':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/plugin-proposal-decorators': 7.28.0(@babel/core@7.28.0)
@@ -11189,7 +11183,7 @@ snapshots:
       '@babel/preset-env': 7.28.0(@babel/core@7.28.0)
       '@babel/preset-typescript': 7.27.1(@babel/core@7.28.0)
       '@babel/runtime': 7.28.4
-      '@nrwl/js': 19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(nx@21.3.2)(typescript@5.4.5)
+      '@nrwl/js': 19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(nx@21.3.2)(typescript@5.4.5)
       '@nx/devkit': 19.8.4(nx@21.3.2)
       '@nx/workspace': 19.8.4
       babel-plugin-const-enum: 1.2.0(@babel/core@7.28.0)
@@ -11209,7 +11203,7 @@ snapshots:
       ora: 5.3.0
       semver: 7.7.2
       source-map-support: 0.5.19
-      ts-node: 10.9.1(@types/node@20.19.27)(typescript@5.4.5)
+      ts-node: 10.9.1(@types/node@24.0.15)(typescript@5.4.5)
       tsconfig-paths: 4.2.0
       tslib: 2.8.1
     transitivePeerDependencies:
@@ -11262,9 +11256,9 @@ snapshots:
       - nx
       - supports-color
 
-  '@nx/linter@19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)':
+  '@nx/linter@19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)':
     dependencies:
-      '@nx/eslint': 19.8.4(@babel/traverse@7.28.0)(@types/node@20.19.27)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)
+      '@nx/eslint': 19.8.4(@babel/traverse@7.28.0)(@types/node@24.0.15)(@zkochan/js-yaml@0.0.7)(eslint@9.31.0(jiti@2.4.2))(nx@21.3.2)
     transitivePeerDependencies:
       - '@babel/traverse'
       - '@swc-node/register'
@@ -12341,7 +12335,7 @@ snapshots:
 
   '@types/conventional-commits-parser@5.0.1':
     dependencies:
-      '@types/node': 20.19.27
+      '@types/node': 24.0.15
 
   '@types/debug@4.1.12':
     dependencies:
@@ -12385,10 +12379,6 @@ snapshots:
   '@types/node@18.19.130':
     dependencies:
       undici-types: 5.26.5
-
-  '@types/node@20.19.27':
-    dependencies:
-      undici-types: 6.21.0
 
   '@types/node@24.0.15':
     dependencies:
@@ -13092,10 +13082,10 @@ snapshots:
 
   commander@5.1.0: {}
 
-  commitizen@4.3.1(@types/node@20.19.27)(typescript@5.9.3):
+  commitizen@4.3.1(@types/node@24.0.15)(typescript@5.9.3):
     dependencies:
       cachedir: 2.3.0
-      cz-conventional-changelog: 3.3.0(@types/node@20.19.27)(typescript@5.9.3)
+      cz-conventional-changelog: 3.3.0(@types/node@24.0.15)(typescript@5.9.3)
       dedent: 0.7.0
       detect-indent: 6.1.0
       find-node-modules: 2.1.3
@@ -13298,9 +13288,9 @@ snapshots:
       object-assign: 4.1.1
       vary: 1.1.2
 
-  cosmiconfig-typescript-loader@6.1.0(@types/node@20.19.27)(cosmiconfig@9.0.0(typescript@5.9.3))(typescript@5.9.3):
+  cosmiconfig-typescript-loader@6.1.0(@types/node@24.0.15)(cosmiconfig@9.0.0(typescript@5.9.3))(typescript@5.9.3):
     dependencies:
-      '@types/node': 20.19.27
+      '@types/node': 24.0.15
       cosmiconfig: 9.0.0(typescript@5.9.3)
       jiti: 2.4.2
       typescript: 5.9.3
@@ -13362,16 +13352,16 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  cz-conventional-changelog@3.3.0(@types/node@20.19.27)(typescript@5.9.3):
+  cz-conventional-changelog@3.3.0(@types/node@24.0.15)(typescript@5.9.3):
     dependencies:
       chalk: 2.4.2
-      commitizen: 4.3.1(@types/node@20.19.27)(typescript@5.9.3)
+      commitizen: 4.3.1(@types/node@24.0.15)(typescript@5.9.3)
       conventional-commit-types: 3.0.0
       lodash.map: 4.6.0
       longest: 2.0.1
       word-wrap: 1.2.5
     optionalDependencies:
-      '@commitlint/load': 19.8.1(@types/node@20.19.27)(typescript@5.9.3)
+      '@commitlint/load': 19.8.1(@types/node@24.0.15)(typescript@5.9.3)
     transitivePeerDependencies:
       - '@types/node'
       - typescript
@@ -16989,14 +16979,14 @@ snapshots:
     optionalDependencies:
       tsconfig-paths: 4.2.0
 
-  ts-node@10.9.1(@types/node@20.19.27)(typescript@5.4.5):
+  ts-node@10.9.1(@types/node@24.0.15)(typescript@5.4.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.19.27
+      '@types/node': 24.0.15
       acorn: 8.15.0
       acorn-walk: 8.3.4
       arg: 4.1.3
@@ -17004,24 +16994,6 @@ snapshots:
       diff: 4.0.2
       make-error: 1.3.6
       typescript: 5.4.5
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-
-  ts-node@10.9.2(@types/node@20.19.27)(typescript@5.9.3):
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.11
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.4
-      '@types/node': 20.19.27
-      acorn: 8.15.0
-      acorn-walk: 8.3.4
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 5.9.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
@@ -17100,8 +17072,6 @@ snapshots:
     optional: true
 
   undici-types@5.26.5: {}
-
-  undici-types@6.21.0: {}
 
   undici-types@7.8.0: {}
 

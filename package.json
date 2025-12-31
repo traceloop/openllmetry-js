@@ -9,7 +9,7 @@
   },
   "private": true,
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^24.0.15",
     "openapi-typescript": "^7.4.0",
     "ts-node": "^10.9.2",
     "@commitlint/cli": "^19.8.1",
