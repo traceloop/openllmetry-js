@@ -4,10 +4,15 @@
   "license": "Apache-2.0",
   "scripts": {
     "build:all": "pnpm nx run-many -t build",
-    "build:affected": "pnpm nx affected -t build"
+    "build:affected": "pnpm nx affected -t build",
+    "generate:evaluator-models": "./scripts/generate-models.sh"
   },
   "private": true,
   "devDependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "@types/node": "^24.0.15",
+    "openapi-typescript": "^7.4.0",
+    "ts-node": "^10.9.2",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/eslintrc": "^3.3.1",

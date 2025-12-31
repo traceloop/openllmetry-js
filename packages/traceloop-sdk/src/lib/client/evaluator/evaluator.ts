@@ -66,11 +66,16 @@ export class Evaluator extends BaseDatasetEntity {
       throw new Error("experimentId, evaluator, and taskResult are required");
     }
 
-    // Handle both string and object evaluator types
+    // Handle string, EvaluatorWithVersion, and EvaluatorWithConfig types
     const evaluatorName =
       typeof evaluator === "string" ? evaluator : evaluator.name;
     const evaluatorVersion =
       typeof evaluator === "string" ? undefined : evaluator.version;
+    // Extract config if present (EvaluatorWithConfig type)
+    const evaluatorConfig =
+      typeof evaluator === "object" && "config" in evaluator
+        ? evaluator.config
+        : undefined;
 
     if (!evaluatorName) {
       throw new Error("evaluator name is required");
@@ -78,13 +83,18 @@ export class Evaluator extends BaseDatasetEntity {
 
     const inputSchemaMapping = this.createInputSchemaMapping(taskResult);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       experiment_id: experimentId,
       experiment_run_id: experimentRunId,
       evaluator_version: evaluatorVersion,
       task_id: taskId,
       input_schema_mapping: inputSchemaMapping,
     };
+
+    // Add evaluator config if present
+    if (evaluatorConfig && Object.keys(evaluatorConfig).length > 0) {
+      payload.evaluator_config = evaluatorConfig;
+    }
 
     const response = await this.client.post(
       `/v2/evaluators/slug/${evaluatorName}/execute`,

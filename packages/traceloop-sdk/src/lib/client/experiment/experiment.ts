@@ -329,15 +329,6 @@ export class Experiment {
               `Evaluator at index ${index} must have a valid non-empty name`,
             );
           }
-          if (
-            !evaluator.version ||
-            typeof evaluator.version !== "string" ||
-            !evaluator.version.trim()
-          ) {
-            throw new Error(
-              `Evaluator at index ${index} must have a valid non-empty version`,
-            );
-          }
         }
       });
     }
