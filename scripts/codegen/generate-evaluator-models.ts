@@ -3,6 +3,10 @@
  * Generate TypeScript interfaces from OpenAPI/Swagger spec.
  * Extracts models used by v2/evaluators/execute/* endpoints.
  *
+ * Uses:
+ * - @apidevtools/swagger-parser for parsing and $ref resolution
+ * - openapi-typescript for generating TypeScript types from schemas
+ *
  * Usage:
  *   npx ts-node generate-evaluator-models.ts <swagger_path> <output_dir>
  *
@@ -12,84 +16,14 @@
 
 import * as fs from "fs";
 import * as path from "path";
+import SwaggerParser from "@apidevtools/swagger-parser";
+import openapiTS, { astToString } from "openapi-typescript";
+import type { OpenAPI, OpenAPIV2, OpenAPIV3 } from "openapi-types";
 
-// Types for OpenAPI spec parsing
-interface OpenAPISchema {
-  type?: string;
-  properties?: Record<string, OpenAPISchema>;
-  required?: string[];
-  items?: OpenAPISchema;
-  $ref?: string;
-  allOf?: OpenAPISchema[];
-  oneOf?: OpenAPISchema[];
-  anyOf?: OpenAPISchema[];
-  enum?: (string | number)[];
-  format?: string;
-  description?: string;
-  example?: unknown;
-  examples?: unknown[];
-  default?: unknown;
-  nullable?: boolean;
-  additionalProperties?: boolean | OpenAPISchema;
-}
-
-interface OpenAPIParameter {
-  name: string;
-  in: string;
-  required?: boolean;
-  schema?: OpenAPISchema;
-}
-
-interface OpenAPIRequestBody {
-  content?: {
-    "application/json"?: {
-      schema?: OpenAPISchema;
-    };
-  };
-}
-
-interface OpenAPIResponse {
-  description?: string;
-  content?: {
-    "application/json"?: {
-      schema?: OpenAPISchema;
-    };
-  };
-  schema?: OpenAPISchema; // Swagger 2.0 format
-}
-
-interface OpenAPIOperation {
-  operationId?: string;
-  summary?: string;
-  description?: string;
-  parameters?: OpenAPIParameter[];
-  requestBody?: OpenAPIRequestBody;
-  responses?: Record<string, OpenAPIResponse>;
-}
-
-interface OpenAPIPathItem {
-  post?: OpenAPIOperation;
-  get?: OpenAPIOperation;
-  put?: OpenAPIOperation;
-  delete?: OpenAPIOperation;
-}
-
-interface OpenAPISpec {
-  openapi?: string;
-  swagger?: string;
-  paths: Record<string, OpenAPIPathItem>;
-  components?: {
-    schemas?: Record<string, OpenAPISchema>;
-  };
-  definitions?: Record<string, OpenAPISchema>; // Swagger 2.0 format
-}
-
+// Internal types for tracking evaluator definitions
 interface EvaluatorDefinition {
   slug: string;
-  requestSchemaRef?: string;
-  responseSchemaRef?: string;
-  requestSchema?: OpenAPISchema;
-  responseSchema?: OpenAPISchema;
+  requestSchema?: OpenAPIV3.SchemaObject;
   description?: string;
 }
 
@@ -111,243 +45,141 @@ function slugToClassName(slug: string): string {
 }
 
 /**
- * Resolve a $ref path to get the schema name
+ * Convert slug like "pii-detector" to camelCase method name like "piiDetector"
  */
-function resolveRefName(ref: string): string {
-  // Handle both OpenAPI 3.0 and Swagger 2.0 formats
-  // OpenAPI 3.0: "#/components/schemas/ModelName"
-  // Swagger 2.0: "#/definitions/ModelName"
-  const parts = ref.split("/");
-  return parts[parts.length - 1];
+function slugToCamelCase(slug: string): string {
+  return slug
+    .split("-")
+    .map((part, index) =>
+      index === 0
+        ? part.toLowerCase()
+        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+    )
+    .join("");
 }
 
 /**
- * Get all schemas from the spec (handles both OpenAPI 3.0 and Swagger 2.0)
+ * Use openapi-typescript to convert a schema to TypeScript type string.
+ * Creates a minimal OpenAPI spec wrapper and extracts the generated type.
  */
-function getAllSchemas(spec: OpenAPISpec): Record<string, OpenAPISchema> {
-  return spec.components?.schemas || spec.definitions || {};
+async function schemaToTsType(
+  schema: OpenAPIV3.SchemaObject,
+): Promise<string> {
+  // Wrap schema in a minimal OpenAPI 3.0 spec
+  // Cast to unknown to avoid type incompatibility between openapi-types and openapi-typescript
+  const miniSpec = {
+    openapi: "3.0.0",
+    info: { title: "temp", version: "1.0.0" },
+    paths: {},
+    components: {
+      schemas: {
+        TempType: schema as unknown,
+      },
+    },
+  };
+
+  const ast = await openapiTS(miniSpec as Parameters<typeof openapiTS>[0]);
+  const output = astToString(ast);
+
+  // Extract just the TempType definition
+  const match = output.match(/TempType:\s*([^;]+);/);
+  if (match) {
+    return match[1].trim();
+  }
+
+  // Fallback for simple types
+  return "unknown";
 }
 
 /**
- * Extract schema from a $ref, resolving nested references
+ * Extract evaluator definitions from the dereferenced OpenAPI spec.
+ * Supports both Swagger 2.0 (parameters with in:body) and OpenAPI 3.0 (requestBody).
  */
-function resolveSchema(
-  ref: string,
-  allSchemas: Record<string, OpenAPISchema>,
-): OpenAPISchema | undefined {
-  const schemaName = resolveRefName(ref);
-  return allSchemas[schemaName];
-}
-
-/**
- * Extract evaluator definitions from the OpenAPI spec
- */
-function extractEvaluatorDefinitions(spec: OpenAPISpec): EvaluatorDefinition[] {
+function extractEvaluatorDefinitions(
+  spec: OpenAPI.Document,
+): EvaluatorDefinition[] {
   const evaluators: EvaluatorDefinition[] = [];
-  const allSchemas = getAllSchemas(spec);
 
-  for (const [pathUrl, pathItem] of Object.entries(spec.paths)) {
+  const paths = spec.paths || {};
+  for (const [pathUrl, pathItem] of Object.entries(paths)) {
     // Match /v2/evaluators/execute/{slug} pattern
     const match = pathUrl.match(/^\/v2\/evaluators\/execute\/([^/]+)$/);
-    if (!match || !pathItem.post) continue;
+    if (!match) continue;
+
+    // Handle both OpenAPI 3.0 and Swagger 2.0 path items
+    const pathItemObj = pathItem as
+      | OpenAPIV3.PathItemObject
+      | OpenAPIV2.PathItemObject;
+    const postOp = pathItemObj?.post;
+    if (!postOp) continue;
 
     const slug = match[1];
-    const operation = pathItem.post;
+    let requestSchema: OpenAPIV3.SchemaObject | undefined;
 
-    const evaluator: EvaluatorDefinition = {
+    // Try OpenAPI 3.0 format first (requestBody)
+    const requestBody = (postOp as OpenAPIV3.OperationObject).requestBody as
+      | OpenAPIV3.RequestBodyObject
+      | undefined;
+    if (requestBody?.content?.["application/json"]?.schema) {
+      requestSchema = requestBody.content["application/json"]
+        .schema as OpenAPIV3.SchemaObject;
+    }
+
+    // Fallback to Swagger 2.0 format (parameters with in: body)
+    if (!requestSchema) {
+      const parameters = (postOp as OpenAPIV2.OperationObject).parameters;
+      if (parameters) {
+        const bodyParam = parameters.find(
+          (p): p is OpenAPIV2.InBodyParameterObject =>
+            "in" in p && p.in === "body",
+        );
+        if (bodyParam?.schema) {
+          requestSchema = bodyParam.schema as unknown as OpenAPIV3.SchemaObject;
+        }
+      }
+    }
+
+    evaluators.push({
       slug,
-      description: operation.description || operation.summary,
-    };
-
-    // Extract request schema
-    // OpenAPI 3.0 format
-    if (operation.requestBody?.content?.["application/json"]?.schema) {
-      const schema = operation.requestBody.content["application/json"].schema;
-      if (schema.$ref) {
-        evaluator.requestSchemaRef = schema.$ref;
-        evaluator.requestSchema = resolveSchema(schema.$ref, allSchemas);
-      } else {
-        evaluator.requestSchema = schema;
-      }
-    }
-    // Swagger 2.0 format - check parameters for body
-    else if (operation.parameters) {
-      const bodyParam = operation.parameters.find((p) => p.in === "body");
-      if (bodyParam?.schema) {
-        if (bodyParam.schema.$ref) {
-          evaluator.requestSchemaRef = bodyParam.schema.$ref;
-          evaluator.requestSchema = resolveSchema(
-            bodyParam.schema.$ref,
-            allSchemas,
-          );
-        } else {
-          evaluator.requestSchema = bodyParam.schema;
-        }
-      }
-    }
-
-    // Extract response schema (200 response)
-    const successResponse = operation.responses?.["200"];
-    if (successResponse) {
-      // OpenAPI 3.0 format
-      if (successResponse.content?.["application/json"]?.schema) {
-        const schema = successResponse.content["application/json"].schema;
-        if (schema.$ref) {
-          evaluator.responseSchemaRef = schema.$ref;
-          evaluator.responseSchema = resolveSchema(schema.$ref, allSchemas);
-        } else {
-          evaluator.responseSchema = schema;
-        }
-      }
-      // Swagger 2.0 format
-      else if (successResponse.schema) {
-        if (successResponse.schema.$ref) {
-          evaluator.responseSchemaRef = successResponse.schema.$ref;
-          evaluator.responseSchema = resolveSchema(
-            successResponse.schema.$ref,
-            allSchemas,
-          );
-        } else {
-          evaluator.responseSchema = successResponse.schema;
-        }
-      }
-    }
-
-    // Only include if we have at least a request schema
-    if (evaluator.requestSchema || evaluator.requestSchemaRef) {
-      evaluators.push(evaluator);
-    }
+      description: postOp.description || postOp.summary,
+      requestSchema,
+    });
   }
 
   return evaluators;
 }
 
 /**
- * Convert OpenAPI type to TypeScript type.
- * When resolveRefs is true, $ref references are resolved and inlined.
- */
-function openApiTypeToTs(
-  schema: OpenAPISchema,
-  allSchemas: Record<string, OpenAPISchema>,
-  indent: string = "",
-  resolveRefs: boolean = true,
-): string {
-  if (schema.$ref) {
-    const refName = resolveRefName(schema.$ref);
-    // Resolve the reference and generate inline type
-    if (resolveRefs) {
-      const refSchema = allSchemas[refName];
-      if (refSchema) {
-        return openApiTypeToTs(refSchema, allSchemas, indent, true);
-      }
-    }
-    return refName;
-  }
-
-  if (schema.allOf) {
-    const types = schema.allOf.map((s) =>
-      openApiTypeToTs(s, allSchemas, indent, resolveRefs),
-    );
-    return types.join(" & ");
-  }
-
-  if (schema.oneOf || schema.anyOf) {
-    const schemas = schema.oneOf || schema.anyOf;
-    const types = schemas!.map((s) =>
-      openApiTypeToTs(s, allSchemas, indent, resolveRefs),
-    );
-    return types.join(" | ");
-  }
-
-  if (schema.enum) {
-    return schema.enum.map((v) => JSON.stringify(v)).join(" | ");
-  }
-
-  switch (schema.type) {
-    case "string":
-      return "string";
-    case "integer":
-    case "number":
-      return "number";
-    case "boolean":
-      return "boolean";
-    case "array":
-      if (schema.items) {
-        return `${openApiTypeToTs(schema.items, allSchemas, indent, resolveRefs)}[]`;
-      }
-      return "unknown[]";
-    case "object":
-      if (schema.properties) {
-        const props = Object.entries(schema.properties)
-          .map(([propName, propSchema]) => {
-            const isRequired = schema.required?.includes(propName);
-            const tsType = openApiTypeToTs(
-              propSchema,
-              allSchemas,
-              indent + "  ",
-              resolveRefs,
-            );
-            const nullable = propSchema.nullable ? " | null" : "";
-            return `${indent}  ${propName}${isRequired ? "" : "?"}: ${tsType}${nullable};`;
-          })
-          .join("\n");
-        return `{\n${props}\n${indent}}`;
-      }
-      if (schema.additionalProperties) {
-        if (typeof schema.additionalProperties === "boolean") {
-          return "Record<string, unknown>";
-        }
-        return `Record<string, ${openApiTypeToTs(schema.additionalProperties, allSchemas, indent, resolveRefs)}>`;
-      }
-      return "Record<string, unknown>";
-    default:
-      return "unknown";
-  }
-}
-
-/**
  * Extract required input fields and optional config fields from a schema.
- * The new swagger structure has nested 'input' and 'config' properties.
+ * The swagger structure has nested 'input' and 'config' properties.
+ * Since we use dereference(), all $refs are already resolved.
  */
-function extractFieldsFromSchema(
-  schema: OpenAPISchema,
-  allSchemas: Record<string, OpenAPISchema>,
-): {
+function extractFieldsFromSchema(schema: OpenAPIV3.SchemaObject): {
   requiredInputFields: string[];
   optionalConfigFields: string[];
 } {
   const requiredInputFields: string[] = [];
   const optionalConfigFields: string[] = [];
 
-  // Extract from nested 'input' property
-  // Only add properties that are marked as required in the schema
-  const inputProp = schema.properties?.input;
-  if (inputProp) {
-    const inputSchema = inputProp.$ref
-      ? resolveSchema(inputProp.$ref, allSchemas)
-      : inputProp;
-    if (inputSchema?.properties) {
-      const requiredProps = Array.isArray(inputSchema.required)
-        ? inputSchema.required
-        : [];
-      // Only push properties that are in the required array
-      for (const propName of Object.keys(inputSchema.properties)) {
-        if (requiredProps.includes(propName)) {
-          requiredInputFields.push(propName);
-        }
+  // Input properties (already dereferenced)
+  const inputSchema = schema.properties?.input as
+    | OpenAPIV3.SchemaObject
+    | undefined;
+  if (inputSchema?.properties) {
+    const requiredProps = inputSchema.required || [];
+    for (const propName of Object.keys(inputSchema.properties)) {
+      if (requiredProps.includes(propName)) {
+        requiredInputFields.push(propName);
       }
     }
   }
 
-  // Extract from nested 'config' property
-  const configProp = schema.properties?.config;
-  if (configProp) {
-    const configSchema = configProp.$ref
-      ? resolveSchema(configProp.$ref, allSchemas)
-      : configProp;
-    if (configSchema?.properties) {
-      optionalConfigFields.push(...Object.keys(configSchema.properties));
-    }
+  // Config properties (already dereferenced)
+  const configSchema = schema.properties?.config as
+    | OpenAPIV3.SchemaObject
+    | undefined;
+  if (configSchema?.properties) {
+    optionalConfigFields.push(...Object.keys(configSchema.properties));
   }
 
   return { requiredInputFields, optionalConfigFields };
@@ -356,10 +188,7 @@ function extractFieldsFromSchema(
 /**
  * Generate registry.ts file content
  */
-function generateRegistryFile(
-  evaluators: EvaluatorDefinition[],
-  allSchemas: Record<string, OpenAPISchema>,
-): string {
+function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
   const lines: string[] = [
     "// Auto-generated - DO NOT EDIT",
     "// Generated from swagger.json by generate-evaluator-models.ts",
@@ -397,7 +226,7 @@ function generateRegistryFile(
   for (const evaluator of evaluators) {
     const { requiredInputFields, optionalConfigFields } =
       evaluator.requestSchema
-        ? extractFieldsFromSchema(evaluator.requestSchema, allSchemas)
+        ? extractFieldsFromSchema(evaluator.requestSchema)
         : { requiredInputFields: [], optionalConfigFields: [] };
 
     lines.push(`  '${evaluator.slug}': {`);
@@ -440,36 +269,16 @@ function generateRegistryFile(
 }
 
 /**
- * Convert slug like "pii-detector" to camelCase method name like "piiDetector"
- */
-function slugToCamelCase(slug: string): string {
-  return slug
-    .split("-")
-    .map((part, index) =>
-      index === 0
-        ? part.toLowerCase()
-        : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
-    )
-    .join("");
-}
-
-/**
  * Generate config interface for an evaluator.
  * Extracts fields from the nested 'config' property in the request schema.
+ * Uses openapi-typescript to convert schema types to TypeScript.
  */
-function generateConfigInterface(
+async function generateConfigInterface(
   evaluator: EvaluatorDefinition,
-  allSchemas: Record<string, OpenAPISchema>,
-): { interfaceName: string; interfaceCode: string } | null {
-  const configProp = evaluator.requestSchema?.properties?.config;
-  if (!configProp) {
-    return null;
-  }
-
-  // Resolve $ref if needed
-  const configSchema = configProp.$ref
-    ? resolveSchema(configProp.$ref, allSchemas)
-    : configProp;
+): Promise<{ interfaceName: string; interfaceCode: string } | null> {
+  const configSchema = evaluator.requestSchema?.properties?.config as
+    | OpenAPIV3.SchemaObject
+    | undefined;
 
   if (
     !configSchema?.properties ||
@@ -481,15 +290,18 @@ function generateConfigInterface(
   const className = slugToClassName(evaluator.slug);
   const interfaceName = `${className}Config`;
 
-  const properties = Object.entries(configSchema.properties).map(
-    ([propName, propSchema]) => {
-      const tsType = openApiTypeToTs(propSchema as OpenAPISchema, allSchemas);
-      const isRequired = configSchema.required?.includes(propName);
-      const docComment = (propSchema as OpenAPISchema).description
-        ? `  /** ${(propSchema as OpenAPISchema).description} */\n`
-        : "";
-      return `${docComment}  ${propName}${isRequired ? "" : "?"}: ${tsType};`;
-    },
+  const properties = await Promise.all(
+    Object.entries(configSchema.properties).map(
+      async ([propName, propSchema]) => {
+        const schema = propSchema as OpenAPIV3.SchemaObject;
+        const tsType = await schemaToTsType(schema);
+        const isRequired = configSchema.required?.includes(propName);
+        const docComment = schema.description
+          ? `  /** ${schema.description} */\n`
+          : "";
+        return `${docComment}  ${propName}${isRequired ? "" : "?"}: ${tsType};`;
+      },
+    ),
   );
 
   const interfaceCode = `export interface ${interfaceName} {
@@ -502,10 +314,9 @@ ${properties.join("\n")}
 /**
  * Generate mbt-evaluators.ts file content
  */
-function generateMbtEvaluatorsFile(
+async function generateMbtEvaluatorsFile(
   evaluators: EvaluatorDefinition[],
-  allSchemas: Record<string, OpenAPISchema>,
-): string {
+): Promise<string> {
   const lines: string[] = [
     "// Auto-generated - DO NOT EDIT",
     "// Generated from swagger.json by generate-evaluator-models.ts",
@@ -520,7 +331,7 @@ function generateMbtEvaluatorsFile(
   // Generate config interfaces for evaluators that have optional fields
   const configInterfaces: Map<string, string> = new Map();
   for (const evaluator of evaluators) {
-    const config = generateConfigInterface(evaluator, allSchemas);
+    const config = await generateConfigInterface(evaluator);
     if (config) {
       configInterfaces.set(evaluator.slug, config.interfaceName);
       lines.push(config.interfaceCode);
@@ -706,9 +517,9 @@ function generateMbtEvaluatorsFile(
       lines.push(`   * ${slugToClassName(evaluator.slug)} evaluator.`);
     }
 
-    // Document required input fields
+    // Document required task output fields
     const { requiredInputFields } = evaluator.requestSchema
-      ? extractFieldsFromSchema(evaluator.requestSchema, allSchemas)
+      ? extractFieldsFromSchema(evaluator.requestSchema)
       : { requiredInputFields: [] };
     if (requiredInputFields.length > 0) {
       lines.push("   *");
@@ -774,7 +585,7 @@ function generateIndexFile(): string {
 /**
  * Main function
  */
-function main(): void {
+async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
   if (args.length !== 2) {
@@ -789,15 +600,16 @@ function main(): void {
 
   const [swaggerPath, outputDir] = args;
 
-  // Read and parse swagger file
+  // Check if file exists
   if (!fs.existsSync(swaggerPath)) {
     console.error(`Error: Swagger file not found at ${swaggerPath}`);
     process.exit(1);
   }
 
   console.log(`=== Reading swagger spec from ${swaggerPath} ===`);
-  const swaggerContent = fs.readFileSync(swaggerPath, "utf-8");
-  const spec: OpenAPISpec = JSON.parse(swaggerContent);
+
+  // Use swagger-parser to parse and dereference all $refs
+  const spec = await SwaggerParser.dereference(swaggerPath);
 
   console.log(`=== Extracting evaluator definitions ===`);
   const evaluators = extractEvaluatorDefinitions(spec);
@@ -808,7 +620,8 @@ function main(): void {
       "No evaluator endpoints found matching /v2/evaluators/execute/{slug}",
     );
     console.log("Available paths:");
-    for (const pathUrl of Object.keys(spec.paths).slice(0, 20)) {
+    const paths = spec.paths || {};
+    for (const pathUrl of Object.keys(paths).slice(0, 20)) {
       console.log(`  ${pathUrl}`);
     }
     process.exit(1);
@@ -821,19 +634,14 @@ function main(): void {
   // Create output directory
   fs.mkdirSync(outputDir, { recursive: true });
 
-  const allSchemas = getAllSchemas(spec);
-
   // Generate files
   console.log(`=== Generating TypeScript files ===`);
 
-  const registryContent = generateRegistryFile(evaluators, allSchemas);
+  const registryContent = generateRegistryFile(evaluators);
   fs.writeFileSync(path.join(outputDir, "registry.ts"), registryContent);
   console.log(`  - registry.ts`);
 
-  const mbtEvaluatorsContent = generateMbtEvaluatorsFile(
-    evaluators,
-    allSchemas,
-  );
+  const mbtEvaluatorsContent = await generateMbtEvaluatorsFile(evaluators);
   fs.writeFileSync(
     path.join(outputDir, "mbt-evaluators.ts"),
     mbtEvaluatorsContent,
@@ -848,4 +656,7 @@ function main(): void {
   console.log(`Output written to: ${outputDir}`);
 }
 
-main();
+main().catch((err) => {
+  console.error("Error:", err);
+  process.exit(1);
+});

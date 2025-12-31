@@ -9,6 +9,7 @@
   },
   "private": true,
   "devDependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
     "@types/node": "^24.0.15",
     "openapi-typescript": "^7.4.0",
     "ts-node": "^10.9.2",
