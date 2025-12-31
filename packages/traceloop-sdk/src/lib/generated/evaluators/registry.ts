@@ -1,6 +1,4 @@
 // Auto-generated - DO NOT EDIT
-// Generated from swagger.json by generate-evaluator-models.ts
-//
 // Regenerate with: pnpm generate:evaluator-models
 
 export interface EvaluatorSchema {
@@ -249,16 +247,10 @@ export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {
   },
 };
 
-/**
- * Get the schema information for an evaluator slug
- */
 export function getEvaluatorSchema<S extends EvaluatorSlug>(slug: S): EvaluatorSchema {
   return EVALUATOR_SCHEMAS[slug];
 }
 
-/**
- * Check if a slug is a valid MBT evaluator
- */
 export function isValidEvaluatorSlug(slug: string): slug is EvaluatorSlug {
   return slug in EVALUATOR_SCHEMAS;
 }

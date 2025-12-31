@@ -66,7 +66,7 @@ export {
   validateEvaluatorInput,
   getAvailableEvaluatorSlugs,
   getEvaluatorSchemaInfo,
-} from "./evaluators";
+} from "./generated/evaluators";
 export { initialize, getClient } from "./configuration";
 export { forceFlush } from "./tracing";
 export { getTraceloopTracer } from "./tracing/tracing";

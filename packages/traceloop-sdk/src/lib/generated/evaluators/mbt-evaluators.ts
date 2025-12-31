@@ -1,161 +1,81 @@
 // Auto-generated - DO NOT EDIT
-// Generated from swagger.json by generate-evaluator-models.ts
-//
 // Regenerate with: pnpm generate:evaluator-models
 
 import type { EvaluatorWithConfig } from '../../interfaces/experiment.interface';
-import { EVALUATOR_SCHEMAS, isValidEvaluatorSlug, type EvaluatorSlug } from './registry';
+import type { components } from './types';
+import { EVALUATOR_SLUGS, EVALUATOR_SCHEMAS, isValidEvaluatorSlug, type EvaluatorSlug, type EvaluatorSchema } from './registry';
 
-export interface AgentFlowQualityConfig {
-  conditions: string[];
-  threshold: number;
-}
+// Config type aliases from generated OpenAPI types
+export type AgentFlowQualityConfig = components['schemas']['request.AgentFlowQualityRequest']['config'];
+export type AgentGoalCompletenessConfig = components['schemas']['request.AgentGoalCompletenessRequest']['config'];
+export type ContextRelevanceConfig = components['schemas']['request.ContextRelevanceRequest']['config'];
+export type ConversationQualityConfig = components['schemas']['request.ConversationQualityRequest']['config'];
+export type IntentChangeConfig = components['schemas']['request.IntentChangeRequest']['config'];
+export type JsonValidatorConfig = components['schemas']['request.JSONValidatorRequest']['config'];
+export type PiiDetectorConfig = components['schemas']['request.PIIDetectorRequest']['config'];
+export type PlaceholderRegexConfig = components['schemas']['request.PlaceholderRegexRequest']['config'];
+export type PromptInjectionConfig = components['schemas']['request.PromptInjectionRequest']['config'];
+export type RegexValidatorConfig = components['schemas']['request.RegexValidatorRequest']['config'];
+export type SexismDetectorConfig = components['schemas']['request.SexismDetectorRequest']['config'];
+export type ToxicityDetectorConfig = components['schemas']['request.ToxicityDetectorRequest']['config'];
 
-export interface AgentGoalCompletenessConfig {
-  threshold: number;
-}
-
-export interface ContextRelevanceConfig {
-  model?: string;
-}
-
-export interface ConversationQualityConfig {
-  model?: string;
-}
-
-export interface IntentChangeConfig {
-  model?: string;
-}
-
-export interface JsonValidatorConfig {
-  enable_schema_validation?: boolean;
-  schema_string?: string;
-}
-
-export interface PiiDetectorConfig {
-  probability_threshold?: number;
-}
-
-export interface PlaceholderRegexConfig {
-  case_sensitive?: boolean;
-  dot_include_nl?: boolean;
-  multi_line?: boolean;
-  should_match?: boolean;
-}
-
-export interface PromptInjectionConfig {
-  threshold?: number;
-}
-
-export interface RegexValidatorConfig {
-  case_sensitive?: boolean;
-  dot_include_nl?: boolean;
-  multi_line?: boolean;
-  regex?: string;
-  should_match?: boolean;
-}
-
-export interface SexismDetectorConfig {
-  threshold?: number;
-}
-
-export interface ToxicityDetectorConfig {
-  threshold?: number;
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Utility functions
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Create an EvaluatorWithConfig for the given slug with optional config.
- *
- * @param slug - The evaluator slug (e.g., 'pii-detector')
- * @param options - Optional version and config
- * @returns EvaluatorWithConfig configured for the specified evaluator
- *
- * @example
- * ```typescript
- * import { createEvaluator } from '@traceloop/node-server-sdk';
- *
- * const evaluator = createEvaluator('pii-detector', {
- *   config: { probability_threshold: 0.8 }
- * });
- * ```
+ * Create an evaluator configuration object.
  */
 export function createEvaluator(
   slug: EvaluatorSlug,
-  options?: {
-    version?: string;
-    config?: Record<string, unknown>;
-  },
+  options?: { version?: string; config?: Record<string, unknown> }
 ): EvaluatorWithConfig {
-  if (!isValidEvaluatorSlug(slug)) {
-    const availableSlugs = Object.keys(EVALUATOR_SCHEMAS).join(', ');
-    throw new Error(`Unknown evaluator slug: '${slug}'. Available: ${availableSlugs}`);
-  }
-
-  const schema = EVALUATOR_SCHEMAS[slug];
-  const result: EvaluatorWithConfig = {
+  return {
     name: slug,
-    version: options?.version || 'latest',
+    version: options?.version,
+    config: options?.config,
   };
-
-  if (options?.config) {
-    result.config = Object.fromEntries(
-      Object.entries(options.config).filter(([, v]) => v !== undefined),
-    );
-  }
-
-  if (schema?.requiredInputFields?.length) {
-    result.requiredInputFields = schema.requiredInputFields;
-  }
-
-  return result;
 }
 
 /**
- * Validate evaluator input against schema.
- * Returns validation errors or null if valid.
- *
- * @param slug - The evaluator slug
- * @param input - The input to validate
- * @returns Array of error messages, or null if valid
+ * Validate that required input fields are present in task output.
  */
 export function validateEvaluatorInput(
-  slug: string,
-  input: Record<string, unknown>,
-): string[] | null {
-  if (!isValidEvaluatorSlug(slug)) {
-    return null;
-  }
-
+  slug: EvaluatorSlug,
+  taskOutput: Record<string, unknown>
+): { valid: boolean; missingFields: string[] } {
   const schema = EVALUATOR_SCHEMAS[slug];
-  const errors: string[] = [];
-
-  for (const field of schema.requiredInputFields) {
-    if (!(field in input) || input[field] === undefined || input[field] === null) {
-      errors.push(`Missing required input field: ${field}`);
-    }
+  if (!schema) {
+    return { valid: false, missingFields: [] };
   }
 
-  return errors.length > 0 ? errors : null;
+  const missingFields = schema.requiredInputFields.filter(
+    (field) => !(field in taskOutput) || taskOutput[field] === undefined
+  );
+
+  return {
+    valid: missingFields.length === 0,
+    missingFields,
+  };
 }
 
 /**
- * Get list of available evaluator slugs.
+ * Get all available evaluator slugs.
  */
 export function getAvailableEvaluatorSlugs(): EvaluatorSlug[] {
-  return Object.keys(EVALUATOR_SCHEMAS) as EvaluatorSlug[];
+  return [...EVALUATOR_SLUGS];
 }
 
 /**
  * Get schema information for an evaluator.
  */
-export function getEvaluatorSchemaInfo(
-  slug: string,
-): { requiredInputFields: string[]; optionalConfigFields: string[] } | undefined {
-  if (!isValidEvaluatorSlug(slug)) {
-    return undefined;
-  }
+export function getEvaluatorSchemaInfo(slug: EvaluatorSlug): EvaluatorSchema | undefined {
   return EVALUATOR_SCHEMAS[slug];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Factory class
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Factory class for creating type-safe MBT evaluator configurations.
@@ -171,26 +91,14 @@ export function getEvaluatorSchemaInfo(
  * ```
  */
 export class EvaluatorMadeByTraceloop {
-  /**
-   * Create an evaluator configuration for any slug.
-   */
-  static create(
-    slug: EvaluatorSlug,
-    options?: { version?: string; config?: Record<string, unknown> },
-  ): EvaluatorWithConfig {
+  static create(slug: EvaluatorSlug, options?: { version?: string; config?: Record<string, unknown> }): EvaluatorWithConfig {
     return createEvaluator(slug, options);
   }
 
-  /**
-   * Get list of available evaluator slugs.
-   */
   static getAvailableSlugs(): EvaluatorSlug[] {
     return getAvailableEvaluatorSlugs();
   }
 
-  /**
-   * Check if a slug is a valid MBT evaluator.
-   */
   static isValidSlug(slug: string): slug is EvaluatorSlug {
     return isValidEvaluatorSlug(slug);
   }
@@ -201,7 +109,6 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.trajectory_prompts` (string, required): JSON array of prompts in the agent trajectory
 - `input.trajectory_completions` (string, required): JSON array of completions in the agent trajectory
-   *
    * Required task output fields: trajectory_completions, trajectory_prompts
    */
   static agentEfficiency(): EvaluatorWithConfig {
@@ -216,11 +123,10 @@ export class EvaluatorMadeByTraceloop {
 - `input.trajectory_completions` (string, required): JSON array of completions in the agent trajectory
 - `config.conditions` (array of strings, required): Array of evaluation conditions/rules to validate against
 - `config.threshold` (number, required): Score threshold for pass/fail determination (0.0-1.0)
-   *
    * Required task output fields: trajectory_completions, trajectory_prompts
    */
   static agentFlowQuality(config?: AgentFlowQualityConfig): EvaluatorWithConfig {
-    return createEvaluator('agent-flow-quality', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('agent-flow-quality', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -230,7 +136,6 @@ export class EvaluatorMadeByTraceloop {
 - `input.question` (string, required): The original question or goal
 - `input.completion` (string, required): The agent's completion/response
 - `input.reference` (string, required): The expected reference answer
-   *
    * Required task output fields: completion, question, reference
    */
   static agentGoalAccuracy(): EvaluatorWithConfig {
@@ -244,11 +149,10 @@ export class EvaluatorMadeByTraceloop {
 - `input.trajectory_prompts` (string, required): JSON array of prompts in the agent trajectory
 - `input.trajectory_completions` (string, required): JSON array of completions in the agent trajectory
 - `config.threshold` (number, required): Score threshold for pass/fail determination (0.0-1.0)
-   *
    * Required task output fields: trajectory_completions, trajectory_prompts
    */
   static agentGoalCompleteness(config?: AgentGoalCompletenessConfig): EvaluatorWithConfig {
-    return createEvaluator('agent-goal-completeness', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('agent-goal-completeness', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -257,7 +161,6 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.tool_input` (string, required): JSON string of the tool input
 - `input.tool_output` (string, required): JSON string of the tool output
-   *
    * Required task output fields: tool_input, tool_output
    */
   static agentToolErrorDetector(): EvaluatorWithConfig {
@@ -271,7 +174,6 @@ export class EvaluatorMadeByTraceloop {
 - `input.question` (string, required): The original question
 - `input.completion` (string, required): The completion to evaluate for completeness
 - `input.context` (string, required): The context that provides the complete information
-   *
    * Required task output fields: completion, context, question
    */
   static answerCompleteness(): EvaluatorWithConfig {
@@ -285,7 +187,6 @@ export class EvaluatorMadeByTraceloop {
 - `input.question` (string, required): The original question
 - `input.completion` (string, required): The completion to evaluate
 - `input.ground_truth` (string, required): The expected correct answer
-   *
    * Required task output fields: completion, ground_truth, question
    */
   static answerCorrectness(): EvaluatorWithConfig {
@@ -298,7 +199,6 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.answer` (string, required): The answer to evaluate for relevancy
 - `input.question` (string, required): The question that the answer should be relevant to
-   *
    * Required task output fields: answer, question
    */
   static answerRelevancy(): EvaluatorWithConfig {
@@ -310,7 +210,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.text` (string, required): The text to count characters in
-   *
    * Required task output fields: text
    */
   static charCount(): EvaluatorWithConfig {
@@ -323,7 +222,6 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.numerator_text` (string, required): The numerator text (will be divided by denominator)
 - `input.denominator_text` (string, required): The denominator text (divides the numerator)
-   *
    * Required task output fields: denominator_text, numerator_text
    */
   static charCountRatio(): EvaluatorWithConfig {
@@ -337,11 +235,10 @@ export class EvaluatorMadeByTraceloop {
 - `input.query` (string, required): The query/question to evaluate context relevance for
 - `input.context` (string, required): The context to evaluate for relevance to the query
 - `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)
-   *
    * Required task output fields: context, query
    */
   static contextRelevance(config?: ContextRelevanceConfig): EvaluatorWithConfig {
-    return createEvaluator('context-relevance', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('context-relevance', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -351,11 +248,10 @@ export class EvaluatorMadeByTraceloop {
 - `input.prompts` (string, required): JSON array of prompts in the conversation
 - `input.completions` (string, required): JSON array of completions in the conversation
 - `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)
-   *
    * Required task output fields: completions, prompts
    */
   static conversationQuality(config?: ConversationQualityConfig): EvaluatorWithConfig {
-    return createEvaluator('conversation-quality', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('conversation-quality', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -365,7 +261,6 @@ export class EvaluatorMadeByTraceloop {
 - `input.completion` (string, required): The LLM completion to check for faithfulness
 - `input.context` (string, required): The context that the completion should be faithful to
 - `input.question` (string, required): The original question asked
-   *
    * Required task output fields: completion, context, question
    */
   static faithfulness(): EvaluatorWithConfig {
@@ -378,7 +273,6 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.instructions` (string, required): The instructions that should be followed
 - `input.response` (string, required): The response to evaluate for instruction adherence
-   *
    * Required task output fields: instructions, response
    */
   static instructionAdherence(): EvaluatorWithConfig {
@@ -392,11 +286,10 @@ export class EvaluatorMadeByTraceloop {
 - `input.prompts` (string, required): JSON array of prompts in the conversation
 - `input.completions` (string, required): JSON array of completions in the conversation
 - `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)
-   *
    * Required task output fields: completions, prompts
    */
   static intentChange(config?: IntentChangeConfig): EvaluatorWithConfig {
-    return createEvaluator('intent-change', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('intent-change', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -406,11 +299,10 @@ export class EvaluatorMadeByTraceloop {
 - `input.text` (string, required): The text to validate as JSON
 - `config.enable_schema_validation` (bool, optional): Enable JSON schema validation
 - `config.schema_string` (string, optional): JSON schema to validate against
-   *
    * Required task output fields: text
    */
   static jsonValidator(config?: JsonValidatorConfig): EvaluatorWithConfig {
-    return createEvaluator('json-validator', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('json-validator', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -418,7 +310,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.logprobs` (string, required): JSON array of log probabilities from the model
-   *
    * Required task output fields: logprobs
    */
   static perplexity(): EvaluatorWithConfig {
@@ -431,11 +322,10 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.text` (string, required): The text to scan for personally identifiable information
 - `config.probability_threshold` (float, optional): Detection threshold (default: 0.8)
-   *
    * Required task output fields: text
    */
   static piiDetector(config?: PiiDetectorConfig): EvaluatorWithConfig {
-    return createEvaluator('pii-detector', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('pii-detector', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -448,11 +338,10 @@ export class EvaluatorMadeByTraceloop {
 - `config.case_sensitive` (bool, optional): Case-sensitive matching
 - `config.dot_include_nl` (bool, optional): Dot matches newlines
 - `config.multi_line` (bool, optional): Multi-line mode
-   *
    * Required task output fields: placeholder_value, text
    */
   static placeholderRegex(config?: PlaceholderRegexConfig): EvaluatorWithConfig {
-    return createEvaluator('placeholder-regex', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('placeholder-regex', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -460,7 +349,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.text` (string, required): The text to scan for profanity
-   *
    * Required task output fields: text
    */
   static profanityDetector(): EvaluatorWithConfig {
@@ -473,11 +361,10 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.prompt` (string, required): The prompt to check for injection attempts
 - `config.threshold` (float, optional): Detection threshold (default: 0.5)
-   *
    * Required task output fields: prompt
    */
   static promptInjection(config?: PromptInjectionConfig): EvaluatorWithConfig {
-    return createEvaluator('prompt-injection', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('prompt-injection', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -485,7 +372,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.prompt` (string, required): The prompt to calculate perplexity for
-   *
    * Required task output fields: prompt
    */
   static promptPerplexity(): EvaluatorWithConfig {
@@ -502,11 +388,10 @@ export class EvaluatorMadeByTraceloop {
 - `config.case_sensitive` (bool, optional): Case-sensitive matching
 - `config.dot_include_nl` (bool, optional): Dot matches newlines
 - `config.multi_line` (bool, optional): Multi-line mode
-   *
    * Required task output fields: text
    */
   static regexValidator(config?: RegexValidatorConfig): EvaluatorWithConfig {
-    return createEvaluator('regex-validator', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('regex-validator', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -514,7 +399,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.text` (string, required): The text to scan for secrets (API keys, passwords, etc.)
-   *
    * Required task output fields: text
    */
   static secretsDetector(): EvaluatorWithConfig {
@@ -527,7 +411,6 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.completion` (string, required): The completion text to compare
 - `input.reference` (string, required): The reference text to compare against
-   *
    * Required task output fields: completion, reference
    */
   static semanticSimilarity(): EvaluatorWithConfig {
@@ -540,11 +423,10 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.text` (string, required): The text to scan for sexist content
 - `config.threshold` (float, optional): Detection threshold (default: 0.5)
-   *
    * Required task output fields: text
    */
   static sexismDetector(config?: SexismDetectorConfig): EvaluatorWithConfig {
-    return createEvaluator('sexism-detector', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('sexism-detector', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -552,7 +434,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.text` (string, required): The text to validate as SQL
-   *
    * Required task output fields: text
    */
   static sqlValidator(): EvaluatorWithConfig {
@@ -564,7 +445,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.text` (string, required): The text to detect the tone of
-   *
    * Required task output fields: text
    */
   static toneDetection(): EvaluatorWithConfig {
@@ -578,7 +458,6 @@ export class EvaluatorMadeByTraceloop {
 - `input.question` (string, required): The original question
 - `input.completion` (string, required): The completion to evaluate
 - `input.reference_topics` (string, required): Comma-separated list of expected topics
-   *
    * Required task output fields: completion, question, reference_topics
    */
   static topicAdherence(): EvaluatorWithConfig {
@@ -591,11 +470,10 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.text` (string, required): The text to scan for toxic content
 - `config.threshold` (float, optional): Detection threshold (default: 0.5)
-   *
    * Required task output fields: text
    */
   static toxicityDetector(config?: ToxicityDetectorConfig): EvaluatorWithConfig {
-    return createEvaluator('toxicity-detector', { config: config as unknown as Record<string, unknown> });
+    return createEvaluator('toxicity-detector', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -603,7 +481,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.prompt` (string, required): The text to detect uncertainty in
-   *
    * Required task output fields: prompt
    */
   static uncertaintyDetector(): EvaluatorWithConfig {
@@ -615,7 +492,6 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.text` (string, required): The text to count words in
-   *
    * Required task output fields: text
    */
   static wordCount(): EvaluatorWithConfig {
@@ -628,7 +504,6 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.numerator_text` (string, required): The numerator text (will be divided by denominator)
 - `input.denominator_text` (string, required): The denominator text (divides the numerator)
-   *
    * Required task output fields: denominator_text, numerator_text
    */
   static wordCountRatio(): EvaluatorWithConfig {

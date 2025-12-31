@@ -27,8 +27,34 @@ echo "=== Generating evaluator models from ${SWAGGER_PATH} ==="
 # Change to root directory
 cd "${ROOT_DIR}"
 
-# Run the TypeScript generation script
-npx ts-node --project "${SCRIPT_DIR}/codegen/tsconfig.json" "${CODEGEN_SCRIPT}" "${SWAGGER_PATH}" "${OUTPUT_DIR}"
+# Create output directory
+mkdir -p "${OUTPUT_DIR}"
+
+# Check if it's Swagger 2.0 and convert to OpenAPI 3.0 if needed
+OPENAPI_PATH="${SWAGGER_PATH}"
+TEMP_OPENAPI=""
+if grep -q '"swagger".*"2\.' "${SWAGGER_PATH}"; then
+    echo "=== Converting Swagger 2.0 to OpenAPI 3.0 ==="
+    TEMP_OPENAPI=$(mktemp)
+    OPENAPI_PATH="${TEMP_OPENAPI}"
+    npx swagger2openapi --patch --warnOnly "${SWAGGER_PATH}" -o "${OPENAPI_PATH}"
+fi
+
+# Step 1: Run the TypeScript generation script (generates filtered spec + registry + mbt-evaluators)
+echo "=== Generating registry and evaluator files ==="
+npx ts-node --project "${SCRIPT_DIR}/codegen/tsconfig.json" "${CODEGEN_SCRIPT}" "${OPENAPI_PATH}" "${OUTPUT_DIR}"
+
+# Step 2: Generate types.ts from the filtered spec (only evaluator schemas)
+echo "=== Generating types.ts with openapi-typescript ==="
+npx openapi-typescript "${OUTPUT_DIR}/openapi-filtered.json" -o "${OUTPUT_DIR}/types.ts"
+
+# Remove the intermediate filtered spec file
+rm -f "${OUTPUT_DIR}/openapi-filtered.json"
+
+# Cleanup temp file
+if [ -n "${TEMP_OPENAPI}" ] && [ -f "${TEMP_OPENAPI}" ]; then
+    rm "${TEMP_OPENAPI}"
+fi
 
 echo ""
 echo "Generated files:"
