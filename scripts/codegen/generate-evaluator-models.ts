@@ -230,25 +230,39 @@ function extractEvaluatorDefinitions(spec: OpenAPISpec): EvaluatorDefinition[] {
 }
 
 /**
- * Convert OpenAPI type to TypeScript type
+ * Convert OpenAPI type to TypeScript type.
+ * When resolveRefs is true, $ref references are resolved and inlined.
  */
 function openApiTypeToTs(
   schema: OpenAPISchema,
   allSchemas: Record<string, OpenAPISchema>,
   indent: string = "",
+  resolveRefs: boolean = true,
 ): string {
   if (schema.$ref) {
-    return resolveRefName(schema.$ref);
+    const refName = resolveRefName(schema.$ref);
+    // Resolve the reference and generate inline type
+    if (resolveRefs) {
+      const refSchema = allSchemas[refName];
+      if (refSchema) {
+        return openApiTypeToTs(refSchema, allSchemas, indent, true);
+      }
+    }
+    return refName;
   }
 
   if (schema.allOf) {
-    const types = schema.allOf.map((s) => openApiTypeToTs(s, allSchemas));
+    const types = schema.allOf.map((s) =>
+      openApiTypeToTs(s, allSchemas, indent, resolveRefs),
+    );
     return types.join(" & ");
   }
 
   if (schema.oneOf || schema.anyOf) {
     const schemas = schema.oneOf || schema.anyOf;
-    const types = schemas!.map((s) => openApiTypeToTs(s, allSchemas));
+    const types = schemas!.map((s) =>
+      openApiTypeToTs(s, allSchemas, indent, resolveRefs),
+    );
     return types.join(" | ");
   }
 
@@ -266,7 +280,7 @@ function openApiTypeToTs(
       return "boolean";
     case "array":
       if (schema.items) {
-        return `${openApiTypeToTs(schema.items, allSchemas)}[]`;
+        return `${openApiTypeToTs(schema.items, allSchemas, indent, resolveRefs)}[]`;
       }
       return "unknown[]";
     case "object":
@@ -274,7 +288,12 @@ function openApiTypeToTs(
         const props = Object.entries(schema.properties)
           .map(([propName, propSchema]) => {
             const isRequired = schema.required?.includes(propName);
-            const tsType = openApiTypeToTs(propSchema, allSchemas);
+            const tsType = openApiTypeToTs(
+              propSchema,
+              allSchemas,
+              indent + "  ",
+              resolveRefs,
+            );
             const nullable = propSchema.nullable ? " | null" : "";
             return `${indent}  ${propName}${isRequired ? "" : "?"}: ${tsType}${nullable};`;
           })
@@ -285,7 +304,7 @@ function openApiTypeToTs(
         if (typeof schema.additionalProperties === "boolean") {
           return "Record<string, unknown>";
         }
-        return `Record<string, ${openApiTypeToTs(schema.additionalProperties, allSchemas)}>`;
+        return `Record<string, ${openApiTypeToTs(schema.additionalProperties, allSchemas, indent, resolveRefs)}>`;
       }
       return "Record<string, unknown>";
     default:
@@ -294,171 +313,56 @@ function openApiTypeToTs(
 }
 
 /**
- * Generate TypeScript interface for a schema
+ * Extract required input fields and optional config fields from a schema.
+ * The new swagger structure has nested 'input' and 'config' properties.
  */
-function generateInterface(
-  name: string,
+function extractFieldsFromSchema(
   schema: OpenAPISchema,
   allSchemas: Record<string, OpenAPISchema>,
-): string {
-  const lines: string[] = [];
-
-  if (schema.description) {
-    lines.push(`/** ${schema.description} */`);
-  }
-
-  if (schema.properties) {
-    lines.push(`export interface ${name} {`);
-    for (const [propName, propSchema] of Object.entries(schema.properties)) {
-      const isRequired = schema.required?.includes(propName);
-      const tsType = openApiTypeToTs(propSchema, allSchemas, "  ");
-      const nullable = propSchema.nullable ? " | null" : "";
-      if (propSchema.description) {
-        lines.push(`  /** ${propSchema.description} */`);
-      }
-      lines.push(
-        `  ${propName}${isRequired ? "" : "?"}: ${tsType}${nullable};`,
-      );
-    }
-    lines.push(`}`);
-  } else {
-    // Handle non-object schemas (aliases)
-    const tsType = openApiTypeToTs(schema, allSchemas);
-    lines.push(`export type ${name} = ${tsType};`);
-  }
-
-  return lines.join("\n");
-}
-
-/**
- * Extract required and optional fields from a schema
- */
-function extractFieldsFromSchema(schema: OpenAPISchema): {
-  required: string[];
-  optional: string[];
+): {
+  requiredInputFields: string[];
+  optionalConfigFields: string[];
 } {
-  const required: string[] = [];
-  const optional: string[] = [];
+  const requiredInputFields: string[] = [];
+  const optionalConfigFields: string[] = [];
 
-  if (schema.properties) {
-    for (const propName of Object.keys(schema.properties)) {
-      if (schema.required?.includes(propName)) {
-        required.push(propName);
-      } else {
-        optional.push(propName);
-      }
+  // Extract from nested 'input' property
+  const inputProp = schema.properties?.input;
+  if (inputProp) {
+    const inputSchema = inputProp.$ref
+      ? resolveSchema(inputProp.$ref, allSchemas)
+      : inputProp;
+    if (inputSchema?.properties) {
+      requiredInputFields.push(...Object.keys(inputSchema.properties));
     }
   }
 
-  return { required, optional };
-}
-
-/**
- * Generate request.ts file content
- */
-function generateRequestFile(
-  evaluators: EvaluatorDefinition[],
-  allSchemas: Record<string, OpenAPISchema>,
-): string {
-  const lines: string[] = [
-    "// Auto-generated - DO NOT EDIT",
-    "// Generated from swagger.json by generate-evaluator-models.ts",
-    "//",
-    "// Regenerate with: pnpm generate:evaluator-models",
-    "",
-  ];
-
-  // Collect all unique schemas that need to be generated
-  const generatedSchemas = new Set<string>();
-
-  for (const evaluator of evaluators) {
-    const className = `${slugToClassName(evaluator.slug)}Request`;
-
-    if (evaluator.requestSchema) {
-      lines.push("");
-      lines.push(
-        generateInterface(className, evaluator.requestSchema, allSchemas),
-      );
-      generatedSchemas.add(className);
-    } else if (evaluator.requestSchemaRef) {
-      // Reference to another schema - create a type alias
-      const refName = resolveRefName(evaluator.requestSchemaRef);
-      if (!generatedSchemas.has(refName)) {
-        const refSchema = allSchemas[refName];
-        if (refSchema) {
-          lines.push("");
-          lines.push(generateInterface(refName, refSchema, allSchemas));
-          generatedSchemas.add(refName);
-        }
-      }
-      if (refName !== className) {
-        lines.push("");
-        lines.push(`export type ${className} = ${refName};`);
-      }
+  // Extract from nested 'config' property
+  const configProp = schema.properties?.config;
+  if (configProp) {
+    const configSchema = configProp.$ref
+      ? resolveSchema(configProp.$ref, allSchemas)
+      : configProp;
+    if (configSchema?.properties) {
+      optionalConfigFields.push(...Object.keys(configSchema.properties));
     }
   }
 
-  return lines.join("\n") + "\n";
-}
-
-/**
- * Generate response.ts file content
- */
-function generateResponseFile(
-  evaluators: EvaluatorDefinition[],
-  allSchemas: Record<string, OpenAPISchema>,
-): string {
-  const lines: string[] = [
-    "// Auto-generated - DO NOT EDIT",
-    "// Generated from swagger.json by generate-evaluator-models.ts",
-    "//",
-    "// Regenerate with: pnpm generate:evaluator-models",
-    "",
-  ];
-
-  const generatedSchemas = new Set<string>();
-
-  for (const evaluator of evaluators) {
-    const className = `${slugToClassName(evaluator.slug)}Response`;
-
-    if (evaluator.responseSchema) {
-      lines.push("");
-      lines.push(
-        generateInterface(className, evaluator.responseSchema, allSchemas),
-      );
-      generatedSchemas.add(className);
-    } else if (evaluator.responseSchemaRef) {
-      const refName = resolveRefName(evaluator.responseSchemaRef);
-      if (!generatedSchemas.has(refName)) {
-        const refSchema = allSchemas[refName];
-        if (refSchema) {
-          lines.push("");
-          lines.push(generateInterface(refName, refSchema, allSchemas));
-          generatedSchemas.add(refName);
-        }
-      }
-      if (refName !== className) {
-        lines.push("");
-        lines.push(`export type ${className} = ${refName};`);
-      }
-    }
-  }
-
-  return lines.join("\n") + "\n";
+  return { requiredInputFields, optionalConfigFields };
 }
 
 /**
  * Generate registry.ts file content
  */
-function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
+function generateRegistryFile(
+  evaluators: EvaluatorDefinition[],
+  allSchemas: Record<string, OpenAPISchema>,
+): string {
   const lines: string[] = [
     "// Auto-generated - DO NOT EDIT",
     "// Generated from swagger.json by generate-evaluator-models.ts",
     "//",
     "// Regenerate with: pnpm generate:evaluator-models",
-    "",
-    "import type * as Request from './request';",
-    "import type * as Response from './response';",
     "",
   ];
 
@@ -484,42 +388,22 @@ function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
   lines.push("];");
   lines.push("");
 
-  // Generate REQUEST_MODELS mapping
-  lines.push("export const REQUEST_MODELS: Record<EvaluatorSlug, unknown> = {");
-  for (const evaluator of evaluators) {
-    const className = `${slugToClassName(evaluator.slug)}Request`;
-    lines.push(`  '${evaluator.slug}': {} as Request.${className},`);
-  }
-  lines.push("};");
-  lines.push("");
-
-  // Generate RESPONSE_MODELS mapping
-  lines.push(
-    "export const RESPONSE_MODELS: Record<EvaluatorSlug, unknown> = {",
-  );
-  for (const evaluator of evaluators) {
-    const className = `${slugToClassName(evaluator.slug)}Response`;
-    lines.push(`  '${evaluator.slug}': {} as Response.${className},`);
-  }
-  lines.push("};");
-  lines.push("");
-
   // Generate EVALUATOR_SCHEMAS
   lines.push(
     "export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {",
   );
   for (const evaluator of evaluators) {
-    const { required, optional } = evaluator.requestSchema
-      ? extractFieldsFromSchema(evaluator.requestSchema)
-      : { required: [], optional: [] };
+    const { requiredInputFields, optionalConfigFields } = evaluator.requestSchema
+      ? extractFieldsFromSchema(evaluator.requestSchema, allSchemas)
+      : { requiredInputFields: [], optionalConfigFields: [] };
 
     lines.push(`  '${evaluator.slug}': {`);
     lines.push(`    slug: '${evaluator.slug}',`);
     lines.push(
-      `    requiredInputFields: [${required.map((f) => `'${f}'`).join(", ")}],`,
+      `    requiredInputFields: [${requiredInputFields.map((f: string) => `'${f}'`).join(", ")}],`,
     );
     lines.push(
-      `    optionalConfigFields: [${optional.map((f) => `'${f}'`).join(", ")}],`,
+      `    optionalConfigFields: [${optionalConfigFields.map((f: string) => `'${f}'`).join(", ")}],`,
     );
     if (evaluator.description) {
       lines.push(`    description: ${JSON.stringify(evaluator.description)},`);
@@ -530,26 +414,6 @@ function generateRegistryFile(evaluators: EvaluatorDefinition[]): string {
   lines.push("");
 
   // Generate helper functions
-  lines.push("/**");
-  lines.push(" * Get the request model type for an evaluator slug");
-  lines.push(" */");
-  lines.push(
-    "export function getRequestModel<S extends EvaluatorSlug>(slug: S): (typeof REQUEST_MODELS)[S] {",
-  );
-  lines.push("  return REQUEST_MODELS[slug];");
-  lines.push("}");
-  lines.push("");
-
-  lines.push("/**");
-  lines.push(" * Get the response model type for an evaluator slug");
-  lines.push(" */");
-  lines.push(
-    "export function getResponseModel<S extends EvaluatorSlug>(slug: S): (typeof RESPONSE_MODELS)[S] {",
-  );
-  lines.push("  return RESPONSE_MODELS[slug];");
-  lines.push("}");
-  lines.push("");
-
   lines.push("/**");
   lines.push(" * Get the schema information for an evaluator slug");
   lines.push(" */");
@@ -587,32 +451,37 @@ function slugToCamelCase(slug: string): string {
 }
 
 /**
- * Generate config interface for an evaluator
+ * Generate config interface for an evaluator.
+ * Extracts fields from the nested 'config' property in the request schema.
  */
 function generateConfigInterface(
   evaluator: EvaluatorDefinition,
   allSchemas: Record<string, OpenAPISchema>,
 ): { interfaceName: string; interfaceCode: string } | null {
-  if (!evaluator.requestSchema?.properties) {
+  const configProp = evaluator.requestSchema?.properties?.config;
+  if (!configProp) {
     return null;
   }
 
-  const { optional } = extractFieldsFromSchema(evaluator.requestSchema);
-  if (optional.length === 0) {
+  // Resolve $ref if needed
+  const configSchema = configProp.$ref
+    ? resolveSchema(configProp.$ref, allSchemas)
+    : configProp;
+
+  if (!configSchema?.properties || Object.keys(configSchema.properties).length === 0) {
     return null;
   }
 
   const className = slugToClassName(evaluator.slug);
   const interfaceName = `${className}Config`;
-  const schemaProps = evaluator.requestSchema!.properties!;
 
-  const properties = optional.map((propName) => {
-    const propSchema = schemaProps[propName];
-    const tsType = openApiTypeToTs(propSchema, allSchemas);
-    const docComment = propSchema.description
-      ? `  /** ${propSchema.description} */\n`
+  const properties = Object.entries(configSchema.properties).map(([propName, propSchema]) => {
+    const tsType = openApiTypeToTs(propSchema as OpenAPISchema, allSchemas);
+    const isRequired = configSchema.required?.includes(propName);
+    const docComment = (propSchema as OpenAPISchema).description
+      ? `  /** ${(propSchema as OpenAPISchema).description} */\n`
       : "";
-    return `${docComment}  ${propName}?: ${tsType};`;
+    return `${docComment}  ${propName}${isRequired ? "" : "?"}: ${tsType};`;
   });
 
   const interfaceCode = `export interface ${interfaceName} {
@@ -691,11 +560,10 @@ function generateMbtEvaluatorsFile(
   lines.push("  }");
   lines.push("");
   lines.push("  const schema = EVALUATOR_SCHEMAS[slug];");
-  lines.push("  const result: EvaluatorWithConfig = { name: slug };");
-  lines.push("");
-  lines.push("  if (options?.version) {");
-  lines.push("    result.version = options.version;");
-  lines.push("  }");
+  lines.push("  const result: EvaluatorWithConfig = {");
+  lines.push("    name: slug,");
+  lines.push("    version: options?.version || 'latest',");
+  lines.push("  };");
   lines.push("");
   lines.push("  if (options?.config) {");
   lines.push("    result.config = Object.fromEntries(");
@@ -830,13 +698,13 @@ function generateMbtEvaluatorsFile(
       lines.push(`   * ${slugToClassName(evaluator.slug)} evaluator.`);
     }
 
-    // Document required fields
-    const { required } = evaluator.requestSchema
-      ? extractFieldsFromSchema(evaluator.requestSchema)
-      : { required: [] };
-    if (required.length > 0) {
+    // Document required input fields
+    const { requiredInputFields } = evaluator.requestSchema
+      ? extractFieldsFromSchema(evaluator.requestSchema, allSchemas)
+      : { requiredInputFields: [] };
+    if (requiredInputFields.length > 0) {
       lines.push("   *");
-      lines.push(`   * Required task output fields: ${required.join(", ")}`);
+      lines.push(`   * Required task output fields: ${requiredInputFields.join(", ")}`);
     }
 
     lines.push("   */");
@@ -846,7 +714,7 @@ function generateMbtEvaluatorsFile(
         `  static ${methodName}(config?: ${configInterface}): EvaluatorWithConfig {`,
       );
       lines.push(
-        `    return createEvaluator('${evaluator.slug}', { config: config as Record<string, unknown> });`,
+        `    return createEvaluator('${evaluator.slug}', { config: config as unknown as Record<string, unknown> });`,
       );
     } else {
       lines.push(`  static ${methodName}(): EvaluatorWithConfig {`);
@@ -863,27 +731,17 @@ function generateMbtEvaluatorsFile(
 /**
  * Generate index.ts file content
  */
-function generateIndexFile(evaluators: EvaluatorDefinition[]): string {
+function generateIndexFile(): string {
   const lines: string[] = [
     "// Auto-generated - DO NOT EDIT",
     "// Generated from swagger.json by generate-evaluator-models.ts",
     "//",
     "// Regenerate with: pnpm generate:evaluator-models",
     "",
-    "// Request types",
-    "export * from './request';",
-    "",
-    "// Response types",
-    "export * from './response';",
-    "",
     "// Registry and utilities",
     "export {",
     "  EVALUATOR_SLUGS,",
     "  EVALUATOR_SCHEMAS,",
-    "  REQUEST_MODELS,",
-    "  RESPONSE_MODELS,",
-    "  getRequestModel,",
-    "  getResponseModel,",
     "  getEvaluatorSchema,",
     "  isValidEvaluatorSlug,",
     "} from './registry';",
@@ -958,15 +816,7 @@ function main(): void {
   // Generate files
   console.log(`=== Generating TypeScript files ===`);
 
-  const requestContent = generateRequestFile(evaluators, allSchemas);
-  fs.writeFileSync(path.join(outputDir, "request.ts"), requestContent);
-  console.log(`  - request.ts`);
-
-  const responseContent = generateResponseFile(evaluators, allSchemas);
-  fs.writeFileSync(path.join(outputDir, "response.ts"), responseContent);
-  console.log(`  - response.ts`);
-
-  const registryContent = generateRegistryFile(evaluators);
+  const registryContent = generateRegistryFile(evaluators, allSchemas);
   fs.writeFileSync(path.join(outputDir, "registry.ts"), registryContent);
   console.log(`  - registry.ts`);
 
@@ -980,7 +830,7 @@ function main(): void {
   );
   console.log(`  - mbt-evaluators.ts`);
 
-  const indexContent = generateIndexFile(evaluators);
+  const indexContent = generateIndexFile();
   fs.writeFileSync(path.join(outputDir, "index.ts"), indexContent);
   console.log(`  - index.ts`);
 
