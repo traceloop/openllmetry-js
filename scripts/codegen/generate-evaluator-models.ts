@@ -393,9 +393,10 @@ function generateRegistryFile(
     "export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {",
   );
   for (const evaluator of evaluators) {
-    const { requiredInputFields, optionalConfigFields } = evaluator.requestSchema
-      ? extractFieldsFromSchema(evaluator.requestSchema, allSchemas)
-      : { requiredInputFields: [], optionalConfigFields: [] };
+    const { requiredInputFields, optionalConfigFields } =
+      evaluator.requestSchema
+        ? extractFieldsFromSchema(evaluator.requestSchema, allSchemas)
+        : { requiredInputFields: [], optionalConfigFields: [] };
 
     lines.push(`  '${evaluator.slug}': {`);
     lines.push(`    slug: '${evaluator.slug}',`);
@@ -468,21 +469,26 @@ function generateConfigInterface(
     ? resolveSchema(configProp.$ref, allSchemas)
     : configProp;
 
-  if (!configSchema?.properties || Object.keys(configSchema.properties).length === 0) {
+  if (
+    !configSchema?.properties ||
+    Object.keys(configSchema.properties).length === 0
+  ) {
     return null;
   }
 
   const className = slugToClassName(evaluator.slug);
   const interfaceName = `${className}Config`;
 
-  const properties = Object.entries(configSchema.properties).map(([propName, propSchema]) => {
-    const tsType = openApiTypeToTs(propSchema as OpenAPISchema, allSchemas);
-    const isRequired = configSchema.required?.includes(propName);
-    const docComment = (propSchema as OpenAPISchema).description
-      ? `  /** ${(propSchema as OpenAPISchema).description} */\n`
-      : "";
-    return `${docComment}  ${propName}${isRequired ? "" : "?"}: ${tsType};`;
-  });
+  const properties = Object.entries(configSchema.properties).map(
+    ([propName, propSchema]) => {
+      const tsType = openApiTypeToTs(propSchema as OpenAPISchema, allSchemas);
+      const isRequired = configSchema.required?.includes(propName);
+      const docComment = (propSchema as OpenAPISchema).description
+        ? `  /** ${(propSchema as OpenAPISchema).description} */\n`
+        : "";
+      return `${docComment}  ${propName}${isRequired ? "" : "?"}: ${tsType};`;
+    },
+  );
 
   const interfaceCode = `export interface ${interfaceName} {
 ${properties.join("\n")}
@@ -704,7 +710,9 @@ function generateMbtEvaluatorsFile(
       : { requiredInputFields: [] };
     if (requiredInputFields.length > 0) {
       lines.push("   *");
-      lines.push(`   * Required task output fields: ${requiredInputFields.join(", ")}`);
+      lines.push(
+        `   * Required task output fields: ${requiredInputFields.join(", ")}`,
+      );
     }
 
     lines.push("   */");
