@@ -111,13 +111,6 @@ function slugToClassName(slug: string): string {
 }
 
 /**
- * Convert slug like "pii-detector" to snake_case method name like "pii_detector"
- */
-function slugToMethodName(slug: string): string {
-  return slug.replace(/-/g, "_");
-}
-
-/**
  * Resolve a $ref path to get the schema name
  */
 function resolveRefName(ref: string): string {
@@ -327,13 +320,22 @@ function extractFieldsFromSchema(
   const optionalConfigFields: string[] = [];
 
   // Extract from nested 'input' property
+  // Only add properties that are marked as required in the schema
   const inputProp = schema.properties?.input;
   if (inputProp) {
     const inputSchema = inputProp.$ref
       ? resolveSchema(inputProp.$ref, allSchemas)
       : inputProp;
     if (inputSchema?.properties) {
-      requiredInputFields.push(...Object.keys(inputSchema.properties));
+      const requiredProps = Array.isArray(inputSchema.required)
+        ? inputSchema.required
+        : [];
+      // Only push properties that are in the required array
+      for (const propName of Object.keys(inputSchema.properties)) {
+        if (requiredProps.includes(propName)) {
+          requiredInputFields.push(propName);
+        }
+      }
     }
   }
 
