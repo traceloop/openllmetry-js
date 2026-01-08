@@ -74,7 +74,7 @@ const main = async () => {
   // Using the evaluator slug directly - TypeScript should infer it's valid
   const evaluators = [
     {
-      name: 'agent-tool-trajectory',
+      name: "agent-tool-trajectory",
       config: {
         input_params_sensitive: true,
         mismatch_sensitive: false,
