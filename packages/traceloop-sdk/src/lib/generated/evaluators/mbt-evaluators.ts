@@ -8,9 +8,8 @@ import { EVALUATOR_SLUGS, EVALUATOR_SCHEMAS, isValidEvaluatorSlug, type Evaluato
 // Config type aliases from generated OpenAPI types
 export type AgentFlowQualityConfig = components['schemas']['request.AgentFlowQualityRequest']['config'];
 export type AgentGoalCompletenessConfig = components['schemas']['request.AgentGoalCompletenessRequest']['config'];
+export type AgentToolTrajectoryConfig = components['schemas']['request.AgentToolTrajectoryRequest']['config'];
 export type ContextRelevanceConfig = components['schemas']['request.ContextRelevanceRequest']['config'];
-export type ConversationQualityConfig = components['schemas']['request.ConversationQualityRequest']['config'];
-export type IntentChangeConfig = components['schemas']['request.IntentChangeRequest']['config'];
 export type JsonValidatorConfig = components['schemas']['request.JSONValidatorRequest']['config'];
 export type PiiDetectorConfig = components['schemas']['request.PIIDetectorRequest']['config'];
 export type PlaceholderRegexConfig = components['schemas']['request.PlaceholderRegexRequest']['config'];
@@ -168,6 +167,22 @@ export class EvaluatorMadeByTraceloop {
   }
 
   /**
+   * Compare actual tool calls against expected reference tool calls
+
+**Request Body:**
+- `input.executed_tool_calls` (string, required): JSON array of actual tool calls made by the agent
+- `input.expected_tool_calls` (string, required): JSON array of expected/reference tool calls
+- `config.threshold` (float, optional): Score threshold for pass/fail determination (default: 0.5)
+- `config.mismatch_sensitive` (bool, optional): Whether tool calls must match exactly (default: false)
+- `config.order_sensitive` (bool, optional): Whether order of tool calls matters (default: false)
+- `config.input_params_sensitive` (bool, optional): Whether to compare input parameters (default: true)
+   * Required task output fields: executed_tool_calls, expected_tool_calls
+   */
+  static agentToolTrajectory(config?: AgentToolTrajectoryConfig): EvaluatorWithConfig {
+    return createEvaluator('agent-tool-trajectory', { config: config as Record<string, unknown> });
+  }
+
+  /**
    * Evaluate whether the answer is complete and contains all the necessary information
 
 **Request Body:**
@@ -247,11 +262,10 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.prompts` (string, required): JSON array of prompts in the conversation
 - `input.completions` (string, required): JSON array of completions in the conversation
-- `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)
    * Required task output fields: completions, prompts
    */
-  static conversationQuality(config?: ConversationQualityConfig): EvaluatorWithConfig {
-    return createEvaluator('conversation-quality', { config: config as Record<string, unknown> });
+  static conversationQuality(): EvaluatorWithConfig {
+    return createEvaluator('conversation-quality');
   }
 
   /**
@@ -265,6 +279,18 @@ export class EvaluatorMadeByTraceloop {
    */
   static faithfulness(): EvaluatorWithConfig {
     return createEvaluator('faithfulness');
+  }
+
+  /**
+   * Compare two HTML documents for structural and content similarity
+
+**Request Body:**
+- `input.html1` (string, required): The first HTML document to compare
+- `input.html2` (string, required): The second HTML document to compare
+   * Required task output fields: html1, html2
+   */
+  static htmlComparison(): EvaluatorWithConfig {
+    return createEvaluator('html-comparison');
   }
 
   /**
@@ -285,11 +311,10 @@ export class EvaluatorMadeByTraceloop {
 **Request Body:**
 - `input.prompts` (string, required): JSON array of prompts in the conversation
 - `input.completions` (string, required): JSON array of completions in the conversation
-- `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)
    * Required task output fields: completions, prompts
    */
-  static intentChange(config?: IntentChangeConfig): EvaluatorWithConfig {
-    return createEvaluator('intent-change', { config: config as Record<string, unknown> });
+  static intentChange(): EvaluatorWithConfig {
+    return createEvaluator('intent-change');
   }
 
   /**
