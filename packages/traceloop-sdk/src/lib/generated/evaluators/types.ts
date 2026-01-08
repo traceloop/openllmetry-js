@@ -17,7 +17,7 @@ export interface components {
             trajectory_prompts: string;
         };
         "request.AgentFlowQualityRequest": {
-            config?: components["schemas"]["request.AgentFlowQualityConfigRequest"];
+            config: components["schemas"]["request.AgentFlowQualityConfigRequest"];
             input: components["schemas"]["request.AgentFlowQualityInput"];
         };
         "request.AgentFlowQualityConfigRequest": {
@@ -70,6 +70,26 @@ export interface components {
             tool_input: string;
             /** @example {"status": "success", "results": [{"flight": "AF123", "price": 450}]} */
             tool_output: string;
+        };
+        "request.AgentToolTrajectoryRequest": {
+            config?: components["schemas"]["request.AgentToolTrajectoryConfigRequest"];
+            input: components["schemas"]["request.AgentToolTrajectoryInput"];
+        };
+        "request.AgentToolTrajectoryConfigRequest": {
+            /** @example true */
+            input_params_sensitive?: boolean;
+            /** @example false */
+            mismatch_sensitive?: boolean;
+            /** @example false */
+            order_sensitive?: boolean;
+            /** @example 0.5 */
+            threshold?: number;
+        };
+        "request.AgentToolTrajectoryInput": {
+            /** @example [{"name": "search", "input": {"query": "weather"}}] */
+            executed_tool_calls: string;
+            /** @example [{"name": "search", "input": {"query": "weather"}}] */
+            expected_tool_calls: string;
         };
         "request.AnswerCompletenessRequest": {
             input: components["schemas"]["request.AnswerCompletenessInput"];
@@ -133,12 +153,7 @@ export interface components {
             query: string;
         };
         "request.ConversationQualityRequest": {
-            config?: components["schemas"]["request.ConversationQualityConfigRequest"];
             input: components["schemas"]["request.ConversationQualityInput"];
-        };
-        "request.ConversationQualityConfigRequest": {
-            /** @example gpt-4o */
-            model?: string;
         };
         "request.ConversationQualityInput": {
             /** @example ["Hi! I'd be happy to assist you today.", "We offer consulting, development, and support services."] */
@@ -157,6 +172,15 @@ export interface components {
             /** @example When was the Eiffel Tower built? */
             question: string;
         };
+        "request.HtmlComparisonRequest": {
+            input: components["schemas"]["request.HtmlComparisonInput"];
+        };
+        "request.HtmlComparisonInput": {
+            /** @example <html><body><h1>Hello, world!</h1></body></html> */
+            html1: string;
+            /** @example <html><body><h1>Hello, world!</h1></body></html> */
+            html2: string;
+        };
         "request.InstructionAdherenceRequest": {
             input: components["schemas"]["request.InstructionAdherenceInput"];
         };
@@ -171,12 +195,7 @@ export interface components {
             response: string;
         };
         "request.IntentChangeRequest": {
-            config?: components["schemas"]["request.IntentChangeConfigRequest"];
             input: components["schemas"]["request.IntentChangeInput"];
-        };
-        "request.IntentChangeConfigRequest": {
-            /** @example gpt-4o */
-            model?: string;
         };
         "request.IntentChangeInput": {
             /** @example ["Sure, I can help with hotel booking", "No problem, let me search for flights"] */

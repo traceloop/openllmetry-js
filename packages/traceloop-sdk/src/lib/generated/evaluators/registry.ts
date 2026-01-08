@@ -8,7 +8,7 @@ export interface EvaluatorSchema {
   description?: string;
 }
 
-export type EvaluatorSlug = 'agent-efficiency' | 'agent-flow-quality' | 'agent-goal-accuracy' | 'agent-goal-completeness' | 'agent-tool-error-detector' | 'answer-completeness' | 'answer-correctness' | 'answer-relevancy' | 'char-count' | 'char-count-ratio' | 'context-relevance' | 'conversation-quality' | 'faithfulness' | 'instruction-adherence' | 'intent-change' | 'json-validator' | 'perplexity' | 'pii-detector' | 'placeholder-regex' | 'profanity-detector' | 'prompt-injection' | 'prompt-perplexity' | 'regex-validator' | 'secrets-detector' | 'semantic-similarity' | 'sexism-detector' | 'sql-validator' | 'tone-detection' | 'topic-adherence' | 'toxicity-detector' | 'uncertainty-detector' | 'word-count' | 'word-count-ratio';
+export type EvaluatorSlug = 'agent-efficiency' | 'agent-flow-quality' | 'agent-goal-accuracy' | 'agent-goal-completeness' | 'agent-tool-error-detector' | 'agent-tool-trajectory' | 'answer-completeness' | 'answer-correctness' | 'answer-relevancy' | 'char-count' | 'char-count-ratio' | 'context-relevance' | 'conversation-quality' | 'faithfulness' | 'html-comparison' | 'instruction-adherence' | 'intent-change' | 'json-validator' | 'perplexity' | 'pii-detector' | 'placeholder-regex' | 'profanity-detector' | 'prompt-injection' | 'prompt-perplexity' | 'regex-validator' | 'secrets-detector' | 'semantic-similarity' | 'sexism-detector' | 'sql-validator' | 'tone-detection' | 'topic-adherence' | 'toxicity-detector' | 'uncertainty-detector' | 'word-count' | 'word-count-ratio';
 
 export const EVALUATOR_SLUGS: EvaluatorSlug[] = [
   'agent-efficiency',
@@ -16,6 +16,7 @@ export const EVALUATOR_SLUGS: EvaluatorSlug[] = [
   'agent-goal-accuracy',
   'agent-goal-completeness',
   'agent-tool-error-detector',
+  'agent-tool-trajectory',
   'answer-completeness',
   'answer-correctness',
   'answer-relevancy',
@@ -24,6 +25,7 @@ export const EVALUATOR_SLUGS: EvaluatorSlug[] = [
   'context-relevance',
   'conversation-quality',
   'faithfulness',
+  'html-comparison',
   'instruction-adherence',
   'intent-change',
   'json-validator',
@@ -77,6 +79,12 @@ export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {
     optionalConfigFields: [],
     description: "Detect errors or failures during tool execution\n\n**Request Body:**\n- `input.tool_input` (string, required): JSON string of the tool input\n- `input.tool_output` (string, required): JSON string of the tool output",
   },
+  'agent-tool-trajectory': {
+    slug: 'agent-tool-trajectory',
+    requiredInputFields: ['executed_tool_calls', 'expected_tool_calls'],
+    optionalConfigFields: ['input_params_sensitive', 'mismatch_sensitive', 'order_sensitive', 'threshold'],
+    description: "Compare actual tool calls against expected reference tool calls\n\n**Request Body:**\n- `input.executed_tool_calls` (string, required): JSON array of actual tool calls made by the agent\n- `input.expected_tool_calls` (string, required): JSON array of expected/reference tool calls\n- `config.threshold` (float, optional): Score threshold for pass/fail determination (default: 0.5)\n- `config.mismatch_sensitive` (bool, optional): Whether tool calls must match exactly (default: false)\n- `config.order_sensitive` (bool, optional): Whether order of tool calls matters (default: false)\n- `config.input_params_sensitive` (bool, optional): Whether to compare input parameters (default: true)",
+  },
   'answer-completeness': {
     slug: 'answer-completeness',
     requiredInputFields: ['completion', 'context', 'question'],
@@ -116,14 +124,20 @@ export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {
   'conversation-quality': {
     slug: 'conversation-quality',
     requiredInputFields: ['completions', 'prompts'],
-    optionalConfigFields: ['model'],
-    description: "Evaluate conversation quality based on tone, clarity, flow, responsiveness, and transparency\n\n**Request Body:**\n- `input.prompts` (string, required): JSON array of prompts in the conversation\n- `input.completions` (string, required): JSON array of completions in the conversation\n- `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)",
+    optionalConfigFields: [],
+    description: "Evaluate conversation quality based on tone, clarity, flow, responsiveness, and transparency\n\n**Request Body:**\n- `input.prompts` (string, required): JSON array of prompts in the conversation\n- `input.completions` (string, required): JSON array of completions in the conversation",
   },
   'faithfulness': {
     slug: 'faithfulness',
     requiredInputFields: ['completion', 'context', 'question'],
     optionalConfigFields: [],
     description: "Check if a completion is faithful to the provided context\n\n**Request Body:**\n- `input.completion` (string, required): The LLM completion to check for faithfulness\n- `input.context` (string, required): The context that the completion should be faithful to\n- `input.question` (string, required): The original question asked",
+  },
+  'html-comparison': {
+    slug: 'html-comparison',
+    requiredInputFields: ['html1', 'html2'],
+    optionalConfigFields: [],
+    description: "Compare two HTML documents for structural and content similarity\n\n**Request Body:**\n- `input.html1` (string, required): The first HTML document to compare\n- `input.html2` (string, required): The second HTML document to compare",
   },
   'instruction-adherence': {
     slug: 'instruction-adherence',
@@ -134,8 +148,8 @@ export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {
   'intent-change': {
     slug: 'intent-change',
     requiredInputFields: ['completions', 'prompts'],
-    optionalConfigFields: ['model'],
-    description: "Detect changes in user intent between prompts and completions\n\n**Request Body:**\n- `input.prompts` (string, required): JSON array of prompts in the conversation\n- `input.completions` (string, required): JSON array of completions in the conversation\n- `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)",
+    optionalConfigFields: [],
+    description: "Detect changes in user intent between prompts and completions\n\n**Request Body:**\n- `input.prompts` (string, required): JSON array of prompts in the conversation\n- `input.completions` (string, required): JSON array of completions in the conversation",
   },
   'json-validator': {
     slug: 'json-validator',
