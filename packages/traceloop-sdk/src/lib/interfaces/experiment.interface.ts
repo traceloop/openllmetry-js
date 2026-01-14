@@ -10,11 +10,25 @@ export interface ExperimentTaskFunction<
   (input: TInput): Promise<TOutput> | TOutput;
 }
 
-export type EvaluatorDetails = string | EvaluatorWithVersion;
+export type EvaluatorDetails =
+  | string
+  | EvaluatorWithVersion
+  | EvaluatorWithConfig;
 
 export interface EvaluatorWithVersion {
   name: string;
   version: string;
+}
+
+/**
+ * Evaluator configuration with optional version and config options.
+ * Used for "Made by Traceloop" (MBT) evaluators that support configuration.
+ */
+export interface EvaluatorWithConfig {
+  name: string;
+  version?: string;
+  config?: Record<string, unknown>;
+  requiredInputFields?: string[];
 }
 
 export interface ExperimentRunOptions {

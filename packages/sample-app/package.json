@@ -40,6 +40,8 @@
     "run:sample_generate": "npm run build && node dist/src/test_generate_only.js",
     "run:sample_experiment": "npm run build && node dist/src/sample_experiment.js",
     "run:github_experiment": "npm run build && node dist/src/sample_github_experiment.js",
+    "run:security_experiment": "npm run build && node dist/src/sample_security_experiment.js",
+    "run:agent_tool_trajectory": "npm run build && node dist/src/sample_agent_tool_trajectory.js",
     "run:mcp": "npm run build && node dist/src/sample_mcp.js",
     "run:mcp:real": "npm run build && node dist/src/sample_mcp_real.js",
     "run:mcp:working": "npm run build && node dist/src/sample_mcp_working.js",
