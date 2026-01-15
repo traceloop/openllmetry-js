@@ -7,7 +7,7 @@ import type {
   TaskInput,
   TaskOutput,
 } from "@traceloop/node-server-sdk";
-
+import fs from "fs";
 import "dotenv/config";
 
 const main = async () => {
@@ -160,6 +160,16 @@ const main = async () => {
       console.log(`   - Experiment ID: ${results2.experimentId}`);
       console.log("Evaluation Results:", results2.evaluations);
     }
+
+    console.log("\n📊 Exporting experiment results...");
+
+    // Export to CSV and JSON using last run's experiment slug and run ID
+    const csvData = await client.experiment.toCsvString();
+    fs.writeFileSync("experiment_results.csv", csvData);
+
+    const jsonData = await client.experiment.toJsonString();
+    fs.writeFileSync("experiment_results.json", jsonData);
+
   } catch (error) {
     console.error(
       "❌ Error in experiment operations:",
