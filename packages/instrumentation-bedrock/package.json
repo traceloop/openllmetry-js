@@ -46,7 +46,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.848.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.969.0",
     "@opentelemetry/context-async-hooks": "^2.0.1",
     "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@pollyjs/adapter-fetch": "^6.0.6",
