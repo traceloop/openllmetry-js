@@ -169,7 +169,6 @@ const main = async () => {
 
     const jsonData = await client.experiment.toJsonString();
     fs.writeFileSync("experiment_results.json", jsonData);
-
   } catch (error) {
     console.error(
       "❌ Error in experiment operations:",

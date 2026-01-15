@@ -522,11 +522,11 @@ export class Experiment {
    * @param runId - Optional run ID (uses last run if not provided)
    * @returns CSV string of experiment results
    */
-  async toCsvString(
-    experimentSlug?: string,
-    runId?: string,
-  ): Promise<string> {
-    const { slug, runId: rid } = this.resolveExportParams(experimentSlug, runId);
+  async toCsvString(experimentSlug?: string, runId?: string): Promise<string> {
+    const { slug, runId: rid } = this.resolveExportParams(
+      experimentSlug,
+      runId,
+    );
 
     const response = await this.client.get(
       `/v2/experiments/${slug}/runs/${rid}/export/csv`,
@@ -555,11 +555,11 @@ export class Experiment {
    * @param runId - Optional run ID (uses last run if not provided)
    * @returns JSON string of experiment results
    */
-  async toJsonString(
-    experimentSlug?: string,
-    runId?: string,
-  ): Promise<string> {
-    const { slug, runId: rid } = this.resolveExportParams(experimentSlug, runId);
+  async toJsonString(experimentSlug?: string, runId?: string): Promise<string> {
+    const { slug, runId: rid } = this.resolveExportParams(
+      experimentSlug,
+      runId,
+    );
 
     const response = await this.client.get(
       `/v2/experiments/${slug}/runs/${rid}/export/json`,
