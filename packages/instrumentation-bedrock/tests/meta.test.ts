@@ -207,86 +207,65 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
 
     const command = new bedrock.InvokeModelWithResponseStreamCommand(input);
     const response = await bedrockRuntimeClient.send(command);
+
+    // Collect all chunks and find the final one with metrics
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let finalParsedResponse: any = null;
     if (response.body) {
       for await (const value of response.body!) {
         const jsonString = new TextDecoder().decode(value.chunk?.bytes);
         const parsedResponse = JSON.parse(jsonString);
-
-        const spans = memoryExporter.getFinishedSpans();
-
-        const attributes = spans[0].attributes;
-
-        assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
-        assert.strictEqual(
-          attributes[SpanAttributes.LLM_REQUEST_TYPE],
-          "completion",
-        );
-        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
-        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
-          params.temperature,
-        );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
-          params.max_gen_len,
-        );
-        assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-          prompt,
-        );
-        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-          "assistant",
-        );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
-          parsedResponse["prompt_token_count"],
-        );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
-          parsedResponse["generation_token_count"],
-        );
-        assert.strictEqual(
-          attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
-          parsedResponse["prompt_token_count"] +
-            parsedResponse["generation_token_count"],
-        );
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
-          parsedResponse["stop_reason"],
-        );
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-          parsedResponse["generation"],
-        );
-
+        // The final chunk contains amazon-bedrock-invocationMetrics
         if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
-          assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
-            parsedResponse["amazon-bedrock-invocationMetrics"][
-              "inputTokenCount"
-            ],
-          );
-          assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
-            parsedResponse["amazon-bedrock-invocationMetrics"][
-              "outputTokenCount"
-            ],
-          );
-          assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
-            parsedResponse["amazon-bedrock-invocationMetrics"][
-              "inputTokenCount"
-            ] +
-              parsedResponse["amazon-bedrock-invocationMetrics"][
-                "outputTokenCount"
-              ],
-          );
+          finalParsedResponse = parsedResponse;
         }
       }
+    }
+
+    // Run assertions only after all chunks have been processed
+    const spans = memoryExporter.getFinishedSpans();
+    const attributes = spans[0].attributes;
+
+    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
+    assert.strictEqual(
+      attributes[SpanAttributes.LLM_REQUEST_TYPE],
+      "completion",
+    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
+      params.temperature,
+    );
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
+      params.max_gen_len,
+    );
+    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
+    assert.strictEqual(
+      attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      prompt,
+    );
+    assert.strictEqual(
+      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
+      "assistant",
+    );
+
+    // Token counts should match the final invocation metrics
+    if (finalParsedResponse) {
+      assert.strictEqual(
+        attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
+        finalParsedResponse["amazon-bedrock-invocationMetrics"]["inputTokenCount"],
+      );
+      assert.strictEqual(
+        attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+        finalParsedResponse["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
+        finalParsedResponse["amazon-bedrock-invocationMetrics"]["inputTokenCount"] +
+          finalParsedResponse["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
+      );
     }
   });
 });

@@ -20,7 +20,7 @@ const calculate = tool({
     a: z.number().describe("First number"),
     b: z.number().describe("Second number"),
   }),
-  execute: async ({ operation, a, b }) => {
+  execute: async ({ operation, a, b }: { operation: "add" | "subtract" | "multiply" | "divide"; a: number; b: number }) => {
     console.log(`🔧 Calculating: ${a} ${operation} ${b}`);
 
     let result: number;
@@ -38,6 +38,8 @@ const calculate = tool({
         if (b === 0) throw new Error("Division by zero");
         result = a / b;
         break;
+      default:
+        throw new Error(`Unknown operation: ${operation}`);
     }
 
     console.log(`✅ Result: ${result}`);

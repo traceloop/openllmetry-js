@@ -51,7 +51,8 @@ async function main() {
   );
 
   // Register add tool
-  server.registerTool(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (server as any).registerTool(
     "add",
     {
       description: "Add two numbers together",
@@ -60,14 +61,15 @@ async function main() {
         b: z.number(),
       },
     },
-    async (args) => {
+    async (args: { a: number; b: number }) => {
       const result = args.a + args.b;
       return { content: [{ type: "text", text: String(result) }] };
     },
   );
 
   // Register multiply tool
-  server.registerTool(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (server as any).registerTool(
     "multiply",
     {
       description: "Multiply two numbers",
@@ -76,7 +78,7 @@ async function main() {
         y: z.number(),
       },
     },
-    async (args) => {
+    async (args: { x: number; y: number }) => {
       const result = args.x * args.y;
       return { content: [{ type: "text", text: String(result) }] };
     },
