@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { generateText, tool, CoreMessage } from "ai";
+import { generateText, tool, CoreMessage, stepCountIs } from "ai";
 import { z } from "zod";
 
 import "dotenv/config";
@@ -50,10 +50,10 @@ const knowledgeBase = new Map([
 const searchKnowledge = tool({
   description:
     "Search the knowledge base for information about programming languages and technologies",
-  parameters: z.object({
+  inputSchema: z.object({
     query: z.string().describe("The search term or technology to look up"),
   }),
-  execute: async ({ query }) => {
+  execute: async ({ query }: { query: string }) => {
     console.log(`🔍 Searching knowledge base for: ${query}`);
 
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -81,12 +81,12 @@ const searchKnowledge = tool({
 
 const analyzeTrends = tool({
   description: "Analyze technology trends and compare popularity",
-  parameters: z.object({
+  inputSchema: z.object({
     technologies: z
       .array(z.string())
       .describe("Array of technologies to analyze"),
   }),
-  execute: async ({ technologies }) => {
+  execute: async ({ technologies }: { technologies: string[] }) => {
     console.log(`📊 Analyzing trends for technologies:`, technologies);
 
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -114,13 +114,13 @@ const analyzeTrends = tool({
 
 const generateReport = tool({
   description: "Generate a detailed report based on research data",
-  parameters: z.object({
+  inputSchema: z.object({
     topic: z.string().describe("The main topic of the report"),
     data: z
       .array(z.string())
       .describe("Key data points to include in the report"),
   }),
-  execute: async ({ topic, data }) => {
+  execute: async ({ topic, data }: { topic: string; data: string[] }) => {
     console.log(`📝 Generating report on: ${topic}`);
     console.log(`📋 Including data points:`, data);
 
@@ -143,11 +143,11 @@ const generateReport = tool({
 const saveToMemory = tool({
   description:
     "Save important information to agent memory for future reference",
-  parameters: z.object({
+  inputSchema: z.object({
     key: z.string().describe("Memory key identifier"),
     value: z.string().describe("Information to store"),
   }),
-  execute: async ({ key, value }) => {
+  execute: async ({ key, value }: { key: string; value: string }) => {
     console.log(`💾 Saving to memory - ${key}: ${value}`);
 
     // In a real implementation, this would persist to a database
@@ -170,10 +170,10 @@ const saveToMemory = tool({
 
 const recallFromMemory = tool({
   description: "Recall previously saved information from agent memory",
-  parameters: z.object({
+  inputSchema: z.object({
     key: z.string().describe("Memory key to recall"),
   }),
-  execute: async ({ key }) => {
+  execute: async ({ key }: { key: string }) => {
     console.log(`🧠 Recalling from memory: ${key}`);
 
     const memory = agentMemory.get(key);
@@ -265,7 +265,7 @@ Conversation Turn: ${this.conversationHistory.length / 2 + 1}`,
             saveToMemory,
             recallFromMemory,
           },
-          maxSteps: 10, // Allow multiple tool interactions
+          stopWhen: stepCountIs(10), // Allow multiple tool interactions
           experimental_telemetry: {
             isEnabled: true,
             // Metadata can be included in telemetry data

@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { generateText, tool } from "ai";
+import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
 import "dotenv/config";
@@ -13,14 +13,22 @@ traceloop.initialize({
 // Simple calculator tool for the agent
 const calculate = tool({
   description: "Perform basic mathematical calculations",
-  parameters: z.object({
+  inputSchema: z.object({
     operation: z
       .enum(["add", "subtract", "multiply", "divide"])
       .describe("The mathematical operation to perform"),
     a: z.number().describe("First number"),
     b: z.number().describe("Second number"),
   }),
-  execute: async ({ operation, a, b }: { operation: "add" | "subtract" | "multiply" | "divide"; a: number; b: number }) => {
+  execute: async ({
+    operation,
+    a,
+    b,
+  }: {
+    operation: "add" | "subtract" | "multiply" | "divide";
+    a: number;
+    b: number;
+  }) => {
     console.log(`🔧 Calculating: ${a} ${operation} ${b}`);
 
     let result: number;
@@ -38,8 +46,6 @@ const calculate = tool({
         if (b === 0) throw new Error("Division by zero");
         result = a / b;
         break;
-      default:
-        throw new Error(`Unknown operation: ${operation}`);
     }
 
     console.log(`✅ Result: ${result}`);
@@ -50,7 +56,7 @@ const calculate = tool({
 // Task management tool
 const createTask = tool({
   description: "Create and manage tasks in a simple task list",
-  parameters: z.object({
+  inputSchema: z.object({
     action: z
       .enum(["create", "complete", "list"])
       .describe("Action to perform on tasks"),
@@ -59,7 +65,13 @@ const createTask = tool({
       .optional()
       .describe("Name of the task (required for create and complete)"),
   }),
-  execute: async ({ action, taskName }) => {
+  execute: async ({
+    action,
+    taskName,
+  }: {
+    action: "create" | "complete" | "list";
+    taskName?: string;
+  }) => {
     console.log(`📝 Task ${action}:${taskName ? ` ${taskName}` : ""}`);
 
     switch (action) {
@@ -133,7 +145,7 @@ User: ${userId}`,
           calculate,
           createTask,
         },
-        maxSteps: 8,
+        stopWhen: stepCountIs(8),
         experimental_telemetry: {
           isEnabled: true,
           functionId: `simple_agent_${sessionId}`,

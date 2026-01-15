@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { generateText, tool } from "ai";
+import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
 import "dotenv/config";
@@ -13,10 +13,10 @@ traceloop.initialize({
 // Define tools
 const getWeather = tool({
   description: "Get the current weather for a specified location",
-  parameters: z.object({
+  inputSchema: z.object({
     location: z.string().describe("The location to get the weather for"),
   }),
-  execute: async ({ location }) => {
+  execute: async ({ location }: { location: string }) => {
     console.log(`🔧 Tool 'getWeather' called with location: ${location}`);
 
     // Simulate API call delay
@@ -39,11 +39,17 @@ const getWeather = tool({
 
 const calculateDistance = tool({
   description: "Calculate the distance between two cities",
-  parameters: z.object({
+  inputSchema: z.object({
     fromCity: z.string().describe("The starting city"),
     toCity: z.string().describe("The destination city"),
   }),
-  execute: async ({ fromCity, toCity }) => {
+  execute: async ({
+    fromCity,
+    toCity,
+  }: {
+    fromCity: string;
+    toCity: string;
+  }) => {
     console.log(
       `🔧 Tool 'calculateDistance' called from ${fromCity} to ${toCity}`,
     );
@@ -67,14 +73,14 @@ const calculateDistance = tool({
 
 const searchRestaurants = tool({
   description: "Search for restaurants in a specific city",
-  parameters: z.object({
+  inputSchema: z.object({
     city: z.string().describe("The city to search for restaurants"),
     cuisine: z
       .string()
       .optional()
       .describe("Optional cuisine type (e.g., Italian, Mexican)"),
   }),
-  execute: async ({ city, cuisine }) => {
+  execute: async ({ city, cuisine }: { city: string; cuisine?: string }) => {
     console.log(
       `🔧 Tool 'searchRestaurants' called for ${city}${cuisine ? ` (${cuisine} cuisine)` : ""}`,
     );
@@ -132,7 +138,7 @@ Please use the available tools to get current information and provide a comprehe
           calculateDistance,
           searchRestaurants,
         },
-        maxSteps: 5, // Allow multiple tool calls
+        stopWhen: stepCountIs(5), // Allow multiple tool calls
         experimental_telemetry: { isEnabled: true },
       });
 

@@ -3,9 +3,17 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "experimentalDecorators": true
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "experimentalDecorators": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "inlineSources": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "files": [],
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["src/**/*.ts"],
   "references": []
 }
