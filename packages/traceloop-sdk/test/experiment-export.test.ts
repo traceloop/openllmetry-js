@@ -63,44 +63,46 @@ describe("Experiment Export Tests", () => {
 
   describe("Export Methods", () => {
     it("should export experiment results as CSV with explicit parameters", async function () {
+      // Skip this test unless valid Polly recordings exist
+      if (process.env.RECORD_MODE !== "NEW") {
+        this.skip();
+        return;
+      }
+
       // Use known experiment slug and run ID for testing
       experimentSlug = "test-experiment-slug";
       runId = "test-run-id";
 
-      try {
-        const csvData = await client.experiment.toCsvString(
-          experimentSlug,
-          runId,
-        );
+      const csvData = await client.experiment.toCsvString(
+        experimentSlug,
+        runId,
+      );
 
-        assert.ok(csvData);
-        assert.strictEqual(typeof csvData, "string");
-        console.log(`✓ Exported CSV data: ${csvData.length} characters`);
-      } catch (error) {
-        // For testing purposes, we expect this might fail if the experiment doesn't exist
-        console.log(`Note: ${error instanceof Error ? error.message : error}`);
-      }
+      assert.ok(csvData);
+      assert.strictEqual(typeof csvData, "string");
+      console.log(`✓ Exported CSV data: ${csvData.length} characters`);
     });
 
     it("should export experiment results as JSON with explicit parameters", async function () {
+      // Skip this test unless valid Polly recordings exist
+      if (process.env.RECORD_MODE !== "NEW") {
+        this.skip();
+        return;
+      }
+
       experimentSlug = "test-experiment-slug";
       runId = "test-run-id";
 
-      try {
-        const jsonData = await client.experiment.toJsonString(
-          experimentSlug,
-          runId,
-        );
+      const jsonData = await client.experiment.toJsonString(
+        experimentSlug,
+        runId,
+      );
 
-        assert.ok(jsonData);
-        assert.strictEqual(typeof jsonData, "string");
-        // Verify it's valid JSON
-        JSON.parse(jsonData);
-        console.log(`✓ Exported JSON data: ${jsonData.length} characters`);
-      } catch (error) {
-        // For testing purposes, we expect this might fail if the experiment doesn't exist
-        console.log(`Note: ${error instanceof Error ? error.message : error}`);
-      }
+      assert.ok(jsonData);
+      assert.strictEqual(typeof jsonData, "string");
+      // Verify it's valid JSON
+      JSON.parse(jsonData);
+      console.log(`✓ Exported JSON data: ${jsonData.length} characters`);
     });
 
     it("should throw error when exporting CSV without experiment slug", async function () {
