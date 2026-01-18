@@ -42,6 +42,47 @@ Polly.register(FetchAdapter);
 Polly.register(FSPersister);
 
 describe("AI SDK v5 Compatibility Tests", () => {
+  describe("AI SDK Version Detection", () => {
+    it("should add ai.sdk.version attribute to AI SDK spans", () => {
+      const span: ReadableSpan = {
+        name: "ai.generateText",
+        instrumentationScope: { name: "ai", version: undefined },
+        attributes: {
+          "ai.model.provider": "openai",
+        },
+        spanContext: () => ({ spanId: "test-span-id", traceId: "test-trace-id", traceFlags: 0 }),
+        parentSpanContext: undefined,
+        startTime: [0, 0],
+        endTime: [0, 0],
+        status: { code: 0 },
+        duration: [0, 0],
+        events: [],
+        links: [],
+        resource: {} as any,
+        kind: 0,
+        ended: true,
+        droppedAttributesCount: 0,
+        droppedEventsCount: 0,
+        droppedLinksCount: 0,
+      };
+
+      transformAiSdkSpanAttributes(span);
+
+      // Check that ai.sdk.version was added
+      assert.ok(span.attributes["ai.sdk.version"], "ai.sdk.version should be set");
+      assert.ok(
+        typeof span.attributes["ai.sdk.version"] === "string",
+        "ai.sdk.version should be a string"
+      );
+      // Version should be like "4.3.19" or "5.0.121"
+      assert.match(
+        span.attributes["ai.sdk.version"] as string,
+        /^\d+\.\d+\.\d+/,
+        "Version should match semantic versioning format"
+      );
+    });
+  });
+
   describe("Unit Tests - Tool Schema Transformation", () => {
     it("should transform v4 format tools with 'parameters' property", () => {
       const attributes = {
