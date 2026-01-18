@@ -723,6 +723,14 @@ const shouldHandleSpan = (span: ReadableSpan): boolean => {
   return span.instrumentationScope?.name === "ai";
 };
 
+const getAiSdkVersion = (): string | undefined => {
+  try {
+    return require("ai/package.json").version;
+  } catch {
+    return undefined;
+  }
+};
+
 const TOP_LEVEL_AI_SPANS = [
   AI_GENERATE_TEXT,
   AI_STREAM_TEXT,
@@ -750,6 +758,12 @@ export const transformAiSdkSpanAttributes = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
   }
+
+  const aiSdkVersion = getAiSdkVersion();
+  if (aiSdkVersion) {
+    span.attributes["ai.sdk.version"] = aiSdkVersion;
+  }
+
   transformLLMSpans(span.attributes, span.name);
   transformToolCalls(span);
 };
