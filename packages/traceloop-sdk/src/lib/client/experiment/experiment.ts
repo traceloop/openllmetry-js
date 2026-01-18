@@ -22,6 +22,8 @@ export class Experiment {
   private client: TraceloopClient;
   private evaluator: Evaluator;
   private datasets: Datasets;
+  private _lastExperimentSlug?: string;
+  private _lastRunId?: string;
 
   constructor(client: TraceloopClient) {
     this.client = client;
@@ -167,6 +169,11 @@ export class Experiment {
       const evalResults = evaluationResults.map(
         (evaluation) => evaluation.result,
       );
+
+      // Track last experiment slug and run ID for export methods
+      this._lastExperimentSlug = experimentSlug;
+      this._lastRunId = experimentResponse.run.id;
+
       return {
         taskResults: taskResults,
         errors: taskErrors,
@@ -477,11 +484,102 @@ export class Experiment {
       );
       const data = await this.handleResponse(response);
 
+      // Track last experiment slug and run ID for export methods
+      this._lastExperimentSlug = data.experimentSlug;
+      this._lastRunId = data.runId;
+
       return data;
     } catch (error) {
       throw new Error(
         `GitHub experiment execution failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
+  }
+
+  /**
+   * Resolve export parameters by falling back to last used values
+   */
+  private resolveExportParams(
+    experimentSlug?: string,
+    runId?: string,
+  ): { slug: string; runId: string } {
+    const slug = experimentSlug || this._lastExperimentSlug;
+    const rid = runId || this._lastRunId;
+
+    if (!slug) {
+      throw new Error("experiment_slug is required");
+    }
+    if (!rid) {
+      throw new Error("run_id is required");
+    }
+
+    return { slug, runId: rid };
+  }
+
+  /**
+   * Export experiment results as CSV string
+   * @param experimentSlug - Optional experiment slug (uses last run if not provided)
+   * @param runId - Optional run ID (uses last run if not provided)
+   * @returns CSV string of experiment results
+   */
+  async toCsvString(experimentSlug?: string, runId?: string): Promise<string> {
+    const { slug, runId: rid } = this.resolveExportParams(
+      experimentSlug,
+      runId,
+    );
+
+    const response = await this.client.get(
+      `/v2/experiments/${slug}/runs/${rid}/export/csv`,
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to export CSV for experiment '${slug}' run '${rid}'`,
+      );
+    }
+
+    const result = await this.handleResponse(response);
+
+    if (result === null || result === undefined) {
+      throw new Error(
+        `Failed to export CSV for experiment '${slug}' run '${rid}'`,
+      );
+    }
+
+    return String(result);
+  }
+
+  /**
+   * Export experiment results as JSON string
+   * @param experimentSlug - Optional experiment slug (uses last run if not provided)
+   * @param runId - Optional run ID (uses last run if not provided)
+   * @returns JSON string of experiment results
+   */
+  async toJsonString(experimentSlug?: string, runId?: string): Promise<string> {
+    const { slug, runId: rid } = this.resolveExportParams(
+      experimentSlug,
+      runId,
+    );
+
+    const response = await this.client.get(
+      `/v2/experiments/${slug}/runs/${rid}/export/json`,
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to export JSON for experiment '${slug}' run '${rid}'`,
+      );
+    }
+
+    const result = await this.handleResponse(response);
+
+    if (result === null || result === undefined) {
+      throw new Error(
+        `Failed to export JSON for experiment '${slug}' run '${rid}'`,
+      );
+    }
+
+    // If result is already a string, return it; otherwise stringify it
+    return typeof result === "string" ? result : JSON.stringify(result);
   }
 }
