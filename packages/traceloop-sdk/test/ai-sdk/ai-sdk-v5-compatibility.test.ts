@@ -22,7 +22,10 @@ import {
   ATTR_GEN_AI_TOOL_CALL_RESULT,
   ATTR_GEN_AI_TOOL_NAME,
 } from "@opentelemetry/semantic-conventions/incubating";
-import { transformLLMSpans, transformAiSdkSpanAttributes } from "../../src/lib/tracing/ai-sdk-transformations";
+import {
+  transformLLMSpans,
+  transformAiSdkSpanAttributes,
+} from "../../src/lib/tracing/ai-sdk-transformations";
 
 import { openai as vercel_openai } from "@ai-sdk/openai";
 import { generateText, tool } from "ai";
@@ -50,7 +53,11 @@ describe("AI SDK v5 Compatibility Tests", () => {
         attributes: {
           "ai.model.provider": "openai",
         },
-        spanContext: () => ({ spanId: "test-span-id", traceId: "test-trace-id", traceFlags: 0 }),
+        spanContext: () => ({
+          spanId: "test-span-id",
+          traceId: "test-trace-id",
+          traceFlags: 0,
+        }),
         parentSpanContext: undefined,
         startTime: [0, 0],
         endTime: [0, 0],
@@ -69,16 +76,19 @@ describe("AI SDK v5 Compatibility Tests", () => {
       transformAiSdkSpanAttributes(span);
 
       // Check that ai.sdk.version was added
-      assert.ok(span.attributes["ai.sdk.version"], "ai.sdk.version should be set");
+      assert.ok(
+        span.attributes["ai.sdk.version"],
+        "ai.sdk.version should be set",
+      );
       assert.ok(
         typeof span.attributes["ai.sdk.version"] === "string",
-        "ai.sdk.version should be a string"
+        "ai.sdk.version should be a string",
       );
       // Version should be like "4.3.19" or "5.0.121"
       assert.match(
         span.attributes["ai.sdk.version"] as string,
         /^\d+\.\d+\.\d+/,
-        "Version should match semantic versioning format"
+        "Version should match semantic versioning format",
       );
     });
   });
@@ -182,7 +192,8 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      const transformedParams = attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`];
+      const transformedParams =
+        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`];
       assert.ok(transformedParams);
       assert.ok(transformedParams.includes("newProp"));
       assert.ok(!transformedParams.includes("oldProp"));
@@ -216,14 +227,16 @@ describe("AI SDK v5 Compatibility Tests", () => {
         attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
         "v4Tool",
       );
-      const v4Params = attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`];
+      const v4Params =
+        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`];
       assert.ok(v4Params.includes("v4Prop"));
 
       assert.strictEqual(
         attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.name`],
         "v5Tool",
       );
-      const v5Params = attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.parameters`];
+      const v5Params =
+        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.parameters`];
       assert.ok(v5Params.includes("v5Prop"));
     });
   });
@@ -308,10 +321,7 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[ATTR_GEN_AI_TOOL_NAME],
-        "calculate",
-      );
+      assert.strictEqual(attributes[ATTR_GEN_AI_TOOL_NAME], "calculate");
       assert.strictEqual(
         attributes[ATTR_GEN_AI_TOOL_CALL_ARGUMENTS],
         '{"operation": "add", "a": 5, "b": 3}',
@@ -332,10 +342,7 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[ATTR_GEN_AI_TOOL_NAME],
-        "calculate",
-      );
+      assert.strictEqual(attributes[ATTR_GEN_AI_TOOL_NAME], "calculate");
       assert.strictEqual(
         attributes[ATTR_GEN_AI_TOOL_CALL_ARGUMENTS],
         '{"operation": "add", "a": 5, "b": 3}',
@@ -355,7 +362,11 @@ describe("AI SDK v5 Compatibility Tests", () => {
           "ai.toolCall.input": '{"operation": "multiply", "a": 4, "b": 7}',
           "ai.toolCall.output": '{"result": 28}',
         },
-        spanContext: () => ({ spanId: "test-span-id", traceId: "test-trace-id", traceFlags: 0 }),
+        spanContext: () => ({
+          spanId: "test-span-id",
+          traceId: "test-trace-id",
+          traceFlags: 0,
+        }),
         parentSpanContext: undefined,
         startTime: [0, 0],
         endTime: [0, 0],
@@ -404,7 +415,11 @@ describe("AI SDK v5 Compatibility Tests", () => {
           "ai.toolCall.args": '{"operation": "subtract", "a": 10, "b": 3}',
           "ai.toolCall.result": '{"result": 7}',
         },
-        spanContext: () => ({ spanId: "test-span-id", traceId: "test-trace-id", traceFlags: 0 }),
+        spanContext: () => ({
+          spanId: "test-span-id",
+          traceId: "test-trace-id",
+          traceFlags: 0,
+        }),
         parentSpanContext: undefined,
         startTime: [0, 0],
         endTime: [0, 0],
@@ -523,7 +538,10 @@ describe("AI SDK v5 Compatibility Tests", () => {
       assert.ok(rootSpan, "Root AI span should exist");
 
       // Verify tool schema was captured with 'parameters' attribute
-      const toolSchemaParam = rootSpan.attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`];
+      const toolSchemaParam =
+        rootSpan.attributes[
+          `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`
+        ];
       assert.ok(toolSchemaParam, "Tool schema should be captured");
       assert.strictEqual(
         rootSpan.attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
@@ -533,7 +551,10 @@ describe("AI SDK v5 Compatibility Tests", () => {
       // Parse and verify the schema
       const schema = JSON.parse(toolSchemaParam as string);
       assert.ok(schema.properties, "Schema should have properties");
-      assert.ok(schema.properties.location, "Schema should have location property");
+      assert.ok(
+        schema.properties.location,
+        "Schema should have location property",
+      );
 
       // Find tool call span
       const toolSpan = spans.find((span) => span.name === "getWeather.tool");
