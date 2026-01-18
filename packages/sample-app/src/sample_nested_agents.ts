@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { generateText, tool } from "ai";
+import { generateText, tool, stepCountIs } from "ai";
 import { z } from "zod";
 
 import "dotenv/config";
@@ -12,10 +12,10 @@ traceloop.initialize({
 
 const searchTool = tool({
   description: "Search for information on a topic",
-  parameters: z.object({
+  inputSchema: z.object({
     query: z.string().describe("Search query"),
   }),
-  execute: async ({ query }) => {
+  execute: async ({ query }: { query: string }) => {
     console.log(`    [search_agent] Searching: ${query}`);
     await new Promise((r) => setTimeout(r, 100));
     return {
@@ -29,10 +29,10 @@ const searchTool = tool({
 
 const searchAgentTool = tool({
   description: "Delegate search tasks to the search agent",
-  parameters: z.object({
+  inputSchema: z.object({
     searchQuery: z.string().describe("What to search for"),
   }),
-  execute: async ({ searchQuery }) => {
+  execute: async ({ searchQuery }: { searchQuery: string }) => {
     console.log(
       `  [research_agent] Delegating to search_agent: ${searchQuery}`,
     );
@@ -41,7 +41,7 @@ const searchAgentTool = tool({
       model: openai("gpt-4o-mini"),
       prompt: `Search for: ${searchQuery}. Use the search tool and return results.`,
       tools: { searchTool },
-      maxSteps: 3,
+      stopWhen: stepCountIs(3),
       experimental_telemetry: {
         isEnabled: true,
         metadata: { agent: "search_agent" },
@@ -54,10 +54,10 @@ const searchAgentTool = tool({
 
 const analyzeTool = tool({
   description: "Analyze data and extract insights",
-  parameters: z.object({
+  inputSchema: z.object({
     data: z.string().describe("Data to analyze"),
   }),
-  execute: async ({ data }) => {
+  execute: async ({ data }: { data: string }) => {
     console.log(`    [analysis_agent] Analyzing data...`);
     await new Promise((r) => setTimeout(r, 100));
     return {
@@ -69,10 +69,10 @@ const analyzeTool = tool({
 
 const analysisAgentTool = tool({
   description: "Delegate analysis tasks to the analysis agent",
-  parameters: z.object({
+  inputSchema: z.object({
     dataToAnalyze: z.string().describe("Data to analyze"),
   }),
-  execute: async ({ dataToAnalyze }) => {
+  execute: async ({ dataToAnalyze }: { dataToAnalyze: string }) => {
     console.log(
       `  [research_agent] Delegating to analysis_agent: ${dataToAnalyze.substring(0, 50)}...`,
     );
@@ -81,7 +81,7 @@ const analysisAgentTool = tool({
       model: openai("gpt-4o-mini"),
       prompt: `Analyze this data: ${dataToAnalyze}. Use the analyze tool.`,
       tools: { analyzeTool },
-      maxSteps: 3,
+      stopWhen: stepCountIs(3),
       experimental_telemetry: {
         isEnabled: true,
         metadata: { agent: "analysis_agent" },
@@ -94,10 +94,10 @@ const analysisAgentTool = tool({
 
 const researchAgentTool = tool({
   description: "Delegate research tasks to the research agent",
-  parameters: z.object({
+  inputSchema: z.object({
     topic: z.string().describe("Research topic"),
   }),
-  execute: async ({ topic }) => {
+  execute: async ({ topic }: { topic: string }) => {
     console.log(`[orchestrator] Delegating to research_agent: ${topic}`);
 
     const result = await generateText({
@@ -107,7 +107,7 @@ const researchAgentTool = tool({
         2. Then use the analysis agent to analyze findings
         Return a research summary.`,
       tools: { searchAgentTool, analysisAgentTool },
-      maxSteps: 5,
+      stopWhen: stepCountIs(5),
       experimental_telemetry: {
         isEnabled: true,
         metadata: { agent: "research_agent" },
@@ -120,10 +120,10 @@ const researchAgentTool = tool({
 
 const formatTool = tool({
   description: "Format text into a summary",
-  parameters: z.object({
+  inputSchema: z.object({
     content: z.string().describe("Content to format"),
   }),
-  execute: async ({ content }) => {
+  execute: async ({ content }: { content: string }) => {
     console.log(`  [summary_agent] Formatting summary...`);
     await new Promise((r) => setTimeout(r, 100));
     return { formatted: `=== SUMMARY ===\n${content}\n===============` };
@@ -132,17 +132,17 @@ const formatTool = tool({
 
 const summaryAgentTool = tool({
   description: "Delegate summarization to the summary agent",
-  parameters: z.object({
+  inputSchema: z.object({
     contentToSummarize: z.string().describe("Content to summarize"),
   }),
-  execute: async ({ contentToSummarize }) => {
+  execute: async ({ contentToSummarize }: { contentToSummarize: string }) => {
     console.log(`[orchestrator] Delegating to summary_agent`);
 
     const result = await generateText({
       model: openai("gpt-4o-mini"),
       prompt: `Summarize this content concisely: ${contentToSummarize}. Use the format tool.`,
       tools: { formatTool },
-      maxSteps: 3,
+      stopWhen: stepCountIs(3),
       experimental_telemetry: {
         isEnabled: true,
         metadata: { agent: "summary_agent" },
@@ -175,7 +175,7 @@ async function runNestedAgents() {
           2. Use the summary agent to create a final summary
           Be brief in your responses.`,
         tools: { researchAgentTool, summaryAgentTool },
-        maxSteps: 5,
+        stopWhen: stepCountIs(5),
         experimental_telemetry: {
           isEnabled: true,
           metadata: { agent: "orchestrator_agent" },

@@ -32,7 +32,8 @@
     "eslint-plugin-prettier": "^5.5.3",
     "globals": "^16.3.0",
     "husky": "^9.1.7",
-    "lerna": "^8.2.3",
+    "js-yaml": "^4.1.1",
+    "lerna": "^9.0.3",
     "nx": "^21.3.0",
     "prettier": "^3.6.2",
     "rollup": "^4.45.1",
@@ -42,6 +43,22 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "pnpm": {
+    "overrides": {
+      "zod": "^3.25.76",
+      "form-data": "^4.0.4",
+      "glob": "^10.5.0",
+      "jws": "^4.0.1",
+      "undici": "^7.18.2",
+      "diff": "^8.0.3",
+      "cookie": "^0.7.0",
+      "qs": "^6.14.1",
+      "body-parser": "^2.2.1",
+      "tmp": "^0.2.4",
+      "playwright": "^1.55.1",
+      "@smithy/config-resolver": "^4.4.0"
     }
   }
 }
