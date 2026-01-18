@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.6](https://github.com/traceloop/openllmetry-js/compare/v0.22.5...v0.22.6) (2026-01-18)
+
+### Bug Fixes
+
+- **eval:** Add agent tool trajectory eval ([#854](https://github.com/traceloop/openllmetry-js/issues/854)) ([1d1f642](https://github.com/traceloop/openllmetry-js/commit/1d1f6421dc10c64e3a210a9625fd5cb2303837ff))
+- **traceloop-sdk:** Add csv and json support to experiment ([#864](https://github.com/traceloop/openllmetry-js/issues/864)) ([114d2b8](https://github.com/traceloop/openllmetry-js/commit/114d2b8f38ddf0abe034157a22ba5112ef40da72))
+- **traceloop-sdk:** ai sdk transform response tool calls ([#866](https://github.com/traceloop/openllmetry-js/issues/866)) ([3112d75](https://github.com/traceloop/openllmetry-js/commit/3112d75a48d1fc8fc726145dd0e513e55bd0b7a9))
+- **traceloop-sdk:** ai-sdk fixes ([#865](https://github.com/traceloop/openllmetry-js/issues/865)) ([c6655da](https://github.com/traceloop/openllmetry-js/commit/c6655da54a51fdfa0797b316c01304ec46307c0d))
+
 ## [0.22.5](https://github.com/traceloop/openllmetry-js/compare/v0.22.4...v0.22.5) (2025-12-17)
 
 ### Bug Fixes
