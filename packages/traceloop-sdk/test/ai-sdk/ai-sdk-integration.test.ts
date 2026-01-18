@@ -28,13 +28,13 @@ import {
   ATTR_GEN_AI_SYSTEM,
 } from "@opentelemetry/semantic-conventions/incubating";
 
-import * as traceloop from "../src";
+import * as traceloop from "../../src";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
-import { initializeSharedTraceloop, getSharedExporter } from "./test-setup";
+import { initializeSharedTraceloop, getSharedExporter } from "../test-setup";
 
 const memoryExporter = getSharedExporter();
 
