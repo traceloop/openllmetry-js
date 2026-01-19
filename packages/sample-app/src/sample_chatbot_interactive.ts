@@ -85,7 +85,6 @@ class InteractiveChatbot {
     };
   })
   async processMessage(userMessage: string): Promise<string> {
-
     // Add user message to history
     this.conversationHistory.push({
       role: "user",
@@ -202,7 +201,6 @@ class InteractiveChatbot {
     console.log("\n");
 
     const finalResult = await result.response;
-
 
     for (const message of finalResult.messages) {
       this.conversationHistory.push(message);

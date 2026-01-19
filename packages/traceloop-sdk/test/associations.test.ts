@@ -39,12 +39,9 @@ describe("Test Associations API", () => {
         await traceloop.withWorkflow(
           { name: "test_single_association" },
           async () => {
-            await traceloop.withTask(
-              { name: "test_single_task" },
-              async () => {
-                return;
-              },
-            );
+            await traceloop.withTask({ name: "test_single_task" }, async () => {
+              return;
+            });
           },
         );
       },
@@ -153,8 +150,8 @@ describe("Test Associations API", () => {
       },
       async () => {
         await traceloop.withTask({ name: "test_within_task" }, async () => {
-                return;
-              });
+          return;
+        });
       },
     );
 
@@ -204,8 +201,8 @@ describe("Test Associations API", () => {
         await traceloop.withWorkflow(
           { name: "test_all_properties" },
           async () => {
-                return;
-              },
+            return;
+          },
         );
       },
     );
@@ -242,8 +239,8 @@ describe("Test Associations API", () => {
       async () => {
         await traceloop.withWorkflow({ name: "outer_workflow" }, async () => {
           await traceloop.withTask({ name: "task_1" }, async () => {
-                return;
-              });
+            return;
+          });
 
           await traceloop.withAssociationProperties(
             {
