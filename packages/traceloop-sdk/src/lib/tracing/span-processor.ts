@@ -195,10 +195,14 @@ const onSpanStart = (span: Span): void => {
     spanAgentNames.set(spanId, { agentName, timestamp: Date.now() });
   }
 
+  // Check for association properties in context (set by decorators or withAssociationProperties)
   const associationProperties = context
     .active()
-    .getValue(ASSOCATION_PROPERTIES_KEY);
-  if (associationProperties) {
+    .getValue(ASSOCATION_PROPERTIES_KEY) as
+    | { [name: string]: string }
+    | undefined;
+
+  if (associationProperties && Object.keys(associationProperties).length > 0) {
     for (const [key, value] of Object.entries(associationProperties)) {
       span.setAttribute(
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
