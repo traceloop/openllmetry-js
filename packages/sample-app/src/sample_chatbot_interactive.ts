@@ -1,12 +1,12 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { streamText, CoreMessage, tool } from "ai";
+import { streamText, CoreMessage, tool, stepCountIs } from "ai";
 import * as readline from "readline";
 import { z } from "zod";
 
 import "dotenv/config";
 
-const client = traceloop.initialize({
+traceloop.initialize({
   appName: "sample_chatbot_interactive",
   disableBatch: true,
 });
@@ -74,20 +74,17 @@ class InteractiveChatbot {
     return cleanSummary;
   }
 
-  @traceloop.workflow({ name: "chat_interaction" })
+  @traceloop.workflow((thisArg) => {
+    const self = thisArg as InteractiveChatbot;
+    return {
+      name: "chat_interaction",
+      associationProperties: {
+        session_id: self.sessionId,
+        user_id: self.userId,
+      },
+    };
+  })
   async processMessage(userMessage: string): Promise<string> {
-    if (client) {
-      client.associations.set([
-        [traceloop.AssociationProperty.SESSION_ID, this.sessionId],
-        [traceloop.AssociationProperty.USER_ID, this.userId],
-      ]);
-    } else {
-      // Fallback to standalone function if no client
-      traceloop.setAssociationProperties({
-        [traceloop.AssociationProperty.SESSION_ID]: this.sessionId,
-        [traceloop.AssociationProperty.USER_ID]: this.userId,
-      });
-    }
 
     // Add user message to history
     this.conversationHistory.push({
@@ -112,14 +109,14 @@ class InteractiveChatbot {
         calculator: tool({
           description:
             "Perform mathematical calculations. Supports basic arithmetic operations.",
-          parameters: z.object({
+          inputSchema: z.object({
             expression: z
               .string()
               .describe(
                 "The mathematical expression to evaluate (e.g., '2 + 2' or '10 * 5')",
               ),
           }),
-          execute: async ({ expression }) => {
+          execute: async ({ expression }: { expression: string }) => {
             try {
               const sanitized = expression.replace(/[^0-9+\-*/().\s]/g, "");
               const result = eval(sanitized);
@@ -135,12 +132,12 @@ class InteractiveChatbot {
         getCurrentWeather: tool({
           description:
             "Get the current weather for a location. Use this when users ask about weather conditions.",
-          parameters: z.object({
+          inputSchema: z.object({
             location: z
               .string()
               .describe("The city and country, e.g., 'London, UK'"),
           }),
-          execute: async ({ location }) => {
+          execute: async ({ location }: { location: string }) => {
             console.log(
               `\n${colors.yellow}🔧 Weather: Checking weather for ${location}${colors.reset}`,
             );
@@ -167,13 +164,13 @@ class InteractiveChatbot {
         getTime: tool({
           description:
             "Get the current date and time. Use this when users ask about the current time or date.",
-          parameters: z.object({
+          inputSchema: z.object({
             timezone: z
               .string()
               .optional()
               .describe("Optional timezone (e.g., 'America/New_York')"),
           }),
-          execute: async ({ timezone }) => {
+          execute: async ({ timezone }: { timezone?: string }) => {
             const now = new Date();
             const options: Intl.DateTimeFormatOptions = {
               timeZone: timezone,
@@ -192,7 +189,7 @@ class InteractiveChatbot {
           },
         }),
       },
-      maxSteps: 5,
+      stopWhen: stepCountIs(5),
       experimental_telemetry: { isEnabled: true },
     });
 

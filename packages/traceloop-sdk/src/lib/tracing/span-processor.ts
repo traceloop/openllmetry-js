@@ -21,11 +21,6 @@ import {
   transformAiSdkSpanNames,
 } from "./ai-sdk-transformations";
 import { parseKeyPairsIntoRecord } from "./baggage-utils";
-import {
-  getSpanAssociationProperties,
-  setSpanAssociationPropertiesForInheritance,
-  cleanupExpiredSpanAssociationProperties,
-} from "./association";
 
 export const ALL_INSTRUMENTATION_LIBRARIES = "all" as const;
 type AllInstrumentationLibraries = typeof ALL_INSTRUMENTATION_LIBRARIES;
@@ -200,35 +195,15 @@ const onSpanStart = (span: Span): void => {
     spanAgentNames.set(spanId, { agentName, timestamp: Date.now() });
   }
 
-  // Check for association properties in context (set by decorators)
-  const contextAssociationProperties = context
+  // Check for association properties in context (set by decorators or withAssociationProperties)
+  const associationProperties = context
     .active()
     .getValue(ASSOCATION_PROPERTIES_KEY) as
     | { [name: string]: string }
     | undefined;
 
-  // Check for association properties from parent span (set by setAssociationProperties)
-  let inheritedAssociationProperties: { [name: string]: string } | undefined;
-  const parentSpanContext = (span as any).parentSpanContext;
-  const parentSpanId = parentSpanContext?.spanId;
-  if (parentSpanId && parentSpanId !== "0000000000000000") {
-    inheritedAssociationProperties = getSpanAssociationProperties(parentSpanId);
-  }
-
-  const mergedAssociationProperties = {
-    ...(inheritedAssociationProperties || {}),
-    ...(contextAssociationProperties || {}),
-  };
-
-  if (Object.keys(mergedAssociationProperties).length > 0) {
-    const spanId = span.spanContext().spanId;
-
-    setSpanAssociationPropertiesForInheritance(
-      spanId,
-      mergedAssociationProperties,
-    );
-
-    for (const [key, value] of Object.entries(mergedAssociationProperties)) {
+  if (associationProperties && Object.keys(associationProperties).length > 0) {
+    for (const [key, value] of Object.entries(associationProperties)) {
       span.setAttribute(
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
         value,
@@ -323,7 +298,6 @@ const onSpanEnd = (
 
     if (Math.random() < 0.01) {
       cleanupExpiredSpanAgentNames();
-      cleanupExpiredSpanAssociationProperties();
     }
 
     const compatibleSpan = ensureSpanCompatibility(span);

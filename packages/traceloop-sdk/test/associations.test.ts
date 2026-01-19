@@ -31,15 +31,20 @@ describe("Test Associations API", () => {
   });
 
   it("should set a single association and propagate to spans", async () => {
-    await traceloop.withWorkflow(
-      { name: "test_single_association" },
+    await traceloop.withAssociationProperties(
+      {
+        [traceloop.AssociationProperty.SESSION_ID]: "conv-123",
+      },
       async () => {
-        traceloop.setAssociationProperties({
-          [traceloop.AssociationProperty.SESSION_ID]: "conv-123",
-        });
-
-        await traceloop.withTask({ name: "test_single_task" }, async () => {
-        });
+        await traceloop.withWorkflow(
+          { name: "test_single_association" },
+          async () => {
+            await traceloop.withTask(
+              { name: "test_single_task" },
+              async () => {},
+            );
+          },
+        );
       },
     );
 
@@ -68,17 +73,22 @@ describe("Test Associations API", () => {
   });
 
   it("should set multiple associations at once", async () => {
-    await traceloop.withWorkflow(
-      { name: "test_multiple_associations" },
+    await traceloop.withAssociationProperties(
+      {
+        [traceloop.AssociationProperty.USER_ID]: "user-456",
+        [traceloop.AssociationProperty.SESSION_ID]: "session-789",
+        [traceloop.AssociationProperty.CUSTOMER_ID]: "customer-999",
+      },
       async () => {
-        traceloop.setAssociationProperties({
-          [traceloop.AssociationProperty.USER_ID]: "user-456",
-          [traceloop.AssociationProperty.SESSION_ID]: "session-789",
-          [traceloop.AssociationProperty.CUSTOMER_ID]: "customer-999",
-        });
-
-        await traceloop.withTask({ name: "test_multiple_task" }, async () => {
-        });
+        await traceloop.withWorkflow(
+          { name: "test_multiple_associations" },
+          async () => {
+            await traceloop.withTask(
+              { name: "test_multiple_task" },
+              async () => {},
+            );
+          },
+        );
       },
     );
 
@@ -128,17 +138,17 @@ describe("Test Associations API", () => {
     );
   });
 
-  it("should set associations within a workflow", async () => {
+  it("should set associations via decorator associationProperties config", async () => {
     await traceloop.withWorkflow(
-      { name: "test_associations_within" },
-      async () => {
-        traceloop.setAssociationProperties({
+      {
+        name: "test_decorator_associations",
+        associationProperties: {
           [traceloop.AssociationProperty.SESSION_ID]: "conv-abc",
           [traceloop.AssociationProperty.USER_ID]: "user-xyz",
-        });
-
-        await traceloop.withTask({ name: "test_within_task" }, async () => {
-        });
+        },
+      },
+      async () => {
+        await traceloop.withTask({ name: "test_within_task" }, async () => {});
       },
     );
 
@@ -178,13 +188,19 @@ describe("Test Associations API", () => {
   });
 
   it("should verify all AssociationProperty enum values work", async () => {
-    await traceloop.withWorkflow({ name: "test_all_properties" }, async () => {
-      traceloop.setAssociationProperties({
+    await traceloop.withAssociationProperties(
+      {
         [traceloop.AssociationProperty.SESSION_ID]: "session-1",
         [traceloop.AssociationProperty.CUSTOMER_ID]: "customer-2",
         [traceloop.AssociationProperty.USER_ID]: "user-3",
-      });
-    });
+      },
+      async () => {
+        await traceloop.withWorkflow(
+          { name: "test_all_properties" },
+          async () => {},
+        );
+      },
+    );
 
     await traceloop.forceFlush();
     const spans = memoryExporter.getFinishedSpans();
@@ -210,23 +226,23 @@ describe("Test Associations API", () => {
     );
   });
 
-  it("should allow updating associations mid-workflow", async () => {
-    await traceloop.withWorkflow(
-      { name: "test_update_associations" },
+  it("should support nested withAssociationProperties with merged properties", async () => {
+    await traceloop.withAssociationProperties(
+      {
+        [traceloop.AssociationProperty.SESSION_ID]: "session-outer",
+      },
       async () => {
-        traceloop.setAssociationProperties({
-          [traceloop.AssociationProperty.SESSION_ID]: "session-initial",
-        });
+        await traceloop.withWorkflow({ name: "outer_workflow" }, async () => {
+          await traceloop.withTask({ name: "task_1" }, async () => {});
 
-        await traceloop.withTask({ name: "task_1" }, async () => {
-        });
-
-        traceloop.setAssociationProperties({
-          [traceloop.AssociationProperty.SESSION_ID]: "session-updated",
-          [traceloop.AssociationProperty.USER_ID]: "user-123",
-        });
-
-        await traceloop.withTask({ name: "task_2" }, async () => {
+          await traceloop.withAssociationProperties(
+            {
+              [traceloop.AssociationProperty.USER_ID]: "user-123",
+            },
+            async () => {
+              await traceloop.withTask({ name: "task_2" }, async () => {});
+            },
+          );
         });
       },
     );
@@ -237,37 +253,24 @@ describe("Test Associations API", () => {
 
     const task1Span = spans[0];
     const task2Span = spans[1];
-    const workflowSpan = spans[2];
 
+    // task_1 should only have session_id
     assert.strictEqual(
       task1Span.attributes[
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.session_id`
       ],
-      "session-initial",
-    );
-
-    assert.strictEqual(
-      task2Span.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.session_id`
-      ],
-      "session-updated",
+      "session-outer",
     );
     assert.strictEqual(
-      task2Span.attributes[
+      task1Span.attributes[
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.user_id`
       ],
-      "user-123",
+      undefined,
     );
 
-    // Workflow should have the final associations
+    // task_2 should have user_id from inner context
     assert.strictEqual(
-      workflowSpan.attributes[
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.session_id`
-      ],
-      "session-updated",
-    );
-    assert.strictEqual(
-      workflowSpan.attributes[
+      task2Span.attributes[
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.user_id`
       ],
       "user-123",

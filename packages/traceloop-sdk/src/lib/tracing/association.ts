@@ -1,40 +1,32 @@
-import { context, trace } from "@opentelemetry/api";
+import { context } from "@opentelemetry/api";
 import { ASSOCATION_PROPERTIES_KEY } from "./tracing";
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 
-// Store association properties by span ID to enable propagation to child spans
-const spanAssociationProperties = new Map<
-  string,
-  { properties: { [name: string]: string }; timestamp: number }
->();
-
-const SPAN_ASSOCIATION_PROPERTIES_TTL = 5 * 60 * 1000; // 5 minutes
-
-export function getSpanAssociationProperties(
-  spanId: string,
-): { [name: string]: string } | undefined {
-  return spanAssociationProperties.get(spanId)?.properties;
-}
-
-export function setSpanAssociationPropertiesForInheritance(
-  spanId: string,
-  properties: { [name: string]: string },
-): void {
-  spanAssociationProperties.set(spanId, {
-    properties,
-    timestamp: Date.now(),
-  });
-}
-
-export function cleanupExpiredSpanAssociationProperties(): void {
-  const now = Date.now();
-  for (const [spanId, entry] of spanAssociationProperties.entries()) {
-    if (now - entry.timestamp > SPAN_ASSOCIATION_PROPERTIES_TTL) {
-      spanAssociationProperties.delete(spanId);
-    }
-  }
-}
-
+/**
+ * Execute a function with association properties that will be added to all spans
+ * created within the function's execution context.
+ *
+ * Uses OpenTelemetry context propagation to flow properties to child spans.
+ *
+ * @param properties - A record of association properties to set
+ * @param fn - The function to execute with the association properties
+ * @param thisArg - Optional this context for the function
+ * @param args - Arguments to pass to the function
+ *
+ * @example
+ * ```typescript
+ * import * as traceloop from "@traceloop/node-server-sdk";
+ *
+ * await traceloop.withAssociationProperties(
+ *   {
+ *     [traceloop.AssociationProperty.USER_ID]: "12345",
+ *     [traceloop.AssociationProperty.SESSION_ID]: "session-abc"
+ *   },
+ *   async () => {
+ *     await chat();
+ *   }
+ * );
+ * ```
+ */
 export function withAssociationProperties<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
@@ -52,41 +44,4 @@ export function withAssociationProperties<
     .active()
     .setValue(ASSOCATION_PROPERTIES_KEY, properties);
   return context.with(newContext, fn, thisArg, ...args);
-}
-
-/**
- * Set association properties that will be added to the current and all child spans.
- * This function should be called within an active span context (e.g., within a workflow or task).
- *
- * @param properties - A record of association properties to set
- */
-export function setAssociationProperties(properties: {
-  [name: string]: string;
-}): void {
-  if (Object.keys(properties).length === 0) {
-    return;
-  }
-
-  const span = trace.getActiveSpan();
-  if (span) {
-    const spanId = span.spanContext().spanId;
-
-    const existingEntry = spanAssociationProperties.get(spanId);
-    const mergedProperties = {
-      ...existingEntry?.properties,
-      ...properties,
-    };
-
-    spanAssociationProperties.set(spanId, {
-      properties: mergedProperties,
-      timestamp: Date.now(),
-    });
-
-    for (const [key, value] of Object.entries(properties)) {
-      span.setAttribute(
-        `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,
-        value,
-      );
-    }
-  }
 }
