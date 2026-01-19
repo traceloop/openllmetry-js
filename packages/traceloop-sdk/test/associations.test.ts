@@ -41,7 +41,9 @@ describe("Test Associations API", () => {
           async () => {
             await traceloop.withTask(
               { name: "test_single_task" },
-              async () => {},
+              async () => {
+                return;
+              },
             );
           },
         );
@@ -85,7 +87,9 @@ describe("Test Associations API", () => {
           async () => {
             await traceloop.withTask(
               { name: "test_multiple_task" },
-              async () => {},
+              async () => {
+                return;
+              },
             );
           },
         );
@@ -148,7 +152,9 @@ describe("Test Associations API", () => {
         },
       },
       async () => {
-        await traceloop.withTask({ name: "test_within_task" }, async () => {});
+        await traceloop.withTask({ name: "test_within_task" }, async () => {
+                return;
+              });
       },
     );
 
@@ -197,7 +203,9 @@ describe("Test Associations API", () => {
       async () => {
         await traceloop.withWorkflow(
           { name: "test_all_properties" },
-          async () => {},
+          async () => {
+                return;
+              },
         );
       },
     );
@@ -233,14 +241,18 @@ describe("Test Associations API", () => {
       },
       async () => {
         await traceloop.withWorkflow({ name: "outer_workflow" }, async () => {
-          await traceloop.withTask({ name: "task_1" }, async () => {});
+          await traceloop.withTask({ name: "task_1" }, async () => {
+                return;
+              });
 
           await traceloop.withAssociationProperties(
             {
               [traceloop.AssociationProperty.USER_ID]: "user-123",
             },
             async () => {
-              await traceloop.withTask({ name: "task_2" }, async () => {});
+              await traceloop.withTask({ name: "task_2" }, async () => {
+                return;
+              });
             },
           );
         });
