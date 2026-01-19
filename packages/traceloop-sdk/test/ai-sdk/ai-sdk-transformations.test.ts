@@ -25,12 +25,12 @@ import {
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { context } from "@opentelemetry/api";
-import { ASSOCATION_PROPERTIES_KEY } from "../src/lib/tracing/tracing";
+import { ASSOCATION_PROPERTIES_KEY } from "../../src/lib/tracing/tracing";
 import {
   transformLLMSpans,
   transformAiSdkSpanAttributes,
   transformAiSdkSpanNames,
-} from "../src/lib/tracing/ai-sdk-transformations";
+} from "../../src/lib/tracing/ai-sdk-transformations";
 
 describe("AI SDK Transformations", () => {
   describe("transformAiSdkAttributes - response text", () => {

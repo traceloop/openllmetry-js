@@ -145,25 +145,23 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
 
       const toolCallParts: any[] = [];
       toolCalls.forEach((toolCall: any, index: number) => {
-        if (toolCall.toolCallType === "function") {
-          // Support both v4 (args) and v5 (input) formats
-          // Prefer v5 (input) if present
-          const toolArgs = toolCall.input ?? toolCall.args;
+        // Support both v4 (args) and v5 (input) formats
+        // Prefer v5 (input) if present
+        const toolArgs = toolCall.input ?? toolCall.args;
 
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.name`] =
-            toolCall.toolName;
-          attributes[
-            `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.arguments`
-          ] = toolArgs;
+        attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.name`] =
+          toolCall.toolName;
+        attributes[
+          `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.arguments`
+        ] = toolArgs;
 
-          toolCallParts.push({
-            type: TYPE_TOOL_CALL,
-            tool_call: {
-              name: toolCall.toolName,
-              arguments: toolArgs,
-            },
-          });
-        }
+        toolCallParts.push({
+          type: TYPE_TOOL_CALL,
+          tool_call: {
+            name: toolCall.toolName,
+            arguments: toolArgs,
+          },
+        });
       });
 
       if (toolCallParts.length > 0) {
@@ -723,6 +721,14 @@ const shouldHandleSpan = (span: ReadableSpan): boolean => {
   return span.instrumentationScope?.name === "ai";
 };
 
+const getAiSdkVersion = (): string | undefined => {
+  try {
+    return require("ai/package.json").version;
+  } catch {
+    return undefined;
+  }
+};
+
 const TOP_LEVEL_AI_SPANS = [
   AI_GENERATE_TEXT,
   AI_STREAM_TEXT,
@@ -750,6 +756,12 @@ export const transformAiSdkSpanAttributes = (span: ReadableSpan): void => {
   if (!shouldHandleSpan(span)) {
     return;
   }
+
+  const aiSdkVersion = getAiSdkVersion();
+  if (aiSdkVersion) {
+    span.attributes["ai.sdk.version"] = aiSdkVersion;
+  }
+
   transformLLMSpans(span.attributes, span.name);
   transformToolCalls(span);
 };

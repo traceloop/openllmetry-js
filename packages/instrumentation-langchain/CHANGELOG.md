@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.6](https://github.com/traceloop/openllmetry-js/compare/v0.22.5...v0.22.6) (2026-01-18)
+
+**Note:** Version bump only for package @traceloop/instrumentation-langchain
+
 ## [0.22.5](https://github.com/traceloop/openllmetry-js/compare/v0.22.4...v0.22.5) (2025-12-17)
 
 ### Bug Fixes
