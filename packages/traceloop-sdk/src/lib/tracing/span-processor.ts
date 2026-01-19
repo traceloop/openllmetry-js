@@ -215,7 +215,6 @@ const onSpanStart = (span: Span): void => {
     inheritedAssociationProperties = getSpanAssociationProperties(parentSpanId);
   }
 
-  // Merge association properties from both sources
   const mergedAssociationProperties = {
     ...(inheritedAssociationProperties || {}),
     ...(contextAssociationProperties || {}),
@@ -224,13 +223,11 @@ const onSpanStart = (span: Span): void => {
   if (Object.keys(mergedAssociationProperties).length > 0) {
     const spanId = span.spanContext().spanId;
 
-    // Store merged properties on this span so its children can inherit them
     setSpanAssociationPropertiesForInheritance(
       spanId,
       mergedAssociationProperties,
     );
 
-    // Set attributes on the span
     for (const [key, value] of Object.entries(mergedAssociationProperties)) {
       span.setAttribute(
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,

@@ -67,25 +67,21 @@ export function setAssociationProperties(properties: {
     return;
   }
 
-  // Get the current span
   const span = trace.getActiveSpan();
   if (span) {
     const spanId = span.spanContext().spanId;
 
-    // Get existing properties for this span and merge with new ones
     const existingEntry = spanAssociationProperties.get(spanId);
     const mergedProperties = {
       ...existingEntry?.properties,
       ...properties,
     };
 
-    // Store the merged properties so child spans can inherit them
     spanAssociationProperties.set(spanId, {
       properties: mergedProperties,
       timestamp: Date.now(),
     });
 
-    // Set attributes on the current span
     for (const [key, value] of Object.entries(properties)) {
       span.setAttribute(
         `${SpanAttributes.TRACELOOP_ASSOCIATION_PROPERTIES}.${key}`,

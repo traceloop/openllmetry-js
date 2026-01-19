@@ -11,7 +11,6 @@ const client = traceloop.initialize({
   disableBatch: true,
 });
 
-// ANSI color codes for terminal output
 const colors = {
   reset: "\x1b[0m",
   bright: "\x1b[1m",
@@ -35,7 +34,6 @@ class InteractiveChatbot {
       output: process.stdout,
       prompt: `${colors.cyan}${colors.bright}You: ${colors.reset}`,
     });
-    // Generate unique IDs for this session
     this.sessionId = `session-${Date.now()}`;
     this.userId = `user-${Math.random().toString(36).substring(7)}`;
   }
@@ -78,7 +76,6 @@ class InteractiveChatbot {
 
   @traceloop.workflow({ name: "chat_interaction" })
   async processMessage(userMessage: string): Promise<string> {
-    // Set associations for tracing
     if (client) {
       client.associations.set([
         [traceloop.AssociationProperty.SESSION_ID, this.sessionId],
@@ -124,7 +121,6 @@ class InteractiveChatbot {
           }),
           execute: async ({ expression }) => {
             try {
-              // Simple safe eval for basic math (only allow numbers and operators)
               const sanitized = expression.replace(/[^0-9+\-*/().\s]/g, "");
               const result = eval(sanitized);
               console.log(
@@ -208,16 +204,13 @@ class InteractiveChatbot {
 
     console.log("\n");
 
-    // Wait for the full response to complete to get all messages including tool calls
     const finalResult = await result.response;
 
-    // Add all response messages (including tool calls and results) to history
-    // This ensures the conversation history includes the complete interaction
+
     for (const message of finalResult.messages) {
       this.conversationHistory.push(message);
     }
 
-    // Generate summary for this interaction
     await this.generateSummary(userMessage, fullResponse);
 
     return fullResponse;
