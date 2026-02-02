@@ -112,7 +112,10 @@ function withEntity<
         // Set conversation ID on all spans when there's an active conversation context
         const conversationId = entityContext.getValue(CONVERSATION_ID_KEY);
         if (conversationId) {
-          span.setAttribute(ATTR_GEN_AI_CONVERSATION_ID, conversationId as string);
+          span.setAttribute(
+            ATTR_GEN_AI_CONVERSATION_ID,
+            conversationId as string,
+          );
         }
 
         if (version) {
@@ -305,20 +308,14 @@ export function tool(
 export function withConversation<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
->(
-  conversationId: string,
-  fn: F,
-  thisArg?: ThisParameterType<F>,
-  ...args: A
-) {
-  const newContext = context.active().setValue(CONVERSATION_ID_KEY, conversationId);
+>(conversationId: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
+  const newContext = context
+    .active()
+    .setValue(CONVERSATION_ID_KEY, conversationId);
   return context.with(newContext, fn, thisArg, ...args);
 }
 
-export function setConversationId<T>(
-  conversationId: string,
-  fn: () => T,
-): T {
+export function setConversationId<T>(conversationId: string, fn: () => T): T {
   const currentContext = context.active();
   const newContext = currentContext.setValue(
     CONVERSATION_ID_KEY,
@@ -327,7 +324,11 @@ export function setConversationId<T>(
   return context.with(newContext, fn);
 }
 
-export function conversation(conversationId: string | ((thisArg: unknown, ...funcArgs: unknown[]) => string)) {
+export function conversation(
+  conversationId:
+    | string
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => string),
+) {
   return function (
     target: unknown,
     propertyKey: string,
