@@ -7,6 +7,7 @@ const TRACER_VERSION = version;
 export const WORKFLOW_NAME_KEY = createContextKey("workflow_name");
 export const ENTITY_NAME_KEY = createContextKey("entity_name");
 export const AGENT_NAME_KEY = createContextKey("agent_name");
+export const CONVERSATION_ID_KEY = createContextKey("conversation_id");
 export const ASSOCATION_PROPERTIES_KEY = createContextKey(
   "association_properties",
 );
