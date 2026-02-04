@@ -3,6 +3,7 @@ import { suppressTracing } from "@opentelemetry/core";
 import {
   AGENT_NAME_KEY,
   ASSOCATION_PROPERTIES_KEY,
+  CONVERSATION_ID_KEY,
   ENTITY_NAME_KEY,
   getEntityPath,
   getTracer,
@@ -13,13 +14,17 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
-import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
+import {
+  ATTR_GEN_AI_AGENT_NAME,
+  ATTR_GEN_AI_CONVERSATION_ID,
+} from "@opentelemetry/semantic-conventions/incubating";
 import { shouldSendTraces } from ".";
 
 export type DecoratorConfig = {
   name: string;
   version?: number;
   associationProperties?: { [name: string]: string };
+  conversationId?: string;
   traceContent?: boolean;
   inputParameters?: unknown[];
   suppressTracing?: boolean;
@@ -34,6 +39,7 @@ function withEntity<
     name,
     version,
     associationProperties,
+    conversationId,
     traceContent: overrideTraceContent,
     inputParameters,
     suppressTracing: shouldSuppressTracing,
@@ -75,6 +81,9 @@ function withEntity<
       associationProperties,
     );
   }
+  if (conversationId) {
+    entityContext = entityContext.setValue(CONVERSATION_ID_KEY, conversationId);
+  }
 
   if (shouldSuppressTracing) {
     entityContext = suppressTracing(entityContext);
@@ -103,6 +112,15 @@ function withEntity<
         const agentName = entityContext.getValue(AGENT_NAME_KEY);
         if (agentName) {
           span.setAttribute(ATTR_GEN_AI_AGENT_NAME, agentName as string);
+        }
+
+        // Set conversation ID on all spans when there's an active conversation context
+        const conversationId = entityContext.getValue(CONVERSATION_ID_KEY);
+        if (conversationId) {
+          span.setAttribute(
+            ATTR_GEN_AI_CONVERSATION_ID,
+            conversationId as string,
+          );
         }
 
         if (version) {
@@ -290,6 +308,56 @@ export function tool(
     | ((thisArg: unknown, ...funcArgs: unknown[]) => Partial<DecoratorConfig>),
 ) {
   return entity(TraceloopSpanKindValues.TOOL, config ?? {});
+}
+
+export function withConversation<
+  A extends unknown[],
+  F extends (...args: A) => ReturnType<F>,
+>(conversationId: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
+  const conversationContext = context
+    .active()
+    .setValue(CONVERSATION_ID_KEY, conversationId);
+
+  return context.with(conversationContext, () =>
+    withEntity(
+      TraceloopSpanKindValues.WORKFLOW,
+      { name: `conversation.${conversationId}` },
+      fn,
+      thisArg,
+      ...args,
+    ),
+  );
+}
+
+export function conversation(
+  conversationId:
+    | string
+    | ((thisArg: unknown, ...funcArgs: unknown[]) => string),
+) {
+  return function (
+    target: unknown,
+    propertyKey: string,
+    descriptor: PropertyDescriptor,
+  ) {
+    const originalMethod = descriptor.value;
+
+    descriptor.value = function (...args: unknown[]) {
+      let actualConversationId: string;
+
+      if (typeof conversationId === "function") {
+        actualConversationId = conversationId(this, ...args);
+      } else {
+        actualConversationId = conversationId;
+      }
+
+      return withConversation(
+        actualConversationId,
+        originalMethod,
+        this,
+        ...args,
+      );
+    };
+  };
 }
 
 function cleanInput(input: unknown): unknown {

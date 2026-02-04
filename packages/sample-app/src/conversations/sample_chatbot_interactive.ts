@@ -25,7 +25,7 @@ const colors = {
 class InteractiveChatbot {
   private conversationHistory: CoreMessage[] = [];
   private rl: readline.Interface;
-  private sessionId: string;
+  private conversationId: string;
   private userId: string;
 
   constructor() {
@@ -34,7 +34,7 @@ class InteractiveChatbot {
       output: process.stdout,
       prompt: `${colors.cyan}${colors.bright}You: ${colors.reset}`,
     });
-    this.sessionId = `session-${Date.now()}`;
+    this.conversationId = `conversation-${Date.now()}`;
     this.userId = `user-${Math.random().toString(36).substring(7)}`;
   }
 
@@ -74,12 +74,14 @@ class InteractiveChatbot {
     return cleanSummary;
   }
 
+  @traceloop.conversation(
+    (thisArg) => (thisArg as InteractiveChatbot).conversationId,
+  )
   @traceloop.workflow((thisArg) => {
     const self = thisArg as InteractiveChatbot;
     return {
       name: "chat_interaction",
       associationProperties: {
-        [traceloop.AssociationProperty.SESSION_ID]: self.sessionId,
         [traceloop.AssociationProperty.USER_ID]: self.userId,
       },
     };
@@ -231,7 +233,9 @@ class InteractiveChatbot {
     console.log(
       `${colors.dim}Commands: /exit (quit) | /clear (clear history)${colors.reset}\n`,
     );
-    console.log(`${colors.dim}Session ID: ${this.sessionId}${colors.reset}`);
+    console.log(
+      `${colors.dim}Conversation ID: ${this.conversationId}${colors.reset}`,
+    );
     console.log(`${colors.dim}User ID: ${this.userId}${colors.reset}\n`);
 
     this.rl.prompt();

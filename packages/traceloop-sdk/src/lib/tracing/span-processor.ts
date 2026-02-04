@@ -13,9 +13,13 @@ import {
   ENTITY_NAME_KEY,
   WORKFLOW_NAME_KEY,
   AGENT_NAME_KEY,
+  CONVERSATION_ID_KEY,
 } from "./tracing";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
-import { ATTR_GEN_AI_AGENT_NAME } from "@opentelemetry/semantic-conventions/incubating";
+import {
+  ATTR_GEN_AI_AGENT_NAME,
+  ATTR_GEN_AI_CONVERSATION_ID,
+} from "@opentelemetry/semantic-conventions/incubating";
 import {
   transformAiSdkSpanAttributes,
   transformAiSdkSpanNames,
@@ -193,6 +197,12 @@ const onSpanStart = (span: Span): void => {
     span.setAttribute(ATTR_GEN_AI_AGENT_NAME, agentName);
     const spanId = span.spanContext().spanId;
     spanAgentNames.set(spanId, { agentName, timestamp: Date.now() });
+  }
+
+  // Check for conversation ID in context
+  const conversationId = context.active().getValue(CONVERSATION_ID_KEY);
+  if (conversationId) {
+    span.setAttribute(ATTR_GEN_AI_CONVERSATION_ID, conversationId as string);
   }
 
   // Check for association properties in context (set by decorators or withAssociationProperties)
