@@ -309,10 +309,19 @@ export function withConversation<
   A extends unknown[],
   F extends (...args: A) => ReturnType<F>,
 >(conversationId: string, fn: F, thisArg?: ThisParameterType<F>, ...args: A) {
-  const newContext = context
+  const conversationContext = context
     .active()
     .setValue(CONVERSATION_ID_KEY, conversationId);
-  return context.with(newContext, fn, thisArg, ...args);
+
+  return context.with(conversationContext, () =>
+    withEntity(
+      TraceloopSpanKindValues.WORKFLOW,
+      { name: `conversation.${conversationId}` },
+      fn,
+      thisArg,
+      ...args,
+    ),
+  );
 }
 
 export function setConversationId<T>(conversationId: string, fn: () => T): T {
