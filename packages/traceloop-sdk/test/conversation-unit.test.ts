@@ -17,7 +17,7 @@ describe("Test Conversation ID Unit Tests", () => {
   it("should set conversation ID on workflow spans", async () => {
     const conversationId = "test_conv_123";
 
-    await traceloop.setConversationId(conversationId, async () => {
+    await traceloop.withConversation(conversationId, async () => {
       await traceloop.withWorkflow({ name: "test_workflow" }, async () => {
         // Simple workflow without external API calls
         return "result";
@@ -80,7 +80,7 @@ describe("Test Conversation ID Unit Tests", () => {
 
     const instance = new TestClass();
 
-    await traceloop.setConversationId(conversationId, async () => {
+    await traceloop.withConversation(conversationId, async () => {
       await instance.parentWorkflow();
     });
 
@@ -170,13 +170,13 @@ describe("Test Conversation ID Unit Tests", () => {
     const conv1 = "conv_1";
     const conv2 = "conv_2";
 
-    await traceloop.setConversationId(conv1, async () => {
+    await traceloop.withConversation(conv1, async () => {
       await traceloop.withWorkflow({ name: "workflow_1" }, async () => {
         return "result1";
       });
     });
 
-    await traceloop.setConversationId(conv2, async () => {
+    await traceloop.withConversation(conv2, async () => {
       await traceloop.withWorkflow({ name: "workflow_2" }, async () => {
         return "result2";
       });

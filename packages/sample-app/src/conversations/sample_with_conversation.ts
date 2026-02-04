@@ -8,7 +8,6 @@ import "dotenv/config";
 
 // Example of using withConversation to set the conversation ID for a workflow
 
-
 traceloop.initialize({
   appName: "sample_chatbot_interactive",
   disableBatch: true,
