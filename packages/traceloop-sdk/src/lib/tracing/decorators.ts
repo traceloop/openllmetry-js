@@ -324,14 +324,6 @@ export function withConversation<
   );
 }
 
-export function setConversationId<T>(conversationId: string, fn: () => T): T {
-  const currentContext = context.active();
-  const newContext = currentContext.setValue(
-    CONVERSATION_ID_KEY,
-    conversationId,
-  );
-  return context.with(newContext, fn);
-}
 
 export function conversation(
   conversationId:
