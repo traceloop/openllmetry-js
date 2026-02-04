@@ -24,6 +24,7 @@ export type DecoratorConfig = {
   name: string;
   version?: number;
   associationProperties?: { [name: string]: string };
+  conversationId?: string;
   traceContent?: boolean;
   inputParameters?: unknown[];
   suppressTracing?: boolean;
@@ -38,6 +39,7 @@ function withEntity<
     name,
     version,
     associationProperties,
+    conversationId,
     traceContent: overrideTraceContent,
     inputParameters,
     suppressTracing: shouldSuppressTracing,
@@ -78,6 +80,9 @@ function withEntity<
       ASSOCATION_PROPERTIES_KEY,
       associationProperties,
     );
+  }
+  if (conversationId) {
+    entityContext = entityContext.setValue(CONVERSATION_ID_KEY, conversationId);
   }
 
   if (shouldSuppressTracing) {

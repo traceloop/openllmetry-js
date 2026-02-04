@@ -206,4 +206,150 @@ describe("Test Conversation ID Unit Tests", () => {
       "Workflow 2 should have conversation ID 2",
     );
   });
+
+  it("should set conversation ID via DecoratorConfig in withWorkflow", async () => {
+    const conversationId = "config_conv_123";
+
+    await traceloop.withWorkflow(
+      { name: "workflow_with_conv_id", conversationId },
+      async () => {
+        return "result";
+      },
+    );
+
+    await traceloop.forceFlush();
+    const spans = memoryExporter.getFinishedSpans();
+
+    const workflowSpan = spans.find(
+      (span) => span.name === "workflow_with_conv_id.workflow",
+    );
+
+    assert.ok(workflowSpan, "Workflow span should exist");
+    assert.strictEqual(
+      workflowSpan.attributes[ATTR_GEN_AI_CONVERSATION_ID],
+      conversationId,
+      "Conversation ID should be set on workflow span via config",
+    );
+  });
+
+  it("should set conversation ID via DecoratorConfig in withTask", async () => {
+    const conversationId = "task_conv_123";
+
+    await traceloop.withTask(
+      { name: "task_with_conv_id", conversationId },
+      async () => {
+        return "result";
+      },
+    );
+
+    await traceloop.forceFlush();
+    const spans = memoryExporter.getFinishedSpans();
+
+    const taskSpan = spans.find(
+      (span) => span.name === "task_with_conv_id.task",
+    );
+
+    assert.ok(taskSpan, "Task span should exist");
+    assert.strictEqual(
+      taskSpan.attributes[ATTR_GEN_AI_CONVERSATION_ID],
+      conversationId,
+      "Conversation ID should be set on task span via config",
+    );
+  });
+
+  it("should propagate conversation ID from config to nested spans", async () => {
+    const conversationId = "nested_config_conv";
+
+    await traceloop.withWorkflow(
+      { name: "parent_workflow_config", conversationId },
+      async () => {
+        await traceloop.withTask({ name: "nested_task" }, async () => {
+          return "nested result";
+        });
+        return "result";
+      },
+    );
+
+    await traceloop.forceFlush();
+    const spans = memoryExporter.getFinishedSpans();
+
+    const workflowSpan = spans.find(
+      (span) => span.name === "parent_workflow_config.workflow",
+    );
+    const taskSpan = spans.find((span) => span.name === "nested_task.task");
+
+    assert.ok(workflowSpan, "Workflow span should exist");
+    assert.ok(taskSpan, "Task span should exist");
+
+    assert.strictEqual(
+      workflowSpan.attributes[ATTR_GEN_AI_CONVERSATION_ID],
+      conversationId,
+      "Conversation ID should be set on workflow span",
+    );
+    assert.strictEqual(
+      taskSpan.attributes[ATTR_GEN_AI_CONVERSATION_ID],
+      conversationId,
+      "Conversation ID should be propagated to nested task span",
+    );
+  });
+
+  it("should set conversation ID via decorator config", async () => {
+    const conversationId = "decorator_config_conv";
+
+    class TestClass {
+      @traceloop.workflow({ name: "workflow_decorator_config", conversationId })
+      async workflowWithConvId() {
+        return "result";
+      }
+    }
+
+    const instance = new TestClass();
+    await instance.workflowWithConvId();
+
+    await traceloop.forceFlush();
+    const spans = memoryExporter.getFinishedSpans();
+
+    const workflowSpan = spans.find(
+      (span) => span.name === "workflow_decorator_config.workflow",
+    );
+
+    assert.ok(workflowSpan, "Workflow span should exist");
+    assert.strictEqual(
+      workflowSpan.attributes[ATTR_GEN_AI_CONVERSATION_ID],
+      conversationId,
+      "Conversation ID should be set on workflow span via decorator config",
+    );
+  });
+
+  it("should set dynamic conversation ID via decorator config function", async () => {
+    class TestClass {
+      constructor(private chatId: string) {}
+
+      @traceloop.workflow((thisArg) => ({
+        name: "dynamic_conv_workflow",
+        conversationId: (thisArg as TestClass).chatId,
+      }))
+      async workflowWithDynamicConvId() {
+        return "result";
+      }
+    }
+
+    const conversationId = "dynamic_config_conv";
+    const instance = new TestClass(conversationId);
+    await instance.workflowWithDynamicConvId();
+
+    await traceloop.forceFlush();
+    const spans = memoryExporter.getFinishedSpans();
+
+    const workflowSpan = spans.find(
+      (span) => span.name === "dynamic_conv_workflow.workflow",
+    );
+
+    assert.ok(workflowSpan, "Workflow span should exist");
+    assert.strictEqual(
+      workflowSpan.attributes[ATTR_GEN_AI_CONVERSATION_ID],
+      conversationId,
+      "Conversation ID should be set dynamically via decorator config function",
+    );
+  });
 });
