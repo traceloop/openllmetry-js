@@ -9,11 +9,20 @@ jobs:
     permissions:
       id-token: write
     steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.CI_BOT_APP_ID }}
+          private-key: ${{ secrets.CI_BOT_PRIVATE_KEY }}
+          repositories: ${{ github.event.repository.name }}
+
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
           fetch-depth: 0
           ref: ${{ github.ref }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: pnpm/action-setup@v2
         with:
@@ -29,9 +38,9 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git remote set-url origin https://github-actions[bot]:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/$GITHUB_REPOSITORY
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
       - name: Create Version
         run: pnpm lerna version --no-private --conventional-commits --yes
       - name: Set Current Version
@@ -44,7 +53,7 @@ jobs:
           body_path: "CHANGELOG.md"
           tag_name: ${{ env.CURRENT_VERSION }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
       - name: "NPM Identity"
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
