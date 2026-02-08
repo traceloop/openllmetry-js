@@ -120,7 +120,7 @@
     "langchain": "^0.3.37",
     "llamaindex": "^0.12.1",
     "openai": "4.38.3",
-    "together-ai": "^0.20.0",
+    "together-ai": "^0.30.0",
     "ts-mocha": "^11.1.0",
     "zod": "^3.25.76"
   }
