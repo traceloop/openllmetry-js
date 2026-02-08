@@ -51,14 +51,8 @@ jobs:
       - name: Create Version
         if: ${{ !inputs.publish-only }}
         run: |
-          VERSION_BEFORE=$(node -p 'require("./lerna.json").version')
           pnpm lerna version --no-private --conventional-commits --yes
-          VERSION_AFTER=$(node -p 'require("./lerna.json").version')
-          if [ "$VERSION_BEFORE" = "$VERSION_AFTER" ]; then
-            echo "::error::lerna version did not create a new version (still $VERSION_BEFORE). No new conventional commits?"
-            exit 1
-          fi
-          echo "Version bumped: $VERSION_BEFORE -> $VERSION_AFTER"
+          git describe --exact-match --tags HEAD || { echo "::error::No version tag created on HEAD"; exit 1; }
       - name: Set Current Version
         if: ${{ !inputs.publish-only }}
         run: |
