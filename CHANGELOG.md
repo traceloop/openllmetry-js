@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.7](https://github.com/traceloop/openllmetry-js/compare/v0.22.6...v0.22.7) (2026-02-08)
+
+### Bug Fixes
+
+- **traceloop-sdk:** Add conversation decorator ([#883](https://github.com/traceloop/openllmetry-js/issues/883)) ([75cf2fe](https://github.com/traceloop/openllmetry-js/commit/75cf2fea2eca2d6f16fdf9bbf71a7cbd36cb4908))
+- **tracing:** Add association property ([#852](https://github.com/traceloop/openllmetry-js/issues/852)) ([7a42933](https://github.com/traceloop/openllmetry-js/commit/7a4293341a5071cdd73832c7f64c650e52106acb))
+
 ## [0.22.6](https://github.com/traceloop/openllmetry-js/compare/v0.22.5...v0.22.6) (2026-01-18)
 
 ### Bug Fixes
