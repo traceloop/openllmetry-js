@@ -74,6 +74,4 @@ jobs:
       - name: Build for Release
         run: pnpm nx run-many --target=build --parallel=3
       - name: Publish
-        run: pnpm lerna publish --no-private from-git --yes --no-verify-access
-        env:
-          ACTIONS_ID_TOKEN_REQUEST_URL: ""
+        run: pnpm lerna publish --no-private from-git --yes
