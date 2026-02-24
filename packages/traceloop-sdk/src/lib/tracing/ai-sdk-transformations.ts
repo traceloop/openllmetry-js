@@ -252,7 +252,9 @@ const processMessageParts = (content: any): any[] => {
         parts.push({ type: TYPE_TEXT, content: item.text });
       } else if (item.type === "tool-call" || item.type === "tool_call") {
         // Tool call part - preserve the tool call information
-        const toolArgs = item.args ?? item.input;
+        // Support both v4 (args) and v5 (input) formats
+        // Prefer v5 (input) if present
+        const toolArgs = item.input ?? item.args;
         parts.push({
           type: TYPE_TOOL_CALL,
           tool_call: {
@@ -262,9 +264,11 @@ const processMessageParts = (content: any): any[] => {
               typeof toolArgs === "string" ? toolArgs : JSON.stringify(toolArgs),
           },
         });
-      } else if (item.type === "tool-result") {
+      } else if (item.type === "tool-result" || item.type === TYPE_TOOL_RESULT) {
         // Tool result part - preserve the tool result information
-        const toolOutput = item.result ?? item.output;
+        // Support both v4 (result) and v5 (output) formats
+        // Prefer v5 (output) if present
+        const toolOutput = item.output ?? item.result;
         parts.push({
           type: TYPE_TOOL_RESULT,
           tool_call_id: item.toolCallId,
