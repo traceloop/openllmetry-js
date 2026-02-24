@@ -505,7 +505,11 @@ const transformOperationName = (
   // Check ai.operationId attribute first (set by Vercel AI SDK)
   // This is more reliable since span name may have been transformed already
   const AI_OPERATION_ID = "ai.operationId";
-  const operationId = attributes[AI_OPERATION_ID] as string | undefined;
+  const operationIdValue = attributes[AI_OPERATION_ID];
+  
+  // Ensure operationId is a string before using it (may be non-string in some cases)
+  const operationId =
+    typeof operationIdValue === "string" ? operationIdValue : undefined;
   
   // Use operationId if available, otherwise fall back to spanName
   const nameToCheck = operationId || spanName;
