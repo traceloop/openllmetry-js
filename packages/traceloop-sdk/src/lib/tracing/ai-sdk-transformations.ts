@@ -489,21 +489,42 @@ const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
+/**
+ * Transform span name to operation name for gen_ai.operation.name attribute.
+ * 
+ * Note: The span name may have already been transformed by onSpanStart
+ * (e.g., "ai.generateText" -> "run.ai"). To handle this, we also check
+ * the ai.operationId attribute which contains the original operation ID.
+ * 
+ * Fixes: https://github.com/traceloop/openllmetry-js/issues/882
+ */
 const transformOperationName = (
   attributes: Record<string, any>,
   spanName?: string,
 ): void => {
-  if (!spanName) return;
+  // Check ai.operationId attribute first (set by Vercel AI SDK)
+  // This is more reliable since span name may have been transformed already
+  const AI_OPERATION_ID = "ai.operationId";
+  const operationId = attributes[AI_OPERATION_ID] as string | undefined;
+  
+  // Use operationId if available, otherwise fall back to spanName
+  const nameToCheck = operationId || spanName;
+  if (!nameToCheck) return;
 
   let operationName: string | undefined;
   if (
-    spanName.includes("generateText") ||
-    spanName.includes("streamText") ||
-    spanName.includes("generateObject") ||
-    spanName.includes("streamObject")
+    nameToCheck.includes("generateText") ||
+    nameToCheck.includes("streamText") ||
+    nameToCheck.includes("generateObject") ||
+    nameToCheck.includes("streamObject")
   ) {
     operationName = "chat";
-  } else if (spanName === "ai.toolCall" || spanName.endsWith(".tool")) {
+  } else if (
+    nameToCheck === "ai.toolCall" ||
+    nameToCheck.endsWith(".tool") ||
+    spanName === "ai.toolCall" ||
+    (spanName && spanName.endsWith(".tool"))
+  ) {
     operationName = "execute_tool";
   }
 
