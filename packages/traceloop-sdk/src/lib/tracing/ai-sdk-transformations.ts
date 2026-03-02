@@ -66,6 +66,7 @@ const ROLE_USER = "user";
 // Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
 const VENDOR_MAPPING: Record<string, string> = {
   openai: "OpenAI",
+  azure: "Azure",
   "azure-openai": "Azure",
   anthropic: "Anthropic",
   cohere: "Cohere",
