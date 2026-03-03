@@ -56,6 +56,7 @@ import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 type APIPromiseType<T> = Promise<T> & {
   _thenUnwrap: <U>(onFulfilled: (value: T) => U) => APIPromiseType<U>;
 };
+import { ATTR_GEN_AI_REQUEST_REASONING_EFFORT } from "./attrs";
 import {
   wrapImageGeneration,
   wrapImageEdit,
@@ -332,6 +333,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       if (params.presence_penalty) {
         attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =
           params.presence_penalty;
+      }
+      if ("reasoning_effort" in params) {
+        if (typeof params.reasoning_effort === "string") {
+          attributes[ATTR_GEN_AI_REQUEST_REASONING_EFFORT] = params.reasoning_effort;
+        } else {
+          attributes[ATTR_GEN_AI_REQUEST_REASONING_EFFORT] = JSON.stringify(params.reasoning_effort);
+        }
       }
 
       if (
