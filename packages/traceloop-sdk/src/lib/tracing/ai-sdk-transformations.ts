@@ -2,6 +2,7 @@ import { ReadableSpan, Span } from "@opentelemetry/sdk-trace-node";
 import {
   SpanAttributes,
   TraceloopSpanKindValues,
+  LLMRequestTypeValues,
 } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_AGENT_NAME,
@@ -498,6 +499,31 @@ const transformVendor = (attributes: Record<string, any>): void => {
  * 
  * Fixes: https://github.com/traceloop/openllmetry-js/issues/882
  */
+const transformLlmRequestType = (
+  attributes: Record<string, any>,
+  nameToCheck?: string,
+): void => {
+  if (!nameToCheck || attributes[SpanAttributes.LLM_REQUEST_TYPE]) {
+    return;
+  }
+
+  let requestType: string | undefined;
+  if (
+    nameToCheck.includes("generateText") ||
+    nameToCheck.includes("streamText") ||
+    nameToCheck.includes("generateObject") ||
+    nameToCheck.includes("streamObject")
+  ) {
+    requestType = LLMRequestTypeValues.CHAT;
+  }
+  // Note: completion, rerank are not currently used by AI SDK
+  // embedding operations are handled separately by the SDK
+
+  if (requestType) {
+    attributes[SpanAttributes.LLM_REQUEST_TYPE] = requestType;
+  }
+};
+
 const transformOperationName = (
   attributes: Record<string, any>,
   spanName?: string,
@@ -535,6 +561,9 @@ const transformOperationName = (
   if (operationName) {
     attributes[ATTR_GEN_AI_OPERATION_NAME] = operationName;
   }
+
+  // Also set llm.request.type for AI SDK spans
+  transformLlmRequestType(attributes, nameToCheck);
 };
 
 const transformModelId = (attributes: Record<string, any>): void => {
