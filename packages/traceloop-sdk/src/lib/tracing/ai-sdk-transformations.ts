@@ -4,6 +4,8 @@ import {
   TraceloopSpanKindValues,
   LLMRequestTypeValues,
 } from "@traceloop/ai-semantic-conventions";
+
+const { AI_OPERATION_ID } = SpanAttributes;
 import {
   ATTR_GEN_AI_AGENT_NAME,
   ATTR_GEN_AI_COMPLETION,
@@ -531,7 +533,6 @@ const transformOperationName = (
 ): void => {
   // Check ai.operationId attribute first (set by Vercel AI SDK)
   // This is more reliable since span name may have been transformed already
-  const AI_OPERATION_ID = "ai.operationId";
   const operationIdValue = attributes[AI_OPERATION_ID];
   
   // Ensure operationId is a string before using it (may be non-string in some cases)
