@@ -494,11 +494,13 @@ const transformVendor = (attributes: Record<string, any>): void => {
 };
 
 /**
- * Transform span name to operation name for gen_ai.operation.name attribute.
+ * Derives and sets the llm.request.type attribute for AI SDK operations.
  * 
- * Note: The span name may have already been transformed by onSpanStart
- * (e.g., "ai.generateText" -> "run.ai"). To handle this, we also check
- * the ai.operationId attribute which contains the original operation ID.
+ * The transformLlmRequestType function determines the request type (e.g., "chat")
+ * by examining either the span name or the ai.operationId attribute. This dual
+ * approach handles cases where the span name has already been transformed by
+ * onSpanStart (e.g., "ai.generateText" -> "run.ai"), ensuring the llm.request.type
+ * attribute is set correctly even after prior transformations.
  * 
  * Fixes: https://github.com/traceloop/openllmetry-js/issues/882
  */
