@@ -148,6 +148,8 @@ export interface components {
         };
         "request.ContextRelevanceInput": {
             /** @example Our store is open Monday to Friday from 9am to 6pm, and Saturday from 10am to 4pm. We are closed on Sundays. */
+            completion: string;
+            /** @example Our store is open Monday to Friday from 9am to 6pm, and Saturday from 10am to 4pm. We are closed on Sundays. */
             context: string;
             /** @example What are the business hours? */
             query: string;
@@ -251,9 +253,11 @@ export interface components {
             should_match?: boolean;
         };
         "request.PlaceholderRegexInput": {
-            /** @example [A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,} */
+            /** @example name */
+            placeholder_name: string;
+            /** @example Hello ${name} */
             placeholder_value: string;
-            /** @example user@example.com */
+            /** @example Hello John Doe */
             text: string;
         };
         "request.ProfanityDetectorRequest": {
