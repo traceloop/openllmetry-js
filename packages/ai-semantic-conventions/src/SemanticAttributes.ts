@@ -13,23 +13,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// TODO: Remove unnecessary comments after all instrumentations are updated before (parent branch merge)
 
 export const SpanAttributes = {
   // Attributes not yet in @opentelemetry/semantic-conventions
-  GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS:
-    "gen_ai.usage.cache_creation_input_tokens",
+  
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS: "gen_ai.usage.cache_creation_input_tokens",
+
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
   GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: "gen_ai.usage.cache_read_input_tokens",
+  
   GEN_AI_USAGE_REASONING_TOKENS: "gen_ai.usage.reasoning_tokens",
 
+  GEN_AI_REQUEST_THINKING_TYPE: "gen_ai.request.thinking_type",
+  
+  GEN_AI_REQUEST_THINKING_BUDGET_TOKENS: "gen_ai.request.thinking.budget_tokens",
   // LLM
-  LLM_REQUEST_TYPE: "llm.request.type",
-  LLM_USAGE_TOTAL_TOKENS: "llm.usage.total_tokens",
-  LLM_TOP_K: "llm.top_k",
-  LLM_FREQUENCY_PENALTY: "llm.frequency_penalty",
-  LLM_PRESENCE_PENALTY: "llm.presence_penalty",
-  LLM_CHAT_STOP_SEQUENCES: "llm.chat.stop_sequences",
-  LLM_REQUEST_FUNCTIONS: "llm.request.functions",
 
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  LLM_REQUEST_TYPE: "llm.request.type",
+
+  GEN_AI_USAGE_TOTAL_TOKENS: "gen_ai.usage.total_tokens",
+
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  LLM_USAGE_TOTAL_TOKENS: "llm.usage.total_tokens",
+
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  LLM_TOP_K: "llm.top_k",
+
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  LLM_FREQUENCY_PENALTY: "llm.frequency_penalty",
+
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  LLM_PRESENCE_PENALTY: "llm.presence_penalty",
+
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  LLM_CHAT_STOP_SEQUENCES: "llm.chat.stop_sequences",
+
+  // TODO: Remove after all instrumentations are updated
+  // Kept for backwards compatibility
+  LLM_REQUEST_FUNCTIONS: "llm.request.functions",
+  
   // Vector DB
   VECTOR_DB_VENDOR: "db.system",
   VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
@@ -42,7 +75,7 @@ export const SpanAttributes = {
   VECTOR_DB_GET_INCLUDE_METADATA: "db.vector.get.include_metadata",
   VECTOR_DB_GET_INCLUDE_VALUES: "db.vector.get.include_values",
 
-  // LLM Workflows
+  // LLM Workflows (all Traceloop-specific, no OTel equivalents yet)
   TRACELOOP_SPAN_KIND: "traceloop.span.kind",
   TRACELOOP_WORKFLOW_NAME: "traceloop.workflow.name",
   TRACELOOP_ENTITY_NAME: "traceloop.entity.name",
@@ -84,19 +117,15 @@ export const EventAttributes = {
 
   // DEPRECATED: Vector DB Query Response
   VECTOR_DB_QUERY_RESULT_NAMESPACE: "db.vector.query.result.namespace",
-  VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED:
-    "db.vector.query.result.read_units",
-  VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH:
-    "db.vector.query.result.matches_length",
+  VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED: "db.vector.query.result.read_units",
+  VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH: "db.vector.query.result.matches_length",
 
   // DEPRECATED: Vector DB Query Response of each result
   VECTOR_DB_QUERY_RESULT_SCORE: "db.vector.query.result.{i}.score",
   VECTOR_DB_QUERY_RESULT_ID: "db.vector.query.result.{i}.id",
   VECTOR_DB_QUERY_RESULT_VALUES: "db.vector.query.result.{i}.values",
-  VECTOR_DB_QUERY_RESULT_SPARSE_INDICES:
-    "db.vector.query.result.{i}.sparse.indices",
-  VECTOR_DB_QUERY_RESULT_SPARSE_VALUES:
-    "db.vector.query.result.{i}.sparse.values",
+  VECTOR_DB_QUERY_RESULT_SPARSE_INDICES: "db.vector.query.result.{i}.sparse.indices",
+  VECTOR_DB_QUERY_RESULT_SPARSE_VALUES: "db.vector.query.result.{i}.sparse.values",
   VECTOR_DB_QUERY_RESULT_METADATA: "db.vector.query.result.{i}.metadata",
 };
 
@@ -115,3 +144,16 @@ export enum TraceloopSpanKindValues {
   SESSION = "session",
   UNKNOWN = "unknown",
 }
+
+/**
+ * Standardized finish reason values following OpenTelemetry semantic conventions.
+ * These should be used by all LLM provider instrumentations when mapping
+ * provider-specific stop reasons to standard values.
+ */
+export const FinishReasons = {
+  STOP: "stop",
+  LENGTH: "length",
+  TOOL_CALL: "tool_call",
+  CONTENT_FILTER: "content_filter",
+  ERROR: "error",
+} as const;
