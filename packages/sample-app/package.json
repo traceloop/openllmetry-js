@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.19",
-    "@anthropic-ai/sdk": "^0.56.0",
+    "@anthropic-ai/sdk": "^0.79.0",
     "@aws-sdk/client-bedrock-runtime": "^3.969.0",
     "@azure/identity": "^4.4.1",
     "@google-cloud/aiplatform": "^4.4.0",

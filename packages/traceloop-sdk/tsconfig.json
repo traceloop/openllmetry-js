@@ -5,7 +5,7 @@
     "rootDir": ".",
     "moduleResolution": "bundler",
     "experimentalDecorators": true,
-    "target": "es2017"
+    "target": "ES2020"
   },
   "include": ["src/**/*.ts"],
   "references": []

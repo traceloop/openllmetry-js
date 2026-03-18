@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.23.0](https://github.com/traceloop/openllmetry-js/compare/v0.22.5...v0.23.0) (2026-03-18)
+
+### ⚠ BREAKING CHANGES
+
+- **semantic-conventions:** Replaced custom `llm.*` and `gen_ai.usage.*` attributes with official OpenTelemetry Semantic Conventions 1.40.0 equivalents. All instrumentation packages consuming this package must update attribute references accordingly.
+
+### Features
+
+- **semantic-conventions:** Migrate to `@opentelemetry/semantic-conventions` v1.40.0 ([#xxx](https://github.com/traceloop/openllmetry-js/issues/xxx))
+    - `gen_ai.usage.cache_creation_input_tokens` → `gen_ai.usage.cache_creation.input_tokens`
+    - `gen_ai.usage.cache_read_input_tokens` → `gen_ai.usage.cache_read.input_tokens`
+    - `llm.request.type` → `gen_ai.operation.name`
+    - `llm.top_k` → `gen_ai.request.top_k`
+    - `llm.frequency_penalty` → `gen_ai.request.frequency_penalty`
+    - `llm.presence_penalty` → `gen_ai.request.presence_penalty`
+    - `llm.chat.stop_sequences` → `gen_ai.request.stop_sequences`
+    - `llm.request.functions` → `gen_ai.tool.definitions`
+    - 
 ## [0.22.5](https://github.com/traceloop/openllmetry-js/compare/v0.22.4...v0.22.5) (2025-12-17)
 
 ### Bug Fixes

@@ -16,6 +16,7 @@
 import { createContextKey } from "@opentelemetry/api";
 
 export * from "./SemanticAttributes";
+export * from "./message-formatters";
 
 export const CONTEXT_KEY_ALLOW_TRACE_CONTENT = createContextKey(
   "allow_trace_content",
