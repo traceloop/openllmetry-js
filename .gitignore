@@ -48,6 +48,3 @@ Thumbs.db
 .env*
 chroma.sqlite3
 chroma.log
-
-# claude
-.claude
