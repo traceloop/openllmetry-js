@@ -248,9 +248,10 @@ export class EvaluatorMadeByTraceloop {
 
 **Request Body:**
 - `input.query` (string, required): The query/question to evaluate context relevance for
+- `input.completion` (string, required): The completion to evaluate for context relevance
 - `input.context` (string, required): The context to evaluate for relevance to the query
 - `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)
-   * Required task output fields: context, query
+   * Required task output fields: completion, context, query
    */
   static contextRelevance(config?: ContextRelevanceConfig): EvaluatorWithConfig {
     return createEvaluator('context-relevance', { config: config as Record<string, unknown> });
@@ -357,13 +358,14 @@ export class EvaluatorMadeByTraceloop {
    * Validate text against a placeholder regex pattern
 
 **Request Body:**
-- `input.placeholder_value` (string, required): The regex pattern to match against
+- `input.placeholder_name` (string, required): The name of the placeholder to substitute
+- `input.placeholder_value` (string, required): The value to substitute into the regex placeholder
 - `input.text` (string, required): The text to validate against the regex pattern
 - `config.should_match` (bool, optional): Whether the text should match the regex
 - `config.case_sensitive` (bool, optional): Case-sensitive matching
 - `config.dot_include_nl` (bool, optional): Dot matches newlines
 - `config.multi_line` (bool, optional): Multi-line mode
-   * Required task output fields: placeholder_value, text
+   * Required task output fields: placeholder_name, placeholder_value, text
    */
   static placeholderRegex(config?: PlaceholderRegexConfig): EvaluatorWithConfig {
     return createEvaluator('placeholder-regex', { config: config as Record<string, unknown> });
