@@ -97,3 +97,94 @@ export interface InputExtractor {
 export interface InputSchemaMapping {
   [key: string]: InputExtractor;
 }
+
+// ─── Standalone evaluator interfaces ───────────────────────────────────────
+
+export interface LLMMessage {
+  role: string;
+  content: string;
+}
+
+export interface PropertySchema {
+  name: string;
+  type: string;
+  description?: string;
+  enumValues?: string[];
+}
+
+export interface CreateCustomEvaluatorRequest {
+  name: string;
+  slug?: string;
+  description?: string;
+  messages: LLMMessage[];
+  provider: string;
+  model: string;
+  inputSchema: PropertySchema[];
+  outputSchema: PropertySchema[];
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+}
+
+export interface EvaluatorUpdateRequest {
+  name?: string;
+  description?: string;
+  messages?: LLMMessage[];
+  provider?: string;
+  model?: string;
+  inputSchema?: PropertySchema[];
+  outputSchema?: PropertySchema[];
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+}
+
+export interface EvaluatorExecuteOptions {
+  input: Record<string, unknown>;
+}
+
+export interface EvaluatorCreateResponse {
+  id: string;
+  slug: string;
+}
+
+export interface EvaluatorUpdateResponse {
+  id: string;
+}
+
+export interface EvaluatorExecuteResponse {
+  executionId: string;
+  result: unknown;
+}
+
+export type EvaluatorSource = "custom" | "prebuilt";
+
+export interface EvaluatorCatalogItem {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  description: string;
+  version?: string;
+  source: EvaluatorSource;
+  inputSchema: PropertySchema[];
+  outputSchema: PropertySchema[];
+  config?: unknown;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface EvaluatorData extends EvaluatorCatalogItem {
+  messages: LLMMessage[];
+  provider: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  topP?: number;
+  frequencyPenalty?: number;
+  presencePenalty?: number;
+}

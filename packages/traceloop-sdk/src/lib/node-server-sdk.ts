@@ -33,6 +33,17 @@ export {
   RunInGithubResponse,
   StreamEvent,
   SSEStreamEvent,
+  LLMMessage,
+  PropertySchema,
+  CreateCustomEvaluatorRequest,
+  EvaluatorUpdateRequest,
+  EvaluatorExecuteOptions,
+  EvaluatorCreateResponse,
+  EvaluatorUpdateResponse,
+  EvaluatorExecuteResponse,
+  EvaluatorSource,
+  EvaluatorCatalogItem,
+  EvaluatorData,
 } from "./interfaces";
 export { TraceloopClient } from "./client/traceloop-client";
 export {
