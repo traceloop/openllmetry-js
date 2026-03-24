@@ -44,7 +44,9 @@ function slugToCamelCase(slug: string): string {
 }
 
 function extractRefName(ref: string): string | undefined {
-  const match = ref.match(/(?:#\/definitions\/|#\/components\/schemas\/)(.+)$/);
+  const match = ref.match(
+    /(?:#\/definitions\/|#\/components\/schemas\/|#\/components\/requestBodies\/)(.+)$/,
+  );
   return match ? match[1] : undefined;
 }
 
@@ -80,8 +82,23 @@ function extractEvaluatorDefinitions(
     let requestSchema: OpenAPIV3.SchemaObject | undefined;
 
     // OpenAPI 3.0 format
-    const rawRequestBody = (rawPostOp as OpenAPIV3.OperationObject)
-      .requestBody as OpenAPIV3.RequestBodyObject | undefined;
+    // swagger2openapi may convert body params to $ref'd requestBodies — resolve them first
+    let rawRequestBodyOrRef = (rawPostOp as OpenAPIV3.OperationObject)
+      .requestBody;
+    if (rawRequestBodyOrRef && "$ref" in rawRequestBodyOrRef) {
+      const refName = extractRefName(
+        (rawRequestBodyOrRef as OpenAPIV3.ReferenceObject).$ref,
+      );
+      const requestBodies = (rawSpec as OpenAPIV3.Document).components
+        ?.requestBodies;
+      rawRequestBodyOrRef =
+        refName && requestBodies?.[refName]
+          ? (requestBodies[refName] as OpenAPIV3.RequestBodyObject)
+          : undefined;
+    }
+    const rawRequestBody = rawRequestBodyOrRef as
+      | OpenAPIV3.RequestBodyObject
+      | undefined;
     if (rawRequestBody?.content?.["application/json"]?.schema) {
       const rawSchema = rawRequestBody.content["application/json"].schema as
         | OpenAPIV3.SchemaObject
@@ -513,6 +530,31 @@ function generateFilteredSpec(
     }
   }
 
+  // Rewrite $ref values from Swagger 2.0 (#/definitions/...) to OpenAPI 3.0 (#/components/schemas/...)
+  // swagger2openapi converts top-level definitions but leaves internal $ref strings unchanged
+  function rewriteRefs(obj: unknown): unknown {
+    if (typeof obj === "string") {
+      return obj.startsWith("#/definitions/")
+        ? obj.replace("#/definitions/", "#/components/schemas/")
+        : obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(rewriteRefs);
+    }
+    if (obj !== null && typeof obj === "object") {
+      const result: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+        result[k] = rewriteRefs(v);
+      }
+      return result;
+    }
+    return obj;
+  }
+  const rewrittenSchemas = rewriteRefs(filteredSchemas) as Record<
+    string,
+    unknown
+  >;
+
   // Create minimal OpenAPI 3.0 spec with only evaluator schemas
   return {
     openapi: "3.0.0",
@@ -522,7 +564,7 @@ function generateFilteredSpec(
     },
     paths: {},
     components: {
-      schemas: filteredSchemas,
+      schemas: rewrittenSchemas,
     },
   };
 }

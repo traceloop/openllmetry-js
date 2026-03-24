@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.22.8](https://github.com/traceloop/openllmetry-js/compare/v0.22.7...v0.22.8) (2026-03-04)
+
+### Bug Fixes
+
+- **ai-sdk:** Add model mapping to azure ([#892](https://github.com/traceloop/openllmetry-js/issues/892)) ([e280ceb](https://github.com/traceloop/openllmetry-js/commit/e280cebdd5bffa670c1b50f86c35a0a2aa4312f2))
+
 ## [0.22.7](https://github.com/traceloop/openllmetry-js/compare/v0.22.6...v0.22.7) (2026-02-08)
 
 ### Bug Fixes

@@ -117,9 +117,9 @@ export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {
   },
   'context-relevance': {
     slug: 'context-relevance',
-    requiredInputFields: ['context', 'query'],
+    requiredInputFields: ['completion', 'context', 'query'],
     optionalConfigFields: ['model'],
-    description: "Evaluate whether retrieved context contains sufficient information to answer the query\n\n**Request Body:**\n- `input.query` (string, required): The query/question to evaluate context relevance for\n- `input.context` (string, required): The context to evaluate for relevance to the query\n- `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)",
+    description: "Evaluate whether retrieved context contains sufficient information to answer the query\n\n**Request Body:**\n- `input.query` (string, required): The query/question to evaluate context relevance for\n- `input.completion` (string, required): The completion to evaluate for context relevance\n- `input.context` (string, required): The context to evaluate for relevance to the query\n- `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)",
   },
   'conversation-quality': {
     slug: 'conversation-quality',
@@ -171,9 +171,9 @@ export const EVALUATOR_SCHEMAS: Record<EvaluatorSlug, EvaluatorSchema> = {
   },
   'placeholder-regex': {
     slug: 'placeholder-regex',
-    requiredInputFields: ['placeholder_value', 'text'],
+    requiredInputFields: ['placeholder_name', 'placeholder_value', 'text'],
     optionalConfigFields: ['case_sensitive', 'dot_include_nl', 'multi_line', 'should_match'],
-    description: "Validate text against a placeholder regex pattern\n\n**Request Body:**\n- `input.placeholder_value` (string, required): The regex pattern to match against\n- `input.text` (string, required): The text to validate against the regex pattern\n- `config.should_match` (bool, optional): Whether the text should match the regex\n- `config.case_sensitive` (bool, optional): Case-sensitive matching\n- `config.dot_include_nl` (bool, optional): Dot matches newlines\n- `config.multi_line` (bool, optional): Multi-line mode",
+    description: "Validate text against a placeholder regex pattern\n\n**Request Body:**\n- `input.placeholder_name` (string, required): The name of the placeholder to substitute\n- `input.placeholder_value` (string, required): The value to substitute into the regex placeholder\n- `input.text` (string, required): The text to validate against the regex pattern\n- `config.should_match` (bool, optional): Whether the text should match the regex\n- `config.case_sensitive` (bool, optional): Case-sensitive matching\n- `config.dot_include_nl` (bool, optional): Dot matches newlines\n- `config.multi_line` (bool, optional): Multi-line mode",
   },
   'profanity-detector': {
     slug: 'profanity-detector',

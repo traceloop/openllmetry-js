@@ -2,6 +2,14 @@ import { TraceloopClient } from "../traceloop-client";
 import { Evaluator } from "../evaluator/evaluator";
 import { Datasets } from "../dataset/datasets";
 import { transformApiResponse } from "../../utils/response-transformer";
+import {
+  validateAndNormalizeTaskOutput,
+  type EvaluatorWithRequiredFields,
+} from "../evaluator/field-mapping";
+import {
+  EVALUATOR_SCHEMAS,
+  isValidEvaluatorSlug,
+} from "../../generated/evaluators/registry";
 import type {
   ExperimentTaskFunction,
   ExperimentRunOptions,
@@ -12,6 +20,8 @@ import type {
   ExecutionResponse,
   CreateTaskRequest,
   CreateTaskResponse,
+  EvaluatorDetails,
+  EvaluatorWithConfig,
   GithubContext,
   TaskResult,
   RunInGithubOptions,
@@ -97,6 +107,7 @@ export class Experiment {
       datasetVersion,
       evaluators = [],
       waitForResults = true,
+      stopOnError = false,
     } = options;
 
     // When experimentSlug is not provided a random one is generated
@@ -125,44 +136,78 @@ export class Experiment {
       const taskErrors: string[] = [];
       const evaluationResults: ExecutionResponse[] = [];
 
+      const evaluatorsForValidation =
+        this.getEvaluatorsForFieldsValidation(evaluators);
+
       for (const row of rows) {
-        const taskOutput = await task(row as TInput);
+        const timestamp = Date.now();
+        let taskResponse: TaskResponse | undefined;
+        try {
+          const rawOutput = await task(row as TInput);
 
-        // Create TaskResponse object
-        const taskResponse: TaskResponse = {
-          input: row,
-          output: taskOutput as Record<string, any>,
-          metadata: {
-            rowId: row.id,
-            timestamp: Date.now(),
-          },
-          timestamp: Date.now(),
-        };
-
-        taskResults.push(taskResponse);
-
-        const response = await this.createTask(
-          experimentSlug,
-          experimentResponse.run.id,
-          row,
-          taskOutput as Record<string, any>,
-        );
-        const taskId = response.id;
-
-        if (evaluators.length > 0) {
-          for (const evaluator of evaluators) {
-            const singleEvaluationResult =
-              await this.evaluator.runExperimentEvaluator({
-                experimentId: experimentResponse.experiment.id,
-                experimentRunId: experimentResponse.run.id,
-                taskId,
-                evaluator,
-                taskResult: taskOutput as Record<string, any>,
-                waitForResults,
-                timeout: 120000, // 2 minutes default
-              });
-            evaluationResults.push(...singleEvaluationResult);
+          // Normalize field names using synonym mapping and validate required fields.
+          let taskOutput = rawOutput as Record<string, any>;
+          if (evaluatorsForValidation.length > 0) {
+            taskOutput = validateAndNormalizeTaskOutput(
+              taskOutput,
+              evaluatorsForValidation,
+            ) as Record<string, any>;
           }
+
+          taskResponse = {
+            input: row,
+            output: taskOutput,
+            metadata: {
+              rowId: row.id,
+              timestamp,
+            },
+            timestamp,
+          };
+
+          taskResults.push(taskResponse);
+
+          const response = await this.createTask(
+            experimentSlug,
+            experimentResponse.run.id,
+            row,
+            taskOutput,
+          );
+          const taskId = response.id;
+
+          if (evaluators.length > 0) {
+            for (const evaluator of evaluators) {
+              const singleEvaluationResult =
+                await this.evaluator.runExperimentEvaluator({
+                  experimentId: experimentResponse.experiment.id,
+                  experimentRunId: experimentResponse.run.id,
+                  taskId,
+                  evaluator,
+                  taskResult: taskOutput,
+                  waitForResults,
+                  timeout: 120000, // 2 minutes default
+                });
+              evaluationResults.push(...singleEvaluationResult);
+            }
+          }
+        } catch (error) {
+          const errorMsg =
+            error instanceof Error ? error.message : String(error);
+          taskErrors.push(errorMsg);
+          if (taskResponse) {
+            taskResponse.error = errorMsg;
+          } else {
+            taskResults.push({
+              input: row,
+              output: {},
+              error: errorMsg,
+              metadata: {
+                rowId: row.id,
+                timestamp,
+              },
+              timestamp,
+            });
+          }
+          if (stopOnError) throw error;
         }
       }
 
@@ -377,7 +422,32 @@ export class Experiment {
   }
 
   /**
-   * Execute tasks locally and capture results
+   * Filter evaluators that have required input fields for synonym normalization.
+   */
+  private getEvaluatorsForFieldsValidation(
+    evaluators: EvaluatorDetails[],
+  ): EvaluatorWithRequiredFields[] {
+    return evaluators
+      .filter((e) => typeof e === "object")
+      .map((e) => {
+        const evaluator = e as EvaluatorWithConfig;
+        const schema = isValidEvaluatorSlug(evaluator.name)
+          ? EVALUATOR_SCHEMAS[evaluator.name]
+          : undefined;
+        return {
+          name: evaluator.name,
+          requiredInputFields: schema?.requiredInputFields,
+        };
+      })
+      .filter(
+        (e): e is { name: string; requiredInputFields: string[] } =>
+          Array.isArray(e.requiredInputFields) &&
+          e.requiredInputFields.length > 0,
+      );
+  }
+
+  /**
+   * Execute tasks locally and capture results.
    */
   private async executeTasksLocally<TInput, TOutput>(
     task: ExperimentTaskFunction<TInput, TOutput>,
@@ -386,10 +456,10 @@ export class Experiment {
     return await Promise.all(
       rows.map(async (row) => {
         try {
-          const output = await task(row as TInput);
+          const rawOutput = await task(row as TInput);
           return {
             input: row,
-            output: output as Record<string, any>,
+            output: rawOutput as Record<string, any>,
             metadata: {
               rowId: row.id,
               timestamp: Date.now(),
@@ -437,13 +507,40 @@ export class Experiment {
     if (!task || typeof task !== "function") {
       throw new Error("Task function is required and must be a function");
     }
+    this.validateRunOptions(task, { evaluators });
 
     try {
       const githubContext = this.getGithubContext();
 
       const rows = await this.getDatasetRows(datasetSlug, datasetVersion);
 
-      const taskResults = await this.executeTasksLocally(task, rows);
+      const evaluatorsForValidation =
+        this.getEvaluatorsForFieldsValidation(evaluators);
+
+      const taskResults = (await this.executeTasksLocally(task, rows)).map(
+        (result) => {
+          if (
+            result.error ||
+            !result.output ||
+            evaluatorsForValidation.length === 0
+          )
+            return result;
+          try {
+            return {
+              ...result,
+              output: validateAndNormalizeTaskOutput(
+                result.output,
+                evaluatorsForValidation,
+              ) as Record<string, any>,
+            };
+          } catch (error) {
+            return {
+              ...result,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+        },
+      );
 
       // Prepare evaluator slugs
       const evaluatorSlugs = evaluators.map((evaluator) =>

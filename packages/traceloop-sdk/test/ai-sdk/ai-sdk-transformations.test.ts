@@ -1016,6 +1016,22 @@ describe("AI SDK Transformations", () => {
       });
     });
 
+    it("should transform azure provider (ai-sdk/azure) to Azure system", () => {
+      const azureProviders = ["azure.chat", "azure.completions", "azure"];
+
+      azureProviders.forEach((provider) => {
+        const attributes = {
+          "ai.model.provider": provider,
+        };
+
+        transformLLMSpans(attributes);
+
+        assert.strictEqual(attributes[ATTR_GEN_AI_PROVIDER_NAME], "azure");
+        assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Azure");
+        assert.strictEqual(attributes["ai.model.provider"], undefined);
+      });
+    });
+
     it("should transform other providers to their value", () => {
       const attributes = {
         "ai.model.provider": "anthropic",
