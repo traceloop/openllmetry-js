@@ -16,13 +16,13 @@
 
 import * as assert from "assert";
 
-import { mapAnthropicContentBlock } from "../../instrumentation-utils/src/content-block-mappers";
+import { mapAnthropicContentBlock } from "@traceloop/instrumentation-utils";
 import {
   formatSystemInstructions,
   formatInputMessages,
   formatInputMessagesFromPrompt,
   formatOutputMessage,
-} from "../../instrumentation-utils/src/message-formatters";
+} from "@traceloop/instrumentation-utils";
 import { anthropicFinishReasonMap } from "../src/instrumentation";
 import {
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
