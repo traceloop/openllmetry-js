@@ -96,7 +96,7 @@
     "@ai-sdk/anthropic": "^2.0.53",
     "@ai-sdk/google": "^2.0.8",
     "@ai-sdk/openai": "^2.0.19",
-    "@anthropic-ai/sdk": "^0.71.0",
+    "@anthropic-ai/sdk": "^0.80.0",
     "@aws-sdk/client-bedrock-runtime": "^3.969.0",
     "@google-cloud/aiplatform": "^4.4.0",
     "@google-cloud/vertexai": "^1.10.0",
