@@ -58,7 +58,7 @@ import {
   ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
-  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION
+  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { AnthropicInstrumentationConfig } from "./types";
 import { version } from "../package.json";
@@ -133,7 +133,10 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     this._wrap(
       moduleExports.Anthropic.Completions.prototype,
       "create",
-      this.patchAnthropic(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION, moduleExports),
+      this.patchAnthropic(
+        GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+        moduleExports,
+      ),
     );
     this._wrap(
       moduleExports.Anthropic.Messages.prototype,
@@ -160,7 +163,9 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   }
 
   private patchAnthropic(
-    type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+    type:
+      | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     moduleExports: typeof anthropic,
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -254,7 +259,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       // Handle thinking parameters (for beta messages)
       const betaParams = params as BetaMessageCreateParamsNonStreaming;
       if (betaParams.thinking && betaParams.thinking.type === "enabled") {
-        attributes[SpanAttributes.GEN_AI_REQUEST_THINKING_TYPE] = betaParams.thinking.type;
+        attributes[SpanAttributes.GEN_AI_REQUEST_THINKING_TYPE] =
+          betaParams.thinking.type;
         attributes[SpanAttributes.GEN_AI_REQUEST_THINKING_BUDGET_TOKENS] =
           betaParams.thinking.budget_tokens;
       }
@@ -278,12 +284,17 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       if (this._shouldSendPrompts()) {
         if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
           if ("system" in params && params.system !== undefined) {
-            attributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS] = formatSystemInstructions(params.system);
+            attributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS] =
+              formatSystemInstructions(params.system);
           }
 
-          attributes[ATTR_GEN_AI_INPUT_MESSAGES] = formatInputMessages(params.messages, mapAnthropicContentBlock);
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] = formatInputMessages(
+            params.messages,
+            mapAnthropicContentBlock,
+          );
         } else {
-          attributes[ATTR_GEN_AI_INPUT_MESSAGES] = formatInputMessagesFromPrompt(params.prompt);
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
+            formatInputMessagesFromPrompt(params.prompt);
         }
       }
     } catch (e) {
@@ -443,7 +454,9 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   }
 
   private _wrapPromise<T>(
-    type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+    type:
+      | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     span: Span,
     promise: Promise<T>,
   ): Promise<T> {
@@ -482,7 +495,11 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     type,
     result,
   }:
-    | { span: Span; type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT; result: Message }
+    | {
+        span: Span;
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
+        result: Message;
+      }
     | {
         span: Span;
         type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
@@ -493,7 +510,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
       // Always set finish_reason — it's metadata, not user content
       if (result.stop_reason) {
-        const mappedReason = anthropicFinishReasonMap[result.stop_reason] ?? result.stop_reason;
+        const mappedReason =
+          anthropicFinishReasonMap[result.stop_reason] ?? result.stop_reason;
         span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [mappedReason]);
       }
 
@@ -528,13 +546,16 @@ export class AnthropicInstrumentation extends InstrumentationBase {
 
       // Only set output message content when tracing content
       if (this._shouldSendPrompts()) {
-        const content = type === GEN_AI_OPERATION_NAME_VALUE_CHAT ? result.content : result.completion;
+        const content =
+          type === GEN_AI_OPERATION_NAME_VALUE_CHAT
+            ? result.content
+            : result.completion;
         const outputMessages = formatOutputMessage(
           content,
           result.stop_reason,
           anthropicFinishReasonMap,
           type,
-          mapAnthropicContentBlock
+          mapAnthropicContentBlock,
         );
 
         span.setAttribute(ATTR_GEN_AI_OUTPUT_MESSAGES, outputMessages);

@@ -114,7 +114,9 @@ describe("Test Anthropic instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const chatSpan = spans.find((span) => span.name === "chat claude-3-opus-20240229");
+    const chatSpan = spans.find(
+      (span) => span.name === "chat claude-3-opus-20240229",
+    );
 
     assert.ok(message);
     assert.ok(chatSpan);
@@ -138,23 +140,28 @@ describe("Test Anthropic instrumentation", async function () {
       chatSpan.attributes[`${ATTR_GEN_AI_REQUEST_MAX_TOKENS}`],
       1024,
     );
-    const finishReasons = chatSpan.attributes[`${ATTR_GEN_AI_RESPONSE_FINISH_REASONS}`];
-    assert.ok(Array.isArray(finishReasons), "finish_reasons should be an array");
+    const finishReasons =
+      chatSpan.attributes[`${ATTR_GEN_AI_RESPONSE_FINISH_REASONS}`];
+    assert.ok(
+      Array.isArray(finishReasons),
+      "finish_reasons should be an array",
+    );
     assert.ok(finishReasons.length > 0, "finish_reasons should not be empty");
     const inputMessages = JSON.parse(
       chatSpan.attributes[`${ATTR_GEN_AI_INPUT_MESSAGES}`] as string,
     );
     assert.strictEqual(inputMessages[0].role, "user");
-    assert.strictEqual(inputMessages[0].parts[0].content, "Tell me a joke about OpenTelemetry");
+    assert.strictEqual(
+      inputMessages[0].parts[0].content,
+      "Tell me a joke about OpenTelemetry",
+    );
     const outputMessages = JSON.parse(
       chatSpan.attributes[`${ATTR_GEN_AI_OUTPUT_MESSAGES}`] as string,
     );
     assert.strictEqual(outputMessages[0].role, "assistant");
     assert.ok(Array.isArray(outputMessages[0].parts));
     assert.equal(chatSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`], 17);
-    assert.ok(
-      +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]! > 0,
-    );
+    assert.ok(+chatSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]! > 0);
     assert.equal(
       +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`]! +
         +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]!,
@@ -173,7 +180,9 @@ describe("Test Anthropic instrumentation", async function () {
     const message = await stream.finalMessage();
 
     const spans = memoryExporter.getFinishedSpans();
-    const chatSpan = spans.find((span) => span.name === "chat claude-3-opus-20240229");
+    const chatSpan = spans.find(
+      (span) => span.name === "chat claude-3-opus-20240229",
+    );
 
     assert.ok(message);
     assert.ok(chatSpan);
@@ -193,16 +202,17 @@ describe("Test Anthropic instrumentation", async function () {
       chatSpan.attributes[`${ATTR_GEN_AI_INPUT_MESSAGES}`] as string,
     );
     assert.strictEqual(inputMessages[0].role, "user");
-    assert.strictEqual(inputMessages[0].parts[0].content, "Tell me a joke about OpenTelemetry");
+    assert.strictEqual(
+      inputMessages[0].parts[0].content,
+      "Tell me a joke about OpenTelemetry",
+    );
     const outputMessages = JSON.parse(
       chatSpan.attributes[`${ATTR_GEN_AI_OUTPUT_MESSAGES}`] as string,
     );
     assert.strictEqual(outputMessages[0].role, "assistant");
     assert.ok(Array.isArray(outputMessages[0].parts));
     assert.equal(chatSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`], 17);
-    assert.ok(
-      +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]! > 0,
-    );
+    assert.ok(+chatSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]! > 0);
     assert.equal(
       +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`]! +
         +chatSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]!,
@@ -229,7 +239,10 @@ describe("Test Anthropic instrumentation", async function () {
       span.attributes[`${ATTR_GEN_AI_SYSTEM_INSTRUCTIONS}`] as string,
     );
     assert.strictEqual(systemInstructions[0].type, "text");
-    assert.strictEqual(systemInstructions[0].content, "You are a helpful assistant");
+    assert.strictEqual(
+      systemInstructions[0].content,
+      "You are a helpful assistant",
+    );
     const inputMessages = JSON.parse(
       span.attributes[`${ATTR_GEN_AI_INPUT_MESSAGES}`] as string,
     );
@@ -254,7 +267,9 @@ describe("Test Anthropic instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const chatSpan = spans.find((span) => span.name === "chat claude-opus-4-1-20250805");
+    const chatSpan = spans.find(
+      (span) => span.name === "chat claude-opus-4-1-20250805",
+    );
 
     assert.ok(message);
     assert.ok(chatSpan);
@@ -277,7 +292,9 @@ describe("Test Anthropic instrumentation", async function () {
       "enabled",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${SpanAttributes.GEN_AI_REQUEST_THINKING_BUDGET_TOKENS}`],
+      chatSpan.attributes[
+        `${SpanAttributes.GEN_AI_REQUEST_THINKING_BUDGET_TOKENS}`
+      ],
       1024,
     );
 

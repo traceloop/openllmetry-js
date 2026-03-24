@@ -412,7 +412,9 @@
     "inputMessages.text_string_shorthand": [
       {
         "role": "user",
-        "parts": [{ "type": "text", "content": "What is the capital of France?" }]
+        "parts": [
+          { "type": "text", "content": "What is the capital of France?" }
+        ]
       }
     ],
 
@@ -450,7 +452,10 @@
         "role": "user",
         "parts": [
           { "type": "text", "content": "Summarise this document." },
-          { "type": "text", "content": "The quick brown fox jumps over the lazy dog." }
+          {
+            "type": "text",
+            "content": "The quick brown fox jumps over the lazy dog."
+          }
         ]
       }
     ],
@@ -496,7 +501,9 @@
     "inputMessages.tool_use_replayed_in_assistant": [
       {
         "role": "user",
-        "parts": [{ "type": "text", "content": "What is the weather in Paris?" }]
+        "parts": [
+          { "type": "text", "content": "What is the weather in Paris?" }
+        ]
       },
       {
         "role": "assistant",
@@ -525,7 +532,9 @@
       {
         "role": "assistant",
         "finish_reason": "stop",
-        "parts": [{ "type": "text", "content": "The capital of France is Paris." }]
+        "parts": [
+          { "type": "text", "content": "The capital of France is Paris." }
+        ]
       }
     ],
 
@@ -564,7 +573,10 @@
         "finish_reason": "stop",
         "parts": [
           { "type": "redacted_thinking" },
-          { "type": "text", "content": "Based on my analysis, the answer is Paris." }
+          {
+            "type": "text",
+            "content": "Based on my analysis, the answer is Paris."
+          }
         ]
       }
     ],
@@ -578,15 +590,24 @@
             "type": "server_tool_call",
             "id": "srvtool_001",
             "name": "web_search",
-            "server_tool_call": { "type": "web_search", "query": "Anthropic founded year" }
+            "server_tool_call": {
+              "type": "web_search",
+              "query": "Anthropic founded year"
+            }
           },
-          { "type": "text", "content": "According to my search, Anthropic was founded in 2021." }
+          {
+            "type": "text",
+            "content": "According to my search, Anthropic was founded in 2021."
+          }
         ]
       }
     ],
 
     "systemInstructions.plain_string": [
-      { "type": "text", "content": "You are a helpful assistant. Always be concise and accurate." }
+      {
+        "type": "text",
+        "content": "You are a helpful assistant. Always be concise and accurate."
+      }
     ],
 
     "systemInstructions.multiple_text_blocks": [

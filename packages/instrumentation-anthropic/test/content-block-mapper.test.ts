@@ -34,7 +34,10 @@ describe("mapAnthropicContentBlock", () => {
   it("maps text block to TextPart", () => {
     const block = fixtures.inputMessages.text_explicit_block[0].content[0];
     const result = mapAnthropicContentBlock(block);
-    assert.deepStrictEqual(result, { type: "text", content: "What is the capital of France?" });
+    assert.deepStrictEqual(result, {
+      type: "text",
+      content: "What is the capital of France?",
+    });
   });
 
   it("maps image/base64 block to BlobPart", () => {
@@ -44,7 +47,8 @@ describe("mapAnthropicContentBlock", () => {
       type: "blob",
       modality: "image",
       mime_type: "image/png",
-      content: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      content:
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
     });
   });
 
@@ -61,7 +65,10 @@ describe("mapAnthropicContentBlock", () => {
   it("maps document/text source to TextPart", () => {
     const block = fixtures.inputMessages.document_text_source[0].content[1];
     const result = mapAnthropicContentBlock(block);
-    assert.deepStrictEqual(result, { type: "text", content: "The quick brown fox jumps over the lazy dog." });
+    assert.deepStrictEqual(result, {
+      type: "text",
+      content: "The quick brown fox jumps over the lazy dog.",
+    });
   });
 
   it("maps document/base64 to BlobPart with mime_type from block", () => {
@@ -70,7 +77,8 @@ describe("mapAnthropicContentBlock", () => {
     assert.deepStrictEqual(result, {
       type: "blob",
       mime_type: "application/pdf",
-      content: "JVBERi0xLjAKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCg==",
+      content:
+        "JVBERi0xLjAKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCg==",
     });
   });
 
@@ -87,11 +95,15 @@ describe("mapAnthropicContentBlock", () => {
   it("maps document/file to FilePart", () => {
     const block = fixtures.inputMessages.document_file_id[0].content[1];
     const result = mapAnthropicContentBlock(block);
-    assert.deepStrictEqual(result, { type: "file", file_id: "file_011CNha8iCJcU1wXNR6q4V8w" });
+    assert.deepStrictEqual(result, {
+      type: "file",
+      file_id: "file_011CNha8iCJcU1wXNR6q4V8w",
+    });
   });
 
   it("maps tool_use to ToolCallRequestPart", () => {
-    const block = fixtures.inputMessages.tool_use_replayed_in_assistant[1].content[0];
+    const block =
+      fixtures.inputMessages.tool_use_replayed_in_assistant[1].content[0];
     const result = mapAnthropicContentBlock(block);
     assert.deepStrictEqual(result, {
       type: "tool_call",
@@ -102,7 +114,8 @@ describe("mapAnthropicContentBlock", () => {
   });
 
   it("maps tool_result (string content) to ToolCallResponsePart", () => {
-    const block = fixtures.inputMessages.tool_use_replayed_in_assistant[2].content[0];
+    const block =
+      fixtures.inputMessages.tool_use_replayed_in_assistant[2].content[0];
     const result = mapAnthropicContentBlock(block);
     assert.deepStrictEqual(result, {
       type: "tool_call_response",
@@ -112,22 +125,26 @@ describe("mapAnthropicContentBlock", () => {
   });
 
   it("maps tool_result (array content) to ToolCallResponsePart", () => {
-    const block = fixtures.inputMessages.tool_result_with_array_content[2].content[0];
+    const block =
+      fixtures.inputMessages.tool_result_with_array_content[2].content[0];
     const result = mapAnthropicContentBlock(block);
     const expected = {
       type: "tool_call_response",
       id: "call_def456",
-      response: fixtures.inputMessages.tool_result_with_array_content[2].content[0].content,
+      response:
+        fixtures.inputMessages.tool_result_with_array_content[2].content[0]
+          .content,
     };
     assert.deepStrictEqual(result, expected);
   });
 
-  it("maps thinking block to ReasoningPart with type \"reasoning\"", () => {
+  it('maps thinking block to ReasoningPart with type "reasoning"', () => {
     const block = fixtures.outputMessages.thinking_then_text[0];
     const result = mapAnthropicContentBlock(block);
     assert.deepStrictEqual(result, {
       type: "reasoning",
-      content: "The user is asking about France's capital. This is a straightforward factual question. Paris has been the capital since...",
+      content:
+        "The user is asking about France's capital. This is a straightforward factual question. Paris has been the capital since...",
     });
   });
 
@@ -155,8 +172,16 @@ describe("mapAnthropicContentBlock", () => {
   });
 
   it("maps unknown block type as GenericPart preserving all fields", () => {
-    const result = mapAnthropicContentBlock({ type: "custom_type", foo: "bar", baz: 42 });
-    assert.deepStrictEqual(result, { type: "custom_type", foo: "bar", baz: 42 });
+    const result = mapAnthropicContentBlock({
+      type: "custom_type",
+      foo: "bar",
+      baz: 42,
+    });
+    assert.deepStrictEqual(result, {
+      type: "custom_type",
+      foo: "bar",
+      baz: 42,
+    });
   });
 
   it("document/base64 does NOT hardcode mime_type — reads from source.media_type", () => {
@@ -165,7 +190,11 @@ describe("mapAnthropicContentBlock", () => {
       source: { type: "base64", media_type: "text/plain", data: "aGVsbG8=" },
     };
     const result = mapAnthropicContentBlock(block);
-    assert.deepStrictEqual(result, { type: "blob", mime_type: "text/plain", content: "aGVsbG8=" });
+    assert.deepStrictEqual(result, {
+      type: "blob",
+      mime_type: "text/plain",
+      content: "aGVsbG8=",
+    });
   });
 
   it("document/base64 result has NO modality field", () => {
@@ -186,7 +215,7 @@ describe("mapAnthropicContentBlock", () => {
     assert.strictEqual(result.modality, undefined);
   });
 
-  it("thinking block maps to type \"reasoning\" — never \"thinking\"", () => {
+  it('thinking block maps to type "reasoning" — never "thinking"', () => {
     const block = { type: "thinking", thinking: "some thought" };
     const result = mapAnthropicContentBlock(block) as any;
     assert.strictEqual(result.type, "reasoning");
@@ -202,23 +231,46 @@ describe("mapAnthropicContentBlock", () => {
 
 describe("formatSystemInstructions", () => {
   it("formats plain string as single TextPart array", () => {
-    const result = JSON.parse(formatSystemInstructions(fixtures.systemInstructions.plain_string));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["systemInstructions.plain_string"]);
+    const result = JSON.parse(
+      formatSystemInstructions(fixtures.systemInstructions.plain_string),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["systemInstructions.plain_string"],
+    );
   });
 
   it("formats single text block array", () => {
-    const result = JSON.parse(formatSystemInstructions(fixtures.systemInstructions.single_text_block));
-    assert.deepStrictEqual(result, [{ type: "text", content: "You are a helpful assistant." }]);
+    const result = JSON.parse(
+      formatSystemInstructions(fixtures.systemInstructions.single_text_block),
+    );
+    assert.deepStrictEqual(result, [
+      { type: "text", content: "You are a helpful assistant." },
+    ]);
   });
 
   it("formats multiple text blocks preserving order", () => {
-    const result = JSON.parse(formatSystemInstructions(fixtures.systemInstructions.multiple_text_blocks));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["systemInstructions.multiple_text_blocks"]);
+    const result = JSON.parse(
+      formatSystemInstructions(
+        fixtures.systemInstructions.multiple_text_blocks,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["systemInstructions.multiple_text_blocks"],
+    );
   });
 
   it("preserves unknown block types as GenericPart", () => {
-    const result = JSON.parse(formatSystemInstructions(fixtures.systemInstructions.mixed_with_unknown_block));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["systemInstructions.mixed_with_unknown_block"]);
+    const result = JSON.parse(
+      formatSystemInstructions(
+        fixtures.systemInstructions.mixed_with_unknown_block,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["systemInstructions.mixed_with_unknown_block"],
+    );
   });
 
   it("returns a valid JSON string (not an object)", () => {
@@ -237,52 +289,129 @@ describe("formatSystemInstructions", () => {
 
 describe("formatInputMessages", () => {
   it("formats string shorthand content as single TextPart", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.text_string_shorthand, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.text_string_shorthand"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.text_string_shorthand,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.text_string_shorthand"],
+    );
   });
 
   it("formats text explicit block", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.text_explicit_block, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result[0].parts[0], { type: "text", content: "What is the capital of France?" });
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.text_explicit_block,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(result[0].parts[0], {
+      type: "text",
+      content: "What is the capital of France?",
+    });
   });
 
   it("formats image/base64 as BlobPart with modality", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.image_base64, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.image_base64"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.image_base64,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.image_base64"],
+    );
   });
 
   it("formats image/url as UriPart with modality", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.image_url, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.image_url"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.image_url,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.image_url"],
+    );
   });
 
   it("formats document/text source as TextPart", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.document_text_source, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.document_text_source"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.document_text_source,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.document_text_source"],
+    );
   });
 
   it("formats document/base64 as BlobPart — mime_type from block not hardcoded", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.document_base64_pdf, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.document_base64_pdf"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.document_base64_pdf,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.document_base64_pdf"],
+    );
   });
 
   it("formats document/url as UriPart", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.document_url, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.document_url"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.document_url,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.document_url"],
+    );
   });
 
   it("formats document/file as FilePart with file_id", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.document_file_id, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.document_file_id"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.document_file_id,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.document_file_id"],
+    );
   });
 
   it("formats multi-turn with tool_use and tool_result", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.tool_use_replayed_in_assistant, mapAnthropicContentBlock));
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["inputMessages.tool_use_replayed_in_assistant"]);
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.tool_use_replayed_in_assistant,
+        mapAnthropicContentBlock,
+      ),
+    );
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["inputMessages.tool_use_replayed_in_assistant"],
+    );
   });
 
   it("formats tool_result with array content — passes array through as response", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.tool_result_with_array_content, mapAnthropicContentBlock));
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.tool_result_with_array_content,
+        mapAnthropicContentBlock,
+      ),
+    );
     const toolResultPart = result[2].parts[0];
     assert.strictEqual(toolResultPart.type, "tool_call_response");
     assert.ok(Array.isArray(toolResultPart.response));
@@ -290,23 +419,36 @@ describe("formatInputMessages", () => {
   });
 
   it("preserves role on each message", () => {
-    const result = JSON.parse(formatInputMessages(fixtures.inputMessages.multi_turn_mixed_blocks, mapAnthropicContentBlock));
+    const result = JSON.parse(
+      formatInputMessages(
+        fixtures.inputMessages.multi_turn_mixed_blocks,
+        mapAnthropicContentBlock,
+      ),
+    );
     assert.strictEqual(result[0].role, "user");
     assert.strictEqual(result[1].role, "assistant");
     assert.strictEqual(result[2].role, "user");
   });
 
   it("returns valid JSON string", () => {
-    const raw = formatInputMessages(fixtures.inputMessages.text_string_shorthand, mapAnthropicContentBlock);
+    const raw = formatInputMessages(
+      fixtures.inputMessages.text_string_shorthand,
+      mapAnthropicContentBlock,
+    );
     assert.strictEqual(typeof raw, "string");
     assert.doesNotThrow(() => JSON.parse(raw));
   });
 
   describe("formatInputMessagesFromPrompt", () => {
     it("wraps prompt as single user message with TextPart", () => {
-      const result = JSON.parse(formatInputMessagesFromPrompt("Summarise this document."));
+      const result = JSON.parse(
+        formatInputMessagesFromPrompt("Summarise this document."),
+      );
       assert.deepStrictEqual(result, [
-        { role: "user", parts: [{ type: "text", content: "Summarise this document." }] },
+        {
+          role: "user",
+          parts: [{ type: "text", content: "Summarise this document." }],
+        },
       ]);
     });
 
@@ -321,110 +463,217 @@ describe("formatInputMessages", () => {
 describe("formatOutputMessage", () => {
   it("formats text-only response", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.text_only, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.text_only,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["outputMessages.text_only"]);
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["outputMessages.text_only"],
+    );
   });
 
   it("maps stop_reason via finishReasonMap — end_turn becomes stop", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.text_only, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.text_only,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.strictEqual(result[0].finish_reason, "stop");
   });
 
   it("maps stop_reason via finishReasonMap — tool_use becomes tool_call", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.tool_use_single, "tool_use", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.tool_use_single,
+        "tool_use",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.strictEqual(result[0].finish_reason, "tool_call");
   });
 
   it("passes unknown stop_reason through unchanged", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.text_only, "some_unknown_reason", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.text_only,
+        "some_unknown_reason",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.strictEqual(result[0].finish_reason, "some_unknown_reason");
   });
 
   it("omits finish_reason when stopReason is null", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.text_only, null, anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.text_only,
+        null,
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.strictEqual(result[0].finish_reason, undefined);
   });
 
   it("formats tool_use output as ToolCallRequestPart", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.tool_use_single, "tool_use", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.tool_use_single,
+        "tool_use",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["outputMessages.tool_use_single"]);
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["outputMessages.tool_use_single"],
+    );
   });
 
   it("formats multiple tool_use blocks", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.tool_use_multiple, "tool_use", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.tool_use_multiple,
+        "tool_use",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.strictEqual(result[0].parts.length, 2);
     assert.strictEqual(result[0].parts[0].type, "tool_call");
     assert.strictEqual(result[0].parts[1].type, "tool_call");
   });
 
-  it("formats thinking + text — thinking maps to type \"reasoning\"", () => {
+  it('formats thinking + text — thinking maps to type "reasoning"', () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.thinking_then_text, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.thinking_then_text,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["outputMessages.thinking_then_text"]);
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["outputMessages.thinking_then_text"],
+    );
     assert.strictEqual(result[0].parts[0].type, "reasoning");
     assert.notStrictEqual(result[0].parts[0].type, "thinking");
   });
 
   it("formats redacted_thinking — data field is NOT present in output", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.redacted_thinking_then_text, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.redacted_thinking_then_text,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["outputMessages.redacted_thinking_then_text"]);
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["outputMessages.redacted_thinking_then_text"],
+    );
     assert.strictEqual((result[0].parts[0] as any).data, undefined);
   });
 
   it("formats server_tool_use as ServerToolCallPart", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.server_tool_use_web_search, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.server_tool_use_web_search,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
-    assert.deepStrictEqual(result, fixtures.expectedOutputs["outputMessages.server_tool_use_web_search"]);
+    assert.deepStrictEqual(
+      result,
+      fixtures.expectedOutputs["outputMessages.server_tool_use_web_search"],
+    );
   });
 
   it("formats string content for text_completion type", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.text_completion_string, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.text_completion_string,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+        mapAnthropicContentBlock,
+      ),
     );
-    assert.deepStrictEqual(result[0].parts, [{ type: "text", content: fixtures.outputMessages.text_completion_string }]);
+    assert.deepStrictEqual(result[0].parts, [
+      { type: "text", content: fixtures.outputMessages.text_completion_string },
+    ]);
   });
 
   it("returns empty parts array when type is chat but content is a string", () => {
     const result = JSON.parse(
-      formatOutputMessage("some string", "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        "some string",
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.deepStrictEqual(result[0].parts, []);
   });
 
   it("always wraps result in an array of exactly one OutputMessage", () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.text_only, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.text_only,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.ok(Array.isArray(result));
     assert.strictEqual(result.length, 1);
   });
 
-  it("output message always has role \"assistant\"", () => {
+  it('output message always has role "assistant"', () => {
     const result = JSON.parse(
-      formatOutputMessage(fixtures.outputMessages.text_only, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock)
+      formatOutputMessage(
+        fixtures.outputMessages.text_only,
+        "end_turn",
+        anthropicFinishReasonMap,
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+        mapAnthropicContentBlock,
+      ),
     );
     assert.strictEqual(result[0].role, "assistant");
   });
 
   it("returns valid JSON string", () => {
-    const raw = formatOutputMessage(fixtures.outputMessages.text_only, "end_turn", anthropicFinishReasonMap, GEN_AI_OPERATION_NAME_VALUE_CHAT, mapAnthropicContentBlock);
+    const raw = formatOutputMessage(
+      fixtures.outputMessages.text_only,
+      "end_turn",
+      anthropicFinishReasonMap,
+      GEN_AI_OPERATION_NAME_VALUE_CHAT,
+      mapAnthropicContentBlock,
+    );
     assert.strictEqual(typeof raw, "string");
     assert.doesNotThrow(() => JSON.parse(raw));
   });
