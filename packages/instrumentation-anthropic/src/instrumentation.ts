@@ -79,7 +79,7 @@ import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type { APIPromise, BaseAnthropic } from "@anthropic-ai/sdk";
 
 // Mapping of Anthropic-specific stop reasons to standardized finish reasons
-const anthropicFinishReasonMap: Record<string, string> = {
+export const anthropicFinishReasonMap: Record<string, string> = {
   end_turn: FinishReasons.STOP,
   max_tokens: FinishReasons.LENGTH,
   stop_sequence: FinishReasons.STOP,
