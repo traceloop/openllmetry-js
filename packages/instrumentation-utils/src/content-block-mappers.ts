@@ -37,7 +37,6 @@ export function mapAnthropicContentBlock(block: any): object {
   }
 
   switch (block.type) {
-
     // -------------------------------------------------------------------------
     // Text
     // -------------------------------------------------------------------------
@@ -53,7 +52,7 @@ export function mapAnthropicContentBlock(block: any): object {
         return {
           type: "blob",
           modality: "image",
-          mime_type: src.media_type,  // e.g. "image/jpeg", "image/png", "image/webp", "image/gif"
+          mime_type: src.media_type, // e.g. "image/jpeg", "image/png", "image/webp", "image/gif"
           content: src.data,
         };
       }

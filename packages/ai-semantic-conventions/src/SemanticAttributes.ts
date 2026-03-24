@@ -17,20 +17,22 @@
 
 export const SpanAttributes = {
   // Attributes not yet in @opentelemetry/semantic-conventions
-  
+
   // TODO: Remove after all instrumentations are updated
   // Kept for backwards compatibility
-  GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS: "gen_ai.usage.cache_creation_input_tokens",
+  GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS:
+    "gen_ai.usage.cache_creation_input_tokens",
 
   // TODO: Remove after all instrumentations are updated
   // Kept for backwards compatibility
   GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS: "gen_ai.usage.cache_read_input_tokens",
-  
+
   GEN_AI_USAGE_REASONING_TOKENS: "gen_ai.usage.reasoning_tokens",
 
   GEN_AI_REQUEST_THINKING_TYPE: "gen_ai.request.thinking_type",
-  
-  GEN_AI_REQUEST_THINKING_BUDGET_TOKENS: "gen_ai.request.thinking.budget_tokens",
+
+  GEN_AI_REQUEST_THINKING_BUDGET_TOKENS:
+    "gen_ai.request.thinking.budget_tokens",
   // LLM
 
   // TODO: Remove after all instrumentations are updated
@@ -62,7 +64,7 @@ export const SpanAttributes = {
   // TODO: Remove after all instrumentations are updated
   // Kept for backwards compatibility
   LLM_REQUEST_FUNCTIONS: "llm.request.functions",
-  
+
   // Vector DB
   VECTOR_DB_VENDOR: "db.system",
   VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
@@ -117,15 +119,19 @@ export const EventAttributes = {
 
   // DEPRECATED: Vector DB Query Response
   VECTOR_DB_QUERY_RESULT_NAMESPACE: "db.vector.query.result.namespace",
-  VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED: "db.vector.query.result.read_units",
-  VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH: "db.vector.query.result.matches_length",
+  VECTOR_DB_QUERY_RESULT_READ_UNITS_CONSUMED:
+    "db.vector.query.result.read_units",
+  VECTOR_DB_QUERY_RESULT_MATCHES_LENGTH:
+    "db.vector.query.result.matches_length",
 
   // DEPRECATED: Vector DB Query Response of each result
   VECTOR_DB_QUERY_RESULT_SCORE: "db.vector.query.result.{i}.score",
   VECTOR_DB_QUERY_RESULT_ID: "db.vector.query.result.{i}.id",
   VECTOR_DB_QUERY_RESULT_VALUES: "db.vector.query.result.{i}.values",
-  VECTOR_DB_QUERY_RESULT_SPARSE_INDICES: "db.vector.query.result.{i}.sparse.indices",
-  VECTOR_DB_QUERY_RESULT_SPARSE_VALUES: "db.vector.query.result.{i}.sparse.values",
+  VECTOR_DB_QUERY_RESULT_SPARSE_INDICES:
+    "db.vector.query.result.{i}.sparse.indices",
+  VECTOR_DB_QUERY_RESULT_SPARSE_VALUES:
+    "db.vector.query.result.{i}.sparse.values",
   VECTOR_DB_QUERY_RESULT_METADATA: "db.vector.query.result.{i}.metadata",
 };
 

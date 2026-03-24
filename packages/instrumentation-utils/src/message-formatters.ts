@@ -69,7 +69,7 @@ import {
  * @returns JSON string — a flat array of OTel part objects (no wrapping message)
  */
 export function formatSystemInstructions(
-  system: string | Array<{ type: string; text?: string; [key: string]: any }>
+  system: string | Array<{ type: string; text?: string; [key: string]: any }>,
 ): string {
   if (typeof system === "string") {
     return JSON.stringify([{ type: "text", content: system }]);
@@ -83,7 +83,7 @@ export function formatSystemInstructions(
       }
       // Preserve any other block type as a GenericPart
       return { ...block };
-    })
+    }),
   );
 }
 
@@ -152,7 +152,7 @@ export function formatInputMessages(
     role: string;
     content: string | Array<any>;
   }>,
-  contentBlockMapper: (block: any) => object
+  contentBlockMapper: (block: any) => object,
 ): string {
   return JSON.stringify(
     messages.map((message) => ({
@@ -161,7 +161,7 @@ export function formatInputMessages(
         typeof message.content === "string"
           ? [{ type: "text", content: message.content }]
           : message.content.map(contentBlockMapper),
-    }))
+    })),
   );
 }
 
@@ -257,11 +257,13 @@ export function formatOutputMessage(
   stopReason: string | null,
   finishReasonMap: Record<string, string>,
   type: string,
-  contentBlockMapper: (block: any) => object
+  contentBlockMapper: (block: any) => object,
 ): string {
   const outputMessage: Record<string, unknown> = {
     role: "assistant",
-    ...(stopReason && { finish_reason: finishReasonMap[stopReason] ?? stopReason }),
+    ...(stopReason && {
+      finish_reason: finishReasonMap[stopReason] ?? stopReason,
+    }),
     parts: [],
   };
 
