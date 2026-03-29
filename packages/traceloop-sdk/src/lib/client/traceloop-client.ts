@@ -84,6 +84,18 @@ export class TraceloopClient {
     });
   }
 
+  async patch(path: string, body: Record<string, unknown> | any) {
+    return await fetch(`${this.baseUrl}${path}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+        "X-Traceloop-SDK-Version": this.version,
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
   async delete(path: string) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "DELETE",
