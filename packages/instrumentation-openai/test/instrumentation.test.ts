@@ -588,8 +588,8 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const imageSpan = spans.find(
-      (span) => span.name === "openai.images.generate",
+    const imageSpan = spans.find((span) =>
+      span.name.startsWith("image_generation "),
     );
     assert.ok(imageSpan);
 
@@ -643,7 +643,9 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const editSpan = spans.find((span) => span.name === "openai.images.edit");
+    const editSpan = spans.find((span) =>
+      span.name.startsWith("image_edit "),
+    );
     assert.ok(editSpan);
 
     assert.strictEqual(
@@ -682,8 +684,8 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const variationSpan = spans.find(
-      (span) => span.name === "openai.images.createVariation",
+    const variationSpan = spans.find((span) =>
+      span.name.startsWith("image_variation "),
     );
     assert.ok(variationSpan);
 
@@ -726,14 +728,14 @@ describe("Test OpenAI instrumentation", async function () {
     const spans = memoryExporter.getFinishedSpans();
     const dalle2Span = spans.find(
       (span) =>
-        span.name === "openai.images.generate" &&
+        span.name.startsWith("image_generation ") &&
         (span.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string)?.includes(
           "Test standard quality",
         ),
     );
     const dalle3Span = spans.find(
       (span) =>
-        span.name === "openai.images.generate" &&
+        span.name.startsWith("image_generation ") &&
         (span.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string)?.includes(
           "Test HD quality",
         ),

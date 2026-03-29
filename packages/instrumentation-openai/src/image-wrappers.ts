@@ -227,13 +227,14 @@ export async function setImageEditRequestAttributes(
     );
 
     if (imageUrl) {
-      // Add the image as a second input message
+      // Add the image as a part of the existing user message
       const existingMessages = attributes[ATTR_GEN_AI_INPUT_MESSAGES];
       if (existingMessages) {
         const parsed = JSON.parse(existingMessages as string);
-        parsed.push({
-          role: "user",
-          parts: [{ type: "uri", modality: "image", uri: imageUrl }],
+        parsed[0].parts.push({
+          type: "uri",
+          modality: "image",
+          uri: imageUrl,
         });
         attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify(parsed);
       } else {
@@ -423,14 +424,17 @@ export function wrapImageGeneration(
     return function (this: any, ...args: any[]) {
       const params = args[0] as ImageGenerateParams;
 
-      const span = tracer.startSpan("openai.images.generate", {
-        kind: SpanKind.CLIENT,
-        attributes: {
-          [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-          [ATTR_GEN_AI_OPERATION_NAME]: "image_generation",
-          "gen_ai.request.type": "image_generation",
+      const span = tracer.startSpan(
+        `image_generation ${params.model}`,
+        {
+          kind: SpanKind.CLIENT,
+          attributes: {
+            [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+            [ATTR_GEN_AI_OPERATION_NAME]: "image_generation",
+            "gen_ai.request.type": "image_generation",
+          },
         },
-      });
+      );
 
       const response = original.apply(this, args);
 
@@ -483,14 +487,17 @@ export function wrapImageEdit(
     return function (this: any, ...args: any[]) {
       const params = args[0] as ImageEditParams;
 
-      const span = tracer.startSpan("openai.images.edit", {
-        kind: SpanKind.CLIENT,
-        attributes: {
-          [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-          [ATTR_GEN_AI_OPERATION_NAME]: "image_edit",
-          "gen_ai.request.type": "image_edit",
+      const span = tracer.startSpan(
+        `image_edit ${params.model}`,
+        {
+          kind: SpanKind.CLIENT,
+          attributes: {
+            [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+            [ATTR_GEN_AI_OPERATION_NAME]: "image_edit",
+            "gen_ai.request.type": "image_edit",
+          },
         },
-      });
+      );
 
       const setRequestAttributesPromise = setImageEditRequestAttributes(
         span,
@@ -551,14 +558,17 @@ export function wrapImageVariation(
     return function (this: any, ...args: any[]) {
       const params = args[0] as ImageCreateVariationParams;
 
-      const span = tracer.startSpan("openai.images.createVariation", {
-        kind: SpanKind.CLIENT,
-        attributes: {
-          [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-          [ATTR_GEN_AI_OPERATION_NAME]: "image_variation",
-          "gen_ai.request.type": "image_variation",
+      const span = tracer.startSpan(
+        `image_variation ${params.model}`,
+        {
+          kind: SpanKind.CLIENT,
+          attributes: {
+            [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+            [ATTR_GEN_AI_OPERATION_NAME]: "image_variation",
+            "gen_ai.request.type": "image_variation",
+          },
         },
-      });
+      );
 
       const response = original.apply(this, args);
 
