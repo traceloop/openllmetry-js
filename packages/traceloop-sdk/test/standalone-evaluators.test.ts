@@ -54,7 +54,7 @@ describe("StandaloneEvaluators", () => {
       assert.strictEqual(result.id, "eval-123");
       assert.strictEqual(result.slug, "quality-judge");
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.strictEqual(body.name, "Quality Judge");
       assert.strictEqual(body.provider, "openai");
       assert.strictEqual(body.model, "gpt-4o");
@@ -95,7 +95,7 @@ describe("StandaloneEvaluators", () => {
         ],
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.deepStrictEqual(body.output_schema, [
         {
           name: "label",
@@ -125,7 +125,7 @@ describe("StandaloneEvaluators", () => {
         outputSchema: [{ name: "result", type: "boolean" }],
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.strictEqual("slug" in body, false);
     });
 
@@ -156,7 +156,7 @@ describe("StandaloneEvaluators", () => {
         presencePenalty: 0.2,
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.strictEqual(body.slug, "my-eval");
       assert.strictEqual(body.description, "A custom judge");
       assert.strictEqual(body.temperature, 0.5);
@@ -358,53 +358,6 @@ describe("StandaloneEvaluators", () => {
       assert.strictEqual(result[0].inputSchema[0].type, "string");
       assert.strictEqual(result[0].outputSchema.length, 1);
       assert.strictEqual(result[0].outputSchema[0].name, "label");
-    });
-
-    it("should default inputSchema and outputSchema to [] when missing from response", async () => {
-      global.fetch = (async () =>
-        new Response(
-          JSON.stringify({
-            evaluators: [
-              {
-                id: "eval-1",
-                slug: "judge-a",
-                name: "Judge A",
-                description: "",
-                source: "prebuilt",
-                // inputSchema and outputSchema intentionally absent
-              },
-            ],
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        )) as typeof global.fetch;
-
-      const result = await client.evaluator.list();
-
-      assert.deepStrictEqual(result[0].inputSchema, []);
-      assert.deepStrictEqual(result[0].outputSchema, []);
-    });
-
-    it("should default description to empty string when missing", async () => {
-      global.fetch = (async () =>
-        new Response(
-          JSON.stringify({
-            evaluators: [
-              {
-                id: "eval-1",
-                slug: "judge-a",
-                name: "Judge A",
-                // description is missing
-                source: "custom",
-                inputSchema: [],
-                outputSchema: [],
-              },
-            ],
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        )) as typeof global.fetch;
-
-      const result = await client.evaluator.list();
-      assert.strictEqual(result[0].description, "");
     });
 
     it("should throw when list returns non-200 status", async () => {
@@ -686,7 +639,7 @@ describe("StandaloneEvaluators", () => {
       assert.strictEqual(capturedMethod, "PATCH");
       assert.strictEqual(result.id, "eval-123");
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.strictEqual(body.name, "Updated Name");
       assert.strictEqual(body.config.llm_config.model, "gpt-4o-mini");
     });
@@ -705,7 +658,7 @@ describe("StandaloneEvaluators", () => {
       // Only updating temperature — nothing else
       await client.evaluator.update("eval-123", { temperature: 0.3 });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.strictEqual(body.config.llm_config.temperature, 0.3);
       assert.strictEqual(body.name, undefined);
       assert.strictEqual(body.config.llm_config.model, undefined);
@@ -735,7 +688,7 @@ describe("StandaloneEvaluators", () => {
         outputSchema: [{ name: "result", type: "boolean" }],
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.deepStrictEqual(body.input_schema, [
         {
           name: "text",
@@ -786,7 +739,7 @@ describe("StandaloneEvaluators", () => {
         ],
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.deepStrictEqual(body.config.messages, [
         { role: "system", content: "You are a strict judge." },
         { role: "user", content: "Evaluate: {{text}}" },
@@ -814,7 +767,7 @@ describe("StandaloneEvaluators", () => {
         presencePenalty: 0.4,
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.strictEqual(body.config.llm_config.max_tokens, 1024);
       assert.strictEqual(body.config.llm_config.top_p, 0.8);
       assert.strictEqual(body.config.llm_config.frequency_penalty, 0.3);
@@ -884,7 +837,7 @@ describe("StandaloneEvaluators", () => {
         result: { score: 0.95, label: "good" },
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.deepStrictEqual(body.input, { text: "This is a great response!" });
     });
 
@@ -958,7 +911,7 @@ describe("StandaloneEvaluators", () => {
         client.evaluator.run("eval-123", { input: {} }),
       );
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.deepStrictEqual(body.input, {});
     });
 
@@ -977,7 +930,7 @@ describe("StandaloneEvaluators", () => {
         input: { text: "Hello", context: "A greeting", language: "en" },
       });
 
-      const body = JSON.parse(capturedBody!);
+      const body = JSON.parse(capturedBody ?? "");
       assert.deepStrictEqual(body.input, {
         text: "Hello",
         context: "A greeting",

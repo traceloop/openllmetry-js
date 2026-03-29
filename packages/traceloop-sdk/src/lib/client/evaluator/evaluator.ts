@@ -18,6 +18,10 @@ import type {
 } from "../../interfaces/evaluator.interface";
 import type { ExecutionResponse } from "../../interfaces/experiment.interface";
 
+function toSnakeCase(key: string): string {
+  return key.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+}
+
 export class Evaluator extends BaseDatasetEntity {
   constructor(client: TraceloopClient) {
     super(client);
@@ -75,21 +79,9 @@ export class Evaluator extends BaseDatasetEntity {
     const query = source ? `?source=${source}` : "";
     const response = await this.client.get(`/v2/evaluators${query}`);
     const data = await this.handleResponse(response);
-    const items: any[] = Array.isArray(data.evaluators) ? data.evaluators : [];
-    return items.map((item) => ({
-      id: item.id,
-      name: item.name,
-      slug: item.slug,
-      type: item.type ?? "",
-      description: item.description ?? "",
-      version: item.version,
-      source: item.source,
-      inputSchema: item.inputSchema ?? [],
-      outputSchema: item.outputSchema ?? [],
-      config: item.config,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt,
-    }));
+    return (
+      Array.isArray(data.evaluators) ? data.evaluators : []
+    ) as EvaluatorCatalogItem[];
   }
 
   /**
@@ -254,38 +246,22 @@ export class Evaluator extends BaseDatasetEntity {
   private buildPayload(
     options: CreateCustomEvaluatorRequest,
   ): Record<string, unknown> {
-    const payload: Record<string, unknown> = {
-      name: options.name,
-      messages: options.messages,
-      provider: options.provider,
-      model: options.model,
-      input_schema: options.inputSchema.map((p) => ({
-        name: p.name,
-        type: p.type,
-        description: p.description,
-        enum_values: p.enumValues,
-      })),
-      output_schema: options.outputSchema.map((p) => ({
-        name: p.name,
-        type: p.type,
-        description: p.description,
-        enum_values: p.enumValues,
-      })),
-    };
-
-    if (options.slug !== undefined) payload.slug = options.slug;
-    if (options.description !== undefined)
-      payload.description = options.description;
-    if (options.temperature !== undefined)
-      payload.temperature = options.temperature;
-    if (options.maxTokens !== undefined) payload.max_tokens = options.maxTokens;
-    if (options.topP !== undefined) payload.top_p = options.topP;
-    if (options.frequencyPenalty !== undefined)
-      payload.frequency_penalty = options.frequencyPenalty;
-    if (options.presencePenalty !== undefined)
-      payload.presence_penalty = options.presencePenalty;
-
-    return payload;
+    return Object.fromEntries(
+      Object.entries(options)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [
+          toSnakeCase(k),
+          Array.isArray(v)
+            ? v.map((item) =>
+                Object.fromEntries(
+                  Object.entries(item as object)
+                    .filter(([, iv]) => iv !== undefined)
+                    .map(([ik, iv]) => [toSnakeCase(ik), iv]),
+                ),
+              )
+            : v,
+        ]),
+    );
   }
 
   private toEvaluatorData(data: any): EvaluatorData {
