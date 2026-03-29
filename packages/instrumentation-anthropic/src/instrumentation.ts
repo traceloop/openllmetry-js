@@ -30,18 +30,35 @@ import {
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
+  FinishReasons,
 } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
+  formatSystemInstructions,
+  formatInputMessages,
+  formatInputMessagesFromPrompt,
+  formatOutputMessage,
+  mapAnthropicContentBlock,
+} from "@traceloop/instrumentation-utils";
+import {
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_MODEL,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_REQUEST_TOP_K,
+  ATTR_GEN_AI_PROVIDER_NAME,
+  GEN_AI_PROVIDER_NAME_VALUE_ANTHROPIC,
+  ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_SYSTEM_INSTRUCTIONS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { AnthropicInstrumentationConfig } from "./types";
 import { version } from "../package.json";
@@ -61,6 +78,14 @@ import type { MessageCreateParamsNonStreaming as BetaMessageCreateParamsNonStrea
 import type { Stream } from "@anthropic-ai/sdk/streaming";
 import type { APIPromise, BaseAnthropic } from "@anthropic-ai/sdk";
 
+// Mapping of Anthropic-specific stop reasons to standardized finish reasons
+export const anthropicFinishReasonMap: Record<string, string> = {
+  end_turn: FinishReasons.STOP,
+  max_tokens: FinishReasons.LENGTH,
+  stop_sequence: FinishReasons.STOP,
+  tool_use: FinishReasons.TOOL_CALL,
+};
+
 export class AnthropicInstrumentation extends InstrumentationBase {
   declare protected _config: AnthropicInstrumentationConfig;
 
@@ -78,17 +103,17 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     this._wrap(
       module.Anthropic.Completions.prototype,
       "create",
-      this.patchAnthropic("completion", module),
+      this.patchAnthropic(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION, module),
     );
     this._wrap(
       module.Anthropic.Messages.prototype,
       "create",
-      this.patchAnthropic("chat", module),
+      this.patchAnthropic(GEN_AI_OPERATION_NAME_VALUE_CHAT, module),
     );
     this._wrap(
       module.Anthropic.Beta.Messages.prototype,
       "create",
-      this.patchAnthropic("chat", module),
+      this.patchAnthropic(GEN_AI_OPERATION_NAME_VALUE_CHAT, module),
     );
   }
 
@@ -108,17 +133,20 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     this._wrap(
       moduleExports.Anthropic.Completions.prototype,
       "create",
-      this.patchAnthropic("completion", moduleExports),
+      this.patchAnthropic(
+        GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+        moduleExports,
+      ),
     );
     this._wrap(
       moduleExports.Anthropic.Messages.prototype,
       "create",
-      this.patchAnthropic("chat", moduleExports),
+      this.patchAnthropic(GEN_AI_OPERATION_NAME_VALUE_CHAT, moduleExports),
     );
     this._wrap(
       moduleExports.Anthropic.Beta.Messages.prototype,
       "create",
-      this.patchAnthropic("chat", moduleExports),
+      this.patchAnthropic(GEN_AI_OPERATION_NAME_VALUE_CHAT, moduleExports),
     );
     return moduleExports;
   }
@@ -135,7 +163,9 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   }
 
   private patchAnthropic(
-    type: "chat" | "completion",
+    type:
+      | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     moduleExports: typeof anthropic,
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -144,7 +174,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span =
-          type === "chat"
+          type === GEN_AI_OPERATION_NAME_VALUE_CHAT
             ? plugin.startSpan({
                 type,
                 params: args[0] as MessageCreateParamsNonStreaming & {
@@ -152,7 +182,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
                 },
               })
             : plugin.startSpan({
-                type,
+                type: GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
                 params: args[0] as CompletionCreateParamsNonStreaming & {
                   extraAttributes?: Record<string, any>;
                 },
@@ -204,37 +234,38 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     params,
   }:
     | {
-        type: "chat";
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
         params: MessageCreateParamsNonStreaming & {
           extraAttributes?: Record<string, any>;
         };
       }
     | {
-        type: "completion";
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
         params: CompletionCreateParamsNonStreaming & {
           extraAttributes?: Record<string, any>;
         };
       }): Span {
     const attributes: Attributes = {
-      [ATTR_GEN_AI_SYSTEM]: "Anthropic",
-      [SpanAttributes.LLM_REQUEST_TYPE]: type,
+      [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_ANTHROPIC,
+      [ATTR_GEN_AI_OPERATION_NAME]: type,
     };
 
     try {
       attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
       attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
-      attributes[SpanAttributes.LLM_TOP_K] = params.top_k;
+      attributes[ATTR_GEN_AI_REQUEST_TOP_K] = params.top_k;
 
       // Handle thinking parameters (for beta messages)
       const betaParams = params as BetaMessageCreateParamsNonStreaming;
       if (betaParams.thinking && betaParams.thinking.type === "enabled") {
-        attributes["llm.request.thinking.type"] = betaParams.thinking.type;
-        attributes["llm.request.thinking.budget_tokens"] =
+        attributes[SpanAttributes.GEN_AI_REQUEST_THINKING_TYPE] =
+          betaParams.thinking.type;
+        attributes[SpanAttributes.GEN_AI_REQUEST_THINKING_BUDGET_TOKENS] =
           betaParams.thinking.budget_tokens;
       }
 
-      if (type === "completion") {
+      if (type === GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION) {
         attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
           params.max_tokens_to_sample;
       } else {
@@ -251,34 +282,19 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts()) {
-        if (type === "chat") {
-          let promptIndex = 0;
-
-          // If a system prompt is provided, it should always be first
+        if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
           if ("system" in params && params.system !== undefined) {
-            attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "system";
-            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] =
-              typeof params.system === "string"
-                ? params.system
-                : JSON.stringify(params.system);
-            promptIndex += 1;
+            attributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS] =
+              formatSystemInstructions(params.system);
           }
 
-          params.messages.forEach((message, index) => {
-            const currentIndex = index + promptIndex;
-            attributes[`${ATTR_GEN_AI_PROMPT}.${currentIndex}.role`] =
-              message.role;
-            if (typeof message.content === "string") {
-              attributes[`${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`] =
-                (message.content as string) || "";
-            } else {
-              attributes[`${ATTR_GEN_AI_PROMPT}.${currentIndex}.content`] =
-                JSON.stringify(message.content);
-            }
-          });
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] = formatInputMessages(
+            params.messages,
+            mapAnthropicContentBlock,
+          );
         } else {
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
+            formatInputMessagesFromPrompt(params.prompt);
         }
       }
     } catch (e) {
@@ -286,7 +302,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       this._config.exceptionLogger?.(e);
     }
 
-    return this.tracer.startSpan(`anthropic.${type}`, {
+    return this.tracer.startSpan(`${type} ${params?.model ?? "unknown"}`, {
       kind: SpanKind.CLIENT,
       attributes,
     });
@@ -302,12 +318,12 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     }:
       | {
           span: Span;
-          type: "chat";
+          type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
           promise: APIPromise<Stream<MessageStreamEvent>>;
         }
       | {
           span: Span;
-          type: "completion";
+          type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
           promise: APIPromise<Stream<Completion>>;
         },
   ) {
@@ -316,8 +332,8 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       stream: Stream<MessageStreamEvent> | Stream<Completion>,
     ) {
       try {
-        if (type === "chat") {
-          const result: Message = {
+        if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
+          const result = {
             id: "0",
             type: "message",
             model: "",
@@ -327,14 +343,11 @@ export class AnthropicInstrumentation extends InstrumentationBase {
             usage: {
               input_tokens: 0,
               output_tokens: 0,
-              cache_creation: null,
               cache_creation_input_tokens: null,
               cache_read_input_tokens: null,
-              server_tool_use: null,
-              service_tier: null,
             },
             content: [],
-          };
+          } as unknown as Message;
 
           for await (const chunk of stream) {
             yield chunk;
@@ -441,13 +454,15 @@ export class AnthropicInstrumentation extends InstrumentationBase {
   }
 
   private _wrapPromise<T>(
-    type: "chat" | "completion",
+    type:
+      | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     span: Span,
     promise: Promise<T>,
   ): Promise<T> {
     return promise
       .then((result) => {
-        if (type === "chat") {
+        if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
           this._endSpan({
             type,
             span,
@@ -480,50 +495,70 @@ export class AnthropicInstrumentation extends InstrumentationBase {
     type,
     result,
   }:
-    | { span: Span; type: "chat"; result: Message }
     | {
         span: Span;
-        type: "completion";
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
+        result: Message;
+      }
+    | {
+        span: Span;
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
         result: Completion;
       }) {
     try {
       span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
-      if (type === "chat" && result.usage) {
-        span.setAttribute(
-          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-          result.usage?.input_tokens + result.usage?.output_tokens,
-        );
-        span.setAttribute(
-          ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-          result.usage?.output_tokens,
-        );
-        span.setAttribute(
-          ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
-          result.usage?.input_tokens,
-        );
-      }
 
+      // Always set finish_reason — it's metadata, not user content
       if (result.stop_reason) {
-        span.setAttribute(
-          `${ATTR_GEN_AI_COMPLETION}.0.finish_reason`,
-          result.stop_reason,
-        );
+        const mappedReason =
+          anthropicFinishReasonMap[result.stop_reason] ?? result.stop_reason;
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [mappedReason]);
       }
 
-      if (this._shouldSendPrompts()) {
-        if (type === "chat") {
-          span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
+      if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT && result.usage) {
+        span.setAttribute(
+          SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+          result.usage.input_tokens + result.usage.output_tokens,
+        );
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+          result.usage.output_tokens,
+        );
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+          result.usage.input_tokens,
+        );
+
+        // Cache token attributes (v1.40)
+        if (result.usage.cache_creation_input_tokens != null) {
           span.setAttribute(
-            `${ATTR_GEN_AI_COMPLETION}.0.content`,
-            JSON.stringify(result.content),
-          );
-        } else {
-          span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.role`, "assistant");
-          span.setAttribute(
-            `${ATTR_GEN_AI_COMPLETION}.0.content`,
-            result.completion,
+            ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+            result.usage.cache_creation_input_tokens,
           );
         }
+        if (result.usage.cache_read_input_tokens != null) {
+          span.setAttribute(
+            ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+            result.usage.cache_read_input_tokens,
+          );
+        }
+      }
+
+      // Only set output message content when tracing content
+      if (this._shouldSendPrompts()) {
+        const content =
+          type === GEN_AI_OPERATION_NAME_VALUE_CHAT
+            ? result.content
+            : result.completion;
+        const outputMessages = formatOutputMessage(
+          content,
+          result.stop_reason,
+          anthropicFinishReasonMap,
+          type,
+          mapAnthropicContentBlock,
+        );
+
+        span.setAttribute(ATTR_GEN_AI_OUTPUT_MESSAGES, outputMessages);
       }
     } catch (e) {
       this._diag.debug(e);

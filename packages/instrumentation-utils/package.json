@@ -1,0 +1,43 @@
+{
+  "name": "@traceloop/instrumentation-utils",
+  "version": "0.1.0",
+  "description": "Shared utilities for Traceloop LLM instrumentations",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "repository": "traceloop/openllmetry-js",
+  "scripts": {
+    "build": "rollup -c",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "opentelemetry",
+    "nodejs",
+    "tracing",
+    "llm",
+    "instrumentation"
+  ],
+  "author": "Traceloop",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.mjs",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "tslib": "^2.8.1"
+  },
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-utils"
+}
