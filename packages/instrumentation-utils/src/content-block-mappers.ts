@@ -225,10 +225,11 @@ export function mapOpenAIContentBlock(block: any): object {
         };
       }
       if (block.file?.file_data) {
+        // Inline file data → BlobPart. OTel FilePart is a reference type (file_id only).
         return {
-          type: "file",
+          type: "blob",
+          mime_type: block.file.mime_type || "application/octet-stream",
           content: block.file.file_data,
-          ...(block.file.filename && { filename: block.file.filename }),
         };
       }
       return { type: block.type, ...block };

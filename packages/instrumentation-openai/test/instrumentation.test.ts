@@ -176,6 +176,12 @@ describe("Test OpenAI instrumentation", async function () {
       "Tell me a joke about OpenTelemetry",
     );
 
+    // Finish reasons
+    assert.deepEqual(
+      completionSpan.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS],
+      ["stop"],
+    );
+
     assert.ok(
       completionSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
     );
@@ -376,17 +382,13 @@ describe("Test OpenAI instrumentation", async function () {
       "What's the weather like in Boston?",
     );
 
-    // Function definitions (custom attrs)
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
-      ],
-      "get_current_weather",
+    // Tool definitions (OTel 1.40 gen_ai.tool.definitions)
+    const toolDefs = JSON.parse(
+      completionSpan.attributes["gen_ai.tool.definitions"] as string,
     );
+    assert.strictEqual(toolDefs[0].name, "get_current_weather");
     assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
-      ],
+      toolDefs[0].description,
       "Get the current weather in a given location",
     );
 
@@ -462,13 +464,11 @@ describe("Test OpenAI instrumentation", async function () {
       "What's the weather like in Boston?",
     );
 
-    // Function definitions (custom attrs)
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
-      ],
-      "get_current_weather",
+    // Tool definitions (OTel 1.40)
+    const toolDefs = JSON.parse(
+      completionSpan.attributes["gen_ai.tool.definitions"] as string,
     );
+    assert.strictEqual(toolDefs[0].name, "get_current_weather");
 
     // Output messages with tool calls
     const outputMessages = JSON.parse(
@@ -598,7 +598,7 @@ describe("Test OpenAI instrumentation", async function () {
       "openai",
     );
     assert.strictEqual(
-      imageSpan.attributes["gen_ai.request.type"],
+      imageSpan.attributes[ATTR_GEN_AI_OPERATION_NAME],
       "image_generation",
     );
     assert.strictEqual(

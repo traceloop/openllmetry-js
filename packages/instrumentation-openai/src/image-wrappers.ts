@@ -8,6 +8,7 @@ import {
   ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_OPERATION_NAME,
   GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
 } from "@opentelemetry/semantic-conventions/incubating";
 import type { ImageUploadCallback } from "./types";
@@ -396,7 +397,6 @@ export async function setImageGenerationResponseAttributes(
       attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
         {
           role: "assistant",
-          finish_reason: "stop",
           parts: [{ type: "uri", modality: "image", uri: imageOutputUrl }],
         },
       ]);
@@ -427,6 +427,7 @@ export function wrapImageGeneration(
         kind: SpanKind.CLIENT,
         attributes: {
           [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+          [ATTR_GEN_AI_OPERATION_NAME]: "image_generation",
           "gen_ai.request.type": "image_generation",
         },
       });
@@ -486,6 +487,7 @@ export function wrapImageEdit(
         kind: SpanKind.CLIENT,
         attributes: {
           [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+          [ATTR_GEN_AI_OPERATION_NAME]: "image_edit",
           "gen_ai.request.type": "image_edit",
         },
       });
@@ -553,6 +555,7 @@ export function wrapImageVariation(
         kind: SpanKind.CLIENT,
         attributes: {
           [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+          [ATTR_GEN_AI_OPERATION_NAME]: "image_variation",
           "gen_ai.request.type": "image_variation",
         },
       });

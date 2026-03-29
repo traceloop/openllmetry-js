@@ -32,6 +32,7 @@ import {
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_INPUT_MESSAGES,
@@ -39,6 +40,7 @@ import {
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_TOOL_DEFINITIONS,
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
   GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
   GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
@@ -371,19 +373,16 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
             JSON.stringify(inputMessages);
 
-          // Function/tool definitions (custom attrs — no OTel equivalent)
-          params.functions?.forEach((func, index) => {
-            attributes[
-              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
-            ] = func.name;
-            attributes[
-              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`
-            ] = func.description;
-            attributes[
-              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.arguments`
-            ] = JSON.stringify(func.parameters);
+          // Tool/function definitions as single JSON attribute (OTel 1.40)
+          const toolDefs: object[] = [];
+          params.functions?.forEach((func) => {
+            toolDefs.push({
+              name: func.name,
+              description: func.description,
+              parameters: func.parameters,
+            });
           });
-          params.tools?.forEach((tool, index) => {
+          params.tools?.forEach((tool) => {
             if (
               tool.type !== "function" ||
               !("function" in tool) ||
@@ -391,17 +390,15 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             ) {
               return;
             }
-
-            attributes[
-              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
-            ] = tool.function.name;
-            attributes[
-              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`
-            ] = tool.function.description;
-            attributes[
-              `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.arguments`
-            ] = JSON.stringify(tool.function.parameters);
+            toolDefs.push({
+              name: tool.function.name,
+              description: tool.function.description,
+              parameters: tool.function.parameters,
+            });
           });
+          if (toolDefs.length > 0) {
+            attributes[ATTR_GEN_AI_TOOL_DEFINITIONS] = JSON.stringify(toolDefs);
+          }
         } else {
           attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
             formatInputMessagesFromPrompt(
@@ -449,7 +446,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           {
             index: 0,
             logprobs: null,
-            finish_reason: "stop",
+            finish_reason: null as any,
             message: {
               role: "assistant",
               content: "",
@@ -561,7 +558,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           {
             index: 0,
             logprobs: null,
-            finish_reason: "stop",
+            finish_reason: null as any,
             text: "",
           },
         ],
@@ -689,6 +686,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       }) {
     try {
       span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
+      if (result.id) {
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, result.id);
+      }
       if (result.usage) {
         span.setAttribute(
           SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
@@ -865,8 +865,16 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         return { provider: GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK };
       }
 
-      if (baseURL.includes("googleapis.com")) {
+      if (baseURL.includes("aiplatform.googleapis.com")) {
         return { provider: GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI };
+      }
+
+      if (baseURL.includes("generativelanguage.googleapis.com")) {
+        return { provider: "gcp.gemini" };
+      }
+
+      if (baseURL.includes("googleapis.com")) {
+        return { provider: "gcp.gen_ai" }; // fallback for other Google APIs
       }
 
       if (baseURL.includes("openrouter")) {

@@ -24,7 +24,7 @@ interface OTelChatMessage {
 
 interface OTelOutputMessage {
   role: string;
-  finish_reason: string;
+  finish_reason?: string;
   parts: object[];
 }
 
@@ -175,7 +175,7 @@ export function buildOpenAIInputMessages(messages: any[]): OTelChatMessage[] {
           parts: [
             {
               type: "tool_call_response",
-              name: msg.name,
+              id: msg.name,
               response: msg.content,
             },
           ],
@@ -272,15 +272,17 @@ export function buildOpenAIOutputMessage(
     parts.push({
       type: "blob",
       modality: "audio",
+      mime_type: "audio/mp3",
       content: message.audio.data,
     });
   }
 
-  const finishReason = choice.finish_reason
-    ? (finishReasonMap[choice.finish_reason] ?? choice.finish_reason)
-    : FinishReasons.STOP;
-
-  return [{ role: "assistant", finish_reason: finishReason, parts }];
+  const outputMsg: OTelOutputMessage = { role: "assistant", parts };
+  if (choice.finish_reason) {
+    outputMsg.finish_reason =
+      finishReasonMap[choice.finish_reason] ?? choice.finish_reason;
+  }
+  return [outputMsg];
 }
 
 /**
@@ -294,17 +296,15 @@ export function buildOpenAICompletionOutputMessage(
   choice: any,
   finishReasonMap: Record<string, string>,
 ): OTelOutputMessage[] {
-  const finishReason = choice.finish_reason
-    ? (finishReasonMap[choice.finish_reason] ?? choice.finish_reason)
-    : FinishReasons.STOP;
-
-  return [
-    {
-      role: "assistant",
-      finish_reason: finishReason,
-      parts: [{ type: "text", content: choice.text ?? "" }],
-    },
-  ];
+  const outputMsg: OTelOutputMessage = {
+    role: "assistant",
+    parts: [{ type: "text", content: choice.text ?? "" }],
+  };
+  if (choice.finish_reason) {
+    outputMsg.finish_reason =
+      finishReasonMap[choice.finish_reason] ?? choice.finish_reason;
+  }
+  return [outputMsg];
 }
 
 // =============================================================================
