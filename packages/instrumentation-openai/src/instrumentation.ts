@@ -25,9 +25,7 @@ import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
-import {
-  formatInputMessagesFromPrompt,
-} from "@traceloop/instrumentation-utils";
+import { formatInputMessagesFromPrompt } from "@traceloop/instrumentation-utils";
 import {
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
@@ -368,8 +366,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           // OpenAI puts system/developer messages in the chat history,
           // not as a separate parameter. Per OTel spec, they stay in
           // gen_ai.input.messages (not gen_ai.system_instructions).
-          const inputMessages =
-            buildOpenAIInputMessages(params.messages);
+          const inputMessages = buildOpenAIInputMessages(params.messages);
 
           attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
             JSON.stringify(inputMessages);

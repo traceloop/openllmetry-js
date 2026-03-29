@@ -153,9 +153,7 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) =>
-      span.name.startsWith("chat "),
-    );
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
@@ -185,9 +183,7 @@ describe("Test OpenAI instrumentation", async function () {
       completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
       "15",
     );
-    assert.ok(
-      +completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0,
-    );
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set attributes in span for streaming chat", async () => {
@@ -205,9 +201,7 @@ describe("Test OpenAI instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) =>
-      span.name.startsWith("chat "),
-    );
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
@@ -236,9 +230,7 @@ describe("Test OpenAI instrumentation", async function () {
       completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
       "8",
     );
-    assert.ok(
-      +completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0,
-    );
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set attributes in span for completion", async () => {
@@ -305,9 +297,7 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) =>
-      span.name.startsWith("chat "),
-    );
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
     const event = completionSpan?.events.find((x) => x.name == "logprobs");
 
     assert.ok(result);
@@ -332,9 +322,7 @@ describe("Test OpenAI instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) =>
-      span.name.startsWith("chat "),
-    );
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
     const event = completionSpan?.events.find((x) => x.name == "logprobs");
 
     assert.ok(result);
@@ -373,9 +361,7 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) =>
-      span.name.startsWith("chat "),
-    );
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
@@ -425,13 +411,8 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(
       completionSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
     );
-    assert.equal(
-      completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
-      82,
-    );
-    assert.ok(
-      +completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0,
-    );
+    assert.equal(completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 82);
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set attributes in span for tool calling", async () => {
@@ -466,9 +447,7 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) =>
-      span.name.startsWith("chat "),
-    );
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
@@ -510,13 +489,8 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(
       completionSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
     );
-    assert.equal(
-      completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
-      82,
-    );
-    assert.ok(
-      +completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0,
-    );
+    assert.equal(completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 82);
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set function_call attributes in span for stream completion when multiple tools called", async () => {
@@ -582,9 +556,7 @@ describe("Test OpenAI instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) =>
-      span.name.startsWith("chat "),
-    );
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.strictEqual(result, "");
     assert.ok(completionSpan);
@@ -648,9 +620,7 @@ describe("Test OpenAI instrumentation", async function () {
 
     // Check token usage calculation (dall-e-2 1024x1024 should be ~1056 tokens)
     assert.ok(imageSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]);
-    assert.ok(
-      imageSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
-    );
+    assert.ok(imageSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]);
 
     // Check response content
     assert.ok(imageSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
@@ -690,9 +660,7 @@ describe("Test OpenAI instrumentation", async function () {
       editSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
       4160,
     );
-    assert.ok(
-      editSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
-    );
+    assert.ok(editSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]);
 
     // Check response content
     assert.ok(editSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);

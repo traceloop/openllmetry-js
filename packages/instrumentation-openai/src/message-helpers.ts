@@ -59,9 +59,7 @@ export const openaiFinishReasonMap: Record<string, string> = {
  * @param messages - The messages array from the OpenAI chat completion request
  * @returns Array of OTel-shaped chat messages
  */
-export function buildOpenAIInputMessages(
-  messages: any[],
-): OTelChatMessage[] {
+export function buildOpenAIInputMessages(messages: any[]): OTelChatMessage[] {
   const inputMessages: OTelChatMessage[] = [];
 
   for (const msg of messages) {
