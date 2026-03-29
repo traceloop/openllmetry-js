@@ -144,3 +144,106 @@ export function mapAnthropicContentBlock(block: any): object {
       return { type: block.type, ...block };
   }
 }
+
+// =============================================================================
+// OpenAI
+// =============================================================================
+//  Maps a single OpenAI SDK input content part to its OTel-compliant part object.
+//
+//  This mapper handles the REQUEST-side content parts that appear in user messages
+//  (ChatCompletionContentPart union). OpenAI's response is flat (not block-based),
+//  so output mapping is handled by buildOpenAIOutputMessage in message-helpers.ts.
+//
+//   text                      → TextPart
+//   image_url (regular URL)   → UriPart        { modality: "image" }
+//   image_url (data: URI)     → BlobPart       { modality: "image", mime_type parsed from URI }
+//   input_audio               → BlobPart       { modality: "audio", mime_type: "audio/{format}" }
+//   file (file_id)            → FilePart       { file_id }
+//   file (file_data)          → BlobPart       { no modality — documents }
+//   refusal                   → GenericPart    { type: "refusal", content }
+//   <unknown>                 → GenericPart
+
+/**
+ * Maps a single OpenAI SDK content part to its OTel-compliant part object.
+ * Used for input content parts in user messages.
+ */
+export function mapOpenAIContentBlock(block: any): object {
+  if (typeof block === "string") {
+    return { type: "text", content: block };
+  }
+
+  switch (block.type) {
+    // -------------------------------------------------------------------------
+    // Text
+    // -------------------------------------------------------------------------
+    case "text":
+      return { type: "text", content: block.text };
+
+    // -------------------------------------------------------------------------
+    // Image URL — can be a regular URL or a base64 data: URI
+    // -------------------------------------------------------------------------
+    case "image_url": {
+      const url = block.image_url?.url;
+      if (url && url.startsWith("data:")) {
+        // Parse data URI: data:image/png;base64,xxxx
+        const match = url.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+          return {
+            type: "blob",
+            modality: "image",
+            mime_type: match[1],
+            content: match[2],
+          };
+        }
+      }
+      return { type: "uri", modality: "image", uri: url };
+    }
+
+    // -------------------------------------------------------------------------
+    // Input audio — base64 encoded audio data with format
+    // -------------------------------------------------------------------------
+    case "input_audio":
+      return {
+        type: "blob",
+        modality: "audio",
+        mime_type: `audio/${block.input_audio?.format || "wav"}`,
+        content: block.input_audio?.data,
+      };
+
+    // -------------------------------------------------------------------------
+    // File — can be file_id reference or inline file_data
+    // OTel FilePart and BlobPart require `modality` (image/video/audio),
+    // but OpenAI files don't specify modality. Use GenericPart to preserve
+    // all info without violating the schema.
+    // -------------------------------------------------------------------------
+    case "file": {
+      if (block.file?.file_id) {
+        return {
+          type: "file",
+          file_id: block.file.file_id,
+          ...(block.file.filename && { filename: block.file.filename }),
+        };
+      }
+      if (block.file?.file_data) {
+        return {
+          type: "file",
+          content: block.file.file_data,
+          ...(block.file.filename && { filename: block.file.filename }),
+        };
+      }
+      return { type: block.type, ...block };
+    }
+
+    // -------------------------------------------------------------------------
+    // Refusal — assistant content part indicating safety refusal
+    // -------------------------------------------------------------------------
+    case "refusal":
+      return { type: "refusal", content: block.refusal };
+
+    // -------------------------------------------------------------------------
+    // Unknown / future content part types — preserve as GenericPart
+    // -------------------------------------------------------------------------
+    default:
+      return { type: block.type, ...block };
+  }
+}

@@ -26,18 +26,35 @@ import {
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
+  formatInputMessagesFromPrompt,
+} from "@traceloop/instrumentation-utils";
+import {
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_MODEL,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_PROVIDER_NAME,
+  ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+  GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+  GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI,
+  GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { OpenAIInstrumentationConfig } from "./types";
+import {
+  buildOpenAIInputMessages,
+  buildOpenAIOutputMessage,
+  buildOpenAICompletionOutputMessage,
+  openaiFinishReasonMap,
+} from "./message-helpers";
 import type {
   ChatCompletion,
   ChatCompletionChunk,
@@ -81,12 +98,12 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     this._wrap(
       openaiModule.Chat.Completions.prototype,
       "create",
-      this.patchOpenAI("chat"),
+      this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_CHAT),
     );
     this._wrap(
       openaiModule.Completions.prototype,
       "create",
-      this.patchOpenAI("completion"),
+      this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION),
     );
 
     if (openaiModule.Images) {
@@ -123,7 +140,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   protected init(): InstrumentationModuleDefinition {
     const module = new InstrumentationNodeModuleDefinition(
       "openai",
-      [">=4 <6"],
+      [">=4 <7"],
       this.patch.bind(this),
       this.unpatch.bind(this),
     );
@@ -138,23 +155,23 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._wrap(
         (moduleExports as any).OpenAIApi.prototype,
         "createChatCompletion",
-        this.patchOpenAI("chat", "v3"),
+        this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_CHAT, "v3"),
       );
       this._wrap(
         (moduleExports as any).OpenAIApi.prototype,
         "createCompletion",
-        this.patchOpenAI("completion", "v3"),
+        this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION, "v3"),
       );
     } else {
       this._wrap(
         moduleExports.OpenAI.Chat.Completions.prototype,
         "create",
-        this.patchOpenAI("chat"),
+        this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_CHAT),
       );
       this._wrap(
         moduleExports.OpenAI.Completions.prototype,
         "create",
-        this.patchOpenAI("completion"),
+        this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION),
       );
 
       if (moduleExports.OpenAI.Images) {
@@ -216,7 +233,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   }
 
   private patchOpenAI(
-    type: "chat" | "completion",
+    type:
+      | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     version: "v3" | "v4" = "v4",
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -225,7 +244,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
         const span =
-          type === "chat"
+          type === GEN_AI_OPERATION_NAME_VALUE_CHAT
             ? plugin.startSpan({
                 type,
                 params: args[0] as ChatCompletionCreateParamsNonStreaming & {
@@ -234,7 +253,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
                 client: this,
               })
             : plugin.startSpan({
-                type,
+                type: GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
                 params: args[0] as CompletionCreateParamsNonStreaming & {
                   extraAttributes?: Record<string, any>;
                 },
@@ -294,14 +313,14 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     client,
   }:
     | {
-        type: "chat";
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
         params: ChatCompletionCreateParamsNonStreaming & {
           extraAttributes?: Record<string, any>;
         };
         client: any;
       }
     | {
-        type: "completion";
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
         params: CompletionCreateParamsNonStreaming & {
           extraAttributes?: Record<string, any>;
         };
@@ -310,8 +329,8 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     const { provider } = this._detectVendorFromURL(client);
 
     const attributes: Attributes = {
-      [ATTR_GEN_AI_SYSTEM]: provider,
-      [SpanAttributes.LLM_REQUEST_TYPE]: type,
+      [ATTR_GEN_AI_PROVIDER_NAME]: provider,
+      [ATTR_GEN_AI_OPERATION_NAME]: type,
     };
 
     try {
@@ -345,17 +364,17 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       }
 
       if (this._shouldSendPrompts()) {
-        if (type === "chat") {
-          params.messages.forEach((message, index) => {
-            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = message.role;
-            if (typeof message.content === "string") {
-              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
-                (message.content as string) || "";
-            } else {
-              attributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
-                JSON.stringify(message.content);
-            }
-          });
+        if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
+          // OpenAI puts system/developer messages in the chat history,
+          // not as a separate parameter. Per OTel spec, they stay in
+          // gen_ai.input.messages (not gen_ai.system_instructions).
+          const inputMessages =
+            buildOpenAIInputMessages(params.messages);
+
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
+            JSON.stringify(inputMessages);
+
+          // Function/tool definitions (custom attrs — no OTel equivalent)
           params.functions?.forEach((func, index) => {
             attributes[
               `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
@@ -387,14 +406,12 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             ] = JSON.stringify(tool.function.parameters);
           });
         } else {
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
-          if (typeof params.prompt === "string") {
-            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = params.prompt;
-          } else {
-            attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = JSON.stringify(
-              params.prompt,
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
+            formatInputMessagesFromPrompt(
+              typeof params.prompt === "string"
+                ? params.prompt
+                : JSON.stringify(params.prompt),
             );
-          }
         }
       }
     } catch (e) {
@@ -402,7 +419,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._config.exceptionLogger?.(e);
     }
 
-    return this.tracer.startSpan(`openai.${type}`, {
+    return this.tracer.startSpan(`${type} ${params?.model}`, {
       kind: SpanKind.CLIENT,
       attributes,
     });
@@ -416,17 +433,17 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   }:
     | {
         span: Span;
-        type: "chat";
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
         params: ChatCompletionCreateParamsStreaming;
         promise: APIPromiseType<Stream<ChatCompletionChunk>>;
       }
     | {
         span: Span;
         params: CompletionCreateParamsStreaming;
-        type: "completion";
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
         promise: APIPromiseType<Stream<Completion>>;
       }) {
-    if (type === "chat") {
+    if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
       const result: ChatCompletion = {
         id: "0",
         created: -1,
@@ -608,14 +625,16 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   }
 
   private _wrapPromise<T>(
-    type: "chat" | "completion",
+    type:
+      | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     version: "v3" | "v4",
     span: Span,
     promise: APIPromiseType<T>,
   ): APIPromiseType<T> {
     return promise._thenUnwrap((result) => {
       if (version === "v3") {
-        if (type === "chat") {
+        if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
           this._addLogProbsEvent(
             span,
             ((result as any).data as ChatCompletion).choices[0].logprobs,
@@ -637,7 +656,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           });
         }
       } else {
-        if (type === "chat") {
+        if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
           this._addLogProbsEvent(
             span,
             (result as ChatCompletion).choices[0].logprobs,
@@ -661,82 +680,74 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     type,
     result,
   }:
-    | { span: Span; type: "chat"; result: ChatCompletion }
-    | { span: Span; type: "completion"; result: Completion }) {
+    | {
+        span: Span;
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
+        result: ChatCompletion;
+      }
+    | {
+        span: Span;
+        type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
+        result: Completion;
+      }) {
     try {
       span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
       if (result.usage) {
         span.setAttribute(
-          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
           result.usage?.total_tokens,
         );
         span.setAttribute(
-          ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+          ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
           result.usage?.completion_tokens,
         );
         span.setAttribute(
-          ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+          ATTR_GEN_AI_USAGE_INPUT_TOKENS,
           result.usage?.prompt_tokens,
         );
       }
 
-      if (this._shouldSendPrompts()) {
-        if (type === "chat") {
-          result.choices.forEach((choice, index) => {
-            span.setAttribute(
-              `${ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
-              choice.finish_reason,
-            );
-            span.setAttribute(
-              `${ATTR_GEN_AI_COMPLETION}.${index}.role`,
-              choice.message.role,
-            );
-            span.setAttribute(
-              `${ATTR_GEN_AI_COMPLETION}.${index}.content`,
-              choice.message.content ?? "",
-            );
+      if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
+        // Set finish reasons (always — it's metadata, not user content)
+        const finishReason = result.choices[0]?.finish_reason;
+        if (finishReason) {
+          const mappedReason =
+            openaiFinishReasonMap[finishReason] ?? finishReason;
+          span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
+            mappedReason,
+          ]);
+        }
 
-            if (choice.message.function_call) {
-              span.setAttribute(
-                `${ATTR_GEN_AI_COMPLETION}.${index}.function_call.name`,
-                choice.message.function_call.name,
-              );
-              span.setAttribute(
-                `${ATTR_GEN_AI_COMPLETION}.${index}.function_call.arguments`,
-                choice.message.function_call.arguments,
-              );
-            }
-            for (const [
-              toolIndex,
-              toolCall,
-            ] of choice?.message?.tool_calls?.entries() || []) {
-              if (toolCall.type === "function" && "function" in toolCall) {
-                span.setAttribute(
-                  `${ATTR_GEN_AI_COMPLETION}.${index}.tool_calls.${toolIndex}.name`,
-                  toolCall.function.name,
-                );
-                span.setAttribute(
-                  `${ATTR_GEN_AI_COMPLETION}.${index}.tool_calls.${toolIndex}.arguments`,
-                  toolCall.function.arguments,
-                );
-              }
-            }
-          });
-        } else {
-          result.choices.forEach((choice, index) => {
-            span.setAttribute(
-              `${ATTR_GEN_AI_COMPLETION}.${index}.finish_reason`,
-              choice.finish_reason,
-            );
-            span.setAttribute(
-              `${ATTR_GEN_AI_COMPLETION}.${index}.role`,
-              "assistant",
-            );
-            span.setAttribute(
-              `${ATTR_GEN_AI_COMPLETION}.${index}.content`,
-              choice.text,
-            );
-          });
+        if (this._shouldSendPrompts()) {
+          const outputMessages = buildOpenAIOutputMessage(
+            result.choices[0],
+            openaiFinishReasonMap,
+          );
+          span.setAttribute(
+            ATTR_GEN_AI_OUTPUT_MESSAGES,
+            JSON.stringify(outputMessages),
+          );
+        }
+      } else {
+        // Text completion
+        const finishReason = result.choices[0]?.finish_reason;
+        if (finishReason) {
+          const mappedReason =
+            openaiFinishReasonMap[finishReason] ?? finishReason;
+          span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
+            mappedReason,
+          ]);
+        }
+
+        if (this._shouldSendPrompts()) {
+          const outputMessages = buildOpenAICompletionOutputMessage(
+            result.choices[0],
+            openaiFinishReasonMap,
+          );
+          span.setAttribute(
+            ATTR_GEN_AI_OUTPUT_MESSAGES,
+            JSON.stringify(outputMessages),
+          );
         }
       }
     } catch (e) {
@@ -834,44 +845,41 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
   private _detectVendorFromURL(client: any): {
     provider: string;
-    modelVendor: string;
   } {
-    const modelVendor = "OpenAI";
-
     try {
       if (!client?.baseURL) {
-        return { provider: "OpenAI", modelVendor };
+        return { provider: GEN_AI_PROVIDER_NAME_VALUE_OPENAI };
       }
 
       const baseURL = client.baseURL.toLowerCase();
 
       if (baseURL.includes("azure") || baseURL.includes("openai.azure.com")) {
-        return { provider: "Azure", modelVendor };
+        return { provider: GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI };
       }
 
       if (
         baseURL.includes("openai.com") ||
         baseURL.includes("api.openai.com")
       ) {
-        return { provider: "OpenAI", modelVendor };
+        return { provider: GEN_AI_PROVIDER_NAME_VALUE_OPENAI };
       }
 
       if (baseURL.includes("amazonaws.com") || baseURL.includes("bedrock")) {
-        return { provider: "AWS", modelVendor };
+        return { provider: GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK };
       }
 
       if (baseURL.includes("googleapis.com")) {
-        return { provider: "Google", modelVendor };
+        return { provider: GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI };
       }
 
       if (baseURL.includes("openrouter")) {
-        return { provider: "OpenRouter", modelVendor };
+        return { provider: "openrouter" };
       }
 
-      return { provider: "OpenAI", modelVendor };
+      return { provider: GEN_AI_PROVIDER_NAME_VALUE_OPENAI };
     } catch (e) {
       this._diag.debug(`Failed to detect vendor from URL: ${e}`);
-      return { provider: "OpenAI", modelVendor };
+      return { provider: GEN_AI_PROVIDER_NAME_VALUE_OPENAI };
     }
   }
 }
