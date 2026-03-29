@@ -424,17 +424,14 @@ export function wrapImageGeneration(
     return function (this: any, ...args: any[]) {
       const params = args[0] as ImageGenerateParams;
 
-      const span = tracer.startSpan(
-        `image_generation ${params.model}`,
-        {
-          kind: SpanKind.CLIENT,
-          attributes: {
-            [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-            [ATTR_GEN_AI_OPERATION_NAME]: "image_generation",
-            "gen_ai.request.type": "image_generation",
-          },
+      const span = tracer.startSpan(`image_generation ${params.model}`, {
+        kind: SpanKind.CLIENT,
+        attributes: {
+          [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+          [ATTR_GEN_AI_OPERATION_NAME]: "image_generation",
+          "gen_ai.request.type": "image_generation",
         },
-      );
+      });
 
       const response = original.apply(this, args);
 
@@ -487,17 +484,14 @@ export function wrapImageEdit(
     return function (this: any, ...args: any[]) {
       const params = args[0] as ImageEditParams;
 
-      const span = tracer.startSpan(
-        `image_edit ${params.model}`,
-        {
-          kind: SpanKind.CLIENT,
-          attributes: {
-            [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-            [ATTR_GEN_AI_OPERATION_NAME]: "image_edit",
-            "gen_ai.request.type": "image_edit",
-          },
+      const span = tracer.startSpan(`image_edit ${params.model}`, {
+        kind: SpanKind.CLIENT,
+        attributes: {
+          [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+          [ATTR_GEN_AI_OPERATION_NAME]: "image_edit",
+          "gen_ai.request.type": "image_edit",
         },
-      );
+      });
 
       const setRequestAttributesPromise = setImageEditRequestAttributes(
         span,
@@ -558,17 +552,14 @@ export function wrapImageVariation(
     return function (this: any, ...args: any[]) {
       const params = args[0] as ImageCreateVariationParams;
 
-      const span = tracer.startSpan(
-        `image_variation ${params.model}`,
-        {
-          kind: SpanKind.CLIENT,
-          attributes: {
-            [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-            [ATTR_GEN_AI_OPERATION_NAME]: "image_variation",
-            "gen_ai.request.type": "image_variation",
-          },
+      const span = tracer.startSpan(`image_variation ${params.model}`, {
+        kind: SpanKind.CLIENT,
+        attributes: {
+          [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+          [ATTR_GEN_AI_OPERATION_NAME]: "image_variation",
+          "gen_ai.request.type": "image_variation",
         },
-      );
+      });
 
       const response = original.apply(this, args);
 

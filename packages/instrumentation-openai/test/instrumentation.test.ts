@@ -643,9 +643,7 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const editSpan = spans.find((span) =>
-      span.name.startsWith("image_edit "),
-    );
+    const editSpan = spans.find((span) => span.name.startsWith("image_edit "));
     assert.ok(editSpan);
 
     assert.strictEqual(
