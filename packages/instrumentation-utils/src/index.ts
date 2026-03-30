@@ -5,4 +5,7 @@ export {
   formatOutputMessage,
 } from "./message-formatters";
 
-export { mapAnthropicContentBlock } from "./content-block-mappers";
+export {
+  mapAnthropicContentBlock,
+  mapOpenAIContentBlock,
+} from "./content-block-mappers";

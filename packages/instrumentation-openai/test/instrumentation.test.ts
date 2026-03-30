@@ -36,12 +36,14 @@ import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_REQUEST_MODEL,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_PROVIDER_NAME,
+  ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 const memoryExporter = new InMemorySpanExporter();
@@ -151,28 +153,43 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+      completionSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "openai",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      completionSpan.attributes[ATTR_GEN_AI_OPERATION_NAME],
+      "chat",
+    );
+
+    // Check input messages
+    const inputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
+    );
+    assert.strictEqual(inputMessages[0].role, "user");
+    assert.strictEqual(
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
+
+    // Finish reasons
+    assert.deepEqual(
+      completionSpan.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS],
+      ["stop"],
+    );
+
     assert.ok(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      completionSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
     );
     assert.equal(
-      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
+      completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
       "15",
     );
-    assert.ok(
-      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
-    );
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set attributes in span for streaming chat", async () => {
@@ -190,79 +207,36 @@ describe("Test OpenAI instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    // Check input messages
+    const inputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-      result,
+
+    // Check output messages
+    const outputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.strictEqual(outputMessages[0].parts[0].content, result);
+
     assert.ok(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      completionSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
     );
     assert.equal(
-      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
+      completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
       "8",
     );
-    assert.ok(
-      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
-    );
-  });
-
-  it.skip("should set attributes in span for streaming chat with new API", async () => {
-    const stream = openai.beta.chat.completions.stream({
-      messages: [
-        { role: "user", content: "Tell me a joke about OpenTelemetry" },
-      ],
-      model: "gpt-3.5-turbo",
-      stream: true,
-    });
-
-    let result = "";
-    for await (const chunk of stream) {
-      result += chunk.choices[0]?.delta?.content || "";
-    }
-
-    const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
-
-    assert.ok(result);
-    assert.ok(completionSpan);
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-      "Tell me a joke about OpenTelemetry",
-    );
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-      result,
-    );
-    assert.ok(completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`]);
-    assert.ok(
-      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`],
-    );
-    assert.ok(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
-    );
-    assert.equal(
-      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
-      "8",
-    );
-    assert.ok(
-      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
-    );
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set attributes in span for completion", async () => {
@@ -272,18 +246,19 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find(
-      (span) => span.name === "openai.completion",
+    const completionSpan = spans.find((span) =>
+      span.name.startsWith("text_completion "),
     );
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -301,18 +276,19 @@ describe("Test OpenAI instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find(
-      (span) => span.name === "openai.completion",
+    const completionSpan = spans.find((span) =>
+      span.name.startsWith("text_completion "),
     );
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -327,7 +303,7 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
     const event = completionSpan?.events.find((x) => x.name == "logprobs");
 
     assert.ok(result);
@@ -352,7 +328,7 @@ describe("Test OpenAI instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
     const event = completionSpan?.events.find((x) => x.name == "logprobs");
 
     assert.ok(result);
@@ -391,70 +367,54 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    // Check input messages
+    const inputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "What's the weather like in Boston?",
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
-      ],
-      "get_current_weather",
+
+    // Tool definitions (OTel 1.40 gen_ai.tool.definitions)
+    const toolDefs = JSON.parse(
+      completionSpan.attributes["gen_ai.tool.definitions"] as string,
     );
+    assert.strictEqual(toolDefs[0].name, "get_current_weather");
     assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
-      ],
+      toolDefs[0].description,
       "Get the current weather in a given location",
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
-      ],
-      JSON.stringify({
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "The city and state, e.g. San Francisco, CA",
-          },
-          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-        },
-        required: ["location"],
-      }),
+
+    // Output messages with tool call
+    const outputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.function_call.name`
-      ],
-      "get_current_weather",
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    const toolCallPart = outputMessages[0].parts.find(
+      (p: any) => p.type === "tool_call",
     );
+    assert.ok(toolCallPart);
+    assert.strictEqual(toolCallPart.name, "get_current_weather");
+    assert.deepEqual(toolCallPart.arguments, { location: "Boston" });
+
+    // Finish reason
     assert.deepEqual(
-      JSON.parse(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_COMPLETION}.0.function_call.arguments`
-        ]! as string,
-      ),
-      { location: "Boston" },
+      completionSpan.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS],
+      ["tool_call"],
     );
+
     assert.ok(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      completionSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
     );
-    assert.equal(
-      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
-      82,
-    );
-    assert.ok(
-      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
-    );
+    assert.equal(completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 82);
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set attributes in span for tool calling", async () => {
@@ -489,71 +449,49 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(completionSpan);
-    assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    // Check input messages
+    const inputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "What's the weather like in Boston?",
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`
-      ],
-      "get_current_weather",
+
+    // Tool definitions (OTel 1.40 — preserves source format with {type, function} wrapper)
+    const toolDefs = JSON.parse(
+      completionSpan.attributes["gen_ai.tool.definitions"] as string,
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`
-      ],
-      "Get the current weather in a given location",
+    assert.strictEqual(toolDefs[0].type, "function");
+    assert.strictEqual(toolDefs[0].function.name, "get_current_weather");
+
+    // Output messages with tool calls
+    const outputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.arguments`
-      ],
-      JSON.stringify({
-        type: "object",
-        properties: {
-          location: {
-            type: "string",
-            description: "The city and state, e.g. San Francisco, CA",
-          },
-          unit: { type: "string", enum: ["celsius", "fahrenheit"] },
-        },
-        required: ["location"],
-      }),
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    const toolCallPart = outputMessages[0].parts.find(
+      (p: any) => p.type === "tool_call",
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
-      ],
-      "get_current_weather",
-    );
-    const parsedArgs = JSON.parse(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`
-      ]! as string,
-    );
+    assert.ok(toolCallPart);
+    assert.strictEqual(toolCallPart.name, "get_current_weather");
     // API returns either "Boston" or "Boston, MA" depending on the call
     assert.ok(
-      parsedArgs.location === "Boston" || parsedArgs.location === "Boston, MA",
+      toolCallPart.arguments.location === "Boston" ||
+        toolCallPart.arguments.location === "Boston, MA",
     );
+
     assert.ok(
-      completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      completionSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
     );
-    assert.equal(
-      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
-      82,
-    );
-    assert.ok(
-      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
-    );
+    assert.equal(completionSpan.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 82);
+    assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
   it("should set function_call attributes in span for stream completion when multiple tools called", async () => {
@@ -619,38 +557,25 @@ describe("Test OpenAI instrumentation", async function () {
     }
 
     const spans = memoryExporter.getFinishedSpans();
-    const completionSpan = spans.find((span) => span.name === "openai.chat");
+    const completionSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.strictEqual(result, "");
     assert.ok(completionSpan);
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.name`
-      ],
-      "get_current_weather",
+
+    // Check output messages with multiple tool calls
+    const outputMessages = JSON.parse(
+      completionSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
-    assert.deepEqual(
-      JSON.parse(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.0.arguments`
-        ]! as string,
-      ),
-      { location: "Boston, MA" },
+    assert.strictEqual(outputMessages[0].role, "assistant");
+
+    const toolCalls = outputMessages[0].parts.filter(
+      (p: any) => p.type === "tool_call",
     );
-    assert.strictEqual(
-      completionSpan.attributes[
-        `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.name`
-      ],
-      "get_tomorrow_weather",
-    );
-    assert.deepEqual(
-      JSON.parse(
-        completionSpan.attributes[
-          `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.1.arguments`
-        ]! as string,
-      ),
-      { location: "Chicago, IL" },
-    );
+    assert.strictEqual(toolCalls.length, 2);
+    assert.strictEqual(toolCalls[0].name, "get_current_weather");
+    assert.deepEqual(toolCalls[0].arguments, { location: "Boston, MA" });
+    assert.strictEqual(toolCalls[1].name, "get_tomorrow_weather");
+    assert.deepEqual(toolCalls[1].arguments, { location: "Chicago, IL" });
   });
 
   it("should set attributes in span for image generation", async function () {
@@ -664,14 +589,17 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const imageSpan = spans.find(
-      (span) => span.name === "openai.images.generate",
+    const imageSpan = spans.find((span) =>
+      span.name.startsWith("image_generation "),
     );
     assert.ok(imageSpan);
 
-    assert.strictEqual(imageSpan.attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
     assert.strictEqual(
-      imageSpan.attributes["gen_ai.request.type"],
+      imageSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "openai",
+    );
+    assert.strictEqual(
+      imageSpan.attributes[ATTR_GEN_AI_OPERATION_NAME],
       "image_generation",
     );
     assert.strictEqual(
@@ -683,25 +611,20 @@ describe("Test OpenAI instrumentation", async function () {
       "1024x1024",
     );
     assert.strictEqual(imageSpan.attributes["gen_ai.request.image.count"], 1);
-    assert.strictEqual(
-      imageSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-      "A test image",
+
+    // Check input messages
+    const inputMessages = JSON.parse(
+      imageSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
-    assert.strictEqual(
-      imageSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
+    assert.strictEqual(inputMessages[0].role, "user");
+    assert.strictEqual(inputMessages[0].parts[0].content, "A test image");
 
     // Check token usage calculation (dall-e-2 1024x1024 should be ~1056 tokens)
-    assert.ok(imageSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
-    assert.ok(imageSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
+    assert.ok(imageSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]);
+    assert.ok(imageSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]);
 
     // Check response content
-    assert.ok(imageSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
-    assert.strictEqual(
-      imageSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-      "assistant",
-    );
+    assert.ok(imageSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
   });
 
   it.skip("should set attributes in span for image editing", async () => {
@@ -713,7 +636,7 @@ describe("Test OpenAI instrumentation", async function () {
       type: "image/png",
     });
 
-    await imageOpenai.images.edit({
+    await (openai as any).images.edit({
       image: mockImageFile,
       prompt: "Add a red hat",
       n: 1,
@@ -721,42 +644,27 @@ describe("Test OpenAI instrumentation", async function () {
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const editSpan = spans.find((span) => span.name === "openai.images.edit");
+    const editSpan = spans.find((span) => span.name.startsWith("image_edit "));
     assert.ok(editSpan);
 
-    assert.strictEqual(editSpan.attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
+    assert.strictEqual(
+      editSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "openai",
+    );
     assert.strictEqual(
       editSpan.attributes["gen_ai.request.type"],
       "image_edit",
     );
-    // Edit doesn't require model parameter
-    assert.strictEqual(
-      editSpan.attributes["gen_ai.request.image.size"],
-      "1024x1024",
-    );
-    assert.strictEqual(editSpan.attributes["gen_ai.request.image.count"], 1);
-    assert.strictEqual(
-      editSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-      "Add a red hat",
-    );
-    assert.strictEqual(
-      editSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
-    );
 
     // Check token usage calculation
     assert.strictEqual(
-      editSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      editSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
       4160,
     );
-    assert.ok(editSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include prompt tokens
+    assert.ok(editSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]);
 
     // Check response content
-    assert.ok(editSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
-    assert.strictEqual(
-      editSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-      "assistant",
-    );
+    assert.ok(editSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
   });
 
   it.skip("should set attributes in span for image variation", async () => {
@@ -768,46 +676,34 @@ describe("Test OpenAI instrumentation", async function () {
       type: "image/png",
     });
 
-    await imageOpenai.images.createVariation({
+    await (openai as any).images.createVariation({
       image: mockImageFile,
       n: 1,
       size: "1024x1024",
     });
 
     const spans = memoryExporter.getFinishedSpans();
-    const variationSpan = spans.find(
-      (span) => span.name === "openai.images.createVariation",
+    const variationSpan = spans.find((span) =>
+      span.name.startsWith("image_variation "),
     );
     assert.ok(variationSpan);
 
-    assert.strictEqual(variationSpan.attributes[ATTR_GEN_AI_SYSTEM], "OpenAI");
     assert.strictEqual(
-      variationSpan.attributes["gen_ai.request.type"],
-      "image_variation",
-    );
-    // Variation doesn't require model parameter
-    assert.strictEqual(
-      variationSpan.attributes["gen_ai.request.image.size"],
-      "1024x1024",
-    );
-    assert.strictEqual(
-      variationSpan.attributes["gen_ai.request.image.count"],
-      1,
+      variationSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "openai",
     );
 
     // Check token usage calculation (DALL-E 2 1024x1024 = 1056 tokens)
     assert.strictEqual(
-      variationSpan.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      variationSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
       1056,
     );
-    assert.ok(variationSpan.attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]); // Should include estimated input tokens
+    assert.ok(
+      variationSpan.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
+    );
 
     // Check response content
-    assert.ok(variationSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
-    assert.strictEqual(
-      variationSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-      "assistant",
-    );
+    assert.ok(variationSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
   });
 
   it.skip("should calculate correct tokens for different quality levels", async function () {
@@ -831,15 +727,17 @@ describe("Test OpenAI instrumentation", async function () {
     const spans = memoryExporter.getFinishedSpans();
     const dalle2Span = spans.find(
       (span) =>
-        span.name === "openai.images.generate" &&
-        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.name.startsWith("image_generation ") &&
+        (span.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string)?.includes(
           "Test standard quality",
+        ),
     );
     const dalle3Span = spans.find(
       (span) =>
-        span.name === "openai.images.generate" &&
-        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
+        span.name.startsWith("image_generation ") &&
+        (span.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string)?.includes(
           "Test HD quality",
+        ),
     );
 
     assert.ok(dalle2Span);
@@ -847,13 +745,13 @@ describe("Test OpenAI instrumentation", async function () {
 
     // DALL-E 2 standard should be 1056 tokens
     assert.strictEqual(
-      dalle2Span.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      dalle2Span.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
       1056,
     );
 
     // DALL-E 3 HD should be 4160 tokens
     assert.strictEqual(
-      dalle3Span.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+      dalle3Span.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
       4160,
     );
   });

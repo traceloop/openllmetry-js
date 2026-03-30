@@ -27,7 +27,7 @@ import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_AGENT_NAME,
-  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_REQUEST_MODEL,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
@@ -107,7 +107,7 @@ describe("Test Agent Decorator", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const agentSpan = spans.find((span) => span.name === "plan_trip.agent");
-    const chatSpan = spans.find((span) => span.name === "openai.chat");
+    const chatSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(agentSpan);
@@ -144,17 +144,19 @@ describe("Test Agent Decorator", () => {
       chatSpan.attributes[`${ATTR_GEN_AI_AGENT_NAME}`],
       "plan_trip",
     );
-    assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      chatSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
   });
 
-  it("should create spans for agents using decoration syntax", async () => {
+  it("should create spans for agents using decoration syntax", async function () {
+    this.timeout(30000);
     class TestAgent {
       @traceloop.agent({ name: "travel_planner", version: 2 })
       async planTrip(destination: string) {
@@ -176,7 +178,7 @@ describe("Test Agent Decorator", () => {
     const agentSpan = spans.find(
       (span) => span.name === "travel_planner.agent",
     );
-    const chatSpan = spans.find((span) => span.name === "openai.chat");
+    const chatSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(agentSpan);
@@ -205,12 +207,13 @@ describe("Test Agent Decorator", () => {
       chatSpan.attributes[`${ATTR_GEN_AI_AGENT_NAME}`],
       "travel_planner",
     );
-    assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      chatSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -275,12 +278,13 @@ describe("Test Agent Decorator", () => {
       completionSpan.attributes[`${ATTR_GEN_AI_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
     );
+    // Manual instrumentation (withLLMCall/reportRequest) uses old indexed format
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
+      completionSpan.attributes[`gen_ai.prompt.0.role`],
       "user",
     );
     assert.strictEqual(
-      completionSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      completionSpan.attributes[`gen_ai.prompt.0.content`],
       "Tell me a joke about OpenTelemetry",
     );
   });

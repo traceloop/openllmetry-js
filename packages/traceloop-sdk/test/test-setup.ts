@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+// TODO: Bump openai devDependency from 4.x to ^6 once we migrate the test
+// HTTP mocking from Polly.js to msw (or undici MockAgent). OpenAI SDK v6 uses
+// native fetch/undici which Polly's adapters cannot intercept in replay mode.
+// See: openai-semconv-review.md and semantic-conventions-migration.md for context.
+
 import { InMemorySpanExporter } from "@opentelemetry/sdk-trace-base";
 import * as traceloop from "../src";
 
