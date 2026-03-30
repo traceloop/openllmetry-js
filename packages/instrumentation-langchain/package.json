@@ -47,7 +47,7 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@langchain/community": "^0.3.59",
+    "@langchain/community": "^1.1.18",
     "@langchain/openai": "^0.6.2",
     "@opentelemetry/context-async-hooks": "^2.0.1",
     "@opentelemetry/sdk-trace-node": "^2.0.1",
