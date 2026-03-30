@@ -398,6 +398,7 @@ export async function setImageGenerationResponseAttributes(
       attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
         {
           role: "assistant",
+          finish_reason: "stop",
           parts: [{ type: "uri", modality: "image", uri: imageOutputUrl }],
         },
       ]);

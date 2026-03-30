@@ -24,7 +24,7 @@ interface OTelChatMessage {
 
 interface OTelOutputMessage {
   role: string;
-  finish_reason?: string;
+  finish_reason: string;
   parts: object[];
 }
 
@@ -273,16 +273,20 @@ export function buildOpenAIOutputMessage(
       type: "blob",
       modality: "audio",
       mime_type: "audio/mp3",
-      content: message.audio.data,
+      data: message.audio.data,
     });
   }
 
-  const outputMsg: OTelOutputMessage = { role: "assistant", parts };
-  if (choice.finish_reason) {
-    outputMsg.finish_reason =
-      finishReasonMap[choice.finish_reason] ?? choice.finish_reason;
-  }
-  return [outputMsg];
+  return [
+    {
+      role: "assistant",
+      finish_reason:
+        finishReasonMap[choice.finish_reason] ??
+        choice.finish_reason ??
+        "stop",
+      parts,
+    },
+  ];
 }
 
 /**
@@ -298,12 +302,12 @@ export function buildOpenAICompletionOutputMessage(
 ): OTelOutputMessage[] {
   const outputMsg: OTelOutputMessage = {
     role: "assistant",
+    finish_reason:
+      finishReasonMap[choice.finish_reason] ??
+      choice.finish_reason ??
+      "stop",
     parts: [{ type: "text", content: choice.text ?? "" }],
   };
-  if (choice.finish_reason) {
-    outputMsg.finish_reason =
-      finishReasonMap[choice.finish_reason] ?? choice.finish_reason;
-  }
   return [outputMsg];
 }
 

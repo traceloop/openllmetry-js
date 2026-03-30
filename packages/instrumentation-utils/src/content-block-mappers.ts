@@ -192,7 +192,7 @@ export function mapOpenAIContentBlock(block: any): object {
             type: "blob",
             modality: "image",
             mime_type: match[1],
-            content: match[2],
+            data: match[2],
           };
         }
       }
@@ -207,7 +207,7 @@ export function mapOpenAIContentBlock(block: any): object {
         type: "blob",
         modality: "audio",
         mime_type: `audio/${block.input_audio?.format || "wav"}`,
-        content: block.input_audio?.data,
+        data: block.input_audio?.data,
       };
 
     // -------------------------------------------------------------------------
@@ -229,7 +229,7 @@ export function mapOpenAIContentBlock(block: any): object {
         return {
           type: "blob",
           mime_type: block.file.mime_type || "application/octet-stream",
-          content: block.file.file_data,
+          data: block.file.file_data,
         };
       }
       return { type: block.type, ...block };

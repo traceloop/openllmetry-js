@@ -27,8 +27,10 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 import { formatInputMessagesFromPrompt } from "@traceloop/instrumentation-utils";
 import {
+  ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_MODEL,
@@ -345,11 +347,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       }
       if (params.frequency_penalty) {
-        attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
+        attributes[ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY] =
           params.frequency_penalty;
       }
       if (params.presence_penalty) {
-        attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =
+        attributes[ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY] =
           params.presence_penalty;
       }
 
@@ -374,27 +376,15 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             JSON.stringify(inputMessages);
 
           // Tool/function definitions as single JSON attribute (OTel 1.40)
+          // Spec: "The value of this attribute matches source system tool definition format."
           const toolDefs: object[] = [];
+          // Legacy functions API — bare {name, description, parameters} IS the source format
           params.functions?.forEach((func) => {
-            toolDefs.push({
-              name: func.name,
-              description: func.description,
-              parameters: func.parameters,
-            });
+            toolDefs.push(func);
           });
+          // Tools API — preserve full {type, function: {...}} wrapper (source format)
           params.tools?.forEach((tool) => {
-            if (
-              tool.type !== "function" ||
-              !("function" in tool) ||
-              !tool.function
-            ) {
-              return;
-            }
-            toolDefs.push({
-              name: tool.function.name,
-              description: tool.function.description,
-              parameters: tool.function.parameters,
-            });
+            toolDefs.push(tool);
           });
           if (toolDefs.length > 0) {
             attributes[ATTR_GEN_AI_TOOL_DEFINITIONS] = JSON.stringify(toolDefs);
@@ -707,13 +697,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
         // Set finish reasons (always — it's metadata, not user content)
         const finishReason = result.choices[0]?.finish_reason;
-        if (finishReason) {
-          const mappedReason =
-            openaiFinishReasonMap[finishReason] ?? finishReason;
-          span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
-            mappedReason,
-          ]);
-        }
+        const mappedReason =
+          openaiFinishReasonMap[finishReason] ?? finishReason ?? "stop";
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [mappedReason]);
 
         if (this._shouldSendPrompts()) {
           const outputMessages = buildOpenAIOutputMessage(
@@ -728,13 +714,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       } else {
         // Text completion
         const finishReason = result.choices[0]?.finish_reason;
-        if (finishReason) {
-          const mappedReason =
-            openaiFinishReasonMap[finishReason] ?? finishReason;
-          span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
-            mappedReason,
-          ]);
-        }
+        const mappedReason =
+          openaiFinishReasonMap[finishReason] ?? finishReason ?? "stop";
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [mappedReason]);
 
         if (this._shouldSendPrompts()) {
           const outputMessages = buildOpenAICompletionOutputMessage(

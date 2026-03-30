@@ -464,11 +464,12 @@ describe("Test OpenAI instrumentation", async function () {
       "What's the weather like in Boston?",
     );
 
-    // Tool definitions (OTel 1.40)
+    // Tool definitions (OTel 1.40 — preserves source format with {type, function} wrapper)
     const toolDefs = JSON.parse(
       completionSpan.attributes["gen_ai.tool.definitions"] as string,
     );
-    assert.strictEqual(toolDefs[0].name, "get_current_weather");
+    assert.strictEqual(toolDefs[0].type, "function");
+    assert.strictEqual(toolDefs[0].function.name, "get_current_weather");
 
     // Output messages with tool calls
     const outputMessages = JSON.parse(

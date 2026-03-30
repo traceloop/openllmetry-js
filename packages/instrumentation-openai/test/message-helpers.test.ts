@@ -39,8 +39,8 @@ describe("mapOpenAIContentBlock", () => {
     assert.strictEqual(result.type, "blob");
     assert.strictEqual(result.modality, "image");
     assert.strictEqual(result.mime_type, "image/png");
-    // The base64 data should be present (field name may be `content` or `data`)
-    assert.ok(result.content === "abc123" || result.data === "abc123");
+    assert.strictEqual(result.data, "abc123");
+    assert.strictEqual(result.content, undefined);
   });
 
   it("maps input_audio to BlobPart", () => {
@@ -51,7 +51,8 @@ describe("mapOpenAIContentBlock", () => {
     assert.strictEqual(result.type, "blob");
     assert.strictEqual(result.modality, "audio");
     assert.strictEqual(result.mime_type, "audio/mp3");
-    assert.ok(result.content === "audiodata" || result.data === "audiodata");
+    assert.strictEqual(result.data, "audiodata");
+    assert.strictEqual(result.content, undefined);
   });
 
   it("maps file (file_id) to FilePart", () => {
@@ -73,7 +74,8 @@ describe("mapOpenAIContentBlock", () => {
     }) as any;
     assert.strictEqual(result.type, "blob");
     assert.strictEqual(result.mime_type, "application/pdf");
-    assert.ok(result.content === "base64data" || result.data === "base64data");
+    assert.strictEqual(result.data, "base64data");
+    assert.strictEqual(result.content, undefined);
     // File data should NOT have modality (documents aren't image/video/audio)
     assert.strictEqual(result.modality, undefined);
   });
@@ -295,7 +297,7 @@ describe("buildOpenAIOutputMessage", () => {
     assert.strictEqual(refusalPart.content, "I cannot help with that");
   });
 
-  it("omits finish_reason when null", () => {
+  it("defaults finish_reason to 'stop' when null (field is required by OTel schema)", () => {
     const result = buildOpenAIOutputMessage(
       {
         message: { role: "assistant", content: "Hi" },
@@ -304,8 +306,7 @@ describe("buildOpenAIOutputMessage", () => {
       openaiFinishReasonMap,
     );
     assert.strictEqual(result.length, 1);
-    assert.strictEqual(result[0].finish_reason, undefined);
-    assert.strictEqual("finish_reason" in result[0], false);
+    assert.strictEqual(result[0].finish_reason, "stop");
   });
 
   it("passes through unknown finish_reason", () => {
@@ -338,9 +339,8 @@ describe("buildOpenAIOutputMessage", () => {
     assert.ok(audioPart);
     assert.strictEqual(audioPart.modality, "audio");
     assert.strictEqual(audioPart.mime_type, "audio/mp3");
-    assert.ok(
-      audioPart.content === "audiobase64" || audioPart.data === "audiobase64",
-    );
+    assert.strictEqual(audioPart.data, "audiobase64");
+    assert.strictEqual(audioPart.content, undefined);
   });
 });
 
@@ -358,13 +358,12 @@ describe("buildOpenAICompletionOutputMessage", () => {
     ]);
   });
 
-  it("omits finish_reason when null", () => {
+  it("defaults finish_reason to 'stop' when null (field is required by OTel schema)", () => {
     const result = buildOpenAICompletionOutputMessage(
       { text: "data", finish_reason: null },
       openaiFinishReasonMap,
     );
     assert.strictEqual(result.length, 1);
-    assert.strictEqual(result[0].finish_reason, undefined);
-    assert.strictEqual("finish_reason" in result[0], false);
+    assert.strictEqual(result[0].finish_reason, "stop");
   });
 });
