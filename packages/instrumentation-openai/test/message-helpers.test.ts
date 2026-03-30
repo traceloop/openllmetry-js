@@ -73,9 +73,7 @@ describe("mapOpenAIContentBlock", () => {
     }) as any;
     assert.strictEqual(result.type, "blob");
     assert.strictEqual(result.mime_type, "application/pdf");
-    assert.ok(
-      result.content === "base64data" || result.data === "base64data",
-    );
+    assert.ok(result.content === "base64data" || result.data === "base64data");
     // File data should NOT have modality (documents aren't image/video/audio)
     assert.strictEqual(result.modality, undefined);
   });
