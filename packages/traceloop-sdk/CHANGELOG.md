@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.23.0](https://github.com/traceloop/openllmetry-js/compare/v0.22.8...v0.23.0) (2026-03-30)
+
+### Features
+
+- **ai-semantic-conventions, instrumentation-anthropic:** align GenAI semconv with OTel 1.40 and migrate Anthropic instrumentation ([#896](https://github.com/traceloop/openllmetry-js/issues/896)) ([643425a](https://github.com/traceloop/openllmetry-js/commit/643425a4193fb9710bd6df36fe45a4c899ceef90))
+- **evaluators:** add standalone evaluator create/list/get/update/run SDK methods ([#908](https://github.com/traceloop/openllmetry-js/issues/908)) ([dd89e8d](https://github.com/traceloop/openllmetry-js/commit/dd89e8d92c21008d4eab0d3b7ccae1b69c5af90b))
+- **instrumentation-openai:** Migrate OpenAI instrumentation to OTel 1.40 semantic conventions ([#909](https://github.com/traceloop/openllmetry-js/issues/909)) ([26a0d01](https://github.com/traceloop/openllmetry-js/commit/26a0d0159abb07e11f6e8349ef883659d0dbb245))
+- **sdk:** add synonym field mapping for experiment evaluator inputs ([#895](https://github.com/traceloop/openllmetry-js/issues/895)) ([50a591c](https://github.com/traceloop/openllmetry-js/commit/50a591c749fc37bd1f049e19a676c165ffd7f46f))
+
 ## [0.22.8](https://github.com/traceloop/openllmetry-js/compare/v0.22.7...v0.22.8) (2026-03-04)
 
 ### Bug Fixes
