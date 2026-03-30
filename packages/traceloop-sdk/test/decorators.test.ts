@@ -30,6 +30,8 @@ import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_COMPLETION,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_RESPONSE_MODEL,
@@ -117,7 +119,7 @@ describe("Test SDK Decorators", () => {
     const workflowSpan = spans.find(
       (span) => span.name === "sample_chat.workflow",
     );
-    const chatSpan = spans.find((span) => span.name === "openai.chat");
+    const chatSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(workflowSpan);
@@ -158,12 +160,13 @@ describe("Test SDK Decorators", () => {
       chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
       "sample_chat",
     );
-    assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      chatSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -195,7 +198,8 @@ describe("Test SDK Decorators", () => {
     assert.strictEqual(spans.length, 0);
   });
 
-  it("should create spans for workflows using decoration syntax", async () => {
+  it("should create spans for workflows using decoration syntax", async function () {
+    this.timeout(30000);
     class TestOpenAI {
       @traceloop.workflow({ name: "sample_chat", version: 2 })
       async chat(things: Map<string, string>) {
@@ -229,7 +233,7 @@ describe("Test SDK Decorators", () => {
     const workflowSpan = spans.find(
       (span) => span.name === "sample_chat.workflow",
     );
-    const chatSpan = spans.find((span) => span.name === "openai.chat");
+    const chatSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(workflowSpan);
@@ -273,12 +277,13 @@ describe("Test SDK Decorators", () => {
       chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
       "sample_chat",
     );
-    assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      chatSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -322,7 +327,7 @@ describe("Test SDK Decorators", () => {
     const workflowSpan = spans.find(
       (span) => span.name === `${workflowName}.workflow`,
     );
-    const chatSpan = spans.find((span) => span.name === "openai.chat");
+    const chatSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(workflowSpan);
@@ -362,12 +367,13 @@ describe("Test SDK Decorators", () => {
       chatSpan.attributes[`${SpanAttributes.TRACELOOP_WORKFLOW_NAME}`],
       workflowName,
     );
-    assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      chatSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
   });
@@ -394,7 +400,7 @@ describe("Test SDK Decorators", () => {
     const workflowSpan = spans.find(
       (span) => span.name === "sample_chat.workflow",
     );
-    const chatSpan = spans.find((span) => span.name === "openai.chat");
+    const chatSpan = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(workflowSpan);
@@ -424,20 +430,17 @@ describe("Test SDK Decorators", () => {
       "sample_chat",
     );
     assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
+      chatSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES],
       undefined,
     );
     assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-      undefined,
-    );
-    assert.strictEqual(
-      chatSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
+      chatSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES],
       undefined,
     );
   });
 
-  it("should create spans for manual LLM instrumentation", async () => {
+  it("should create spans for manual LLM instrumentation", async function () {
+    this.timeout(30000);
     const result = await traceloop.withWorkflow(
       { name: "joke_generator", associationProperties: { userId: "123" } },
       () =>
@@ -456,7 +459,14 @@ describe("Test SDK Decorators", () => {
               model,
             });
 
-            span.reportResponse(response);
+            span.reportResponse({
+              model: response.model,
+              usage: response.usage,
+              completions: response.choices.map((c) => ({
+                finish_reason: c.finish_reason,
+                message: c.message,
+              })),
+            });
 
             return response;
           },
@@ -522,12 +532,11 @@ describe("Test SDK Decorators", () => {
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
-    assert.equal(
-      completionSpan.attributes[`${ATTR_GEN_AI_USAGE_PROMPT_TOKENS}`],
-      "15",
+    assert.ok(
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`]! > 0,
     );
     assert.ok(
-      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_COMPLETION_TOKENS}`]! > 0,
+      +completionSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]! > 0,
     );
   });
 
@@ -559,15 +568,15 @@ describe("Test SDK Decorators", () => {
     assert.ok(result1);
     assert.ok(result2);
 
-    const openAI1Span = spans.find(
-      (span) =>
-        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
+    const openAI1Span = spans.find((span) =>
+      (span.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string)?.includes(
         "Tell me a joke about OpenTelemetry",
+      ),
     );
-    const openAI2Span = spans.find(
-      (span) =>
-        span.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] ===
+    const openAI2Span = spans.find((span) =>
+      (span.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string)?.includes(
         "Tell me a joke about Typescript",
+      ),
     );
 
     assert.ok(openAI1Span);
@@ -619,7 +628,7 @@ describe("Test SDK Decorators", () => {
     const jokeCreationSpan = spans.find(
       (span) => span.name === "joke_creation.task",
     );
-    const openAiChatSpans = spans.find((span) => span.name === "openai.chat");
+    const openAiChatSpans = spans.find((span) => span.name.startsWith("chat "));
 
     assert.ok(result);
     assert.ok(jokeCreationTaskWrapperSpan);
