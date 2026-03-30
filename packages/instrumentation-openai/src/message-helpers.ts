@@ -281,9 +281,7 @@ export function buildOpenAIOutputMessage(
     {
       role: "assistant",
       finish_reason:
-        finishReasonMap[choice.finish_reason] ??
-        choice.finish_reason ??
-        "stop",
+        finishReasonMap[choice.finish_reason] ?? choice.finish_reason ?? "stop",
       parts,
     },
   ];
@@ -303,9 +301,7 @@ export function buildOpenAICompletionOutputMessage(
   const outputMsg: OTelOutputMessage = {
     role: "assistant",
     finish_reason:
-      finishReasonMap[choice.finish_reason] ??
-      choice.finish_reason ??
-      "stop",
+      finishReasonMap[choice.finish_reason] ?? choice.finish_reason ?? "stop",
     parts: [{ type: "text", content: choice.text ?? "" }],
   };
   return [outputMsg];
