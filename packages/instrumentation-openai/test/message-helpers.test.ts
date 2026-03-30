@@ -39,8 +39,7 @@ describe("mapOpenAIContentBlock", () => {
     assert.strictEqual(result.type, "blob");
     assert.strictEqual(result.modality, "image");
     assert.strictEqual(result.mime_type, "image/png");
-    assert.strictEqual(result.data, "abc123");
-    assert.strictEqual(result.content, undefined);
+    assert.strictEqual(result.content, "abc123");
   });
 
   it("maps input_audio to BlobPart", () => {
@@ -51,8 +50,7 @@ describe("mapOpenAIContentBlock", () => {
     assert.strictEqual(result.type, "blob");
     assert.strictEqual(result.modality, "audio");
     assert.strictEqual(result.mime_type, "audio/mp3");
-    assert.strictEqual(result.data, "audiodata");
-    assert.strictEqual(result.content, undefined);
+    assert.strictEqual(result.content, "audiodata");
   });
 
   it("maps file (file_id) to FilePart", () => {
@@ -74,8 +72,7 @@ describe("mapOpenAIContentBlock", () => {
     }) as any;
     assert.strictEqual(result.type, "blob");
     assert.strictEqual(result.mime_type, "application/pdf");
-    assert.strictEqual(result.data, "base64data");
-    assert.strictEqual(result.content, undefined);
+    assert.strictEqual(result.content, "base64data");
     // File data should NOT have modality (documents aren't image/video/audio)
     assert.strictEqual(result.modality, undefined);
   });
@@ -339,8 +336,7 @@ describe("buildOpenAIOutputMessage", () => {
     assert.ok(audioPart);
     assert.strictEqual(audioPart.modality, "audio");
     assert.strictEqual(audioPart.mime_type, "audio/mp3");
-    assert.strictEqual(audioPart.data, "audiobase64");
-    assert.strictEqual(audioPart.content, undefined);
+    assert.strictEqual(audioPart.content, "audiobase64");
   });
 });
 

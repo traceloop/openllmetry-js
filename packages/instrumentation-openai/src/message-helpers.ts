@@ -273,7 +273,7 @@ export function buildOpenAIOutputMessage(
       type: "blob",
       modality: "audio",
       mime_type: "audio/mp3",
-      data: message.audio.data,
+      content: message.audio.data,
     });
   }
 
