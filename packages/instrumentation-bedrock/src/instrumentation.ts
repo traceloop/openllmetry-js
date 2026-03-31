@@ -27,7 +27,7 @@ import {
   InstrumentationNodeModuleDefinition,
   safeExecuteInTheMiddle,
 } from "@opentelemetry/instrumentation";
-import { BedrockInstrumentationConfig } from "./types";
+import { BedrockInstrumentationConfig, BedrockVendor } from "./types";
 import type * as bedrock from "@aws-sdk/client-bedrock-runtime";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
@@ -35,18 +35,54 @@ import {
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_RESPONSE_MODEL,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+  ATTR_GEN_AI_PROVIDER_NAME,
+  GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  ATTR_GEN_AI_SYSTEM_INSTRUCTIONS,
 } from "@opentelemetry/semantic-conventions/incubating";
+import {
+  formatInputMessages,
+  formatInputMessagesFromPrompt,
+  formatOutputMessage,
+  formatSystemInstructions,
+  mapBedrockContentBlock,
+} from "@traceloop/instrumentation-utils";
 import { version } from "../package.json";
+import { FinishReasons } from "@traceloop/ai-semantic-conventions";
+
+export const bedrockFinishReasonMap: Record<string, string> = {
+  // AI21
+  endoftext: FinishReasons.STOP,
+  // Amazon Titan / Nova
+  FINISH: FinishReasons.STOP,
+  LENGTH: FinishReasons.LENGTH,
+  CONTENT_FILTERED: FinishReasons.CONTENT_FILTER,
+  // Anthropic
+  end_turn: FinishReasons.STOP,
+  max_tokens: FinishReasons.LENGTH,
+  stop_sequence: FinishReasons.STOP,
+  tool_use: FinishReasons.TOOL_CALL,
+  // Cohere
+  COMPLETE: FinishReasons.STOP,
+  MAX_TOKENS: FinishReasons.LENGTH,
+  ERROR: FinishReasons.ERROR,
+  ERROR_TOXIC: FinishReasons.CONTENT_FILTER,
+  // Meta
+  stop: FinishReasons.STOP,
+  length: FinishReasons.LENGTH,
+};
 
 export class BedrockInstrumentation extends InstrumentationBase {
   declare protected _config: BedrockInstrumentationConfig;
@@ -161,6 +197,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
     params: Parameters<bedrock.BedrockRuntimeClient["send"]>[0];
   }): Span {
     let attributes: Attributes = {};
+    let spanName = "bedrock.completion";
 
     try {
       const input = params.input as bedrock.InvokeModelCommandInput;
@@ -169,7 +206,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
       );
 
       attributes = {
-        [ATTR_GEN_AI_SYSTEM]: "AWS",
+        [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
         [ATTR_GEN_AI_REQUEST_MODEL]: model,
         [ATTR_GEN_AI_RESPONSE_MODEL]: input.modelId,
         [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
@@ -177,7 +214,14 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
       if (typeof input.body === "string") {
         const requestBody = JSON.parse(input.body);
-
+        const operationType = this._getOperationType(modelVendor, requestBody);
+        spanName = `${operationType} ${model}`;
+        // Set operation name before _setRequestAttributes so it is always
+        // present even if _setRequestAttributes throws for an unexpected body.
+        attributes = {
+          ...attributes,
+          [ATTR_GEN_AI_OPERATION_NAME]: operationType,
+        };
         attributes = {
           ...attributes,
           ...this._setRequestAttributes(modelVendor, requestBody),
@@ -188,7 +232,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
       this._config.exceptionLogger?.(e);
     }
 
-    return this.tracer.startSpan(`bedrock.completion`, {
+    return this.tracer.startSpan(spanName, {
       kind: SpanKind.CLIENT,
       attributes,
     });
@@ -210,7 +254,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
             ? (span["attributes"] as Record<string, any>)
             : {};
 
-        if (ATTR_GEN_AI_SYSTEM in attributes) {
+        if (ATTR_GEN_AI_PROVIDER_NAME in attributes) {
           const modelId = attributes[ATTR_GEN_AI_RESPONSE_MODEL] as string;
           const { modelVendor, model } = this._extractVendorAndModel(modelId);
 
@@ -228,30 +272,34 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
               if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
                 span.setAttribute(
-                  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+                  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
                   parsedResponse["amazon-bedrock-invocationMetrics"][
                     "inputTokenCount"
                   ],
                 );
                 span.setAttribute(
-                  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+                  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
                   parsedResponse["amazon-bedrock-invocationMetrics"][
                     "outputTokenCount"
                   ],
                 );
 
-                span.setAttribute(
-                  SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+                const totalTokens =
                   parsedResponse["amazon-bedrock-invocationMetrics"][
                     "inputTokenCount"
                   ] +
-                    parsedResponse["amazon-bedrock-invocationMetrics"][
-                      "outputTokenCount"
-                    ],
+                  parsedResponse["amazon-bedrock-invocationMetrics"][
+                    "outputTokenCount"
+                  ];
+                span.setAttribute(
+                  SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+                  totalTokens,
                 );
               }
 
-              let responseAttributes = this._setResponseAttributes(
+              this._handleNovaStreamingMetadata(span, parsedResponse);
+
+              const responseAttributes = this._setResponseAttributes(
                 modelVendor,
                 parsedResponse,
                 true,
@@ -259,14 +307,28 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
               // ! NOTE: This make sure the content always have all streamed chunks
               if (this._shouldSendPrompts()) {
-                // Update local value with attribute value that was set by _setResponseAttributes
-                streamedContent +=
-                  responseAttributes[`${ATTR_GEN_AI_COMPLETION}.0.content`];
-                // re-assign the new value to responseAttributes
-                responseAttributes = {
-                  ...responseAttributes,
-                  [`${ATTR_GEN_AI_COMPLETION}.0.content`]: streamedContent,
-                };
+                const chunkContent = this._getStreamChunkContent(
+                  modelVendor,
+                  parsedResponse,
+                );
+                if (chunkContent !== undefined) {
+                  streamedContent += chunkContent;
+                }
+
+                // When finish reason is available (final chunk), set OTel 1.40 output message
+                if (responseAttributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS]) {
+                  const finishReasons = responseAttributes[
+                    ATTR_GEN_AI_RESPONSE_FINISH_REASONS
+                  ] as string[];
+                  responseAttributes[ATTR_GEN_AI_OUTPUT_MESSAGES] =
+                    formatOutputMessage(
+                      streamedContent,
+                      finishReasons[0] ?? null,
+                      {}, // already mapped by _setResponseAttributes
+                      attributes[ATTR_GEN_AI_OPERATION_NAME],
+                      mapBedrockContentBlock,
+                    );
+                }
               }
 
               span.setAttributes(responseAttributes);
@@ -302,44 +364,81 @@ export class BedrockInstrumentation extends InstrumentationBase {
     requestBody: Record<string, any>,
   ) {
     switch (vendor) {
-      case "ai21": {
+      case BedrockVendor.AI21: {
+        // Jamba format: messages array + max_tokens + top_p
+        if (requestBody["messages"]) {
+          return {
+            [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["top_p"],
+            [ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
+            [ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["max_tokens"],
+            ...(this._shouldSendPrompts()
+              ? {
+                  [ATTR_GEN_AI_INPUT_MESSAGES]: formatInputMessages(
+                    requestBody["messages"],
+                    mapBedrockContentBlock,
+                  ),
+                }
+              : {}),
+          };
+        }
+
+        // Legacy Jurassic format: prompt + topP + maxTokens
         return {
           [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["topP"],
           [ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["maxTokens"],
           [SpanAttributes.LLM_PRESENCE_PENALTY]:
-            requestBody["presencePenalty"]["scale"],
+            requestBody["presencePenalty"]?.["scale"],
           [SpanAttributes.LLM_FREQUENCY_PENALTY]:
-            requestBody["frequencyPenalty"]["scale"],
-
-          // Prompt & Role
+            requestBody["frequencyPenalty"]?.["scale"],
           ...(this._shouldSendPrompts()
             ? {
-                [`${ATTR_GEN_AI_PROMPT}.0.role`]: "user",
-                [`${ATTR_GEN_AI_PROMPT}.0.content`]: requestBody["prompt"],
+                [ATTR_GEN_AI_INPUT_MESSAGES]: formatInputMessagesFromPrompt(
+                  requestBody["prompt"],
+                ),
               }
             : {}),
         };
       }
-      case "amazon": {
+      case BedrockVendor.AMAZON: {
+        // Amazon Nova format: messages array + inferenceConfig
+        if (requestBody["messages"]) {
+          return {
+            [ATTR_GEN_AI_REQUEST_TOP_P]:
+              requestBody["inferenceConfig"]?.["topP"],
+            [ATTR_GEN_AI_REQUEST_TEMPERATURE]:
+              requestBody["inferenceConfig"]?.["temperature"],
+            [ATTR_GEN_AI_REQUEST_MAX_TOKENS]:
+              requestBody["inferenceConfig"]?.["maxTokens"],
+            ...(this._shouldSendPrompts()
+              ? {
+                  [ATTR_GEN_AI_INPUT_MESSAGES]: formatInputMessages(
+                    requestBody["messages"],
+                    mapBedrockContentBlock,
+                  ),
+                }
+              : {}),
+          };
+        }
+
+        // Amazon Titan format: inputText + textGenerationConfig
         return {
           [ATTR_GEN_AI_REQUEST_TOP_P]:
-            requestBody["textGenerationConfig"]["topP"],
+            requestBody["textGenerationConfig"]?.["topP"],
           [ATTR_GEN_AI_REQUEST_TEMPERATURE]:
-            requestBody["textGenerationConfig"]["temperature"],
+            requestBody["textGenerationConfig"]?.["temperature"],
           [ATTR_GEN_AI_REQUEST_MAX_TOKENS]:
-            requestBody["textGenerationConfig"]["maxTokenCount"],
-
-          // Prompt & Role
+            requestBody["textGenerationConfig"]?.["maxTokenCount"],
           ...(this._shouldSendPrompts()
             ? {
-                [`${ATTR_GEN_AI_PROMPT}.0.role`]: "user",
-                [`${ATTR_GEN_AI_PROMPT}.0.content`]: requestBody["inputText"],
+                [ATTR_GEN_AI_INPUT_MESSAGES]: formatInputMessagesFromPrompt(
+                  requestBody["inputText"],
+                ),
               }
             : {}),
         };
       }
-      case "anthropic": {
+      case BedrockVendor.ANTHROPIC: {
         const baseAttributes = {
           [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["top_p"],
           [SpanAttributes.LLM_TOP_K]: requestBody["top_k"],
@@ -354,15 +453,16 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
         // Handle new messages API format (used by langchain)
         if (requestBody["messages"]) {
-          const promptAttributes: Record<string, any> = {};
-          requestBody["messages"].forEach((message: any, index: number) => {
-            promptAttributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] =
-              message.role;
-            promptAttributes[`${ATTR_GEN_AI_PROMPT}.${index}.content`] =
-              typeof message.content === "string"
-                ? message.content
-                : JSON.stringify(message.content);
-          });
+          const promptAttributes: Record<string, any> = {
+            [ATTR_GEN_AI_INPUT_MESSAGES]: formatInputMessages(
+              requestBody["messages"],
+              mapBedrockContentBlock,
+            ),
+          };
+          if (requestBody["system"] !== undefined) {
+            promptAttributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS] =
+              formatSystemInstructions(requestBody["system"]);
+          }
           return { ...baseAttributes, ...promptAttributes };
         }
 
@@ -370,44 +470,34 @@ export class BedrockInstrumentation extends InstrumentationBase {
         if (requestBody["prompt"]) {
           return {
             ...baseAttributes,
-            [`${ATTR_GEN_AI_PROMPT}.0.role`]: "user",
-            [`${ATTR_GEN_AI_PROMPT}.0.content`]: requestBody["prompt"]
-              // The format is removing when we are setting span attribute
-              .replace("\n\nHuman:", "")
-              .replace("\n\nAssistant:", ""),
+            [ATTR_GEN_AI_INPUT_MESSAGES]: formatInputMessagesFromPrompt(
+              requestBody["prompt"]
+                .replace("\n\nHuman:", "")
+                .replace("\n\nAssistant:", ""),
+            ),
           };
         }
 
         return baseAttributes;
       }
-      case "cohere": {
+      case BedrockVendor.COHERE: {
         return {
           [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["p"],
           [SpanAttributes.LLM_TOP_K]: requestBody["k"],
           [ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["max_tokens"],
-
-          // Prompt & Role
-          ...(this._shouldSendPrompts()
-            ? {
-                [`${ATTR_GEN_AI_PROMPT}.0.role`]: "user",
-                [`${ATTR_GEN_AI_PROMPT}.0.content`]:
-                  requestBody["message"] || requestBody["prompt"],
-              }
-            : {}),
         };
       }
-      case "meta": {
+      case BedrockVendor.META: {
         return {
           [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["top_p"],
           [ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["max_gen_len"],
-
-          // Prompt & Role
           ...(this._shouldSendPrompts()
             ? {
-                [`${ATTR_GEN_AI_PROMPT}.0.role`]: "user",
-                [`${ATTR_GEN_AI_PROMPT}.0.content`]: requestBody["prompt"],
+                [ATTR_GEN_AI_INPUT_MESSAGES]: formatInputMessagesFromPrompt(
+                  requestBody["prompt"],
+                ),
               }
             : {}),
         };
@@ -423,48 +513,188 @@ export class BedrockInstrumentation extends InstrumentationBase {
     isStream = false,
   ) {
     switch (vendor) {
-      case "ai21": {
+      case BedrockVendor.AI21: {
+        // Jamba format: choices[0].message + choices[0].finish_reason
+        if (response["choices"]) {
+          const usage = response["usage"];
+          const finishReason = response["choices"][0]?.["finish_reason"];
+          const content = isStream
+            ? response["choices"][0]?.["delta"]?.["content"]
+            : response["choices"][0]?.["message"]?.["content"];
+          return {
+            ...(finishReason != null
+              ? {
+                  [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+                    bedrockFinishReasonMap[finishReason] ?? finishReason,
+                  ],
+                }
+              : {}),
+            ...(usage
+              ? {
+                  [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: usage["prompt_tokens"],
+                  [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage["completion_tokens"],
+                  [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
+                    usage["total_tokens"],
+                }
+              : {}),
+            ...(this._shouldSendPrompts()
+              ? {
+                  [ATTR_GEN_AI_OUTPUT_MESSAGES]: formatOutputMessage(
+                    content ?? "",
+                    finishReason,
+                    bedrockFinishReasonMap,
+                    GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+                    mapBedrockContentBlock,
+                  ),
+                }
+              : {}),
+          };
+        }
+
+        // Legacy Jurassic format: completions[0].data.text
+        const jurassicFinishReason =
+          response["completions"][0]["finishReason"]["reason"];
+        const jurassicContent = response["completions"][0]["data"]["text"];
         return {
-          [`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`]:
-            response["completions"][0]["finishReason"]["reason"],
-          [`${ATTR_GEN_AI_COMPLETION}.0.role`]: "assistant",
+          [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+            bedrockFinishReasonMap[jurassicFinishReason] ??
+              jurassicFinishReason,
+          ],
           ...(this._shouldSendPrompts()
             ? {
-                [`${ATTR_GEN_AI_COMPLETION}.0.content`]:
-                  response["completions"][0]["data"]["text"],
+                [ATTR_GEN_AI_OUTPUT_MESSAGES]: formatOutputMessage(
+                  jurassicContent,
+                  jurassicFinishReason,
+                  bedrockFinishReasonMap,
+                  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+                  mapBedrockContentBlock,
+                ),
               }
             : {}),
         };
       }
-      case "amazon": {
+      case BedrockVendor.AMAZON: {
+        if (isStream) {
+          // Amazon Nova format: contentBlockDelta has text, messageStop has stopReason
+          const novaFinishReason = response["messageStop"]?.["stopReason"];
+          // Amazon Titan format: outputText, completionReason
+          const titanFinishReason = response["completionReason"];
+          const finishReason = novaFinishReason ?? titanFinishReason;
+
+          return {
+            ...(finishReason != null
+              ? {
+                  [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+                    bedrockFinishReasonMap[finishReason] ?? finishReason,
+                  ],
+                }
+              : {}),
+            // Titan includes token counts on the final chunk
+            ...(response["inputTextTokenCount"] != null
+              ? {
+                  [ATTR_GEN_AI_USAGE_INPUT_TOKENS]:
+                    response["inputTextTokenCount"],
+                  [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]:
+                    response["totalOutputTextTokenCount"],
+                  [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
+                    response["inputTextTokenCount"] +
+                    response["totalOutputTextTokenCount"],
+                }
+              : {}),
+          };
+        }
+
+        // Amazon Titan token fields
+        const titanInputTokens = response["inputTextTokenCount"];
+        const titanOutputTokens = response["results"]?.[0]?.["tokenCount"];
+        // Amazon Nova token fields
+        const novaUsage = response["usage"];
+
+        const amazonFinishReason =
+          response["results"]?.[0]?.["completionReason"] ??
+          response["stopReason"];
+        const novaRawContent = response["output"]?.["message"]?.["content"];
+        const titanContent = response["results"]?.[0]?.["outputText"];
+        const outputContent = novaRawContent ?? titanContent ?? "";
+        const operationType = novaRawContent
+          ? GEN_AI_OPERATION_NAME_VALUE_CHAT
+          : GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
+
         return {
-          [`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`]: isStream
-            ? response["completionReason"]
-            : response["results"][0]["completionReason"],
-          [`${ATTR_GEN_AI_COMPLETION}.0.role`]: "assistant",
-          [ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: response["inputTextTokenCount"],
-          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]: isStream
-            ? response["totalOutputTextTokenCount"]
-            : response["results"][0]["tokenCount"],
-          [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: isStream
-            ? response["inputTextTokenCount"] +
-              response["totalOutputTextTokenCount"]
-            : response["inputTextTokenCount"] +
-              response["results"][0]["tokenCount"],
+          ...(amazonFinishReason != null
+            ? {
+                [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+                  bedrockFinishReasonMap[amazonFinishReason] ??
+                    amazonFinishReason,
+                ],
+              }
+            : {}),
+          ...(titanInputTokens != null
+            ? {
+                [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: titanInputTokens,
+                [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: titanOutputTokens,
+                [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
+                  titanInputTokens + titanOutputTokens,
+              }
+            : novaUsage != null
+              ? {
+                  [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: novaUsage["inputTokens"],
+                  [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: novaUsage["outputTokens"],
+                  [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
+                    novaUsage["totalTokens"],
+                }
+              : {}),
           ...(this._shouldSendPrompts()
             ? {
-                [`${ATTR_GEN_AI_COMPLETION}.0.content`]: isStream
-                  ? response["outputText"]
-                  : response["results"][0]["outputText"],
+                [ATTR_GEN_AI_OUTPUT_MESSAGES]: formatOutputMessage(
+                  outputContent,
+                  amazonFinishReason,
+                  bedrockFinishReasonMap,
+                  operationType,
+                  mapBedrockContentBlock,
+                ),
               }
             : {}),
         };
       }
-      case "anthropic": {
-        const baseAttributes = {
-          [`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`]:
-            response["stop_reason"],
-          [`${ATTR_GEN_AI_COMPLETION}.0.role`]: "assistant",
+      case BedrockVendor.ANTHROPIC: {
+        if (isStream) {
+          // New messages API streaming: content_block_delta has delta.text,
+          // message_delta has delta.stop_reason
+          const stopReason =
+            response["delta"]?.["stop_reason"] ?? response["stop_reason"];
+          const finishReason = stopReason ?? undefined;
+
+          return {
+            ...(finishReason != null
+              ? {
+                  [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+                    bedrockFinishReasonMap[finishReason] ?? finishReason,
+                  ],
+                }
+              : {}),
+          };
+        }
+
+        const stopReason = response["stop_reason"];
+        const usage = response["usage"];
+        const baseAttributes: Record<string, any> = {
+          ...(stopReason != null
+            ? {
+                [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+                  bedrockFinishReasonMap[stopReason] ?? stopReason,
+                ],
+              }
+            : {}),
+          // Anthropic new messages API returns usage on non-streaming response
+          ...(usage
+            ? {
+                [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: usage["input_tokens"],
+                [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage["output_tokens"],
+                [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
+                  (usage["input_tokens"] || 0) + (usage["output_tokens"] || 0),
+              }
+            : {}),
         };
 
         if (!this._shouldSendPrompts()) {
@@ -474,11 +704,17 @@ export class BedrockInstrumentation extends InstrumentationBase {
         // Handle new messages API format response
         if (response["content"]) {
           const content = Array.isArray(response["content"])
-            ? response["content"].map((c: any) => c.text || c).join("")
+            ? response["content"]
             : response["content"];
           return {
             ...baseAttributes,
-            [`${ATTR_GEN_AI_COMPLETION}.0.content`]: content,
+            [ATTR_GEN_AI_OUTPUT_MESSAGES]: formatOutputMessage(
+              content,
+              stopReason,
+              bedrockFinishReasonMap,
+              GEN_AI_OPERATION_NAME_VALUE_CHAT,
+              mapBedrockContentBlock,
+            ),
           };
         }
 
@@ -486,59 +722,78 @@ export class BedrockInstrumentation extends InstrumentationBase {
         if (response["completion"]) {
           return {
             ...baseAttributes,
-            [`${ATTR_GEN_AI_COMPLETION}.0.content`]: response["completion"],
+            [ATTR_GEN_AI_OUTPUT_MESSAGES]: formatOutputMessage(
+              response["completion"],
+              stopReason,
+              bedrockFinishReasonMap,
+              GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+              mapBedrockContentBlock,
+            ),
           };
         }
 
         return baseAttributes;
       }
-      case "cohere": {
-        const baseAttributes = {
-          [`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`]:
-            response["generations"]?.[0]?.["finish_reason"],
-          [`${ATTR_GEN_AI_COMPLETION}.0.role`]: "assistant",
-          ...(this._shouldSendPrompts()
-            ? {
-                [`${ATTR_GEN_AI_COMPLETION}.0.content`]:
-                  response["generations"]?.[0]?.["text"],
-              }
-            : {}),
-        };
-
+      case BedrockVendor.COHERE: {
         // Add token usage if available
         if (response["meta"] && response["meta"]["billed_units"]) {
           const billedUnits = response["meta"]["billed_units"];
           return {
-            ...baseAttributes,
-            [ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: billedUnits["input_tokens"],
-            [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]: billedUnits["output_tokens"],
-            [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]:
+            [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: billedUnits["input_tokens"],
+            [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: billedUnits["output_tokens"],
+            [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
               (billedUnits["input_tokens"] || 0) +
               (billedUnits["output_tokens"] || 0),
           };
         }
 
-        return baseAttributes;
+        return {};
       }
-      case "meta": {
+      case BedrockVendor.META: {
+        const metaFinishReason = response["stop_reason"];
+        const metaContent = response["generation"];
         return {
-          [`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`]:
-            response["stop_reason"],
-          [`${ATTR_GEN_AI_COMPLETION}.0.role`]: "assistant",
-          [ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: response["prompt_token_count"],
-          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]:
-            response["generation_token_count"],
-          [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]:
+          ...(metaFinishReason != null
+            ? {
+                [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+                  bedrockFinishReasonMap[metaFinishReason] ?? metaFinishReason,
+                ],
+              }
+            : {}),
+          [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: response["prompt_token_count"],
+          [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: response["generation_token_count"],
+          [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
             response["prompt_token_count"] + response["generation_token_count"],
           ...(this._shouldSendPrompts()
             ? {
-                [`${ATTR_GEN_AI_COMPLETION}.0.content`]: response["generation"],
+                [ATTR_GEN_AI_OUTPUT_MESSAGES]: formatOutputMessage(
+                  metaContent ?? "",
+                  metaFinishReason,
+                  bedrockFinishReasonMap,
+                  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+                  mapBedrockContentBlock,
+                ),
               }
             : {}),
         };
       }
       default:
         return {};
+    }
+  }
+
+  private _handleNovaStreamingMetadata(
+    span: Span,
+    parsedResponse: Record<string, any>,
+  ): void {
+    if ("metadata" in parsedResponse && parsedResponse["metadata"]?.["usage"]) {
+      const usage = parsedResponse["metadata"]["usage"];
+      span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage["inputTokens"]);
+      span.setAttribute(ATTR_GEN_AI_USAGE_OUTPUT_TOKENS, usage["outputTokens"]);
+      span.setAttribute(
+        SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+        usage["totalTokens"],
+      );
     }
   }
 
@@ -556,6 +811,46 @@ export class BedrockInstrumentation extends InstrumentationBase {
       : true;
   }
 
+  private _getOperationType(
+    vendor: string,
+    requestBody: Record<string, any>,
+  ): string {
+    switch (vendor) {
+      case BedrockVendor.AI21:
+      case BedrockVendor.AMAZON:
+      case BedrockVendor.ANTHROPIC:
+        return requestBody["messages"]
+          ? GEN_AI_OPERATION_NAME_VALUE_CHAT
+          : GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
+      case BedrockVendor.COHERE:
+      case BedrockVendor.META:
+        return GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
+      default:
+        return GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
+    }
+  }
+
+  private _getStreamChunkContent(
+    vendor: string,
+    response: Record<string, any>,
+  ): string | undefined {
+    switch (vendor) {
+      case BedrockVendor.AMAZON:
+        return (
+          response["contentBlockDelta"]?.["delta"]?.["text"] ??
+          response["outputText"]
+        );
+      case BedrockVendor.ANTHROPIC:
+        return response["delta"]?.["text"] ?? response["completion"];
+      case BedrockVendor.AI21:
+        return response["choices"]?.[0]?.["delta"]?.["content"];
+      case BedrockVendor.META:
+        return response["generation"];
+      default:
+        return undefined;
+    }
+  }
+
   private _extractVendorAndModel(modelId: string): {
     modelVendor: string;
     model: string;
@@ -564,10 +859,29 @@ export class BedrockInstrumentation extends InstrumentationBase {
       return { modelVendor: "", model: "" };
     }
 
-    const parts = modelId.split(".");
+    // Handle cross-region inference profile IDs like "us.anthropic.claude-3-5-sonnet-20241022-v2:0"
+    // Mirrors Python's _cross_region_check logic.
+    const prefixes = ["us", "us-gov", "eu", "apac"];
+    const hasCrossRegionPrefix = prefixes.some((prefix) =>
+      modelId.startsWith(prefix + "."),
+    );
+
+    if (hasCrossRegionPrefix) {
+      const parts = modelId.split(".");
+      if (parts.length > 2) {
+        parts.shift(); // remove region prefix ("us", "eu", etc.)
+      }
+      return { modelVendor: parts[0] || "", model: parts[1] || "" };
+    }
+
+    // Standard format: "vendor.model-name"
+    const dotIndex = modelId.indexOf(".");
+    if (dotIndex === -1) {
+      return { modelVendor: modelId, model: "" };
+    }
     return {
-      modelVendor: parts[0] || "",
-      model: parts[1] || "",
+      modelVendor: modelId.slice(0, dotIndex),
+      model: modelId.slice(dotIndex + 1),
     };
   }
 }

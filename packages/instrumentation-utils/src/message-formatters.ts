@@ -153,14 +153,18 @@ export function formatInputMessages(
     content: string | Array<any>;
   }>,
   contentBlockMapper: (block: any) => object,
+  // When false, message content is omitted from the span (privacy/security).
+  // Role is always kept — it is metadata, not content.
+  traceContent = true,
 ): string {
   return JSON.stringify(
     messages.map((message) => ({
       role: message.role,
-      parts:
-        typeof message.content === "string"
+      parts: traceContent
+        ? typeof message.content === "string"
           ? [{ type: "text", content: message.content }]
-          : message.content.map(contentBlockMapper),
+          : message.content.map(contentBlockMapper)
+        : [],
     })),
   );
 }
@@ -181,9 +185,17 @@ export function formatInputMessages(
  * @param prompt - The text prompt string
  * @returns JSON string — array with a single user ChatMessage
  */
-export function formatInputMessagesFromPrompt(prompt: string): string {
+export function formatInputMessagesFromPrompt(
+  prompt: string,
+  // When false, message content is omitted from the span (privacy/security).
+  // Role is always kept — it is metadata, not content.
+  traceContent = true,
+): string {
   return JSON.stringify([
-    { role: "user", parts: [{ type: "text", content: prompt }] },
+    {
+      role: "user",
+      parts: traceContent ? [{ type: "text", content: prompt }] : [],
+    },
   ]);
 }
 
@@ -258,22 +270,28 @@ export function formatOutputMessage(
   finishReasonMap: Record<string, string>,
   type: string,
   contentBlockMapper: (block: any) => object,
+  // When false, message content is omitted from the span (privacy/security).
+  // Role and finish_reason are always kept — they are metadata, not content.
+  traceContent = true,
 ): string {
   const outputMessage: Record<string, unknown> = {
     role: "assistant",
-    ...(stopReason && {
-      finish_reason: finishReasonMap[stopReason] ?? stopReason,
-    }),
+    // Always include finish_reason. Use "" when the model did not return a stop reason.
+    finish_reason: stopReason
+      ? (finishReasonMap[stopReason] ?? stopReason)
+      : "",
     parts: [],
   };
 
-  if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT && Array.isArray(content)) {
-    outputMessage.parts = content.map(contentBlockMapper);
-  } else if (
-    type === GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION &&
-    typeof content === "string"
-  ) {
-    outputMessage.parts = [{ type: "text", content }];
+  if (traceContent) {
+    if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT && Array.isArray(content)) {
+      outputMessage.parts = content.map(contentBlockMapper);
+    } else if (
+      type === GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION &&
+      typeof content === "string"
+    ) {
+      outputMessage.parts = [{ type: "text", content }];
+    }
   }
 
   return JSON.stringify([outputMessage]);

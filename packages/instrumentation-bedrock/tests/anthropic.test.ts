@@ -27,15 +27,20 @@ import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  // OTel 1.40 new attributes
+  ATTR_GEN_AI_PROVIDER_NAME,
+  GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  ATTR_GEN_AI_OPERATION_NAME,
+  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
@@ -93,7 +98,8 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     );
   });
 
-  after(() => {
+  after(async () => {
+    await provider.forceFlush();
     instrumentation.disable();
   });
 
@@ -102,6 +108,7 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     context.setGlobalContextManager(contextManager);
 
     const { server } = this.polly as Polly;
+    server.any("https://api.traceloop.dev/*").passthrough();
     server.any().on("beforePersist", (_req, recording) => {
       recording.request.headers = recording.request.headers.filter(
         ({ name }: { name: string }) =>
@@ -144,7 +151,6 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
@@ -160,17 +166,52 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
       attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.max_tokens_to_sample,
     );
-    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
-    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.content`], prompt);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+
+    // ── OTel 1.40 new assertions (TDD — will fail until implementation) ──
+
+    // Provider and operation
     assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-      "assistant",
+      attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
     );
     assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-      parsedResponse["completion"],
+      attributes[ATTR_GEN_AI_OPERATION_NAME],
+      GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     );
+
+    // Span name: "text_completion <model>"
+    assert.strictEqual(
+      spans[0].name,
+      `${GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION} ${model}`,
+    );
+
+    // gen_ai.input.messages — valid OTel JSON
+    const inputMessages = JSON.parse(
+      attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(inputMessages));
+    assert.ok(inputMessages.length > 0);
+    assert.strictEqual(inputMessages[0].role, "user");
+    assert.ok(Array.isArray(inputMessages[0].parts));
+    assert.strictEqual(inputMessages[0].parts[0].type, "text");
+
+    // gen_ai.output.messages — valid OTel JSON
+    const outputMessages = JSON.parse(
+      attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(outputMessages));
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.ok(Array.isArray(outputMessages[0].parts));
+    assert.ok(outputMessages[0].finish_reason !== undefined);
+
+    // gen_ai.response.finish_reasons — Anthropic "stop_sequence" → "stop"
+    const finishReasons = attributes[
+      ATTR_GEN_AI_RESPONSE_FINISH_REASONS
+    ] as string[];
+    assert.ok(Array.isArray(finishReasons));
+    assert.ok(finishReasons.length > 0);
+    assert.strictEqual(finishReasons[0], "stop");
   });
 
   it("should set request and response attributes in span for given prompt with streaming result", async () => {
@@ -209,7 +250,6 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
         assert.strictEqual(
           attributes[SpanAttributes.LLM_REQUEST_TYPE],
           "completion",
@@ -225,32 +265,64 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
           attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
           params.max_tokens_to_sample,
         );
-        assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-          prompt,
-        );
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+
+        // ── OTel 1.40 new assertions (TDD — will fail until implementation) ──
+
+        // Provider and operation
         assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-          "assistant",
+          attributes[ATTR_GEN_AI_PROVIDER_NAME],
+          GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
         );
         assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-          content,
+          attributes[ATTR_GEN_AI_OPERATION_NAME],
+          GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
         );
+
+        // Span name: "text_completion <model>"
+        assert.strictEqual(
+          spans[0].name,
+          `${GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION} ${model}`,
+        );
+
+        // gen_ai.input.messages — valid OTel JSON
+        const inputMessages = JSON.parse(
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
+        );
+        assert.ok(Array.isArray(inputMessages));
+        assert.strictEqual(inputMessages[0].role, "user");
+        assert.ok(Array.isArray(inputMessages[0].parts));
+        assert.strictEqual(inputMessages[0].parts[0].type, "text");
+
+        // gen_ai.output.messages — valid OTel JSON
+        const outputMessages = JSON.parse(
+          attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
+        );
+        assert.ok(Array.isArray(outputMessages));
+        assert.strictEqual(outputMessages[0].role, "assistant");
+        assert.ok(outputMessages[0].finish_reason !== undefined);
+
+        // gen_ai.response.finish_reasons — Anthropic "stop_sequence" → "stop"
+        const finishReasons = attributes[
+          ATTR_GEN_AI_RESPONSE_FINISH_REASONS
+        ] as string[];
+        assert.ok(Array.isArray(finishReasons));
+        assert.ok(finishReasons.length > 0);
+        assert.strictEqual(finishReasons[0], "stop");
+
+        // Backward compat
 
         if ("amazon-bedrock-invocationMetrics" in result) {
           assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
             result["amazon-bedrock-invocationMetrics"]["inputTokenCount"],
           );
           assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
             result["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
           );
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
+            attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
             result["amazon-bedrock-invocationMetrics"]["inputTokenCount"] +
               result["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
           );

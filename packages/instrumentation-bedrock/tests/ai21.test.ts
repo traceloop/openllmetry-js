@@ -27,13 +27,18 @@ import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
-  ATTR_GEN_AI_SYSTEM,
+  // OTel 1.40 new attributes
+  ATTR_GEN_AI_PROVIDER_NAME,
+  GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  ATTR_GEN_AI_OPERATION_NAME,
+  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
@@ -143,7 +148,6 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
     assert.strictEqual(
       attributes[SpanAttributes.LLM_REQUEST_TYPE],
       "completion",
@@ -166,20 +170,52 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
       attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
       params.maxTokens,
     );
-    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
-    assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.content`], prompt);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+
+    // ── OTel 1.40 new assertions (TDD — will fail until implementation) ──
+
+    // Provider and operation
     assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-      "assistant",
+      attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
     );
     assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
-      parsedResponse["completions"][0]["finishReason"]["reason"],
+      attributes[ATTR_GEN_AI_OPERATION_NAME],
+      GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
     );
+
+    // Span name: "text_completion <model>"
     assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-      parsedResponse["completions"][0]["data"]["text"],
+      spans[0].name,
+      `${GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION} ${model}`,
     );
+
+    // gen_ai.input.messages — valid OTel JSON
+    const inputMessages = JSON.parse(
+      attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(inputMessages));
+    assert.ok(inputMessages.length > 0);
+    assert.ok(typeof inputMessages[0].role === "string");
+    assert.ok(Array.isArray(inputMessages[0].parts));
+    assert.strictEqual(inputMessages[0].parts[0].type, "text");
+
+    // gen_ai.output.messages — valid OTel JSON
+    const outputMessages = JSON.parse(
+      attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(outputMessages));
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.ok(Array.isArray(outputMessages[0].parts));
+    assert.ok(outputMessages[0].finish_reason !== undefined);
+
+    // gen_ai.response.finish_reasons — OTel mapped value
+    const finishReasons = attributes[
+      ATTR_GEN_AI_RESPONSE_FINISH_REASONS
+    ] as string[];
+    assert.ok(Array.isArray(finishReasons));
+    assert.ok(finishReasons.length > 0);
+    // AI21 "endoftext" → "stop"
+    assert.strictEqual(finishReasons[0], "stop");
   });
 });

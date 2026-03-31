@@ -516,7 +516,7 @@ describe("formatOutputMessage", () => {
     assert.strictEqual(result[0].finish_reason, "some_unknown_reason");
   });
 
-  it("omits finish_reason when stopReason is null", () => {
+  it("sets finish_reason to empty string when stopReason is null", () => {
     const result = JSON.parse(
       formatOutputMessage(
         fixtures.outputMessages.text_only,
@@ -526,7 +526,7 @@ describe("formatOutputMessage", () => {
         mapAnthropicContentBlock,
       ),
     );
-    assert.strictEqual(result[0].finish_reason, undefined);
+    assert.strictEqual(result[0].finish_reason, "");
   });
 
   it("formats tool_use output as ToolCallRequestPart", () => {

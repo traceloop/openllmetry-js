@@ -8,4 +8,5 @@ export {
 export {
   mapAnthropicContentBlock,
   mapOpenAIContentBlock,
+  mapBedrockContentBlock,
 } from "./content-block-mappers";

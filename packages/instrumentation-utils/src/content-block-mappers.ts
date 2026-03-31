@@ -248,3 +248,66 @@ export function mapOpenAIContentBlock(block: any): object {
       return { type: block.type, ...block };
   }
 }
+
+// =============================================================================
+// Bedrock
+// =============================================================================
+//  Maps a single Bedrock SDK content block to its OTel-compliant part object.
+//
+//  Bedrock is used by multiple providers (Anthropic, AI21, Amazon Nova, Meta,
+//  Cohere) — all share the same block schema on the Bedrock layer:
+//
+//   plain string              → TextPart
+//   { type: "text", text }    → TextPart
+//   { text } (Nova format)    → TextPart
+//   tool_use                  → ToolCallRequestPart
+//   tool_result               → ToolCallResponsePart
+//   <unknown>                 → GenericPart
+
+/**
+ * Maps a single Bedrock content block to its OTel-compliant part object.
+ * Used by formatInputMessages and formatOutputMessage for all Bedrock providers.
+ */
+export const mapBedrockContentBlock = (block: any): object => {
+  if (typeof block === "string") {
+    return { type: "text", content: block };
+  }
+
+  switch (block.type) {
+    // -------------------------------------------------------------------------
+    // Text
+    // -------------------------------------------------------------------------
+    case "text":
+      return { type: "text", content: block.text };
+
+    // -------------------------------------------------------------------------
+    // Tool use (model requests a function call)
+    // -------------------------------------------------------------------------
+    case "tool_use":
+      return {
+        type: "tool_call",
+        id: block.id,
+        name: block.name,
+        arguments: block.input,
+      };
+
+    // -------------------------------------------------------------------------
+    // Tool result (client returns function result to model)
+    // -------------------------------------------------------------------------
+    case "tool_result":
+      return {
+        type: "tool_call_response",
+        id: block.tool_use_id,
+        response: block.content,
+      };
+
+    // -------------------------------------------------------------------------
+    // Amazon Nova format: { text: "..." } without explicit type
+    // -------------------------------------------------------------------------
+    default:
+      if (!block.type && block.text !== undefined) {
+        return { type: "text", content: block.text };
+      }
+      return { type: block.type, ...block };
+  }
+};
