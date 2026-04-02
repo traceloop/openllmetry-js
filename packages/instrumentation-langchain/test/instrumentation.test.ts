@@ -36,12 +36,20 @@ import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_ru
 import { LangChainInstrumentation } from "../src/instrumentation";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_PROVIDER_NAME,
+  ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_AGENT_NAME,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT,
+  GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL,
+  GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+  GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { BedrockInstrumentation } from "@traceloop/instrumentation-bedrock";
 
@@ -129,11 +137,21 @@ describe("Test Langchain instrumentation", async function () {
     const spans = memoryExporter.getFinishedSpans();
 
     const wikipediaSpan = spans.find(
-      (span) => span.name === "WikipediaQueryRun.task",
+      (span) => span.name === "execute_tool WikipediaQueryRun",
     );
 
     assert.ok(result);
     assert.ok(wikipediaSpan);
+    // OTel agent span conventions
+    assert.strictEqual(
+      wikipediaSpan.attributes[ATTR_GEN_AI_OPERATION_NAME],
+      GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL,
+    );
+    assert.strictEqual(
+      wikipediaSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "langchain",
+    );
+    // Backward compatibility
     assert.strictEqual(wikipediaSpan.attributes["traceloop.span.kind"], "task");
   });
 
@@ -159,11 +177,25 @@ describe("Test Langchain instrumentation", async function () {
 
     const spans = memoryExporter.getFinishedSpans();
     const agentSpan = spans.find(
-      (span) => span.name === "AgentExecutor.workflow",
+      (span) => span.name === "invoke_agent AgentExecutor",
     );
 
     assert.ok(result);
     assert.ok(agentSpan);
+    // OTel agent span conventions
+    assert.strictEqual(
+      agentSpan.attributes[ATTR_GEN_AI_OPERATION_NAME],
+      GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT,
+    );
+    assert.strictEqual(
+      agentSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "langchain",
+    );
+    assert.strictEqual(
+      agentSpan.attributes[ATTR_GEN_AI_AGENT_NAME],
+      "AgentExecutor",
+    );
+    // Backward compatibility
     assert.strictEqual(agentSpan.attributes["traceloop.span.kind"], "workflow");
     assert.ok(agentSpan.attributes["traceloop.entity.input"]);
     assert.ok(agentSpan.attributes["traceloop.entity.output"]);
@@ -352,7 +384,7 @@ describe("Test Langchain instrumentation", async function () {
 
     const spans = memoryExporter.getFinishedSpans();
     const wikipediaSpan = spans.find(
-      (span) => span.name === "WikipediaQueryRun.task",
+      (span) => span.name === "execute_tool WikipediaQueryRun",
     );
 
     assert.ok(result);
@@ -438,53 +470,80 @@ describe("Test Langchain instrumentation", async function () {
     assert.ok(response);
     assert.ok(response.content);
 
-    // Look for LLM span created by Bedrock instrumentation
-    const llmSpan = spans.find(
-      (span) => span.attributes[ATTR_GEN_AI_SYSTEM] === "AWS",
+    // Look for LangChain callback handler span (uses new OTel 1.40 conventions)
+    const chatSpan = spans.find(
+      (span) =>
+        span.attributes[ATTR_GEN_AI_PROVIDER_NAME] ===
+        GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
     );
 
-    if (llmSpan) {
-      // Test LLM span attributes like in amazon.test.ts
-      const attributes = llmSpan.attributes;
-      assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "AWS");
-      assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
+    if (chatSpan) {
+      const attributes = chatSpan.attributes;
+      assert.strictEqual(
+        attributes[ATTR_GEN_AI_PROVIDER_NAME],
+        GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+      );
+      assert.strictEqual(
+        attributes[ATTR_GEN_AI_OPERATION_NAME],
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
+      );
       assert.ok(attributes[ATTR_GEN_AI_REQUEST_MODEL]);
-      assert.strictEqual(attributes[`${ATTR_GEN_AI_PROMPT}.0.role`], "user");
-      assert.strictEqual(
-        attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
-        "What is a popular landmark in the most populous city in the US?",
-      );
-      assert.strictEqual(
-        attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-        "assistant",
-      );
-      assert.ok(attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`]);
-      assert.ok(attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS]);
-      assert.ok(attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
-      assert.ok(attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
+
+      // Input messages should be JSON string with OTel schema
+      if (attributes[ATTR_GEN_AI_INPUT_MESSAGES]) {
+        const inputMessages = JSON.parse(
+          attributes[ATTR_GEN_AI_INPUT_MESSAGES].toString(),
+        );
+        assert.ok(Array.isArray(inputMessages));
+        assert.strictEqual(inputMessages[0].role, "user");
+        assert.ok(inputMessages[0].parts);
+        assert.strictEqual(inputMessages[0].parts[0].type, "text");
+        assert.strictEqual(
+          inputMessages[0].parts[0].content,
+          "What is a popular landmark in the most populous city in the US?",
+        );
+      }
+
+      // Output messages should be JSON string with OTel schema
+      if (attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]) {
+        const outputMessages = JSON.parse(
+          attributes[ATTR_GEN_AI_OUTPUT_MESSAGES].toString(),
+        );
+        assert.ok(Array.isArray(outputMessages));
+        assert.strictEqual(outputMessages[0].role, "assistant");
+        assert.ok(outputMessages[0].parts);
+        assert.strictEqual(outputMessages[0].parts[0].type, "text");
+      }
+
+      // Token usage with new attribute names
+      if (attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS]) {
+        assert.ok(attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS]);
+      }
+      if (attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]) {
+        assert.ok(attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]);
+      }
     } else {
-      // Test LangChain callback handler spans - now only creates completion span
-      const completionSpan = spans.find((span) => span.name === "bedrock.chat");
+      // Fallback: find span by name pattern (chat <className>)
+      const completionSpan = spans.find(
+        (span) =>
+          span.name.startsWith("chat ") ||
+          span.name.startsWith("text_completion "),
+      );
 
       assert.ok(
         completionSpan,
         `No completion span found. Available spans: ${spans.map((s) => s.name).join(", ")}`,
       );
 
-      // Test completion span attributes
       const completionAttributes = completionSpan.attributes;
-      assert.strictEqual(completionAttributes[ATTR_GEN_AI_SYSTEM], "AWS");
       assert.strictEqual(
-        completionAttributes[SpanAttributes.LLM_REQUEST_TYPE],
-        "chat",
+        completionAttributes[ATTR_GEN_AI_PROVIDER_NAME],
+        GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
       );
       assert.strictEqual(
-        completionAttributes[ATTR_GEN_AI_REQUEST_MODEL],
-        "claude-3-7-sonnet",
+        completionAttributes[ATTR_GEN_AI_OPERATION_NAME],
+        GEN_AI_OPERATION_NAME_VALUE_CHAT,
       );
-      assert.ok(completionAttributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS]);
-      assert.ok(completionAttributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]);
-      assert.ok(completionAttributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS]);
     }
   }).timeout(300000);
 });

@@ -88,6 +88,7 @@
     "hnswlib-node": "^3.0.0",
     "jimp": "^1.6.0",
     "langchain": "^0.3.37",
+    "langsmith": "^0.3.67",
     "llamaindex": "^0.12.1",
     "openai": "^6.32.0",
     "zod": "^3.25.76"

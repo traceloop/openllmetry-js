@@ -342,8 +342,8 @@ importers:
         specifier: ^0.203.0
         version: 0.203.0(@opentelemetry/api@1.9.0)(supports-color@10.0.0)
       '@opentelemetry/semantic-conventions':
-        specifier: ^1.38.0
-        version: 1.38.0
+        specifier: ^1.40.0
+        version: 1.40.0
       '@traceloop/ai-semantic-conventions':
         specifier: workspace:*
         version: link:../ai-semantic-conventions
@@ -859,6 +859,9 @@ importers:
       langchain:
         specifier: ^0.3.37
         version: 0.3.37(@langchain/aws@0.1.13(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@6.32.0(ws@8.18.3)(zod@3.25.76))))(@langchain/core@0.3.80(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@6.32.0(ws@8.18.3)(zod@3.25.76)))(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(axios@1.13.2)(cheerio@1.1.2)(handlebars@4.7.8)(openai@6.32.0(ws@8.18.3)(zod@3.25.76))(ws@8.18.3)
+      langsmith:
+        specifier: ^0.3.67
+        version: 0.3.87(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@6.32.0(ws@8.18.3)(zod@3.25.76))
       llamaindex:
         specifier: ^0.12.1
         version: 0.12.1(@modelcontextprotocol/sdk@1.25.2(@cfworker/json-schema@4.1.1)(hono@4.11.4)(supports-color@10.0.0)(zod@3.25.76))(hono@4.11.4)(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.76)

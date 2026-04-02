@@ -22,19 +22,34 @@ import { ChainValues } from "@langchain/core/utils/types";
 import { Tracer, SpanKind, SpanStatusCode } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_PROVIDER_NAME,
+  ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_RESPONSE_MODEL,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_RESPONSE_ID,
+  ATTR_GEN_AI_AGENT_NAME,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+  GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT,
+  GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL,
+  GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+  GEN_AI_PROVIDER_NAME_VALUE_ANTHROPIC,
+  GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI,
+  GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI,
+  GEN_AI_PROVIDER_NAME_VALUE_COHERE,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 interface SpanData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   span: any;
   runId: string;
+  operationType: string;
 }
 
 export class TraceloopCallbackHandler extends BaseCallbackHandler {
@@ -62,34 +77,37 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   ): Promise<void> {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const vendor = this.detectVendor(llm);
-    const spanBaseName = this.convertClassNameToSpanName(className);
+    const operationType = GEN_AI_OPERATION_NAME_VALUE_CHAT;
 
-    // Create single LLM span like Python implementation
-    const span = this.tracer.startSpan(spanBaseName, {
+    const span = this.tracer.startSpan(`${operationType} ${className}`, {
       kind: SpanKind.CLIENT,
     });
 
     const flatMessages = messages.flat();
     span.setAttributes({
-      [ATTR_GEN_AI_SYSTEM]: vendor,
-      [SpanAttributes.LLM_REQUEST_TYPE]: "chat",
+      [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
+      [ATTR_GEN_AI_OPERATION_NAME]: operationType,
     });
 
-    // Add prompts if tracing content
     if (this.traceContent && flatMessages.length > 0) {
-      flatMessages.forEach((message, idx) => {
+      const inputMessages = flatMessages.map((message) => {
         const role = this.mapMessageTypeToRole(message._getType());
-        span.setAttributes({
-          [`${ATTR_GEN_AI_PROMPT}.${idx}.role`]: role,
-          [`${ATTR_GEN_AI_PROMPT}.${idx}.content`]:
-            typeof message.content === "string"
-              ? message.content
-              : JSON.stringify(message.content),
-        });
+        const content =
+          typeof message.content === "string"
+            ? message.content
+            : JSON.stringify(message.content);
+        return {
+          role,
+          parts: [{ type: "text", content }],
+        };
       });
+      span.setAttribute(
+        ATTR_GEN_AI_INPUT_MESSAGES,
+        JSON.stringify(inputMessages),
+      );
     }
 
-    this.spans.set(runId, { span, runId });
+    this.spans.set(runId, { span, runId, operationType });
   }
 
   override async handleLLMStart(
@@ -104,28 +122,29 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   ): Promise<void> {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const vendor = this.detectVendor(llm);
-    const spanBaseName = this.convertClassNameToSpanName(className);
+    const operationType = GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
 
-    // Create single LLM span like handleChatModelStart
-    const span = this.tracer.startSpan(spanBaseName, {
+    const span = this.tracer.startSpan(`${operationType} ${className}`, {
       kind: SpanKind.CLIENT,
     });
 
     span.setAttributes({
-      [ATTR_GEN_AI_SYSTEM]: vendor,
-      [SpanAttributes.LLM_REQUEST_TYPE]: "completion",
+      [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
+      [ATTR_GEN_AI_OPERATION_NAME]: operationType,
     });
 
     if (this.traceContent && prompts.length > 0) {
-      prompts.forEach((prompt, idx) => {
-        span.setAttributes({
-          [`${ATTR_GEN_AI_PROMPT}.${idx}.role`]: "user",
-          [`${ATTR_GEN_AI_PROMPT}.${idx}.content`]: prompt,
-        });
-      });
+      const inputMessages = prompts.map((prompt) => ({
+        role: "user",
+        parts: [{ type: "text", content: prompt }],
+      }));
+      span.setAttribute(
+        ATTR_GEN_AI_INPUT_MESSAGES,
+        JSON.stringify(inputMessages),
+      );
     }
 
-    this.spans.set(runId, { span, runId });
+    this.spans.set(runId, { span, runId, operationType });
   }
 
   override async handleLLMEnd(
@@ -138,51 +157,66 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
 
-    const { span } = spanData;
+    const { span, operationType } = spanData;
+
+    // Extract model name from response
+    const modelName = this.extractModelNameFromResponse(output);
+
+    // Update span name to "{operation} {model}" now that we know the model
+    if (modelName) {
+      span.updateName(`${operationType} ${modelName}`);
+    }
+
+    span.setAttributes({
+      [ATTR_GEN_AI_REQUEST_MODEL]: modelName || "unknown",
+      [ATTR_GEN_AI_RESPONSE_MODEL]: modelName || "unknown",
+    });
+
+    // Set response ID if available (providers may expose it in llmOutput)
+    const responseId = this.extractResponseId(output);
+    if (responseId) {
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, responseId);
+    }
+
+    // Set finish reasons if available (metadata — NOT gated by traceContent)
+    const finishReason = this.extractFinishReason(output);
+    if (finishReason) {
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [finishReason]);
+    }
 
     if (
       this.traceContent &&
       output.generations &&
       output.generations.length > 0
     ) {
-      output.generations.forEach((generation, idx) => {
-        if (generation && generation.length > 0) {
-          span.setAttributes({
-            [`${ATTR_GEN_AI_COMPLETION}.${idx}.role`]: "assistant",
-            [`${ATTR_GEN_AI_COMPLETION}.${idx}.content`]: generation[0].text,
-          });
-        }
+      const outputMessages = output.generations.map((generation) => {
+        const text =
+          generation && generation.length > 0 ? generation[0].text : "";
+        return {
+          role: "assistant",
+          parts: [{ type: "text", content: text }],
+          finish_reason: finishReason ?? null,
+        };
       });
+      span.setAttribute(
+        ATTR_GEN_AI_OUTPUT_MESSAGES,
+        JSON.stringify(outputMessages),
+      );
     }
-
-    // Extract model name from response only, like Python implementation
-    const modelName = this.extractModelNameFromResponse(output);
-
-    // Set both request and response model attributes like Python implementation
-    span.setAttributes({
-      [ATTR_GEN_AI_REQUEST_MODEL]: modelName || "unknown",
-      [ATTR_GEN_AI_RESPONSE_MODEL]: modelName || "unknown",
-    });
 
     // Add usage metrics if available
     if (output.llmOutput?.usage) {
       const usage = output.llmOutput.usage;
       if (usage.input_tokens) {
-        span.setAttributes({
-          [ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.input_tokens,
-        });
+        span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.input_tokens);
       }
       if (usage.output_tokens) {
-        span.setAttributes({
-          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]: usage.output_tokens,
-        });
+        span.setAttribute(ATTR_GEN_AI_USAGE_OUTPUT_TOKENS, usage.output_tokens);
       }
       const totalTokens =
         (usage.input_tokens || 0) + (usage.output_tokens || 0);
       if (totalTokens > 0) {
-        span.setAttributes({
-          [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: totalTokens,
-        });
+        span.setAttribute(SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS, totalTokens);
       }
     }
 
@@ -190,19 +224,19 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     if (output.llmOutput?.tokenUsage) {
       const usage = output.llmOutput.tokenUsage;
       if (usage.promptTokens) {
-        span.setAttributes({
-          [ATTR_GEN_AI_USAGE_PROMPT_TOKENS]: usage.promptTokens,
-        });
+        span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.promptTokens);
       }
       if (usage.completionTokens) {
-        span.setAttributes({
-          [ATTR_GEN_AI_USAGE_COMPLETION_TOKENS]: usage.completionTokens,
-        });
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+          usage.completionTokens,
+        );
       }
       if (usage.totalTokens) {
-        span.setAttributes({
-          [SpanAttributes.LLM_USAGE_TOTAL_TOKENS]: usage.totalTokens,
-        });
+        span.setAttribute(
+          SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+          usage.totalTokens,
+        );
       }
     }
 
@@ -250,15 +284,22 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     runName?: string,
   ): Promise<void> {
     const chainName = chain.id?.[chain.id.length - 1] || "unknown";
-    const spanName = `${chainName}.workflow`;
+    const agentName = runName || chainName;
 
-    const span = this.tracer.startSpan(spanName, {
-      kind: SpanKind.CLIENT,
-    });
+    const span = this.tracer.startSpan(
+      `${GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT} ${agentName}`,
+      {
+        kind: SpanKind.INTERNAL,
+      },
+    );
 
     span.setAttributes({
+      [ATTR_GEN_AI_OPERATION_NAME]: GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT,
+      [ATTR_GEN_AI_PROVIDER_NAME]: "langchain",
+      [ATTR_GEN_AI_AGENT_NAME]: agentName,
+      // Backward compatibility
       "traceloop.span.kind": "workflow",
-      "traceloop.workflow.name": runName || chainName,
+      "traceloop.workflow.name": agentName,
     });
 
     if (this.traceContent) {
@@ -267,7 +308,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       });
     }
 
-    this.spans.set(runId, { span, runId });
+    this.spans.set(runId, {
+      span,
+      runId,
+      operationType: GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT,
+    });
   }
 
   override async handleChainEnd(
@@ -320,13 +365,18 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _runName?: string,
   ): Promise<void> {
     const toolName = tool.id?.[tool.id.length - 1] || "unknown";
-    const spanName = `${toolName}.task`;
 
-    const span = this.tracer.startSpan(spanName, {
-      kind: SpanKind.CLIENT,
-    });
+    const span = this.tracer.startSpan(
+      `${GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL} ${toolName}`,
+      {
+        kind: SpanKind.INTERNAL,
+      },
+    );
 
     span.setAttributes({
+      [ATTR_GEN_AI_OPERATION_NAME]: GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL,
+      [ATTR_GEN_AI_PROVIDER_NAME]: "langchain",
+      // Backward compatibility
       "traceloop.span.kind": "task",
       "traceloop.entity.name": toolName,
     });
@@ -337,7 +387,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       });
     }
 
-    this.spans.set(runId, { span, runId });
+    this.spans.set(runId, {
+      span,
+      runId,
+      operationType: GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL,
+    });
   }
 
   override async handleToolEnd(
@@ -378,6 +432,17 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     this.spans.delete(runId);
   }
 
+  private extractResponseId(output: LLMResult): string | null {
+    // Providers may expose response ID in llmOutput (e.g., OpenAI's chatcmpl-xxx)
+    if (output.llmOutput) {
+      const id = output.llmOutput.id || output.llmOutput.response_id;
+      if (id && typeof id === "string") {
+        return id;
+      }
+    }
+    return null;
+  }
+
   private extractModelNameFromResponse(output: LLMResult): string | null {
     // Follow Python implementation - extract from llm_output first
     if (output.llmOutput) {
@@ -393,23 +458,33 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     return null;
   }
 
-  private convertClassNameToSpanName(className: string): string {
-    // Convert PascalCase to lowercase with dots
-    // BedrockChat -> bedrock.chat
-    // ChatOpenAI -> chat.openai
-    return className.replace(/([A-Z])/g, (match, char, index) => {
-      return index === 0 ? char.toLowerCase() : `.${char.toLowerCase()}`;
-    });
+  private extractFinishReason(output: LLMResult): string | null {
+    // Try to extract finish reason from LangChain's LLMResult
+    // LangChain exposes it in generationInfo or llmOutput
+    if (output.generations && output.generations.length > 0) {
+      const firstGen = output.generations[0];
+      if (firstGen && firstGen.length > 0) {
+        const genInfo = firstGen[0].generationInfo;
+        if (genInfo) {
+          // Different providers use different field names
+          const reason =
+            genInfo.finish_reason || genInfo.stop_reason || genInfo.done_reason;
+          if (reason && typeof reason === "string") {
+            return reason;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   private detectVendor(llm: Serialized): string {
     const className = llm.id?.[llm.id.length - 1] || "";
 
     if (!className) {
-      return "Langchain";
+      return "langchain";
     }
 
-    // Follow Python implementation with exact matches and patterns
     // Ordered by specificity (most specific first)
 
     // Azure (most specific - check first)
@@ -419,7 +494,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ) ||
       className.toLowerCase().includes("azure")
     ) {
-      return "Azure";
+      return GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI;
     }
 
     // OpenAI
@@ -427,7 +502,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ["ChatOpenAI", "OpenAI", "OpenAIEmbeddings"].includes(className) ||
       className.toLowerCase().includes("openai")
     ) {
-      return "openai";
+      return GEN_AI_PROVIDER_NAME_VALUE_OPENAI;
     }
 
     // AWS Bedrock
@@ -438,7 +513,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       className.toLowerCase().includes("bedrock") ||
       className.toLowerCase().includes("aws")
     ) {
-      return "AWS";
+      return GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK;
     }
 
     // Anthropic
@@ -446,7 +521,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ["ChatAnthropic", "AnthropicLLM"].includes(className) ||
       className.toLowerCase().includes("anthropic")
     ) {
-      return "Anthropic";
+      return GEN_AI_PROVIDER_NAME_VALUE_ANTHROPIC;
     }
 
     // Google (Vertex/PaLM/Gemini)
@@ -465,7 +540,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       className.toLowerCase().includes("palm") ||
       className.toLowerCase().includes("gemini")
     ) {
-      return "Google";
+      return GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI;
     }
 
     // Cohere
@@ -473,10 +548,10 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ["ChatCohere", "CohereEmbeddings", "Cohere"].includes(className) ||
       className.toLowerCase().includes("cohere")
     ) {
-      return "Cohere";
+      return GEN_AI_PROVIDER_NAME_VALUE_COHERE;
     }
 
-    // HuggingFace
+    // HuggingFace - no OTel constant, use string
     if (
       [
         "HuggingFacePipeline",
@@ -486,34 +561,34 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ].includes(className) ||
       className.toLowerCase().includes("huggingface")
     ) {
-      return "HuggingFace";
+      return "huggingface";
     }
 
-    // Ollama
+    // Ollama - no OTel constant, use string
     if (
       ["ChatOllama", "OllamaEmbeddings", "Ollama"].includes(className) ||
       className.toLowerCase().includes("ollama")
     ) {
-      return "Ollama";
+      return "ollama";
     }
 
-    // Together
+    // Together - no OTel constant, use string
     if (
       ["Together", "ChatTogether"].includes(className) ||
       className.toLowerCase().includes("together")
     ) {
-      return "TogetherAI";
+      return "together_ai";
     }
 
-    // Replicate
+    // Replicate - no OTel constant, use string
     if (
       ["Replicate", "ChatReplicate"].includes(className) ||
       className.toLowerCase().includes("replicate")
     ) {
-      return "Replicate";
+      return "replicate";
     }
 
-    return "Langchain";
+    return "langchain";
   }
 
   private mapMessageTypeToRole(messageType: string): string {
