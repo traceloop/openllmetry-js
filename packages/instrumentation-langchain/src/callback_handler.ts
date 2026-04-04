@@ -277,11 +277,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     chain: Serialized,
     inputs: ChainValues,
     runId: string,
-    _parentRunId?: string,
+    _runType?: string,
     _tags?: string[],
-    metadata?: Record<string, unknown>,
-    runType?: string,
+    _metadata?: Record<string, unknown>,
     runName?: string,
+    _parentRunId?: string,
+    _extra?: Record<string, unknown>,
   ): Promise<void> {
     const chainName = chain.id?.[chain.id.length - 1] || "unknown";
     const agentName = runName || chainName;

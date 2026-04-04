@@ -25,11 +25,11 @@ import {
 } from "@opentelemetry/sdk-trace-node";
 
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
-import { createOpenAIToolsAgent, AgentExecutor } from "langchain/agents";
+import { createOpenAIToolsAgent, AgentExecutor } from "@langchain/classic/agents";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { ChatOpenAI, OpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { WikipediaQueryRun } from "@langchain/community/tools/wikipedia_query_run";
 
