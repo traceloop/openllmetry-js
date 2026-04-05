@@ -53,7 +53,6 @@ export class LangChainInstrumentation extends InstrumentationBase {
   private instrumentCallbackManagerDirectly() {
     // Patch CJS module
     try {
-       
       const callbackManagerModule = require("@langchain/core/callbacks/manager");
 
       if (callbackManagerModule?.CallbackManager) {
