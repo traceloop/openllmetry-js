@@ -490,38 +490,44 @@ describe("Test Langchain instrumentation", async function () {
       assert.ok(attributes[ATTR_GEN_AI_REQUEST_MODEL]);
 
       // Input messages should be JSON string with OTel schema
-      if (attributes[ATTR_GEN_AI_INPUT_MESSAGES]) {
-        const inputMessages = JSON.parse(
-          attributes[ATTR_GEN_AI_INPUT_MESSAGES].toString(),
-        );
-        assert.ok(Array.isArray(inputMessages));
-        assert.strictEqual(inputMessages[0].role, "user");
-        assert.ok(inputMessages[0].parts);
-        assert.strictEqual(inputMessages[0].parts[0].type, "text");
-        assert.strictEqual(
-          inputMessages[0].parts[0].content,
-          "What is a popular landmark in the most populous city in the US?",
-        );
-      }
+      assert.ok(
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES],
+        "gen_ai.input.messages should be set",
+      );
+      const inputMessages = JSON.parse(
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES].toString(),
+      );
+      assert.ok(Array.isArray(inputMessages));
+      assert.strictEqual(inputMessages[0].role, "user");
+      assert.ok(inputMessages[0].parts);
+      assert.strictEqual(inputMessages[0].parts[0].type, "text");
+      assert.strictEqual(
+        inputMessages[0].parts[0].content,
+        "What is a popular landmark in the most populous city in the US?",
+      );
 
       // Output messages should be JSON string with OTel schema
-      if (attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]) {
-        const outputMessages = JSON.parse(
-          attributes[ATTR_GEN_AI_OUTPUT_MESSAGES].toString(),
-        );
-        assert.ok(Array.isArray(outputMessages));
-        assert.strictEqual(outputMessages[0].role, "assistant");
-        assert.ok(outputMessages[0].parts);
-        assert.strictEqual(outputMessages[0].parts[0].type, "text");
-      }
+      assert.ok(
+        attributes[ATTR_GEN_AI_OUTPUT_MESSAGES],
+        "gen_ai.output.messages should be set",
+      );
+      const outputMessages = JSON.parse(
+        attributes[ATTR_GEN_AI_OUTPUT_MESSAGES].toString(),
+      );
+      assert.ok(Array.isArray(outputMessages));
+      assert.strictEqual(outputMessages[0].role, "assistant");
+      assert.ok(outputMessages[0].parts);
+      assert.strictEqual(outputMessages[0].parts[0].type, "text");
 
       // Token usage with new attribute names
-      if (attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS]) {
-        assert.ok(attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS]);
-      }
-      if (attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]) {
-        assert.ok(attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]);
-      }
+      assert.ok(
+        attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+        "gen_ai.usage.input_tokens should be set",
+      );
+      assert.ok(
+        attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
+        "gen_ai.usage.output_tokens should be set",
+      );
     } else {
       // Fallback: find span by name pattern (chat <className>)
       const completionSpan = spans.find(

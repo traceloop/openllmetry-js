@@ -44,6 +44,37 @@ import {
   GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI,
   GEN_AI_PROVIDER_NAME_VALUE_COHERE,
 } from "@opentelemetry/semantic-conventions/incubating";
+import { FinishReasons } from "@traceloop/ai-semantic-conventions";
+
+// Combined finish reason map covering all providers LangChain wraps.
+// Unknown reasons pass through unchanged via the `?? reason` fallback.
+//
+// NOTE FOR REVIEWERS: This is intentionally a single flat map as a stopgap.
+// A follow-up PR (`feat/centralize-finish-reason-maps`) will move all per-provider
+// finish reason maps (Anthropic, OpenAI, and this one) into @traceloop/instrumentation-utils
+// so they can be shared across all instrumentations. At that point this map will be
+// replaced with per-provider imports from that package.
+const langchainFinishReasonMap: Record<string, string> = {
+  // OpenAI / Azure / Together
+  stop: FinishReasons.STOP,
+  length: FinishReasons.LENGTH,
+  tool_calls: FinishReasons.TOOL_CALL,       // plural → singular
+  content_filter: FinishReasons.CONTENT_FILTER,
+  function_call: FinishReasons.TOOL_CALL,    // deprecated
+  // Anthropic / Bedrock (Anthropic models)
+  end_turn: FinishReasons.STOP,
+  stop_sequence: FinishReasons.STOP,
+  tool_use: FinishReasons.TOOL_CALL,
+  max_tokens: FinishReasons.LENGTH,
+  // Google (Vertex AI / Gemini)
+  STOP: FinishReasons.STOP,
+  MAX_TOKENS: FinishReasons.LENGTH,
+  SAFETY: FinishReasons.CONTENT_FILTER,
+  RECITATION: FinishReasons.CONTENT_FILTER,
+  // Cohere
+  COMPLETE: FinishReasons.STOP,
+  ERROR_TOXIC: FinishReasons.CONTENT_FILTER,
+};
 
 interface SpanData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,10 +209,15 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, responseId);
     }
 
-    // Set finish reasons if available (metadata — NOT gated by traceContent)
-    const finishReason = this.extractFinishReason(output);
-    if (finishReason) {
-      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [finishReason]);
+    // Map raw finish reason to OTel standard value; unknown reasons pass through unchanged
+    const rawFinishReason = this.extractFinishReason(output);
+    const mappedFinishReason = rawFinishReason
+      ? (langchainFinishReasonMap[rawFinishReason] ?? rawFinishReason)
+      : null;
+
+    // Set finish reasons on span (metadata — NOT gated by traceContent)
+    if (mappedFinishReason) {
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [mappedFinishReason]);
     }
 
     if (
@@ -192,10 +228,18 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       const outputMessages = output.generations.map((generation) => {
         const text =
           generation && generation.length > 0 ? generation[0].text : "";
+        // Extract per-generation finish reason
+        const genRaw = generation?.[0]?.generationInfo?.finish_reason
+          || generation?.[0]?.generationInfo?.stop_reason
+          || generation?.[0]?.generationInfo?.done_reason
+          || null;
+        const genFinishReason = genRaw
+          ? (langchainFinishReasonMap[genRaw] ?? genRaw)
+          : mappedFinishReason ?? null;
         return {
           role: "assistant",
           parts: [{ type: "text", content: text }],
-          finish_reason: finishReason ?? null,
+          finish_reason: genFinishReason,
         };
       });
       span.setAttribute(
@@ -207,10 +251,10 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     // Add usage metrics if available
     if (output.llmOutput?.usage) {
       const usage = output.llmOutput.usage;
-      if (usage.input_tokens) {
+      if (usage.input_tokens || usage.input_tokens === 0) {
         span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.input_tokens);
       }
-      if (usage.output_tokens) {
+      if (usage.output_tokens || usage.output_tokens === 0) {
         span.setAttribute(ATTR_GEN_AI_USAGE_OUTPUT_TOKENS, usage.output_tokens);
       }
       const totalTokens =
@@ -223,16 +267,16 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     // Also check for tokenUsage format (for compatibility)
     if (output.llmOutput?.tokenUsage) {
       const usage = output.llmOutput.tokenUsage;
-      if (usage.promptTokens) {
+      if (usage.promptTokens || usage.promptTokens === 0) {
         span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.promptTokens);
       }
-      if (usage.completionTokens) {
+      if (usage.completionTokens || usage.completionTokens === 0) {
         span.setAttribute(
           ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
           usage.completionTokens,
         );
       }
-      if (usage.totalTokens) {
+      if (usage.totalTokens || usage.totalTokens === 0) {
         span.setAttribute(
           SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
           usage.totalTokens,
@@ -525,23 +569,33 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       return GEN_AI_PROVIDER_NAME_VALUE_ANTHROPIC;
     }
 
-    // Google (Vertex/PaLM/Gemini)
+    // Google Vertex AI (aiplatform.googleapis.com)
     if (
-      [
-        "ChatVertexAI",
-        "VertexAI",
-        "VertexAIEmbeddings",
-        "ChatGoogleGenerativeAI",
-        "GoogleGenerativeAI",
-        "GooglePaLM",
-        "ChatGooglePaLM",
-      ].includes(className) ||
-      className.toLowerCase().includes("vertex") ||
-      className.toLowerCase().includes("google") ||
-      className.toLowerCase().includes("palm") ||
-      className.toLowerCase().includes("gemini")
+      ["ChatVertexAI", "VertexAI", "VertexAIEmbeddings"].includes(className) ||
+      className.toLowerCase().includes("vertex")
     ) {
       return GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI;
+    }
+
+    // Google Gemini / AI Studio (generativelanguage.googleapis.com)
+    if (
+      [
+        "ChatGoogleGenerativeAI",
+        "GoogleGenerativeAI",
+        "GoogleGenerativeAIEmbeddings",
+      ].includes(className) ||
+      className.toLowerCase().includes("gemini")
+    ) {
+      return "gcp.gemini";
+    }
+
+    // Google PaLM / generic Google (fallback)
+    if (
+      ["GooglePaLM", "ChatGooglePaLM"].includes(className) ||
+      className.toLowerCase().includes("google") ||
+      className.toLowerCase().includes("palm")
+    ) {
+      return "gcp.gen_ai";
     }
 
     // Cohere
