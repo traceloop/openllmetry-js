@@ -42,6 +42,8 @@ import {
   GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
   GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI,
   GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI,
+  GEN_AI_PROVIDER_NAME_VALUE_GCP_GEMINI,
+  GEN_AI_PROVIDER_NAME_VALUE_GCP_GEN_AI,
   GEN_AI_PROVIDER_NAME_VALUE_COHERE,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { FinishReasons } from "@traceloop/ai-semantic-conventions";
@@ -198,10 +200,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       span.updateName(`${operationType} ${modelName}`);
     }
 
-    span.setAttributes({
-      [ATTR_GEN_AI_REQUEST_MODEL]: modelName || "unknown",
-      [ATTR_GEN_AI_RESPONSE_MODEL]: modelName || "unknown",
-    });
+    if (modelName) {
+      span.setAttributes({
+        [ATTR_GEN_AI_REQUEST_MODEL]: modelName,
+        [ATTR_GEN_AI_RESPONSE_MODEL]: modelName,
+      });
+    }
 
     // Set response ID if available (providers may expose it in llmOutput)
     const responseId = this.extractResponseId(output);
@@ -238,7 +242,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
           null;
         const genFinishReason = genRaw
           ? (langchainFinishReasonMap[genRaw] ?? genRaw)
-          : (mappedFinishReason ?? null);
+          : (mappedFinishReason ?? "");
         return {
           role: "assistant",
           parts: [{ type: "text", content: text }],
@@ -295,17 +299,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     this.spans.delete(runId);
   }
 
-  async handleChatModelEnd(
-    output: LLMResult,
-    runId: string,
-    _parentRunId?: string,
-    _tags?: string[],
-    _extraParams?: Record<string, unknown>,
-  ): Promise<void> {
-    // Same as handleLLMEnd for chat models
-    return this.handleLLMEnd(output, runId, _parentRunId, _tags, _extraParams);
-  }
-
   override async handleLLMError(
     err: Error,
     runId: string,
@@ -324,11 +317,8 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
   }
 
   // Parameter order follows @langchain/core >=1.0.0.
-  // On @langchain/core 0.3.x the order was (chain, inputs, runId, parentRunId, tags, metadata, runType, runName).
-  // If a user upgrades the Traceloop SDK but stays on LangChain 0.3.x, `runName` (pos 7) will
-  // receive the 0.3.x `runType` value (e.g. "chain"), causing agent span names to be incorrect.
-  // This is a known trade-off — peerDependencies declares ">=0.3.80 <2.0.0" to signal both are
-  // supported, but upgrading both together is recommended to avoid this mismatch.
+  // The 0.3.x signature had a different order (parentRunId at pos 4, runType at pos 7, runName at pos 8).
+  // peerDependencies requires >=1.0.0 to ensure this signature matches at runtime.
   override async handleChainStart(
     chain: Serialized,
     inputs: ChainValues,
@@ -598,7 +588,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       ].includes(className) ||
       className.toLowerCase().includes("gemini")
     ) {
-      return "gcp.gemini";
+      return GEN_AI_PROVIDER_NAME_VALUE_GCP_GEMINI;
     }
 
     // Google PaLM / generic Google (fallback)
@@ -607,7 +597,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       className.toLowerCase().includes("google") ||
       className.toLowerCase().includes("palm")
     ) {
-      return "gcp.gen_ai";
+      return GEN_AI_PROVIDER_NAME_VALUE_GCP_GEN_AI;
     }
 
     // Cohere
