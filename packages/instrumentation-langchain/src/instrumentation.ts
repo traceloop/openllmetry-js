@@ -53,7 +53,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
   private instrumentCallbackManagerDirectly() {
     // Patch CJS module
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+       
       const callbackManagerModule = require("@langchain/core/callbacks/manager");
 
       if (callbackManagerModule?.CallbackManager) {

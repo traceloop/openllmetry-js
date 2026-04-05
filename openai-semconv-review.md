@@ -33,7 +33,7 @@ span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, result.id);
 ```typescript
 const finishReason = choice.finish_reason
   ? (finishReasonMap[choice.finish_reason] ?? choice.finish_reason)
-  : FinishReasons.STOP;  // <-- fabricates "stop"
+  : FinishReasons.STOP; // <-- fabricates "stop"
 ```
 
 When `choice.finish_reason` is `null` or `undefined`, the code defaults to `"stop"`. This means the output message JSON always contains a `finish_reason`, even when the API didn't provide one.
@@ -69,7 +69,7 @@ Apply the same pattern to `buildOpenAICompletionOutputMessage`.
 ```typescript
 interface OTelOutputMessage {
   role: string;
-  finish_reason: string;  // <-- required
+  finish_reason: string; // <-- required
   parts: object[];
 }
 ```
@@ -81,7 +81,7 @@ This forces `finish_reason` to always be present, preventing the fix in item #2.
 ```typescript
 interface OTelOutputMessage {
   role: string;
-  finish_reason?: string;  // optional
+  finish_reason?: string; // optional
   parts: object[];
 }
 ```
@@ -93,29 +93,36 @@ interface OTelOutputMessage {
 The OTel BlobPart schema defines the field as `data`, not `content`:
 
 ```json
-{"type": "blob", "modality": "audio", "mime_type": "audio/wav", "data": "<base64>"}
+{
+  "type": "blob",
+  "modality": "audio",
+  "mime_type": "audio/wav",
+  "data": "<base64>"
+}
 ```
 
 **Affected locations:**
 
 1. **`packages/instrumentation-openai/src/message-helpers.ts` lines 271-276** — Output audio:
+
    ```typescript
    // WRONG:
    parts.push({
      type: "blob",
      modality: "audio",
-     content: message.audio.data,  // should be `data`
+     content: message.audio.data, // should be `data`
    });
    ```
 
 2. **`packages/instrumentation-utils/src/content-block-mappers.ts` ~line 193** — Input image data URI:
+
    ```typescript
    // WRONG:
    return {
      type: "blob",
      modality: "image",
      mime_type: match[1],
-     content: match[2],  // should be `data`
+     content: match[2], // should be `data`
    };
    ```
 
@@ -126,7 +133,7 @@ The OTel BlobPart schema defines the field as `data`, not `content`:
      type: "blob",
      modality: "audio",
      mime_type: `audio/${block.input_audio?.format || "wav"}`,
-     content: block.input_audio?.data,  // should be `data`
+     content: block.input_audio?.data, // should be `data`
    };
    ```
 
@@ -157,7 +164,7 @@ parts.push({
 parts.push({
   type: "blob",
   modality: "audio",
-  mime_type: "audio/mp3",  // or derive from response format
+  mime_type: "audio/mp3", // or derive from response format
   data: message.audio.data,
 });
 ```
@@ -174,13 +181,17 @@ parts.push({
 
 ```typescript
 params.functions?.forEach((func, index) => {
-  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`] = func.name;
-  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`] = func.description;
-  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.arguments`] = JSON.stringify(func.parameters);
+  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`] =
+    func.name;
+  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`] =
+    func.description;
+  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.arguments`] =
+    JSON.stringify(func.parameters);
 });
 
 params.tools?.forEach((tool, index) => {
-  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`] = tool.function.name;
+  attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`] =
+    tool.function.name;
   // ... same pattern
 });
 ```
@@ -231,7 +242,7 @@ Check if `GEN_AI_TOOL_DEFINITIONS` exists in `@traceloop/ai-semantic-conventions
     kind: SpanKind.CLIENT,
     attributes: {
       [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-      "gen_ai.request.type": "image_generation",  // custom attr, not operation.name
+      "gen_ai.request.type": "image_generation", // custom attr, not operation.name
     },
   });
   ```
@@ -254,7 +265,7 @@ Check if `GEN_AI_TOOL_DEFINITIONS` exists in `@traceloop/ai-semantic-conventions
 attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
   {
     role: "assistant",
-    finish_reason: "stop",  // fabricated — image API has no finish_reason
+    finish_reason: "stop", // fabricated — image API has no finish_reason
     parts: [{ type: "uri", modality: "image", uri: imageOutputUrl }],
   },
 ]);
@@ -275,12 +286,14 @@ attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
 ```typescript
 const result: ChatCompletion = {
   // ...
-  choices: [{
-    index: 0,
-    logprobs: null,
-    finish_reason: "stop",  // <-- should be null
-    message: { role: "assistant", content: "", tool_calls: [] } as any,
-  }],
+  choices: [
+    {
+      index: 0,
+      logprobs: null,
+      finish_reason: "stop", // <-- should be null
+      message: { role: "assistant", content: "", tool_calls: [] } as any,
+    },
+  ],
   // ...
 };
 ```
@@ -309,18 +322,21 @@ The `_endSpan` code already handles null correctly (line 709: `if (finishReason)
 
 ```typescript
 const finishReasons = result.choices
-  .map(c => c.finish_reason)
+  .map((c) => c.finish_reason)
   .filter(Boolean)
-  .map(r => openaiFinishReasonMap[r] ?? r);
+  .map((r) => openaiFinishReasonMap[r] ?? r);
 if (finishReasons.length) {
   span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, finishReasons);
 }
 
 if (this._shouldSendPrompts()) {
-  const outputMessages = result.choices.map(choice =>
-    buildOpenAIOutputMessage(choice, openaiFinishReasonMap)[0]
+  const outputMessages = result.choices.map(
+    (choice) => buildOpenAIOutputMessage(choice, openaiFinishReasonMap)[0],
   );
-  span.setAttribute(ATTR_GEN_AI_OUTPUT_MESSAGES, JSON.stringify(outputMessages));
+  span.setAttribute(
+    ATTR_GEN_AI_OUTPUT_MESSAGES,
+    JSON.stringify(outputMessages),
+  );
 }
 ```
 
@@ -336,8 +352,11 @@ This is lower priority since `n=1` is the overwhelmingly common case.
 
 ```json
 [
-  {"role": "user", "parts": [{"type": "text", "content": "Add a red hat"}]},
-  {"role": "user", "parts": [{"type": "uri", "modality": "image", "uri": "..."}]}
+  { "role": "user", "parts": [{ "type": "text", "content": "Add a red hat" }] },
+  {
+    "role": "user",
+    "parts": [{ "type": "uri", "modality": "image", "uri": "..." }]
+  }
 ]
 ```
 
@@ -348,8 +367,8 @@ This is lower priority since `n=1` is the overwhelmingly common case.
   {
     "role": "user",
     "parts": [
-      {"type": "text", "content": "Add a red hat"},
-      {"type": "uri", "modality": "image", "uri": "..."}
+      { "type": "text", "content": "Add a red hat" },
+      { "type": "uri", "modality": "image", "uri": "..." }
     ]
   }
 ]

@@ -58,9 +58,9 @@ const langchainFinishReasonMap: Record<string, string> = {
   // OpenAI / Azure / Together
   stop: FinishReasons.STOP,
   length: FinishReasons.LENGTH,
-  tool_calls: FinishReasons.TOOL_CALL,       // plural → singular
+  tool_calls: FinishReasons.TOOL_CALL, // plural → singular
   content_filter: FinishReasons.CONTENT_FILTER,
-  function_call: FinishReasons.TOOL_CALL,    // deprecated
+  function_call: FinishReasons.TOOL_CALL, // deprecated
   // Anthropic / Bedrock (Anthropic models)
   end_turn: FinishReasons.STOP,
   stop_sequence: FinishReasons.STOP,
@@ -217,7 +217,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
     // Set finish reasons on span (metadata — NOT gated by traceContent)
     if (mappedFinishReason) {
-      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [mappedFinishReason]);
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
+        mappedFinishReason,
+      ]);
     }
 
     if (
@@ -229,13 +231,14 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
         const text =
           generation && generation.length > 0 ? generation[0].text : "";
         // Extract per-generation finish reason
-        const genRaw = generation?.[0]?.generationInfo?.finish_reason
-          || generation?.[0]?.generationInfo?.stop_reason
-          || generation?.[0]?.generationInfo?.done_reason
-          || null;
+        const genRaw =
+          generation?.[0]?.generationInfo?.finish_reason ||
+          generation?.[0]?.generationInfo?.stop_reason ||
+          generation?.[0]?.generationInfo?.done_reason ||
+          null;
         const genFinishReason = genRaw
           ? (langchainFinishReasonMap[genRaw] ?? genRaw)
-          : mappedFinishReason ?? null;
+          : (mappedFinishReason ?? null);
         return {
           role: "assistant",
           parts: [{ type: "text", content: text }],
@@ -260,7 +263,10 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       const totalTokens =
         (usage.input_tokens || 0) + (usage.output_tokens || 0);
       if (totalTokens > 0) {
-        span.setAttribute(SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS, totalTokens);
+        span.setAttribute(
+          SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+          totalTokens,
+        );
       }
     }
 

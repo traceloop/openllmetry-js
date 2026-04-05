@@ -12,12 +12,13 @@ import { HNSWLib } from "@langchain/community/vectorstores/hnswlib";
 import { OpenAIEmbeddings, OpenAI } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { RetrievalQAChain, loadQAStuffChain } from "@langchain/classic/chains";
-import { createOpenAIToolsAgent, AgentExecutor } from "@langchain/classic/agents";
+import {
+  createOpenAIToolsAgent,
+  AgentExecutor,
+} from "@langchain/classic/agents";
 import { Calculator } from "@langchain/community/tools/calculator";
 import { ChatPromptTemplate, PromptTemplate } from "@langchain/core/prompts";
 import { ChatOpenAI } from "@langchain/openai";
-
-
 
 class SampleLangchain {
   @traceloop.workflow({ name: "sample_retrieval_qa_example" })
