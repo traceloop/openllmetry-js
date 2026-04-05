@@ -51,6 +51,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
   }
 
   private instrumentCallbackManagerDirectly() {
+    // Patch CJS module
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const callbackManagerModule = require("@langchain/core/callbacks/manager");
@@ -59,8 +60,20 @@ export class LangChainInstrumentation extends InstrumentationBase {
         this.patchCallbackManager(callbackManagerModule.CallbackManager);
       }
     } catch (error) {
-      this._diag.debug("Error instrumenting callback manager:", error);
+      this._diag.debug("Error instrumenting CJS callback manager:", error);
     }
+
+    // Also patch ESM module — in LangChain 1.x, CJS and ESM resolve to
+    // different objects, so patching CJS alone doesn't work for ESM consumers.
+    import("@langchain/core/callbacks/manager")
+      .then((esmModule) => {
+        if (esmModule?.CallbackManager) {
+          this.patchCallbackManager(esmModule.CallbackManager);
+        }
+      })
+      .catch((error) => {
+        this._diag.debug("Error instrumenting ESM callback manager:", error);
+      });
   }
 
   private patchCallbackManager(CallbackManager: unknown) {
