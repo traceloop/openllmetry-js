@@ -83,6 +83,7 @@ interface SpanData {
   span: any;
   runId: string;
   operationType: string;
+  requestModel?: string;
 }
 
 export class TraceloopCallbackHandler extends BaseCallbackHandler {
@@ -111,8 +112,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const vendor = this.detectVendor(llm);
     const operationType = GEN_AI_OPERATION_NAME_VALUE_CHAT;
+    const requestModel = this.extractModelFromExtraParams(_extraParams);
+    const spanName = requestModel
+      ? `${operationType} ${requestModel}`
+      : `${operationType} ${className}`;
 
-    const span = this.tracer.startSpan(`${operationType} ${className}`, {
+    const span = this.tracer.startSpan(spanName, {
       kind: SpanKind.CLIENT,
     });
 
@@ -120,11 +125,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     span.setAttributes({
       [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
       [ATTR_GEN_AI_OPERATION_NAME]: operationType,
+      [ATTR_GEN_AI_REQUEST_MODEL]: requestModel || className,
     });
 
     if (this.traceContent && flatMessages.length > 0) {
       const inputMessages = flatMessages.map((message) => {
-        const role = this.mapMessageTypeToRole(message._getType());
+        const role = this.mapMessageTypeToRole(message.type);
         const content =
           typeof message.content === "string"
             ? message.content
@@ -140,7 +146,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       );
     }
 
-    this.spans.set(runId, { span, runId, operationType });
+    this.spans.set(runId, { span, runId, operationType, requestModel });
   }
 
   override async handleLLMStart(
@@ -156,14 +162,19 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const className = llm.id?.[llm.id.length - 1] || "unknown";
     const vendor = this.detectVendor(llm);
     const operationType = GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
+    const requestModel = this.extractModelFromExtraParams(_extraParams);
+    const spanName = requestModel
+      ? `${operationType} ${requestModel}`
+      : `${operationType} ${className}`;
 
-    const span = this.tracer.startSpan(`${operationType} ${className}`, {
+    const span = this.tracer.startSpan(spanName, {
       kind: SpanKind.CLIENT,
     });
 
     span.setAttributes({
       [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
       [ATTR_GEN_AI_OPERATION_NAME]: operationType,
+      [ATTR_GEN_AI_REQUEST_MODEL]: requestModel || className,
     });
 
     if (this.traceContent && prompts.length > 0) {
@@ -177,7 +188,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       );
     }
 
-    this.spans.set(runId, { span, runId, operationType });
+    this.spans.set(runId, { span, runId, operationType, requestModel });
   }
 
   override async handleLLMEnd(
@@ -190,22 +201,21 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     const spanData = this.spans.get(runId);
     if (!spanData) return;
 
-    const { span, operationType } = spanData;
+    const { span, operationType, requestModel } = spanData;
 
-    // Extract model name from response
-    const modelName = this.extractModelNameFromResponse(output);
+    // Extract model name from response (llmOutput) or fall back to request model
+    const responseModel = this.extractModelNameFromResponse(output);
+    const model = responseModel || requestModel;
 
-    // Update span name to "{operation} {model}" now that we know the model
-    if (modelName) {
-      span.updateName(`${operationType} ${modelName}`);
+    // Update span name if we got a better model name from the response
+    if (responseModel && responseModel !== requestModel) {
+      span.updateName(`${operationType} ${responseModel}`);
     }
 
-    if (modelName) {
-      span.setAttributes({
-        [ATTR_GEN_AI_REQUEST_MODEL]: modelName,
-        [ATTR_GEN_AI_RESPONSE_MODEL]: modelName,
-      });
-    }
+    span.setAttributes({
+      [ATTR_GEN_AI_REQUEST_MODEL]: requestModel || model,
+      [ATTR_GEN_AI_RESPONSE_MODEL]: model,
+    });
 
     // Set response ID if available (providers may expose it in llmOutput)
     const responseId = this.extractResponseId(output);
@@ -227,9 +237,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
               gen?.generationInfo?.done_reason ||
               null;
             if (raw) {
-              allFinishReasons.push(
-                langchainFinishReasonMap[raw] ?? raw,
-              );
+              allFinishReasons.push(langchainFinishReasonMap[raw] ?? raw);
             }
           }
         }
@@ -505,6 +513,18 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
     span.end();
     this.spans.delete(runId);
+  }
+
+  private extractModelFromExtraParams(
+    extraParams?: Record<string, unknown>,
+  ): string | undefined {
+    // LangChain passes invocation_params in extraParams for handleChatModelStart/handleLLMStart
+    // which contains the model name from the provider SDK (e.g., "gpt-4o-mini")
+    const invocationParams = extraParams?.invocation_params as
+      | Record<string, unknown>
+      | undefined;
+    const model = invocationParams?.model ?? invocationParams?.model_name;
+    return model && typeof model === "string" ? model : undefined;
   }
 
   private extractResponseId(output: LLMResult): string | null {
