@@ -213,17 +213,32 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, responseId);
     }
 
-    // Map raw finish reason to OTel standard value; unknown reasons pass through unchanged
-    const rawFinishReason = this.extractFinishReason(output);
-    const mappedFinishReason = rawFinishReason
-      ? (langchainFinishReasonMap[rawFinishReason] ?? rawFinishReason)
-      : null;
+    // Collect finish reasons from ALL candidates across ALL generation groups.
+    // LLMResult.generations is Generation[][] where outer = prompt batch, inner = n candidates.
+    // ATTR_GEN_AI_RESPONSE_FINISH_REASONS should contain one entry per candidate (OTel spec).
+    const allFinishReasons: string[] = [];
+    if (output.generations) {
+      for (const group of output.generations) {
+        if (group) {
+          for (const gen of group) {
+            const raw =
+              gen?.generationInfo?.finish_reason ||
+              gen?.generationInfo?.stop_reason ||
+              gen?.generationInfo?.done_reason ||
+              null;
+            if (raw) {
+              allFinishReasons.push(
+                langchainFinishReasonMap[raw] ?? raw,
+              );
+            }
+          }
+        }
+      }
+    }
 
     // Set finish reasons on span (metadata — NOT gated by traceContent)
-    if (mappedFinishReason) {
-      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
-        mappedFinishReason,
-      ]);
+    if (allFinishReasons.length > 0) {
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, allFinishReasons);
     }
 
     if (
@@ -231,24 +246,24 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       output.generations &&
       output.generations.length > 0
     ) {
-      const outputMessages = output.generations.map((generation) => {
-        const text =
-          generation && generation.length > 0 ? generation[0].text : "";
-        // Extract per-generation finish reason
-        const genRaw =
-          generation?.[0]?.generationInfo?.finish_reason ||
-          generation?.[0]?.generationInfo?.stop_reason ||
-          generation?.[0]?.generationInfo?.done_reason ||
-          null;
-        const genFinishReason = genRaw
-          ? (langchainFinishReasonMap[genRaw] ?? genRaw)
-          : (mappedFinishReason ?? "");
-        return {
-          role: "assistant",
-          parts: [{ type: "text", content: text }],
-          finish_reason: genFinishReason,
-        };
-      });
+      // flatMap over all candidates in all groups — one output message per candidate
+      const outputMessages = output.generations.flatMap((group) =>
+        (group ?? []).map((gen) => {
+          const raw =
+            gen?.generationInfo?.finish_reason ||
+            gen?.generationInfo?.stop_reason ||
+            gen?.generationInfo?.done_reason ||
+            null;
+          const genFinishReason = raw
+            ? (langchainFinishReasonMap[raw] ?? raw)
+            : (allFinishReasons[0] ?? "");
+          return {
+            role: "assistant",
+            parts: [{ type: "text", content: gen?.text ?? "" }],
+            finish_reason: genFinishReason,
+          };
+        }),
+      );
       span.setAttribute(
         ATTR_GEN_AI_OUTPUT_MESSAGES,
         JSON.stringify(outputMessages),
@@ -264,9 +279,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       if (usage.output_tokens || usage.output_tokens === 0) {
         span.setAttribute(ATTR_GEN_AI_USAGE_OUTPUT_TOKENS, usage.output_tokens);
       }
-      const totalTokens =
-        (usage.input_tokens || 0) + (usage.output_tokens || 0);
-      if (totalTokens > 0) {
+      const hasUsage =
+        usage.input_tokens != null || usage.output_tokens != null;
+      if (hasUsage) {
+        const totalTokens =
+          (usage.input_tokens || 0) + (usage.output_tokens || 0);
         span.setAttribute(
           SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
           totalTokens,
@@ -331,23 +348,34 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     _extra?: Record<string, unknown>,
   ): Promise<void> {
     const chainName = chain.id?.[chain.id.length - 1] || "unknown";
-    const agentName = runName || chainName;
+    const displayName = runName || chainName;
 
-    const span = this.tracer.startSpan(
-      `${GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT} ${agentName}`,
-      {
-        kind: SpanKind.INTERNAL,
-      },
-    );
+    // Detect whether this chain is an agent executor vs a regular chain.
+    // Both pass runType: undefined in LangChain 1.x, so we use the class name.
+    // Only agent executors get invoke_agent; regular chains use "workflow" (custom,
+    // no OTel well-known value exists for generic chain execution).
+    const isAgent = this.isAgentChain(chainName);
+    const operationName = isAgent
+      ? GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT
+      : "workflow";
 
-    span.setAttributes({
-      [ATTR_GEN_AI_OPERATION_NAME]: GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT,
+    const span = this.tracer.startSpan(`${operationName} ${displayName}`, {
+      kind: SpanKind.INTERNAL,
+    });
+
+    const attributes: Record<string, string> = {
+      [ATTR_GEN_AI_OPERATION_NAME]: operationName,
       [ATTR_GEN_AI_PROVIDER_NAME]: "langchain",
-      [ATTR_GEN_AI_AGENT_NAME]: agentName,
       // Backward compatibility
       "traceloop.span.kind": "workflow",
-      "traceloop.workflow.name": agentName,
-    });
+      "traceloop.workflow.name": displayName,
+    };
+
+    if (isAgent) {
+      attributes[ATTR_GEN_AI_AGENT_NAME] = displayName;
+    }
+
+    span.setAttributes(attributes);
 
     if (this.traceContent) {
       span.setAttributes({
@@ -505,26 +533,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     return null;
   }
 
-  private extractFinishReason(output: LLMResult): string | null {
-    // Try to extract finish reason from LangChain's LLMResult
-    // LangChain exposes it in generationInfo or llmOutput
-    if (output.generations && output.generations.length > 0) {
-      const firstGen = output.generations[0];
-      if (firstGen && firstGen.length > 0) {
-        const genInfo = firstGen[0].generationInfo;
-        if (genInfo) {
-          // Different providers use different field names
-          const reason =
-            genInfo.finish_reason || genInfo.stop_reason || genInfo.done_reason;
-          if (reason && typeof reason === "string") {
-            return reason;
-          }
-        }
-      }
-    }
-    return null;
-  }
-
   private detectVendor(llm: Serialized): string {
     const className = llm.id?.[llm.id.length - 1] || "";
 
@@ -646,6 +654,15 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     }
 
     return "langchain";
+  }
+
+  private isAgentChain(chainName: string): boolean {
+    const lower = chainName.toLowerCase();
+    return (
+      lower.includes("agent") ||
+      lower.includes("executor") ||
+      lower === "agentexecutor"
+    );
   }
 
   private mapMessageTypeToRole(messageType: string): string {
