@@ -317,6 +317,12 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     this.spans.delete(runId);
   }
 
+  // Parameter order follows @langchain/core >=1.0.0.
+  // On @langchain/core 0.3.x the order was (chain, inputs, runId, parentRunId, tags, metadata, runType, runName).
+  // If a user upgrades the Traceloop SDK but stays on LangChain 0.3.x, `runName` (pos 7) will
+  // receive the 0.3.x `runType` value (e.g. "chain"), causing agent span names to be incorrect.
+  // This is a known trade-off — peerDependencies declares ">=0.3.80 <2.0.0" to signal both are
+  // supported, but upgrading both together is recommended to avoid this mismatch.
   override async handleChainStart(
     chain: Serialized,
     inputs: ChainValues,
