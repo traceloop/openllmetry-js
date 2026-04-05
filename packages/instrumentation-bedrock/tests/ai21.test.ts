@@ -27,8 +27,10 @@ import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
+  ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
   // OTel 1.40 new attributes
@@ -155,11 +157,11 @@ describe("Test Ai21 with AWS Bedrock Instrumentation", () => {
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.topP);
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_PRESENCE_PENALTY],
+      attributes[ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY],
       params.presencePenalty.scale,
     );
     assert.strictEqual(
-      attributes[SpanAttributes.LLM_FREQUENCY_PENALTY],
+      attributes[ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY],
       params.frequencyPenalty.scale,
     );
     assert.strictEqual(

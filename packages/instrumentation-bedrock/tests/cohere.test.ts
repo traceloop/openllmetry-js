@@ -27,10 +27,13 @@ import * as bedrockModule from "@aws-sdk/client-bedrock-runtime";
 import { NodeHttpHandler } from "@smithy/node-http-handler";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_K,
   ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
@@ -147,7 +150,7 @@ describe("Test Cohere with AWS Bedrock Instrumentation", () => {
     );
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.k);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
@@ -157,6 +160,22 @@ describe("Test Cohere with AWS Bedrock Instrumentation", () => {
       params.max_tokens,
     );
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+
+    // gen_ai.response.finish_reasons
+    const finishReasons = attributes[
+      ATTR_GEN_AI_RESPONSE_FINISH_REASONS
+    ] as string[];
+    assert.ok(Array.isArray(finishReasons));
+    assert.ok(finishReasons.length > 0);
+    assert.strictEqual(finishReasons[0], "stop");
+
+    // gen_ai.output.messages
+    const outputMessages = JSON.parse(
+      attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
+    );
+    assert.ok(Array.isArray(outputMessages));
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.ok(outputMessages[0].finish_reason !== undefined);
   });
 
   it("should set request and response attributes in span for given prompt with streaming result", async () => {
@@ -194,7 +213,7 @@ describe("Test Cohere with AWS Bedrock Instrumentation", () => {
         );
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
-        assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.k);
         assert.strictEqual(
           attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
           params.temperature,

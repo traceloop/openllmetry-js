@@ -264,49 +264,51 @@ export function mapOpenAIContentBlock(block: any): object {
 //   tool_result               → ToolCallResponsePart
 //   <unknown>                 → GenericPart
 
+/** Bedrock SDK content block type strings. */
+const BedrockBlockType = {
+  TEXT: "text",
+  TOOL_USE: "tool_use",
+  TOOL_RESULT: "tool_result",
+} as const;
+
+/** OTel gen_ai part type strings used by the Bedrock mapper. */
+const BedrockOtelPartType = {
+  TEXT: "text",
+  TOOL_CALL: "tool_call",
+  TOOL_CALL_RESPONSE: "tool_call_response",
+} as const;
+
 /**
  * Maps a single Bedrock content block to its OTel-compliant part object.
  * Used by formatInputMessages and formatOutputMessage for all Bedrock providers.
  */
 export const mapBedrockContentBlock = (block: any): object => {
   if (typeof block === "string") {
-    return { type: "text", content: block };
+    return { type: BedrockOtelPartType.TEXT, content: block };
   }
 
   switch (block.type) {
-    // -------------------------------------------------------------------------
-    // Text
-    // -------------------------------------------------------------------------
-    case "text":
-      return { type: "text", content: block.text };
+    case BedrockBlockType.TEXT:
+      return { type: BedrockOtelPartType.TEXT, content: block.text };
 
-    // -------------------------------------------------------------------------
-    // Tool use (model requests a function call)
-    // -------------------------------------------------------------------------
-    case "tool_use":
+    case BedrockBlockType.TOOL_USE:
       return {
-        type: "tool_call",
+        type: BedrockOtelPartType.TOOL_CALL,
         id: block.id,
         name: block.name,
         arguments: block.input,
       };
 
-    // -------------------------------------------------------------------------
-    // Tool result (client returns function result to model)
-    // -------------------------------------------------------------------------
-    case "tool_result":
+    case BedrockBlockType.TOOL_RESULT:
       return {
-        type: "tool_call_response",
+        type: BedrockOtelPartType.TOOL_CALL_RESPONSE,
         id: block.tool_use_id,
         response: block.content,
       };
 
-    // -------------------------------------------------------------------------
-    // Amazon Nova format: { text: "..." } without explicit type
-    // -------------------------------------------------------------------------
     default:
       if (!block.type && block.text !== undefined) {
-        return { type: "text", content: block.text };
+        return { type: BedrockOtelPartType.TEXT, content: block.text };
       }
       return { type: block.type, ...block };
   }

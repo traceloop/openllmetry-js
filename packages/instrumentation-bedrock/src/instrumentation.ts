@@ -38,9 +38,12 @@ import {
   ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY,
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_K,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_RESPONSE_MODEL,
@@ -387,9 +390,9 @@ export class BedrockInstrumentation extends InstrumentationBase {
           [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["topP"],
           [ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["maxTokens"],
-          [SpanAttributes.LLM_PRESENCE_PENALTY]:
+          [ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY]:
             requestBody["presencePenalty"]?.["scale"],
-          [SpanAttributes.LLM_FREQUENCY_PENALTY]:
+          [ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY]:
             requestBody["frequencyPenalty"]?.["scale"],
           ...(this._shouldSendPrompts()
             ? {
@@ -441,7 +444,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
       case BedrockVendor.ANTHROPIC: {
         const baseAttributes = {
           [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["top_p"],
-          [SpanAttributes.LLM_TOP_K]: requestBody["top_k"],
+          [ATTR_GEN_AI_REQUEST_TOP_K]: requestBody["top_k"],
           [ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [ATTR_GEN_AI_REQUEST_MAX_TOKENS]:
             requestBody["max_tokens_to_sample"] || requestBody["max_tokens"],
@@ -483,7 +486,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
       case BedrockVendor.COHERE: {
         return {
           [ATTR_GEN_AI_REQUEST_TOP_P]: requestBody["p"],
-          [SpanAttributes.LLM_TOP_K]: requestBody["k"],
+          [ATTR_GEN_AI_REQUEST_TOP_K]: requestBody["k"],
           [ATTR_GEN_AI_REQUEST_TEMPERATURE]: requestBody["temperature"],
           [ATTR_GEN_AI_REQUEST_MAX_TOKENS]: requestBody["max_tokens"],
         };
@@ -735,19 +738,45 @@ export class BedrockInstrumentation extends InstrumentationBase {
         return baseAttributes;
       }
       case BedrockVendor.COHERE: {
-        // Add token usage if available
-        if (response["meta"] && response["meta"]["billed_units"]) {
-          const billedUnits = response["meta"]["billed_units"];
-          return {
-            [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: billedUnits["input_tokens"],
-            [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: billedUnits["output_tokens"],
-            [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
-              (billedUnits["input_tokens"] || 0) +
-              (billedUnits["output_tokens"] || 0),
-          };
-        }
+        const cohereFinishReason =
+          response["generations"]?.[0]?.["finish_reason"] ??
+          response["finish_reason"];
+        const cohereText =
+          response["generations"]?.[0]?.["text"] ?? response["text"];
 
-        return {};
+        return {
+          ...(cohereFinishReason != null
+            ? {
+                [ATTR_GEN_AI_RESPONSE_FINISH_REASONS]: [
+                  bedrockFinishReasonMap[cohereFinishReason] ??
+                    cohereFinishReason,
+                ],
+              }
+            : {}),
+          // Add token usage if available
+          ...(response["meta"]?.["billed_units"]
+            ? {
+                [ATTR_GEN_AI_USAGE_INPUT_TOKENS]:
+                  response["meta"]["billed_units"]["input_tokens"],
+                [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]:
+                  response["meta"]["billed_units"]["output_tokens"],
+                [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
+                  (response["meta"]["billed_units"]["input_tokens"] || 0) +
+                  (response["meta"]["billed_units"]["output_tokens"] || 0),
+              }
+            : {}),
+          ...(this._shouldSendPrompts() && cohereText != null
+            ? {
+                [ATTR_GEN_AI_OUTPUT_MESSAGES]: formatOutputMessage(
+                  cohereText,
+                  cohereFinishReason,
+                  bedrockFinishReasonMap,
+                  GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+                  mapBedrockContentBlock,
+                ),
+              }
+            : {}),
+        };
       }
       case BedrockVendor.META: {
         const metaFinishReason = response["stop_reason"];

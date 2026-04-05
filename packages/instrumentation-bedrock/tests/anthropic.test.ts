@@ -30,6 +30,7 @@ import {
   ATTR_GEN_AI_REQUEST_MAX_TOKENS,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_K,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
@@ -157,7 +158,7 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     );
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.top_k);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
       params.temperature,
@@ -256,7 +257,7 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
         );
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
-        assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.top_k);
+        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.top_k);
         assert.strictEqual(
           attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
           params.temperature,
