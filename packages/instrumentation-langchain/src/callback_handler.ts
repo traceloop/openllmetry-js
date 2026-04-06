@@ -125,8 +125,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     span.setAttributes({
       [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
       [ATTR_GEN_AI_OPERATION_NAME]: operationType,
-      [ATTR_GEN_AI_REQUEST_MODEL]: requestModel || className,
     });
+    
+    if (requestModel) {
+      span.setAttribute(ATTR_GEN_AI_REQUEST_MODEL, requestModel);
+    }
 
     if (this.traceContent && flatMessages.length > 0) {
       const inputMessages = flatMessages.map((message) => {
@@ -174,8 +177,11 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     span.setAttributes({
       [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
       [ATTR_GEN_AI_OPERATION_NAME]: operationType,
-      [ATTR_GEN_AI_REQUEST_MODEL]: requestModel || className,
     });
+    
+    if (requestModel) {
+      span.setAttribute(ATTR_GEN_AI_REQUEST_MODEL, requestModel);
+    }
 
     if (this.traceContent && prompts.length > 0) {
       const inputMessages = prompts.map((prompt) => ({
@@ -394,7 +400,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     this.spans.set(runId, {
       span,
       runId,
-      operationType: GEN_AI_OPERATION_NAME_VALUE_INVOKE_AGENT,
+      operationType: operationName,
     });
   }
 
