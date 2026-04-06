@@ -65,7 +65,8 @@ export function mapAnthropicContentBlock(block: any): object {
 
     // -------------------------------------------------------------------------
     // Document — sources: base64 | text | url | file
-    // Note: document blocks have no OTel modality (modality is image/video/audio only)
+    // OTel modality accepts any string (anyOf: [Modality enum, string]), so
+    // "document" is a valid value for BlobPart/UriPart/FilePart modality.
     // -------------------------------------------------------------------------
     case "document": {
       const src = block.source;
@@ -75,6 +76,7 @@ export function mapAnthropicContentBlock(block: any): object {
           // (can be "application/pdf" or "text/plain")
           return {
             type: "blob",
+            modality: "document",
             mime_type: src.media_type,
             content: src.data,
           };
@@ -83,10 +85,15 @@ export function mapAnthropicContentBlock(block: any): object {
           return { type: "text", content: src.data };
         case "url":
           // URL-referenced PDF
-          return { type: "uri", mime_type: "application/pdf", uri: src.url };
+          return {
+            type: "uri",
+            modality: "document",
+            mime_type: "application/pdf",
+            uri: src.url,
+          };
         case "file":
           // Files API reference — file_id is on source.file_id
-          return { type: "file", file_id: src.file_id };
+          return { type: "file", modality: "document", file_id: src.file_id };
         default:
           return { type: block.type, ...block };
       }
@@ -158,8 +165,8 @@ export function mapAnthropicContentBlock(block: any): object {
 //   image_url (regular URL)   → UriPart        { modality: "image" }
 //   image_url (data: URI)     → BlobPart       { modality: "image", mime_type parsed from URI }
 //   input_audio               → BlobPart       { modality: "audio", mime_type: "audio/{format}" }
-//   file (file_id)            → FilePart       { file_id }
-//   file (file_data)          → BlobPart       { no modality — documents }
+//   file (file_id)            → FilePart       { modality: "document", file_id }
+//   file (file_data)          → BlobPart       { modality: "document", mime_type }
 //   refusal                   → GenericPart    { type: "refusal", content }
 //   <unknown>                 → GenericPart
 
@@ -212,14 +219,14 @@ export function mapOpenAIContentBlock(block: any): object {
 
     // -------------------------------------------------------------------------
     // File — can be file_id reference or inline file_data
-    // OTel FilePart and BlobPart require `modality` (image/video/audio),
-    // but OpenAI files don't specify modality. Use GenericPart to preserve
-    // all info without violating the schema.
+    // OpenAI file content parts are used for documents (PDFs etc.), not images
+    // (images use image_url). modality accepts any string, so "document" is valid.
     // -------------------------------------------------------------------------
     case "file": {
       if (block.file?.file_id) {
         return {
           type: "file",
+          modality: "document",
           file_id: block.file.file_id,
           ...(block.file.filename && { filename: block.file.filename }),
         };
@@ -228,6 +235,7 @@ export function mapOpenAIContentBlock(block: any): object {
         // Inline file data → BlobPart. OTel FilePart is a reference type (file_id only).
         return {
           type: "blob",
+          modality: "document",
           mime_type: block.file.mime_type || "application/octet-stream",
           content: block.file.file_data,
         };

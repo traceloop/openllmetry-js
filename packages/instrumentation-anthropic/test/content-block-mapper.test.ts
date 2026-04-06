@@ -76,6 +76,7 @@ describe("mapAnthropicContentBlock", () => {
     const result = mapAnthropicContentBlock(block);
     assert.deepStrictEqual(result, {
       type: "blob",
+      modality: "document",
       mime_type: "application/pdf",
       content:
         "JVBERi0xLjAKMSAwIG9iajw8L1R5cGUvQ2F0YWxvZy9QYWdlcyAyIDAgUj4+ZW5kb2JqCg==",
@@ -87,6 +88,7 @@ describe("mapAnthropicContentBlock", () => {
     const result = mapAnthropicContentBlock(block);
     assert.deepStrictEqual(result, {
       type: "uri",
+      modality: "document",
       mime_type: "application/pdf",
       uri: "https://assets.anthropic.com/m/1cd9d098ac3e6467/original/Claude-3-Model-Card-October-Addendum.pdf",
     });
@@ -97,6 +99,7 @@ describe("mapAnthropicContentBlock", () => {
     const result = mapAnthropicContentBlock(block);
     assert.deepStrictEqual(result, {
       type: "file",
+      modality: "document",
       file_id: "file_011CNha8iCJcU1wXNR6q4V8w",
     });
   });
@@ -192,27 +195,28 @@ describe("mapAnthropicContentBlock", () => {
     const result = mapAnthropicContentBlock(block);
     assert.deepStrictEqual(result, {
       type: "blob",
+      modality: "document",
       mime_type: "text/plain",
       content: "aGVsbG8=",
     });
   });
 
-  it("document/base64 result has NO modality field", () => {
+  it("document/base64 result has modality: document", () => {
     const block = {
       type: "document",
       source: { type: "base64", media_type: "application/pdf", data: "abc" },
     };
     const result = mapAnthropicContentBlock(block) as any;
-    assert.strictEqual(result.modality, undefined);
+    assert.strictEqual(result.modality, "document");
   });
 
-  it("document/file result has NO modality field", () => {
+  it("document/file result has modality: document", () => {
     const block = {
       type: "document",
       source: { type: "file", file_id: "file_abc" },
     };
     const result = mapAnthropicContentBlock(block) as any;
-    assert.strictEqual(result.modality, undefined);
+    assert.strictEqual(result.modality, "document");
   });
 
   it('thinking block maps to type "reasoning" — never "thinking"', () => {
