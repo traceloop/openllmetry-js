@@ -210,7 +210,7 @@ describe("mapAnthropicContentBlock", () => {
     assert.strictEqual(result.modality, "document");
   });
 
-;  it("document/file result has modality: document", () => {
+  it("document/file result has modality: document", () => {
     const block = {
       type: "document",
       source: { type: "file", file_id: "file_abc" },
