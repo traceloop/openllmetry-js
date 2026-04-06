@@ -132,11 +132,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
     }
 
     if (this.traceContent && flatMessages.length > 0) {
-      // TODO: Add a LangChain-specific content block mapper to properly convert
-      // structured BaseMessage content (AIMessage.tool_calls, ToolMessage content,
-      // ContentBlock arrays) to OTel ToolCallRequestPart / ToolCallResponsePart parts.
-      // Currently non-string content is collapsed to a JSON string inside a TextPart,
-      // which is a pre-existing limitation (same behavior as before this migration).
       const inputMessages = flatMessages.map((message) => {
         const role = this.mapMessageTypeToRole(message.type);
         const content =
@@ -265,9 +260,6 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       output.generations &&
       output.generations.length > 0
     ) {
-      // TODO: Use gen.message (BaseMessage) instead of gen.text to capture structured
-      // output content including tool calls. Requires the same LangChain content block
-      // mapper as the input messages TODO above. Pre-existing limitation.
       // flatMap over all candidates in all groups — one output message per candidate
       const outputMessages = output.generations.flatMap((group) =>
         (group ?? []).map((gen) => {
