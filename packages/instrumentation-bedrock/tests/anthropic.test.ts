@@ -152,10 +152,6 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(
-      attributes[SpanAttributes.LLM_REQUEST_TYPE],
-      "completion",
-    );
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.top_k);
@@ -251,10 +247,6 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
 
         const attributes = spans[0].attributes;
 
-        assert.strictEqual(
-          attributes[SpanAttributes.LLM_REQUEST_TYPE],
-          "completion",
-        );
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.top_p);
         assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.top_k);

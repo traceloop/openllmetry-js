@@ -31,7 +31,6 @@ import { BedrockInstrumentationConfig, BedrockVendor } from "./types";
 import type * as bedrock from "@aws-sdk/client-bedrock-runtime";
 import {
   CONTEXT_KEY_ALLOW_TRACE_CONTENT,
-  LLMRequestTypeValues,
   SpanAttributes,
 } from "@traceloop/ai-semantic-conventions";
 import {
@@ -150,6 +149,8 @@ export class BedrockInstrumentation extends InstrumentationBase {
         const span = plugin._startSpan({
           params: args[0],
         });
+        const modelId =
+          (args[0]?.input as bedrock.InvokeModelCommandInput)?.modelId ?? "";
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
           () => {
@@ -163,12 +164,16 @@ export class BedrockInstrumentation extends InstrumentationBase {
             }
           },
         );
-        const wrappedPromise = plugin._wrapPromise(span, execPromise);
+        const wrappedPromise = plugin._wrapPromise(span, execPromise, modelId);
         return context.bind(execContext, wrappedPromise);
       };
     };
   }
-  private _wrapPromise<T>(span: Span, promise: Promise<T>): Promise<T> {
+  private _wrapPromise<T>(
+    span: Span,
+    promise: Promise<T>,
+    modelId: string,
+  ): Promise<T> {
     return promise
       .then(async (result) => {
         await this._endSpan({
@@ -176,6 +181,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
           result: result as
             | bedrock.InvokeModelCommandOutput
             | bedrock.InvokeModelWithResponseStreamCommandOutput,
+          modelId,
         });
 
         return new Promise<T>((resolve) => resolve(result));
@@ -211,8 +217,6 @@ export class BedrockInstrumentation extends InstrumentationBase {
       attributes = {
         [ATTR_GEN_AI_PROVIDER_NAME]: GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
         [ATTR_GEN_AI_REQUEST_MODEL]: model,
-        [ATTR_GEN_AI_RESPONSE_MODEL]: input.modelId,
-        [SpanAttributes.LLM_REQUEST_TYPE]: LLMRequestTypeValues.COMPLETION,
       };
 
       if (typeof input.body === "string") {
@@ -244,11 +248,13 @@ export class BedrockInstrumentation extends InstrumentationBase {
   private async _endSpan({
     span,
     result,
+    modelId,
   }: {
     span: Span;
     result:
       | bedrock.InvokeModelCommandOutput
       | bedrock.InvokeModelWithResponseStreamCommandOutput;
+    modelId: string;
   }) {
     try {
       if ("body" in result) {
@@ -258,7 +264,6 @@ export class BedrockInstrumentation extends InstrumentationBase {
             : {};
 
         if (ATTR_GEN_AI_PROVIDER_NAME in attributes) {
-          const modelId = attributes[ATTR_GEN_AI_RESPONSE_MODEL] as string;
           const { modelVendor, model } = this._extractVendorAndModel(modelId);
 
           span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, model);
