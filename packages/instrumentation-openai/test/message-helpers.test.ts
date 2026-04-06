@@ -60,6 +60,7 @@ describe("mapOpenAIContentBlock", () => {
     });
     assert.deepStrictEqual(result, {
       type: "file",
+      modality: "document",
       file_id: "f_123",
       filename: "doc.pdf",
     });
@@ -71,10 +72,9 @@ describe("mapOpenAIContentBlock", () => {
       file: { file_data: "base64data", mime_type: "application/pdf" },
     }) as any;
     assert.strictEqual(result.type, "blob");
+    assert.strictEqual(result.modality, "document");
     assert.strictEqual(result.mime_type, "application/pdf");
     assert.strictEqual(result.content, "base64data");
-    // File data should NOT have modality (documents aren't image/video/audio)
-    assert.strictEqual(result.modality, undefined);
   });
 
   it("maps refusal to GenericPart", () => {
