@@ -248,3 +248,68 @@ export function mapOpenAIContentBlock(block: any): object {
       return { type: block.type, ...block };
   }
 }
+
+// =============================================================================
+// Bedrock
+// =============================================================================
+//  Maps a single Bedrock SDK content block to its OTel-compliant part object.
+//
+//  Bedrock is used by multiple providers (Anthropic, AI21, Amazon Nova, Meta,
+//  Cohere) — all share the same block schema on the Bedrock layer:
+//
+//   plain string              → TextPart
+//   { type: "text", text }    → TextPart
+//   { text } (Nova format)    → TextPart
+//   tool_use                  → ToolCallRequestPart
+//   tool_result               → ToolCallResponsePart
+//   <unknown>                 → GenericPart
+
+/** Bedrock SDK content block type strings. */
+const BedrockBlockType = {
+  TEXT: "text",
+  TOOL_USE: "tool_use",
+  TOOL_RESULT: "tool_result",
+} as const;
+
+/** OTel gen_ai part type strings used by the Bedrock mapper. */
+const BedrockOtelPartType = {
+  TEXT: "text",
+  TOOL_CALL: "tool_call",
+  TOOL_CALL_RESPONSE: "tool_call_response",
+} as const;
+
+/**
+ * Maps a single Bedrock content block to its OTel-compliant part object.
+ * Used by formatInputMessages and formatOutputMessage for all Bedrock providers.
+ */
+export const mapBedrockContentBlock = (block: any): object => {
+  if (typeof block === "string") {
+    return { type: BedrockOtelPartType.TEXT, content: block };
+  }
+
+  switch (block.type) {
+    case BedrockBlockType.TEXT:
+      return { type: BedrockOtelPartType.TEXT, content: block.text };
+
+    case BedrockBlockType.TOOL_USE:
+      return {
+        type: BedrockOtelPartType.TOOL_CALL,
+        id: block.id,
+        name: block.name,
+        arguments: block.input,
+      };
+
+    case BedrockBlockType.TOOL_RESULT:
+      return {
+        type: BedrockOtelPartType.TOOL_CALL_RESPONSE,
+        id: block.tool_use_id,
+        response: block.content,
+      };
+
+    default:
+      if (!block.type && block.text !== undefined) {
+        return { type: BedrockOtelPartType.TEXT, content: block.text };
+      }
+      return { type: block.type, ...block };
+  }
+};

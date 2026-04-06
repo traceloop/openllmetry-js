@@ -1,5 +1,13 @@
 import { InstrumentationConfig } from "@opentelemetry/instrumentation";
 
+export enum BedrockVendor {
+  AI21 = "ai21",
+  AMAZON = "amazon",
+  ANTHROPIC = "anthropic",
+  COHERE = "cohere",
+  META = "meta",
+}
+
 export interface BedrockInstrumentationConfig extends InstrumentationConfig {
   /**
    * Whether to log prompts, completions and embeddings on traces.
