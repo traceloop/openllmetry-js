@@ -126,7 +126,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
       [ATTR_GEN_AI_OPERATION_NAME]: operationType,
     });
-    
+
     if (requestModel) {
       span.setAttribute(ATTR_GEN_AI_REQUEST_MODEL, requestModel);
     }
@@ -183,7 +183,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       [ATTR_GEN_AI_PROVIDER_NAME]: vendor,
       [ATTR_GEN_AI_OPERATION_NAME]: operationType,
     });
-    
+
     if (requestModel) {
       span.setAttribute(ATTR_GEN_AI_REQUEST_MODEL, requestModel);
     }
