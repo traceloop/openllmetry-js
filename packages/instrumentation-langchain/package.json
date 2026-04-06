@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-langchain",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "OpenTelemetry instrumentation for LangchainJS",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -55,9 +55,11 @@
     "tslib": "^2.8.1"
   },
   "devDependencies": {
-    "@langchain/core": "^1.0.0",
+    "@langchain/classic": "^1.0.0",
     "@langchain/community": "^1.0.0",
+    "@langchain/core": "^1.0.0",
     "@langchain/openai": "^1.0.0",
+    "@langchain/textsplitters": "^1.0.0",
     "@opentelemetry/context-async-hooks": "^2.0.1",
     "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@pollyjs/adapter-fetch": "^6.0.6",
@@ -67,8 +69,6 @@
     "@traceloop/instrumentation-bedrock": "workspace:*",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.0.15",
-    "@langchain/classic": "^1.0.0",
-    "@langchain/textsplitters": "^1.0.0",
     "langchain": "^1.0.0",
     "mocha": "^11.7.1",
     "ts-mocha": "^11.1.0"

@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.24.0](https://github.com/traceloop/openllmetry-js/compare/v0.23.0...v0.24.0) (2026-04-06)
+
+**Note:** Version bump only for package @traceloop/instrumentation-together
+
 # [0.23.0](https://github.com/traceloop/openllmetry-js/compare/v0.22.8...v0.23.0) (2026-03-30)
 
 **Note:** Version bump only for package @traceloop/instrumentation-together
