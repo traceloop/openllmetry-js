@@ -2,7 +2,10 @@ import { ReadableSpan, Span } from "@opentelemetry/sdk-trace-node";
 import {
   SpanAttributes,
   TraceloopSpanKindValues,
+  LLMRequestTypeValues,
 } from "@traceloop/ai-semantic-conventions";
+
+const { AI_OPERATION_ID } = SpanAttributes;
 import {
   ATTR_GEN_AI_AGENT_NAME,
   ATTR_GEN_AI_COMPLETION,
@@ -490,27 +493,81 @@ const transformVendor = (attributes: Record<string, any>): void => {
   }
 };
 
+/**
+ * Derives and sets the llm.request.type attribute for AI SDK operations.
+ * 
+ * The transformLlmRequestType function determines the request type (e.g., "chat")
+ * by examining either the span name or the ai.operationId attribute. This dual
+ * approach handles cases where the span name has already been transformed by
+ * onSpanStart (e.g., "ai.generateText" -> "run.ai"), ensuring the llm.request.type
+ * attribute is set correctly even after prior transformations.
+ * 
+ * Fixes: https://github.com/traceloop/openllmetry-js/issues/882
+ */
+const transformLlmRequestType = (
+  attributes: Record<string, any>,
+  nameToCheck?: string,
+): void => {
+  if (!nameToCheck || attributes[SpanAttributes.LLM_REQUEST_TYPE]) {
+    return;
+  }
+
+  let requestType: string | undefined;
+  if (
+    nameToCheck.includes("generateText") ||
+    nameToCheck.includes("streamText") ||
+    nameToCheck.includes("generateObject") ||
+    nameToCheck.includes("streamObject")
+  ) {
+    requestType = LLMRequestTypeValues.CHAT;
+  }
+  // Note: completion, rerank are not currently used by AI SDK
+  // embedding operations are handled separately by the SDK
+
+  if (requestType) {
+    attributes[SpanAttributes.LLM_REQUEST_TYPE] = requestType;
+  }
+};
+
 const transformOperationName = (
   attributes: Record<string, any>,
   spanName?: string,
 ): void => {
-  if (!spanName) return;
+  // Check ai.operationId attribute first (set by Vercel AI SDK)
+  // This is more reliable since span name may have been transformed already
+  const operationIdValue = attributes[AI_OPERATION_ID];
+  
+  // Ensure operationId is a string before using it (may be non-string in some cases)
+  const operationId =
+    typeof operationIdValue === "string" ? operationIdValue : undefined;
+  
+  // Use operationId if available, otherwise fall back to spanName
+  const nameToCheck = operationId || spanName;
+  if (!nameToCheck) return;
 
   let operationName: string | undefined;
   if (
-    spanName.includes("generateText") ||
-    spanName.includes("streamText") ||
-    spanName.includes("generateObject") ||
-    spanName.includes("streamObject")
+    nameToCheck.includes("generateText") ||
+    nameToCheck.includes("streamText") ||
+    nameToCheck.includes("generateObject") ||
+    nameToCheck.includes("streamObject")
   ) {
     operationName = "chat";
-  } else if (spanName === "ai.toolCall" || spanName.endsWith(".tool")) {
+  } else if (
+    nameToCheck === "ai.toolCall" ||
+    nameToCheck.endsWith(".tool") ||
+    spanName === "ai.toolCall" ||
+    (spanName && spanName.endsWith(".tool"))
+  ) {
     operationName = "execute_tool";
   }
 
   if (operationName) {
     attributes[ATTR_GEN_AI_OPERATION_NAME] = operationName;
   }
+
+  // Also set llm.request.type for AI SDK spans
+  transformLlmRequestType(attributes, nameToCheck);
 };
 
 const transformModelId = (attributes: Record<string, any>): void => {

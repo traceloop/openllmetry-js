@@ -65,6 +65,9 @@ export const SpanAttributes = {
   // Kept for backwards compatibility
   LLM_REQUEST_FUNCTIONS: "llm.request.functions",
 
+  // AI SDK
+  AI_OPERATION_ID: "ai.operationId",
+
   // Vector DB
   VECTOR_DB_VENDOR: "db.system",
   VECTOR_DB_QUERY_TOP_K: "db.vector.query.top_k",
