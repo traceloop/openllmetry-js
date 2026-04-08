@@ -317,11 +317,13 @@ export class GoogleGenAIInstrumentation extends InstrumentationBase {
             span.end();
           }
         } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
           span.setStatus({
             code: SpanStatusCode.ERROR,
-            message: error.message,
+            message,
           });
-          span.recordException(error);
+          span.recordException(error instanceof Error ? error : new Error(message));
           span.end();
           throw error;
         }

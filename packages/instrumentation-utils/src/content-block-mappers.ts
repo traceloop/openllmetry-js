@@ -399,7 +399,7 @@ export function mapGoogleGenAIContentBlock(block: any): object {
   if (block.functionCall) {
     return {
       type: "tool_call",
-      id: block.functionCall.id,
+      ...(block.functionCall.id != null && { id: block.functionCall.id }),
       name: block.functionCall.name,
       arguments: block.functionCall.args,
     };
@@ -409,7 +409,9 @@ export function mapGoogleGenAIContentBlock(block: any): object {
   if (block.functionResponse) {
     return {
       type: "tool_call_response",
-      id: block.functionResponse.id,
+      ...(block.functionResponse.id != null && {
+        id: block.functionResponse.id,
+      }),
       name: block.functionResponse.name,
       response: block.functionResponse.response,
     };
