@@ -59,6 +59,7 @@ const AI_PROMPT_TOOLS = "ai.prompt.tools";
 const AI_TELEMETRY_METADATA_PREFIX = "ai.telemetry.metadata.";
 const TYPE_TEXT = "text";
 const TYPE_TOOL_CALL = "tool_call";
+const TYPE_TOOL_RESULT = "tool_result";
 const ROLE_ASSISTANT = "assistant";
 const ROLE_USER = "user";
 
@@ -235,6 +236,83 @@ const processMessageContent = (content: any): string => {
   return String(content);
 };
 
+/**
+ * Process message content into proper parts array for gen_ai.input.messages.
+ * This preserves tool-call and tool-result parts instead of converting everything to text.
+ * Fixes: https://github.com/traceloop/openllmetry-js/issues/889
+ */
+const processMessageParts = (content: any): any[] => {
+  const parts: any[] = [];
+
+  if (Array.isArray(content)) {
+    for (const item of content) {
+      if (!item || typeof item !== "object") continue;
+
+      if (item.type === TYPE_TEXT && item.text) {
+        // Text part
+        parts.push({ type: TYPE_TEXT, content: item.text });
+      } else if (item.type === "tool-call" || item.type === "tool_call") {
+        // Tool call part - preserve the tool call information
+        // Support both v4 (args) and v5 (input) formats
+        // Prefer v5 (input) if present
+        const toolArgs = item.input ?? item.args;
+        parts.push({
+          type: TYPE_TOOL_CALL,
+          tool_call: {
+            id: item.toolCallId,
+            name: item.toolName,
+            arguments:
+              typeof toolArgs === "string" ? toolArgs : JSON.stringify(toolArgs),
+          },
+        });
+      } else if (item.type === "tool-result" || item.type === TYPE_TOOL_RESULT) {
+        // Tool result part - preserve the tool result information
+        // Support both v4 (result) and v5 (output) formats
+        // Prefer v5 (output) if present
+        const toolOutput = item.output ?? item.result;
+        parts.push({
+          type: TYPE_TOOL_RESULT,
+          tool_call_id: item.toolCallId,
+          tool_name: item.toolName,
+          content:
+            typeof toolOutput === "string"
+              ? toolOutput
+              : JSON.stringify(toolOutput),
+        });
+      } else {
+        // Unknown part type - serialize as text
+        parts.push({ type: TYPE_TEXT, content: JSON.stringify(item) });
+      }
+    }
+  } else if (content && typeof content === "object") {
+    if (content.type === TYPE_TEXT && content.text) {
+      parts.push({ type: TYPE_TEXT, content: content.text });
+    } else {
+      parts.push({ type: TYPE_TEXT, content: JSON.stringify(content) });
+    }
+  } else if (typeof content === "string") {
+    // Try to parse as JSON array of parts
+    try {
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        return processMessageParts(parsed);
+      }
+    } catch {
+      // Not JSON, treat as plain text
+    }
+    parts.push({ type: TYPE_TEXT, content: content });
+  } else if (content != null) {
+    parts.push({ type: TYPE_TEXT, content: String(content) });
+  }
+
+  // If no parts were extracted, return a single empty text part
+  if (parts.length === 0) {
+    parts.push({ type: TYPE_TEXT, content: "" });
+  }
+
+  return parts;
+};
+
 const transformTools = (attributes: Record<string, any>): void => {
   if (AI_PROMPT_TOOLS in attributes) {
     try {
@@ -303,14 +381,10 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = msg.role;
 
         // Add to OpenTelemetry standard gen_ai.input.messages format
+        // Use processMessageParts to preserve tool-call and tool-result parts
         inputMessages.push({
           role: msg.role,
-          parts: [
-            {
-              type: TYPE_TEXT,
-              content: processedContent,
-            },
-          ],
+          parts: processMessageParts(msg.content),
         });
       });
 
@@ -339,14 +413,10 @@ const transformPrompts = (attributes: Record<string, any>): void => {
             attributes[contentKey] = processedContent;
             attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = msg.role;
 
+            // Use processMessageParts to preserve tool-call and tool-result parts
             inputMessages.push({
               role: msg.role,
-              parts: [
-                {
-                  type: TYPE_TEXT,
-                  content: processedContent,
-                },
-              ],
+              parts: processMessageParts(msg.content),
             });
           },
         );
