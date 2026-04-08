@@ -151,6 +151,7 @@ export const traceloopInstrumentationLibraries = [
   "@traceloop/instrumentation-qdrant",
   "@traceloop/instrumentation-together",
   "@traceloop/instrumentation-mcp",
+  "@traceloop/instrumentation-google-genai",
 ];
 
 const onSpanStart = (span: Span): void => {

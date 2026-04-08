@@ -12,6 +12,7 @@ import type * as llamaindex from "llamaindex";
 import type * as chromadb from "chromadb";
 import type * as qdrant from "@qdrant/js-client-rest";
 import type * as mcp from "@modelcontextprotocol/sdk/client/index.js";
+import type * as genai from "@google/genai";
 
 /**
  * Options for initializing the Traceloop SDK.
@@ -100,6 +101,7 @@ export interface InitializeOptions {
     chromadb?: typeof chromadb;
     qdrant?: typeof qdrant;
     mcp?: typeof mcp;
+    google_genai?: typeof genai;
   };
 
   /**

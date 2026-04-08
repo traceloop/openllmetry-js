@@ -24,6 +24,7 @@ import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
 import { TogetherInstrumentation } from "@traceloop/instrumentation-together";
 import { McpInstrumentation } from "@traceloop/instrumentation-mcp";
+import { GoogleGenAIInstrumentation } from "@traceloop/instrumentation-google-genai";
 import {
   ALL_INSTRUMENTATION_LIBRARIES,
   createSpanProcessor,
@@ -46,6 +47,7 @@ let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
 let qdrantInstrumentation: QdrantInstrumentation | undefined;
 let togetherInstrumentation: TogetherInstrumentation | undefined;
 let mcpInstrumentation: McpInstrumentation | undefined;
+let googleGenAIInstrumentation: GoogleGenAIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -127,6 +129,13 @@ export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
 
   mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
   instrumentations.push(mcpInstrumentation);
+
+  if (!googleGenAIInstrumentation) {
+    googleGenAIInstrumentation = new GoogleGenAIInstrumentation({
+      exceptionLogger,
+    });
+    instrumentations.push(googleGenAIInstrumentation);
+  }
 };
 
 export const manuallyInitInstrumentations = (
@@ -244,6 +253,16 @@ export const manuallyInitInstrumentations = (
     instrumentations.push(mcpInstrumentation);
     mcpInstrumentation.manuallyInstrument(instrumentModules.mcp);
   }
+
+  if (instrumentModules?.google_genai) {
+    googleGenAIInstrumentation = new GoogleGenAIInstrumentation({
+      exceptionLogger,
+    });
+    instrumentations.push(googleGenAIInstrumentation);
+    googleGenAIInstrumentation.manuallyInstrument(
+      instrumentModules.google_genai,
+    );
+  }
 };
 
 /**
@@ -289,6 +308,9 @@ export const startTracing = (options: InitializeOptions) => {
       traceContent: false,
     });
     togetherInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    googleGenAIInstrumentation?.setConfig({
       traceContent: false,
     });
   }

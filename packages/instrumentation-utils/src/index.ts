@@ -9,4 +9,5 @@ export {
   mapAnthropicContentBlock,
   mapOpenAIContentBlock,
   mapBedrockContentBlock,
+  mapGoogleGenAIContentBlock,
 } from "./content-block-mappers";
