@@ -163,10 +163,7 @@ export class GoogleGenAIInstrumentation extends InstrumentationBase {
           },
           (e) => {
             if (e) {
-              plugin._diag.error(
-                "Error in Google GenAI instrumentation",
-                e,
-              );
+              plugin._diag.error("Error in Google GenAI instrumentation", e);
             }
           },
         );
@@ -195,10 +192,7 @@ export class GoogleGenAIInstrumentation extends InstrumentationBase {
           },
           (e) => {
             if (e) {
-              plugin._diag.error(
-                "Error in Google GenAI instrumentation",
-                e,
-              );
+              plugin._diag.error("Error in Google GenAI instrumentation", e);
             }
           },
         );
@@ -323,7 +317,9 @@ export class GoogleGenAIInstrumentation extends InstrumentationBase {
             code: SpanStatusCode.ERROR,
             message,
           });
-          span.recordException(error instanceof Error ? error : new Error(message));
+          span.recordException(
+            error instanceof Error ? error : new Error(message),
+          );
           span.end();
           throw error;
         }
@@ -461,7 +457,8 @@ function formatGoogleGenAIContents(contents: any): string {
 
   // Single Content object
   if (!Array.isArray(contents) && contents.parts) {
-    const role = contents.role === "model" ? "assistant" : (contents.role || "user");
+    const role =
+      contents.role === "model" ? "assistant" : contents.role || "user";
     return formatInputMessages(
       [{ role, content: contents.parts }],
       mapGoogleGenAIContentBlock,
@@ -473,7 +470,7 @@ function formatGoogleGenAIContents(contents: any): string {
     // If items have a 'role' property, treat as Content[]
     if (contents[0].role !== undefined || contents[0].parts !== undefined) {
       const messages = contents.map((c: any) => ({
-        role: c.role === "model" ? "assistant" : (c.role || "user"),
+        role: c.role === "model" ? "assistant" : c.role || "user",
         content: c.parts || [],
       }));
       return formatInputMessages(messages, mapGoogleGenAIContentBlock);

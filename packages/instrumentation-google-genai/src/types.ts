@@ -1,6 +1,7 @@
 import { InstrumentationConfig } from "@opentelemetry/instrumentation";
 
-export interface GoogleGenAIInstrumentationConfig extends InstrumentationConfig {
+export interface GoogleGenAIInstrumentationConfig
+  extends InstrumentationConfig {
   /**
    * Whether to log prompts, completions and embeddings on traces.
    * @default true

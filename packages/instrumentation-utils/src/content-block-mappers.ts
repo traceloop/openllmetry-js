@@ -327,9 +327,7 @@ export const mapBedrockContentBlock = (block: any): object => {
 // =============================================================================
 
 /** Infers OTel modality from a MIME type string (e.g., "image/png" → "image"). */
-function inferModality(
-  mimeType: string | undefined,
-): string | undefined {
+function inferModality(mimeType: string | undefined): string | undefined {
   if (!mimeType) return undefined;
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("audio/")) return "audio";
