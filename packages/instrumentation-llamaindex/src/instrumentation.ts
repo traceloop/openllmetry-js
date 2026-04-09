@@ -41,7 +41,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
   constructor(config: LlamaIndexInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-llamaindex", version, config);
     this.customLLMInstrumentation = new CustomLLMInstrumentation(
-      this._config,
+      () => this._config,
       this._diag,
       () => this.tracer,
     );

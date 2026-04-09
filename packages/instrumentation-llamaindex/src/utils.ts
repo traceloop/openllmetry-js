@@ -58,23 +58,43 @@ export async function* llmGeneratorWrapper(
     | AsyncIterable<llamaindex.ChatResponseChunk>
     | AsyncIterable<llamaindex.CompletionResponse>,
   ctx: Context,
-  fn: (message: string) => void,
+  fn: (message: string, lastChunk?: any) => void,
 ) {
   let message = "";
+  // Track the last chunk so the callback can extract usage/finish_reason from
+  // chunk.raw — OpenAI sends these in the final streaming chunk when
+  // stream_options: { include_usage: true } is set on the LLM.
+  let lastChunk: any;
 
-  for await (const messageChunk of bindAsyncGenerator(
-    ctx,
-    streamingResult as AsyncGenerator,
-  )) {
-    if ((messageChunk as llamaindex.ChatResponseChunk).delta) {
-      message += (messageChunk as llamaindex.ChatResponseChunk).delta;
+  let fnCalled = false;
+  try {
+    for await (const messageChunk of bindAsyncGenerator(
+      ctx,
+      streamingResult as AsyncGenerator,
+    )) {
+      if ((messageChunk as llamaindex.ChatResponseChunk).delta) {
+        message += (messageChunk as llamaindex.ChatResponseChunk).delta;
+      }
+      if ((messageChunk as llamaindex.CompletionResponse).text) {
+        message += (messageChunk as llamaindex.CompletionResponse).text;
+      }
+      lastChunk = messageChunk;
+      yield messageChunk;
     }
-    if ((messageChunk as llamaindex.CompletionResponse).text) {
-      message += (messageChunk as llamaindex.CompletionResponse).text;
+  } catch (err) {
+    // Ensure span is finalized even if the stream throws
+    if (!fnCalled) {
+      fnCalled = true;
+      fn(message, lastChunk);
     }
-    yield messageChunk;
+    throw err;
+  } finally {
+    // Covers normal completion and early consumer exit (break/return)
+    if (!fnCalled) {
+      fnCalled = true;
+      fn(message, lastChunk);
+    }
   }
-  fn(message);
 }
 
 export function genericWrapper(

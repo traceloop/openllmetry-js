@@ -16,7 +16,10 @@ traceloop.initialize({
 });
 
 Settings.embedModel = new OpenAIEmbedding();
-Settings.llm = new OpenAI();
+// OpenAI only sends usage in the final streaming chunk if stream_options: { include_usage: true }
+Settings.llm = new OpenAI({
+  additionalChatOptions: { stream_options: { include_usage: true } },
+});
 
 class SampleLlamaIndex {
   async query() {
