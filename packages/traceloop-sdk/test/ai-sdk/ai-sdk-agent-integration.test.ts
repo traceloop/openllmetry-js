@@ -82,7 +82,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     memoryExporter.reset();
   });
 
-  it.skip("should propagate agent name to tool call spans [NEEDS_RERECORD: @ai-sdk/openai v2->v3 endpoint change]", async () => {
+  it("should propagate agent name to tool call spans", async () => {
     // Define a simple calculator tool
     const calculate = tool({
       description: "Perform basic mathematical calculations",
@@ -239,7 +239,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     }
   });
 
-  it.skip("should preserve original AI SDK span name when no agent metadata is provided [NEEDS_RERECORD: @ai-sdk/openai v2->v3 endpoint change]", async () => {
+  it("should preserve original AI SDK span name when no agent metadata is provided", async () => {
     // Define a simple calculator tool
     const calculate = tool({
       description: "Perform basic mathematical calculations",
@@ -320,7 +320,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     );
   });
 
-  it.skip("should use agent name for generateObject with agent metadata [NEEDS_RERECORD: @ai-sdk/openai v2->v3 endpoint change]", async () => {
+  it("should use agent name for generateObject with agent metadata", async () => {
     const PersonSchema = z.object({
       name: z.string(),
       age: z.number(),
@@ -380,7 +380,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     );
   });
 
-  it.skip("should use agent name for streamText with agent metadata [NEEDS_RERECORD: @ai-sdk/openai v2->v3 endpoint change]", async () => {
+  it("should use agent name for streamText with agent metadata", async () => {
     const result = await traceloop.withWorkflow(
       { name: "test_stream_text_agent_workflow" },
       async () => {
@@ -439,7 +439,7 @@ describe("Test AI SDK Agent Integration with Recording", function () {
     );
   });
 
-  it.skip("should properly scope agent names in nested agent scenarios [NEEDS_RERECORD: @ai-sdk/openai v2->v3 endpoint change]", async () => {
+  it("should properly scope agent names in nested agent scenarios", async () => {
     const innerAgentTool = tool({
       description: "Calls an inner agent to perform a subtask",
       inputSchema: z.object({
