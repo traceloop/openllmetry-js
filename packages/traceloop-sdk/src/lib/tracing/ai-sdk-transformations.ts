@@ -3,6 +3,7 @@ import {
   SpanAttributes,
   TraceloopSpanKindValues,
 } from "@traceloop/ai-semantic-conventions";
+import { mapAiSdkMessageContent } from "@traceloop/instrumentation-utils";
 import {
   ATTR_GEN_AI_AGENT_NAME,
   ATTR_GEN_AI_CONVERSATION_ID,
@@ -232,59 +233,6 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
   }
 };
 
-const processMessageContent = (content: any): string => {
-  if (Array.isArray(content)) {
-    const textItems = content.filter(
-      (item: any) =>
-        item &&
-        typeof item === "object" &&
-        item.type === TYPE_TEXT &&
-        item.text,
-    );
-
-    if (textItems.length > 0) {
-      const joinedText = textItems.map((item: any) => item.text).join(" ");
-      return joinedText;
-    } else {
-      return JSON.stringify(content);
-    }
-  }
-
-  if (content && typeof content === "object") {
-    if (content.type === TYPE_TEXT && content.text) {
-      return content.text;
-    }
-    return JSON.stringify(content);
-  }
-
-  if (typeof content === "string") {
-    try {
-      const parsed = JSON.parse(content);
-      if (Array.isArray(parsed)) {
-        const allTextItems = parsed.every(
-          (item: any) =>
-            item &&
-            typeof item === "object" &&
-            item.type === TYPE_TEXT &&
-            item.text,
-        );
-
-        if (allTextItems && parsed.length > 0) {
-          return parsed.map((item: any) => item.text).join(" ");
-        } else {
-          return content;
-        }
-      }
-    } catch {
-      // Ignore parsing errors
-    }
-
-    return content;
-  }
-
-  return String(content);
-};
-
 const transformTools = (attributes: Record<string, any>): void => {
   if (AI_PROMPT_TOOLS in attributes) {
     try {
@@ -337,11 +285,9 @@ const transformPrompts = (attributes: Record<string, any>): void => {
       const inputMessages: any[] = [];
 
       messages.forEach((msg: { role: string; content: any }) => {
-        const processedContent = processMessageContent(msg.content);
-
         inputMessages.push({
           role: msg.role,
-          parts: [{ type: TYPE_TEXT, content: processedContent }],
+          parts: mapAiSdkMessageContent(msg.content),
         });
       });
 
@@ -368,10 +314,9 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         const inputMessages: any[] = [];
 
         messages.forEach((msg: { role: string; content: any }) => {
-          const processedContent = processMessageContent(msg.content);
           inputMessages.push({
             role: msg.role,
-            parts: [{ type: TYPE_TEXT, content: processedContent }],
+            parts: mapAiSdkMessageContent(msg.content),
           });
         });
 
@@ -535,7 +480,11 @@ const transformOperationName = (
     spanName.includes("streamObject")
   ) {
     operationName = GEN_AI_OPERATION_NAME_VALUE_CHAT;
-  } else if (spanName === "ai.toolCall" || spanName.endsWith(".tool")) {
+  } else if (
+    spanName === "ai.toolCall" ||
+    spanName.endsWith(".tool") ||
+    spanName.startsWith(GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL)
+  ) {
     operationName = GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL;
   }
 

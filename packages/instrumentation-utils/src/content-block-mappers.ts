@@ -321,3 +321,188 @@ export const mapBedrockContentBlock = (block: any): object => {
       return { type: block.type, ...block };
   }
 };
+
+// =============================================================================
+// Vercel AI SDK
+// =============================================================================
+//  Maps a single Vercel AI SDK content part (from ai.prompt.messages span attr)
+//  to its OTel-compliant part object. Verified against:
+//    - AI SDK v6 ToolCallPart / ToolResultPart / ImagePart / FilePart / ReasoningPart types
+//    - OTel gen_ai input/output messages JSON schemas (v1.40)
+//
+//   text       → TextPart               { type:"text", content }
+//   reasoning  → ReasoningPart          { type:"reasoning", content }
+//   tool-call  → ToolCallRequestPart    { type:"tool_call", id?, name, arguments? }
+//   tool-result→ ToolCallResponsePart   { type:"tool_call_response", id?, response }
+//   image (string data URI) → BlobPart  { modality:"image", mime_type?, content }
+//   image (string URL)      → UriPart   { modality:"image", uri }
+//   image (URL object)      → UriPart   { modality:"image", uri: url.href }
+//   image (binary data)     → BlobPart  { modality:"image", content (base64) }
+//   file (inline data)      → BlobPart  { modality inferred from mediaType, content }
+//   file (URL)              → UriPart   { modality inferred from mediaType, uri }
+//   <unknown>               → GenericPart
+
+/**
+ * Maps a single Vercel AI SDK content part to its OTel-compliant part object.
+ *
+ * Field names follow AI SDK v6:
+ *   ToolCallPart:   toolCallId, toolName, input
+ *   ToolResultPart: toolCallId, toolName, output (ToolResultOutput union)
+ *   ImagePart:      image (DataContent | URL), optional mediaType
+ *   FilePart:       data (DataContent | URL), mediaType (required)
+ *   ReasoningPart:  text
+ */
+export const mapAiSdkContentPart = (part: any): any => {
+  if (!part || typeof part !== "object") {
+    return { type: "text", content: String(part ?? "") };
+  }
+
+  switch (part.type) {
+    case "text":
+      return { type: "text", content: part.text ?? "" };
+
+    // OTel type is "reasoning", AI SDK v6 field is `text`
+    case "reasoning":
+      return { type: "reasoning", content: part.text ?? "" };
+
+    case "tool-call":
+      // AI SDK v6: toolCallId, toolName, input
+      return {
+        type: "tool_call",
+        id: part.toolCallId ?? null,
+        name: part.toolName,
+        arguments: part.input,
+      };
+
+    case "tool-result": {
+      // AI SDK v6: output is ToolResultOutput — { type: 'text'|'json', value } union
+      // Unwrap to the actual value for tracing; fall back to the full object if unknown shape
+      const output = part.output;
+      const response =
+        output && typeof output === "object" && "value" in output
+          ? output.value
+          : output;
+      return {
+        type: "tool_call_response",
+        id: part.toolCallId ?? null,
+        response,
+      };
+    }
+
+    case "image": {
+      // AI SDK v6: image is DataContent | URL; optional mediaType
+      const imgSrc = part.image ?? null;
+      const mimeType = part.mediaType ?? null;
+
+      if (imgSrc instanceof URL) {
+        return {
+          type: "uri",
+          modality: "image",
+          uri: imgSrc.href,
+          mime_type: mimeType,
+        };
+      }
+      if (typeof imgSrc === "string") {
+        if (imgSrc.startsWith("data:")) {
+          const [header, data] = imgSrc.split(",");
+          const detectedMime = header.match(/data:([^;]+)/)?.[1] ?? mimeType;
+          return {
+            type: "blob",
+            modality: "image",
+            ...(detectedMime ? { mime_type: detectedMime } : {}),
+            content: data,
+          };
+        }
+        return {
+          type: "uri",
+          modality: "image",
+          uri: imgSrc,
+          mime_type: mimeType,
+        };
+      }
+      if (imgSrc != null) {
+        // Binary data (Uint8Array / ArrayBuffer / Buffer) — base64 encode
+        const bytes =
+          imgSrc instanceof ArrayBuffer ? new Uint8Array(imgSrc) : imgSrc;
+        const b64 = Buffer.from(bytes).toString("base64");
+        return {
+          type: "blob",
+          modality: "image",
+          mime_type: mimeType,
+          content: b64,
+        };
+      }
+      return { type: "blob", modality: "image", content: "" };
+    }
+
+    case "file": {
+      // AI SDK v6: data is DataContent | URL; mediaType is required
+      const fileSrc = part.data ?? null;
+      const mimeType = part.mediaType ?? null;
+      // Infer modality from MIME type (best-effort)
+      const modality = mimeType?.startsWith("image/")
+        ? "image"
+        : mimeType?.startsWith("audio/")
+          ? "audio"
+          : mimeType?.startsWith("video/")
+            ? "video"
+            : "document";
+
+      if (fileSrc instanceof URL) {
+        return {
+          type: "uri",
+          modality,
+          uri: fileSrc.href,
+          mime_type: mimeType,
+        };
+      }
+      if (typeof fileSrc === "string") {
+        if (fileSrc.startsWith("data:")) {
+          const [, data] = fileSrc.split(",");
+          return { type: "blob", modality, mime_type: mimeType, content: data };
+        }
+        return { type: "uri", modality, uri: fileSrc, mime_type: mimeType };
+      }
+      if (fileSrc != null) {
+        const bytes =
+          fileSrc instanceof ArrayBuffer ? new Uint8Array(fileSrc) : fileSrc;
+        const b64 = Buffer.from(bytes).toString("base64");
+        return { type: "blob", modality, mime_type: mimeType, content: b64 };
+      }
+      return { type: "blob", modality, content: "" };
+    }
+
+    default:
+      // GenericPart — preserve unknown types as-is
+      return { type: part.type, ...part };
+  }
+};
+
+/**
+ * Converts Vercel AI SDK message content to an array of OTel parts.
+ * Accepts: plain string, array of SDK content parts, or a JSON-serialized array
+ * (the AI SDK serializes content arrays as JSON strings in span attributes).
+ */
+export const mapAiSdkMessageContent = (content: any): any[] => {
+  if (typeof content === "string") {
+    try {
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        return parsed.map(mapAiSdkContentPart);
+      }
+    } catch {
+      // plain string
+    }
+    return [{ type: "text", content }];
+  }
+
+  if (Array.isArray(content)) {
+    return content.map(mapAiSdkContentPart);
+  }
+
+  if (content && typeof content === "object") {
+    return [mapAiSdkContentPart(content)];
+  }
+
+  return [{ type: "text", content: String(content ?? "") }];
+};

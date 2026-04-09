@@ -282,11 +282,19 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
+      // Each text part maps to its own OTel TextPart — not joined
       const inputMessages = JSON.parse(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
       assert.strictEqual(inputMessages[0].role, "user");
+      assert.strictEqual(inputMessages[0].parts.length, 2);
+      assert.strictEqual(inputMessages[0].parts[0].type, "text");
       assert.strictEqual(
         inputMessages[0].parts[0].content,
-        "Help me plan a trip to San Francisco. I'd like to know about the weather and restaurants.",
+        "Help me plan a trip to San Francisco.",
+      );
+      assert.strictEqual(inputMessages[0].parts[1].type, "text");
+      assert.strictEqual(
+        inputMessages[0].parts[1].content,
+        "I'd like to know about the weather and restaurants.",
       );
     });
 
@@ -307,11 +315,21 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
+      // data URI maps to BlobPart; text parts to TextPart — none are dropped
       const inputMessages = JSON.parse(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
       assert.strictEqual(inputMessages[0].role, "user");
+      assert.strictEqual(inputMessages[0].parts.length, 3);
+      assert.strictEqual(inputMessages[0].parts[0].type, "text");
       assert.strictEqual(
         inputMessages[0].parts[0].content,
-        "What's in this image? Please describe it.",
+        "What's in this image?",
+      );
+      assert.strictEqual(inputMessages[0].parts[1].type, "blob");
+      assert.strictEqual(inputMessages[0].parts[1].modality, "image");
+      assert.strictEqual(inputMessages[0].parts[2].type, "text");
+      assert.strictEqual(
+        inputMessages[0].parts[2].content,
+        "Please describe it.",
       );
     });
 
@@ -329,20 +347,29 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
+      // JSON string of parts is parsed and each maps to its own OTel part
       const inputMessages = JSON.parse(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
       assert.strictEqual(inputMessages[0].role, "user");
+      assert.strictEqual(inputMessages[0].parts.length, 2);
+      assert.strictEqual(inputMessages[0].parts[0].type, "text");
       assert.strictEqual(
         inputMessages[0].parts[0].content,
-        "Help me plan a trip to San Francisco. What should I know about the weather?",
+        "Help me plan a trip to San Francisco.",
+      );
+      assert.strictEqual(inputMessages[0].parts[1].type, "text");
+      assert.strictEqual(
+        inputMessages[0].parts[1].content,
+        "What should I know about the weather?",
       );
     });
 
     it("should preserve complex content like tool calls", () => {
+      // AI SDK v6 ToolCallPart fields: toolCallId, toolName, input
       const messages = [
         {
           role: "assistant",
           content:
-            '[{"type":"tool-call","id":"call_123","name":"getWeather","args":{"location":"Paris"}}]',
+            '[{"type":"tool-call","toolCallId":"call_123","toolName":"getWeather","input":{"location":"Paris"}}]',
         },
       ];
       const attributes = {
@@ -351,13 +378,15 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      // Should preserve the original JSON since it's not simple text
+      // Tool call maps to OTel ToolCallRequestPart — not serialized as text
       const inputMessages = JSON.parse(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
       assert.strictEqual(inputMessages[0].role, "assistant");
-      assert.strictEqual(
-        inputMessages[0].parts[0].content,
-        '[{"type":"tool-call","id":"call_123","name":"getWeather","args":{"location":"Paris"}}]',
-      );
+      assert.strictEqual(inputMessages[0].parts[0].type, "tool_call");
+      assert.strictEqual(inputMessages[0].parts[0].name, "getWeather");
+      assert.strictEqual(inputMessages[0].parts[0].id, "call_123");
+      assert.deepStrictEqual(inputMessages[0].parts[0].arguments, {
+        location: "Paris",
+      });
     });
 
     it("should preserve mixed content arrays", () => {
@@ -374,13 +403,17 @@ describe("AI SDK Transformations", () => {
 
       transformLLMSpans(attributes);
 
-      // Should preserve the original JSON since it has mixed content
+      // Mixed content: text → TextPart, data URI image → BlobPart (not serialized as fallback text)
       const inputMessages = JSON.parse(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
       assert.strictEqual(inputMessages[0].role, "user");
+      assert.strictEqual(inputMessages[0].parts.length, 2);
+      assert.strictEqual(inputMessages[0].parts[0].type, "text");
       assert.strictEqual(
         inputMessages[0].parts[0].content,
-        '[{"type":"text","text":"What\'s the weather?"},{"type":"image","url":"data:image/jpeg;base64,..."}]',
+        "What's the weather?",
       );
+      assert.strictEqual(inputMessages[0].parts[1].type, "blob");
+      assert.strictEqual(inputMessages[0].parts[1].modality, "image");
     });
 
     it("should handle invalid JSON gracefully", () => {

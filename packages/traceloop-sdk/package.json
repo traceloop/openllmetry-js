@@ -66,6 +66,7 @@
     "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@traceloop/ai-semantic-conventions": "workspace:*",
+    "@traceloop/instrumentation-utils": "workspace:*",
     "@traceloop/instrumentation-anthropic": "workspace:*",
     "@traceloop/instrumentation-bedrock": "workspace:*",
     "@traceloop/instrumentation-chromadb": "workspace:*",

@@ -1001,6 +1001,9 @@ importers:
       '@traceloop/instrumentation-together':
         specifier: workspace:*
         version: link:../instrumentation-together
+      '@traceloop/instrumentation-utils':
+        specifier: workspace:*
+        version: link:../instrumentation-utils
       '@traceloop/instrumentation-vertexai':
         specifier: workspace:*
         version: link:../instrumentation-vertexai
@@ -16675,7 +16678,7 @@ snapshots:
       isstream: 0.1.2
       jsonwebtoken: 9.0.3
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.13.2(debug@4.4.3))
+      retry-axios: 2.6.0(axios@1.13.2)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -18659,7 +18662,7 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
 
-  retry-axios@2.6.0(axios@1.13.2(debug@4.4.3)):
+  retry-axios@2.6.0(axios@1.13.2):
     dependencies:
       axios: 1.13.2(debug@4.4.3)
 
