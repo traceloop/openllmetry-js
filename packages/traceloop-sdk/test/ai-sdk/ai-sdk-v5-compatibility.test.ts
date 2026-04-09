@@ -102,9 +102,7 @@ describe("AI SDK v5 Compatibility Tests", () => {
             description: "Get weather for a location",
             parameters: {
               type: "object",
-              properties: {
-                location: { type: "string" },
-              },
+              properties: { location: { type: "string" } },
               required: ["location"],
             },
           },
@@ -113,24 +111,10 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
-        "getWeather",
-      );
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`],
-        "Get weather for a location",
-      );
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
-        JSON.stringify({
-          type: "object",
-          properties: {
-            location: { type: "string" },
-          },
-          required: ["location"],
-        }),
-      );
+      const toolDefs = JSON.parse(attributes[`gen_ai.tool.definitions`]);
+      assert.strictEqual(toolDefs[0].name, "getWeather");
+      assert.strictEqual(toolDefs[0].description, "Get weather for a location");
+      assert.deepStrictEqual(toolDefs[0].parameters.required, ["location"]);
     });
 
     it("should transform v5 format tools with 'inputSchema' property", () => {
@@ -141,9 +125,7 @@ describe("AI SDK v5 Compatibility Tests", () => {
             description: "Get weather for a location",
             inputSchema: {
               type: "object",
-              properties: {
-                location: { type: "string" },
-              },
+              properties: { location: { type: "string" } },
               required: ["location"],
             },
           },
@@ -152,32 +134,18 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
-        "getWeather",
-      );
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.description`],
-        "Get weather for a location",
-      );
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`],
-        JSON.stringify({
-          type: "object",
-          properties: {
-            location: { type: "string" },
-          },
-          required: ["location"],
-        }),
-      );
+      const toolDefs = JSON.parse(attributes[`gen_ai.tool.definitions`]);
+      assert.strictEqual(toolDefs[0].name, "getWeather");
+      assert.strictEqual(toolDefs[0].description, "Get weather for a location");
+      assert.deepStrictEqual(toolDefs[0].inputSchema.required, ["location"]);
     });
 
-    it("should prefer 'inputSchema' when both 'parameters' and 'inputSchema' exist", () => {
+    it("should preserve both parameters and inputSchema when both exist (source format)", () => {
       const attributes = {
         "ai.prompt.tools": [
           {
             name: "testTool",
-            description: "Test tool with both properties",
+            description: "Test",
             parameters: {
               type: "object",
               properties: { oldProp: { type: "string" } },
@@ -192,11 +160,10 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      const transformedParams =
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`];
-      assert.ok(transformedParams);
-      assert.ok(transformedParams.includes("newProp"));
-      assert.ok(!transformedParams.includes("oldProp"));
+      const toolDefs = JSON.parse(attributes[`gen_ai.tool.definitions`]);
+      // Source format preserved as-is — both fields present
+      assert.ok(toolDefs[0].inputSchema.properties.newProp);
+      assert.ok(toolDefs[0].parameters.properties.oldProp);
     });
 
     it("should handle mixed v4 and v5 tools in the same array", () => {
@@ -204,7 +171,7 @@ describe("AI SDK v5 Compatibility Tests", () => {
         "ai.prompt.tools": [
           {
             name: "v4Tool",
-            description: "Tool using v4 format",
+            description: "v4 format",
             parameters: {
               type: "object",
               properties: { v4Prop: { type: "string" } },
@@ -212,7 +179,7 @@ describe("AI SDK v5 Compatibility Tests", () => {
           },
           {
             name: "v5Tool",
-            description: "Tool using v5 format",
+            description: "v5 format",
             inputSchema: {
               type: "object",
               properties: { v5Prop: { type: "string" } },
@@ -223,21 +190,11 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
-        "v4Tool",
-      );
-      const v4Params =
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`];
-      assert.ok(v4Params.includes("v4Prop"));
-
-      assert.strictEqual(
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.name`],
-        "v5Tool",
-      );
-      const v5Params =
-        attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.1.parameters`];
-      assert.ok(v5Params.includes("v5Prop"));
+      const toolDefs = JSON.parse(attributes[`gen_ai.tool.definitions`]);
+      assert.strictEqual(toolDefs[0].name, "v4Tool");
+      assert.ok(JSON.stringify(toolDefs[0].parameters).includes("v4Prop"));
+      assert.strictEqual(toolDefs[1].name, "v5Tool");
+      assert.ok(JSON.stringify(toolDefs[1].inputSchema).includes("v5Prop"));
     });
   });
 
@@ -256,14 +213,12 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[`gen_ai.completion.0.tool_calls.0.name`],
-        "getWeather",
-      );
-      assert.strictEqual(
-        attributes[`gen_ai.completion.0.tool_calls.0.arguments`],
-        '{"location": "San Francisco"}',
-      );
+      // OTel 1.40: tool calls in gen_ai.output.messages flat format
+      const outputMsgsV4 = JSON.parse(attributes["gen_ai.output.messages"]);
+      assert.strictEqual(outputMsgsV4[0].parts[0].name, "getWeather");
+      assert.deepStrictEqual(outputMsgsV4[0].parts[0].arguments, {
+        location: "San Francisco",
+      });
     });
 
     it("should transform v5 format tool calls with 'input' property", () => {
@@ -280,14 +235,11 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[`gen_ai.completion.0.tool_calls.0.name`],
-        "getWeather",
-      );
-      assert.strictEqual(
-        attributes[`gen_ai.completion.0.tool_calls.0.arguments`],
-        '{"location": "San Francisco"}',
-      );
+      const outputMsgsV5 = JSON.parse(attributes["gen_ai.output.messages"]);
+      assert.strictEqual(outputMsgsV5[0].parts[0].name, "getWeather");
+      assert.deepStrictEqual(outputMsgsV5[0].parts[0].arguments, {
+        location: "San Francisco",
+      });
     });
 
     it("should prefer 'input' over 'args' when both exist in tool calls", () => {
@@ -305,10 +257,10 @@ describe("AI SDK v5 Compatibility Tests", () => {
 
       transformLLMSpans(attributes);
 
-      assert.strictEqual(
-        attributes[`gen_ai.completion.0.tool_calls.0.arguments`],
-        '{"location": "New Value"}',
-      );
+      const outputMsgsPref = JSON.parse(attributes["gen_ai.output.messages"]);
+      assert.deepStrictEqual(outputMsgsPref[0].parts[0].arguments, {
+        location: "New Value",
+      });
     });
 
     it("should transform v4 tool call span attributes with 'args' and 'result'", () => {
@@ -533,31 +485,27 @@ describe("AI SDK v5 Compatibility Tests", () => {
       await traceloop.forceFlush();
       const spans = memoryExporter.getFinishedSpans();
 
-      // Find the root AI span
-      const rootSpan = spans.find((span) => span.name === "ai.generateText");
+      // Find the root AI span (OTel 1.40 name: "chat {model}")
+      const rootSpan = spans.find((span) => span.name.startsWith("chat "));
       assert.ok(rootSpan, "Root AI span should exist");
 
-      // Verify tool schema was captured with 'parameters' attribute
-      const toolSchemaParam =
-        rootSpan.attributes[
-          `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.parameters`
-        ];
-      assert.ok(toolSchemaParam, "Tool schema should be captured");
-      assert.strictEqual(
-        rootSpan.attributes[`${SpanAttributes.LLM_REQUEST_FUNCTIONS}.0.name`],
-        "getWeather",
-      );
-
-      // Parse and verify the schema
-      const schema = JSON.parse(toolSchemaParam as string);
-      assert.ok(schema.properties, "Schema should have properties");
+      // Verify tool schema was captured in gen_ai.tool.definitions
+      const toolDefsRaw = rootSpan.attributes["gen_ai.tool.definitions"];
+      assert.ok(toolDefsRaw, "Tool definitions should be captured");
+      const toolDefsInteg = JSON.parse(toolDefsRaw as string);
+      assert.strictEqual(toolDefsInteg[0].name, "getWeather");
+      const toolSchema =
+        toolDefsInteg[0].parameters || toolDefsInteg[0].inputSchema;
+      assert.ok(toolSchema?.properties, "Schema should have properties");
       assert.ok(
-        schema.properties.location,
+        toolSchema.properties.location,
         "Schema should have location property",
       );
 
-      // Find tool call span
-      const toolSpan = spans.find((span) => span.name === "getWeather.tool");
+      // Find tool call span (OTel 1.40 name: "execute_tool {toolName}")
+      const toolSpan = spans.find((span) =>
+        span.name.startsWith("execute_tool "),
+      );
       if (toolSpan) {
         // Verify tool call input/output are captured
         assert.ok(

@@ -5,24 +5,37 @@ import {
 } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_AGENT_NAME,
-  ATTR_GEN_AI_COMPLETION,
   ATTR_GEN_AI_CONVERSATION_ID,
   ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_OUTPUT_MESSAGES,
-  ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_RESPONSE_MODEL,
-  ATTR_GEN_AI_SYSTEM,
   ATTR_GEN_AI_TOOL_CALL_ARGUMENTS,
   ATTR_GEN_AI_TOOL_CALL_ID,
   ATTR_GEN_AI_TOOL_CALL_RESULT,
+  ATTR_GEN_AI_TOOL_DEFINITIONS,
   ATTR_GEN_AI_TOOL_NAME,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL,
+  GEN_AI_PROVIDER_NAME_VALUE_ANTHROPIC,
+  GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI,
+  GEN_AI_PROVIDER_NAME_VALUE_COHERE,
+  GEN_AI_PROVIDER_NAME_VALUE_DEEPSEEK,
+  GEN_AI_PROVIDER_NAME_VALUE_GCP_GEMINI,
+  GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI,
+  GEN_AI_PROVIDER_NAME_VALUE_GROQ,
+  GEN_AI_PROVIDER_NAME_VALUE_MISTRAL_AI,
+  GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+  GEN_AI_PROVIDER_NAME_VALUE_PERPLEXITY,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 const AI_GENERATE_TEXT = "ai.generateText";
@@ -33,18 +46,40 @@ const AI_GENERATE_TEXT_DO_GENERATE = "ai.generateText.doGenerate";
 const AI_GENERATE_OBJECT_DO_GENERATE = "ai.generateObject.doGenerate";
 const AI_STREAM_TEXT_DO_STREAM = "ai.streamText.doStream";
 const AI_STREAM_OBJECT_DO_STREAM = "ai.streamObject.doStream";
-const HANDLED_SPAN_NAMES: Record<string, string> = {
-  [AI_GENERATE_TEXT]: "run.ai",
-  [AI_STREAM_TEXT]: "stream.ai",
-  [AI_GENERATE_OBJECT]: "object.ai",
-  [AI_STREAM_OBJECT]: "stream-object.ai",
-  [AI_GENERATE_TEXT_DO_GENERATE]: "text.generate",
-  [AI_GENERATE_OBJECT_DO_GENERATE]: "object.generate",
-  [AI_STREAM_TEXT_DO_STREAM]: "text.stream",
-  [AI_STREAM_OBJECT_DO_STREAM]: "object.stream",
-};
+// Span names emitted by the AI SDK that we rename to OTel 1.40 format.
+// Only membership is checked (not values) — using a Set is correct.
+const HANDLED_SPAN_NAMES = new Set([
+  AI_GENERATE_TEXT,
+  AI_STREAM_TEXT,
+  AI_GENERATE_OBJECT,
+  AI_STREAM_OBJECT,
+  AI_GENERATE_TEXT_DO_GENERATE,
+  AI_GENERATE_OBJECT_DO_GENERATE,
+  AI_STREAM_TEXT_DO_STREAM,
+  AI_STREAM_OBJECT_DO_STREAM,
+]);
 
 const TOOL_SPAN_NAME = "ai.toolCall";
+
+const AI_RESPONSE_FINISH_REASON = "ai.response.finishReason";
+
+// Maps AI SDK finish reason values to OTel 1.40 finish_reason enum values
+const aiSdkFinishReasonMap: Record<string, string> = {
+  stop: "stop",
+  length: "length",
+  "content-filter": "content_filter",
+  "tool-calls": "tool_call", // AI SDK v4 format (hyphen)
+  tool_calls: "tool_call", // alternative format (underscore)
+  error: "error",
+};
+
+// Returns mapped finish reason for output message JSON.
+// Per OTel spec, finish_reason is required on OutputMessage — use "" when unavailable.
+const getMappedFinishReason = (attributes: Record<string, any>): string => {
+  const raw = attributes[AI_RESPONSE_FINISH_REASON];
+  if (raw == null) return "";
+  return aiSdkFinishReasonMap[raw as string] ?? (raw as string);
+};
 
 const AI_RESPONSE_TEXT = "ai.response.text";
 const AI_RESPONSE_OBJECT = "ai.response.object";
@@ -62,28 +97,48 @@ const TYPE_TOOL_CALL = "tool_call";
 const ROLE_ASSISTANT = "assistant";
 const ROLE_USER = "user";
 
-// Vendor mapping from AI SDK provider prefixes to standardized LLM_SYSTEM values
-// Uses prefixes to match AI SDK patterns like "openai.chat", "anthropic.messages", etc.
-const VENDOR_MAPPING: Record<string, string> = {
-  openai: "OpenAI",
-  azure: "Azure",
-  "azure-openai": "Azure",
-  anthropic: "Anthropic",
-  cohere: "Cohere",
-  mistral: "MistralAI",
-  groq: "Groq",
-  replicate: "Replicate",
-  together: "TogetherAI",
-  fireworks: "Fireworks",
-  deepseek: "DeepSeek",
-  perplexity: "Perplexity",
-  "amazon-bedrock": "AWS",
-  bedrock: "AWS",
-  google: "Google",
-  vertex: "Google",
-  ollama: "Ollama",
-  huggingface: "HuggingFace",
-  openrouter: "OpenRouter",
+// Maps AI SDK provider prefixes to OTel 1.40 gen_ai.provider.name well-known constants.
+// Prefixes are the part before the first dot in ai.model.provider (e.g. "openai" from "openai.chat").
+// See https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/ for the full list.
+const PROVIDER_NAME_MAPPING: Record<string, string> = {
+  openai: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+  anthropic: GEN_AI_PROVIDER_NAME_VALUE_ANTHROPIC,
+  azure: GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI,
+  "azure-openai": GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI,
+  google: GEN_AI_PROVIDER_NAME_VALUE_GCP_GEMINI,
+  vertex: GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI,
+  "amazon-bedrock": GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  bedrock: GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
+  cohere: GEN_AI_PROVIDER_NAME_VALUE_COHERE,
+  mistral: GEN_AI_PROVIDER_NAME_VALUE_MISTRAL_AI,
+  groq: GEN_AI_PROVIDER_NAME_VALUE_GROQ,
+  deepseek: GEN_AI_PROVIDER_NAME_VALUE_DEEPSEEK,
+  perplexity: GEN_AI_PROVIDER_NAME_VALUE_PERPLEXITY,
+};
+
+/**
+ * Sets a span attribute only if it is not already present and value is non-null.
+ *
+ * We use this instead of direct assignment for every gen_ai.* attribute write because:
+ *
+ * 1. ai@6+ emits gen_ai.* attributes natively on doGenerate/doStream spans
+ *    (e.g. gen_ai.usage.input_tokens, gen_ai.response.finish_reasons, gen_ai.request.model).
+ *    Without this guard our transformer would silently overwrite correctly-set values.
+ *
+ * 2. Users who opt into @ai-sdk/otel (the official Vercel AI SDK OTel integration package)
+ *    get gen_ai.* attributes set by that package before our span processor runs.
+ *    Again, we must not clobber those values.
+ *
+ * The rule: if the SDK already got it right, we stay out of the way.
+ */
+const setIfAbsent = (
+  attributes: Record<string, any>,
+  key: string,
+  value: any,
+): void => {
+  if (!(key in attributes) && value != null) {
+    attributes[key] = value;
+  }
 };
 
 const getAgentNameFromAttributes = (
@@ -95,42 +150,32 @@ const getAgentNameFromAttributes = (
 
 const transformResponseText = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_TEXT in attributes) {
-    attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] =
-      attributes[AI_RESPONSE_TEXT];
-    attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] = ROLE_ASSISTANT;
-
     const outputMessage = {
       role: ROLE_ASSISTANT,
-      parts: [
-        {
-          type: TYPE_TEXT,
-          content: attributes[AI_RESPONSE_TEXT],
-        },
-      ],
+      finish_reason: getMappedFinishReason(attributes),
+      parts: [{ type: TYPE_TEXT, content: attributes[AI_RESPONSE_TEXT] }],
     };
-    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([outputMessage]);
-
+    setIfAbsent(
+      attributes,
+      ATTR_GEN_AI_OUTPUT_MESSAGES,
+      JSON.stringify([outputMessage]),
+    );
     delete attributes[AI_RESPONSE_TEXT];
   }
 };
 
 const transformResponseObject = (attributes: Record<string, any>): void => {
   if (AI_RESPONSE_OBJECT in attributes) {
-    attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`] =
-      attributes[AI_RESPONSE_OBJECT];
-    attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] = ROLE_ASSISTANT;
-
     const outputMessage = {
       role: ROLE_ASSISTANT,
-      parts: [
-        {
-          type: TYPE_TEXT,
-          content: attributes[AI_RESPONSE_OBJECT],
-        },
-      ],
+      finish_reason: getMappedFinishReason(attributes),
+      parts: [{ type: TYPE_TEXT, content: attributes[AI_RESPONSE_OBJECT] }],
     };
-    attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([outputMessage]);
-
+    setIfAbsent(
+      attributes,
+      ATTR_GEN_AI_OUTPUT_MESSAGES,
+      JSON.stringify([outputMessage]),
+    );
     delete attributes[AI_RESPONSE_OBJECT];
   }
 };
@@ -141,38 +186,43 @@ const transformResponseToolCalls = (attributes: Record<string, any>): void => {
       const toolCalls = JSON.parse(
         attributes[AI_RESPONSE_TOOL_CALLS] as string,
       );
-
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`] = ROLE_ASSISTANT;
+      const finishReason = getMappedFinishReason(attributes);
 
       const toolCallParts: any[] = [];
-      toolCalls.forEach((toolCall: any, index: number) => {
+      toolCalls.forEach((toolCall: any) => {
         // Support both v4 (args) and v5 (input) formats
         // Prefer v5 (input) if present
         const toolArgs = toolCall.input ?? toolCall.args;
 
-        attributes[`${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.name`] =
-          toolCall.toolName;
-        attributes[
-          `${ATTR_GEN_AI_COMPLETION}.0.tool_calls.${index}.arguments`
-        ] = toolArgs;
+        // Per OTel spec, arguments must be an OBJECT, not a JSON string
+        let parsedArgs: any = toolArgs;
+        if (typeof toolArgs === "string") {
+          try {
+            parsedArgs = JSON.parse(toolArgs);
+          } catch {
+            parsedArgs = toolArgs;
+          }
+        }
 
         toolCallParts.push({
           type: TYPE_TOOL_CALL,
-          tool_call: {
-            name: toolCall.toolName,
-            arguments: toolArgs,
-          },
+          name: toolCall.toolName,
+          id: toolCall.toolCallId ?? null,
+          arguments: parsedArgs,
         });
       });
 
       if (toolCallParts.length > 0) {
         const outputMessage = {
           role: ROLE_ASSISTANT,
+          finish_reason: finishReason,
           parts: toolCallParts,
         };
-        attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = JSON.stringify([
-          outputMessage,
-        ]);
+        setIfAbsent(
+          attributes,
+          ATTR_GEN_AI_OUTPUT_MESSAGES,
+          JSON.stringify([outputMessage]),
+        );
       }
 
       delete attributes[AI_RESPONSE_TOOL_CALLS];
@@ -240,7 +290,10 @@ const transformTools = (attributes: Record<string, any>): void => {
     try {
       const tools = attributes[AI_PROMPT_TOOLS];
       if (Array.isArray(tools)) {
-        tools.forEach((toolItem: any, index: number) => {
+        // Preserve source tool format as per OTel 1.40 spec:
+        // "The value of this attribute matches source system tool definition format."
+        const toolDefs: object[] = [];
+        tools.forEach((toolItem: any) => {
           let tool = toolItem;
           if (typeof toolItem === "string") {
             try {
@@ -249,30 +302,17 @@ const transformTools = (attributes: Record<string, any>): void => {
               return;
             }
           }
-
           if (tool && typeof tool === "object") {
-            if (tool.name) {
-              attributes[
-                `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.name`
-              ] = tool.name;
-            }
-
-            if (tool.description) {
-              attributes[
-                `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.description`
-              ] = tool.description;
-            }
-
-            // Support both v4 (parameters) and v5 (inputSchema) formats
-            // Prefer v5 (inputSchema) if present
-            const schema = tool.inputSchema ?? tool.parameters;
-            if (schema) {
-              attributes[
-                `${SpanAttributes.LLM_REQUEST_FUNCTIONS}.${index}.parameters`
-              ] = typeof schema === "string" ? schema : JSON.stringify(schema);
-            }
+            toolDefs.push(tool);
           }
         });
+        if (toolDefs.length > 0) {
+          setIfAbsent(
+            attributes,
+            ATTR_GEN_AI_TOOL_DEFINITIONS,
+            JSON.stringify(toolDefs),
+          );
+        }
       }
       delete attributes[AI_PROMPT_TOOLS];
     } catch {
@@ -296,27 +336,22 @@ const transformPrompts = (attributes: Record<string, any>): void => {
       const messages = JSON.parse(jsonString);
       const inputMessages: any[] = [];
 
-      messages.forEach((msg: { role: string; content: any }, index: number) => {
+      messages.forEach((msg: { role: string; content: any }) => {
         const processedContent = processMessageContent(msg.content);
-        const contentKey = `${ATTR_GEN_AI_PROMPT}.${index}.content`;
-        attributes[contentKey] = processedContent;
-        attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = msg.role;
 
-        // Add to OpenTelemetry standard gen_ai.input.messages format
         inputMessages.push({
           role: msg.role,
-          parts: [
-            {
-              type: TYPE_TEXT,
-              content: processedContent,
-            },
-          ],
+          parts: [{ type: TYPE_TEXT, content: processedContent }],
         });
       });
 
       // Set the OpenTelemetry standard input messages attribute
       if (inputMessages.length > 0) {
-        attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify(inputMessages);
+        setIfAbsent(
+          attributes,
+          ATTR_GEN_AI_INPUT_MESSAGES,
+          JSON.stringify(inputMessages),
+        );
       }
 
       delete attributes[AI_PROMPT_MESSAGES];
@@ -332,46 +367,33 @@ const transformPrompts = (attributes: Record<string, any>): void => {
         const messages = promptData.messages;
         const inputMessages: any[] = [];
 
-        messages.forEach(
-          (msg: { role: string; content: any }, index: number) => {
-            const processedContent = processMessageContent(msg.content);
-            const contentKey = `${ATTR_GEN_AI_PROMPT}.${index}.content`;
-            attributes[contentKey] = processedContent;
-            attributes[`${ATTR_GEN_AI_PROMPT}.${index}.role`] = msg.role;
-
-            inputMessages.push({
-              role: msg.role,
-              parts: [
-                {
-                  type: TYPE_TEXT,
-                  content: processedContent,
-                },
-              ],
-            });
-          },
-        );
+        messages.forEach((msg: { role: string; content: any }) => {
+          const processedContent = processMessageContent(msg.content);
+          inputMessages.push({
+            role: msg.role,
+            parts: [{ type: TYPE_TEXT, content: processedContent }],
+          });
+        });
 
         if (inputMessages.length > 0) {
-          attributes[ATTR_GEN_AI_INPUT_MESSAGES] =
-            JSON.stringify(inputMessages);
+          setIfAbsent(
+            attributes,
+            ATTR_GEN_AI_INPUT_MESSAGES,
+            JSON.stringify(inputMessages),
+          );
         }
 
         delete attributes[AI_PROMPT];
       } else if (promptData.prompt && typeof promptData.prompt === "string") {
-        attributes[`${ATTR_GEN_AI_PROMPT}.0.content`] = promptData.prompt;
-        attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = ROLE_USER;
-
         const inputMessage = {
           role: ROLE_USER,
-          parts: [
-            {
-              type: TYPE_TEXT,
-              content: promptData.prompt,
-            },
-          ],
+          parts: [{ type: TYPE_TEXT, content: promptData.prompt }],
         };
-        attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify([inputMessage]);
-
+        setIfAbsent(
+          attributes,
+          ATTR_GEN_AI_INPUT_MESSAGES,
+          JSON.stringify([inputMessage]),
+        );
         delete attributes[AI_PROMPT];
       }
     } catch {
@@ -422,13 +444,19 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
         const anthropicMetadata = metadata.anthropic;
 
         if (anthropicMetadata.cacheCreationInputTokens !== undefined) {
-          attributes[SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS] =
-            anthropicMetadata.cacheCreationInputTokens;
+          setIfAbsent(
+            attributes,
+            ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+            anthropicMetadata.cacheCreationInputTokens,
+          );
         }
 
         if (anthropicMetadata.cacheReadInputTokens !== undefined) {
-          attributes[SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS] =
-            anthropicMetadata.cacheReadInputTokens;
+          setIfAbsent(
+            attributes,
+            ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+            anthropicMetadata.cacheReadInputTokens,
+          );
         }
       }
 
@@ -436,13 +464,19 @@ const transformProviderMetadata = (attributes: Record<string, any>): void => {
         const openaiMetadata = metadata.openai;
 
         if (openaiMetadata.cachedPromptTokens !== undefined) {
-          attributes[SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS] =
-            openaiMetadata.cachedPromptTokens;
+          setIfAbsent(
+            attributes,
+            ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+            openaiMetadata.cachedPromptTokens,
+          );
         }
 
         if (openaiMetadata.reasoningTokens !== undefined) {
-          attributes[SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS] =
-            openaiMetadata.reasoningTokens;
+          setIfAbsent(
+            attributes,
+            SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS,
+            openaiMetadata.reasoningTokens,
+          );
         }
       }
 
@@ -457,9 +491,12 @@ const calculateTotalTokens = (attributes: Record<string, any>): void => {
   const inputTokens = attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS];
   const outputTokens = attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS];
 
-  if (inputTokens && outputTokens) {
-    attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`] =
-      Number(inputTokens) + Number(outputTokens);
+  if (inputTokens != null && outputTokens != null) {
+    setIfAbsent(
+      attributes,
+      SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+      Number(inputTokens) + Number(outputTokens),
+    );
   }
 };
 
@@ -467,23 +504,17 @@ const transformVendor = (attributes: Record<string, any>): void => {
   if (AI_MODEL_PROVIDER in attributes) {
     const vendor = attributes[AI_MODEL_PROVIDER];
 
-    // Find matching vendor prefix in mapping
-    let mappedVendor = null;
-    let providerName = vendor;
     if (typeof vendor === "string" && vendor.length > 0) {
-      // Extract provider name (part before first dot, or entire string if no dot)
+      // Extract the prefix before the first dot (e.g. "openai" from "openai.chat")
       const dotIndex = vendor.indexOf(".");
-      providerName = dotIndex > 0 ? vendor.substring(0, dotIndex) : vendor;
-
-      for (const prefix of Object.keys(VENDOR_MAPPING)) {
-        if (vendor.startsWith(prefix)) {
-          mappedVendor = VENDOR_MAPPING[prefix];
-          break;
-        }
-      }
-
-      attributes[ATTR_GEN_AI_SYSTEM] = mappedVendor || vendor;
-      attributes[ATTR_GEN_AI_PROVIDER_NAME] = providerName;
+      const providerPrefix =
+        dotIndex > 0 ? vendor.substring(0, dotIndex) : vendor;
+      // Map to OTel 1.40 well-known gen_ai.provider.name value; fall back to raw prefix
+      setIfAbsent(
+        attributes,
+        ATTR_GEN_AI_PROVIDER_NAME,
+        PROVIDER_NAME_MAPPING[providerPrefix] ?? providerPrefix,
+      );
     }
 
     delete attributes[AI_MODEL_PROVIDER];
@@ -503,45 +534,51 @@ const transformOperationName = (
     spanName.includes("generateObject") ||
     spanName.includes("streamObject")
   ) {
-    operationName = "chat";
+    operationName = GEN_AI_OPERATION_NAME_VALUE_CHAT;
   } else if (spanName === "ai.toolCall" || spanName.endsWith(".tool")) {
-    operationName = "execute_tool";
+    operationName = GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL;
   }
 
   if (operationName) {
-    attributes[ATTR_GEN_AI_OPERATION_NAME] = operationName;
+    setIfAbsent(attributes, ATTR_GEN_AI_OPERATION_NAME, operationName);
   }
 };
 
 const transformModelId = (attributes: Record<string, any>): void => {
   const AI_MODEL_ID = "ai.model.id";
   if (AI_MODEL_ID in attributes) {
-    attributes[ATTR_GEN_AI_REQUEST_MODEL] = attributes[AI_MODEL_ID];
+    setIfAbsent(attributes, ATTR_GEN_AI_REQUEST_MODEL, attributes[AI_MODEL_ID]);
     delete attributes[AI_MODEL_ID];
   }
 };
 
 const transformFinishReason = (attributes: Record<string, any>): void => {
-  const AI_RESPONSE_FINISH_REASON = "ai.response.finishReason";
   if (AI_RESPONSE_FINISH_REASON in attributes) {
-    const finishReason = attributes[AI_RESPONSE_FINISH_REASON];
-    attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS] = Array.isArray(
-      finishReason,
-    )
-      ? finishReason
-      : [finishReason];
+    const raw = attributes[AI_RESPONSE_FINISH_REASON];
+    const reasons: string[] = Array.isArray(raw) ? raw : [raw];
+    // Apply the same mapping used for output message finish_reason
+    const mapped = reasons.map((r: string) => aiSdkFinishReasonMap[r] ?? r);
+    setIfAbsent(attributes, ATTR_GEN_AI_RESPONSE_FINISH_REASONS, mapped);
     delete attributes[AI_RESPONSE_FINISH_REASON];
   }
 };
 
 const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   if ("ai.toolCall.name" in attributes) {
-    attributes[ATTR_GEN_AI_TOOL_NAME] = attributes["ai.toolCall.name"];
+    setIfAbsent(
+      attributes,
+      ATTR_GEN_AI_TOOL_NAME,
+      attributes["ai.toolCall.name"],
+    );
     // Keep ai.toolCall.name for now, will be deleted in transformToolCalls
   }
 
   if ("ai.toolCall.id" in attributes) {
-    attributes[ATTR_GEN_AI_TOOL_CALL_ID] = attributes["ai.toolCall.id"];
+    setIfAbsent(
+      attributes,
+      ATTR_GEN_AI_TOOL_CALL_ID,
+      attributes["ai.toolCall.id"],
+    );
     delete attributes["ai.toolCall.id"];
   }
 
@@ -550,7 +587,7 @@ const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   const toolArgs =
     attributes["ai.toolCall.input"] ?? attributes["ai.toolCall.args"];
   if (toolArgs !== undefined) {
-    attributes[ATTR_GEN_AI_TOOL_CALL_ARGUMENTS] = toolArgs;
+    setIfAbsent(attributes, ATTR_GEN_AI_TOOL_CALL_ARGUMENTS, toolArgs);
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
 
@@ -559,7 +596,7 @@ const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   const toolResult =
     attributes["ai.toolCall.output"] ?? attributes["ai.toolCall.result"];
   if (toolResult !== undefined) {
-    attributes[ATTR_GEN_AI_TOOL_CALL_RESULT] = toolResult;
+    setIfAbsent(attributes, ATTR_GEN_AI_TOOL_CALL_RESULT, toolResult);
     // Don't delete yet - transformToolCalls will handle entity input/output
   }
 };
@@ -569,9 +606,9 @@ const transformConversationId = (attributes: Record<string, any>): void => {
   const sessionId = attributes["ai.telemetry.metadata.sessionId"];
 
   if (conversationId) {
-    attributes[ATTR_GEN_AI_CONVERSATION_ID] = conversationId;
+    setIfAbsent(attributes, ATTR_GEN_AI_CONVERSATION_ID, conversationId);
   } else if (sessionId) {
-    attributes[ATTR_GEN_AI_CONVERSATION_ID] = sessionId;
+    setIfAbsent(attributes, ATTR_GEN_AI_CONVERSATION_ID, sessionId);
   }
 };
 
@@ -580,12 +617,20 @@ const transformResponseMetadata = (attributes: Record<string, any>): void => {
   const AI_RESPONSE_ID = "ai.response.id";
 
   if (AI_RESPONSE_MODEL in attributes) {
-    attributes[ATTR_GEN_AI_RESPONSE_MODEL] = attributes[AI_RESPONSE_MODEL];
+    setIfAbsent(
+      attributes,
+      ATTR_GEN_AI_RESPONSE_MODEL,
+      attributes[AI_RESPONSE_MODEL],
+    );
     delete attributes[AI_RESPONSE_MODEL];
   }
 
   if (AI_RESPONSE_ID in attributes) {
-    attributes[ATTR_GEN_AI_RESPONSE_ID] = attributes[AI_RESPONSE_ID];
+    setIfAbsent(
+      attributes,
+      ATTR_GEN_AI_RESPONSE_ID,
+      attributes[AI_RESPONSE_ID],
+    );
     delete attributes[AI_RESPONSE_ID];
   }
 };
@@ -621,7 +666,7 @@ const transformTelemetryMetadata = (
   }
 
   if (agentName) {
-    attributes[ATTR_GEN_AI_AGENT_NAME] = agentName;
+    setIfAbsent(attributes, ATTR_GEN_AI_AGENT_NAME, agentName);
 
     const topLevelSpanNames = [
       AI_GENERATE_TEXT,
@@ -722,12 +767,19 @@ const shouldHandleSpan = (span: ReadableSpan): boolean => {
   return span.instrumentationScope?.name === "ai";
 };
 
+let _cachedAiSdkVersion: string | undefined;
+let _aiSdkVersionResolved = false;
+
 const getAiSdkVersion = (): string | undefined => {
-  try {
-    return require("ai/package.json").version;
-  } catch {
-    return undefined;
+  if (!_aiSdkVersionResolved) {
+    try {
+      _cachedAiSdkVersion = require("ai/package.json").version;
+    } catch {
+      _cachedAiSdkVersion = undefined;
+    }
+    _aiSdkVersionResolved = true;
   }
+  return _cachedAiSdkVersion;
 };
 
 const TOP_LEVEL_AI_SPANS = [
@@ -739,16 +791,25 @@ const TOP_LEVEL_AI_SPANS = [
 
 export const transformAiSdkSpanNames = (span: Span): void => {
   if (span.name === TOOL_SPAN_NAME) {
-    span.updateName(`${span.attributes["ai.toolCall.name"] as string}.tool`);
+    const toolName = span.attributes["ai.toolCall.name"] as string;
+    span.updateName(
+      `${GEN_AI_OPERATION_NAME_VALUE_EXECUTE_TOOL}${toolName ? ` ${toolName}` : ""}`,
+    );
+    return;
   }
-  if (span.name in HANDLED_SPAN_NAMES) {
+
+  if (HANDLED_SPAN_NAMES.has(span.name)) {
     const agentName = getAgentNameFromAttributes(span.attributes);
     const isTopLevelSpan = TOP_LEVEL_AI_SPANS.includes(span.name);
 
     if (agentName && isTopLevelSpan) {
+      // Traceloop-specific agent span naming — keep as-is
       span.updateName(`${agentName}.agent`);
-    } else if (!isTopLevelSpan) {
-      span.updateName(HANDLED_SPAN_NAMES[span.name]);
+    } else {
+      // OTel 1.40 span name format: "{operation} {model}"
+      const model = span.attributes["ai.model.id"] as string | undefined;
+      const operation = GEN_AI_OPERATION_NAME_VALUE_CHAT;
+      span.updateName(model ? `${operation} ${model}` : operation);
     }
   }
 };

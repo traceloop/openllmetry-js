@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { generateText, tool, CoreMessage, stepCountIs } from "ai";
+import { generateText, tool, ModelMessage, stepCountIs } from "ai";
 import { z } from "zod";
 
 import "dotenv/config";
@@ -209,7 +209,7 @@ const agentMemory = new Map<
 >();
 
 class ResearchAgent {
-  private conversationHistory: CoreMessage[] = [];
+  private conversationHistory: ModelMessage[] = [];
   private sessionId: string;
   private userId?: string;
 
@@ -292,7 +292,7 @@ Conversation Turn: ${this.conversationHistory.length / 2 + 1}`,
     );
   }
 
-  getConversationHistory(): CoreMessage[] {
+  getConversationHistory(): ModelMessage[] {
     return [...this.conversationHistory];
   }
 
