@@ -218,7 +218,10 @@ export const manuallyInitInstrumentations = (
       exceptionLogger,
     });
     instrumentations.push(llamaIndexInstrumentation);
-    llamaIndexInstrumentation.manuallyInstrument(instrumentModules.llamaIndex);
+    llamaIndexInstrumentation.manuallyInstrument(
+      instrumentModules.llamaIndex,
+      instrumentModules.llamaIndexOpenAI,
+    );
   }
 
   if (instrumentModules?.chromadb) {

@@ -1,5 +1,7 @@
 import * as traceloop from "@traceloop/node-server-sdk";
+import * as llamaindex from "llamaindex";
 import { VectorStoreIndex, Document, Settings } from "llamaindex";
+import * as llamaIndexOpenAI from "@llamaindex/openai";
 import { OpenAIEmbedding, OpenAI } from "@llamaindex/openai";
 import { readFile } from "fs/promises";
 
@@ -7,6 +9,10 @@ traceloop.initialize({
   appName: "sample_llamaindex",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
+  instrumentModules: {
+    llamaIndex: llamaindex,
+    llamaIndexOpenAI,
+  },
 });
 
 Settings.embedModel = new OpenAIEmbedding();

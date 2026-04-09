@@ -1,5 +1,6 @@
 import * as llamaindex from "llamaindex";
 import * as traceloop from "@traceloop/node-server-sdk";
+import * as llamaIndexOpenAI from "@llamaindex/openai";
 import { OpenAIAgent, OpenAI as LLamaOpenAI } from "@llamaindex/openai";
 
 traceloop.initialize({
@@ -8,6 +9,7 @@ traceloop.initialize({
   disableBatch: true,
   instrumentModules: {
     llamaIndex: llamaindex,
+    llamaIndexOpenAI,
   },
 });
 
