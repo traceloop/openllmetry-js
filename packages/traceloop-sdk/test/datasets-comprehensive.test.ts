@@ -43,7 +43,7 @@ describe("Dataset API Comprehensive Tests", () => {
     const baseUrl =
       process.env.RECORD_MODE === "NEW"
         ? process.env.TRACELOOP_BASE_URL!
-        : "https://api-staging.traceloop.com";
+        : "https://api.traceloop.dev";
 
     client = new traceloop.TraceloopClient({
       appName: "comprehensive_dataset_test",
