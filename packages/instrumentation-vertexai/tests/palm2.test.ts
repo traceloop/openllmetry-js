@@ -28,6 +28,8 @@ import { google } from "@google-cloud/aiplatform/build/protos/protos";
 
 const memoryExporter = new InMemorySpanExporter();
 
+// PaLM2 (AIPlatform) uses gRPC which cannot be intercepted by Polly.js HTTP adapters.
+// Additionally, PaLM2 models are deprecated by Google. These tests remain skipped.
 describe.skip("Test PaLM2 PredictionServiceClient Instrumentation", () => {
   const provider = new BasicTracerProvider();
   let instrumentation: AIPlatformInstrumentation;
