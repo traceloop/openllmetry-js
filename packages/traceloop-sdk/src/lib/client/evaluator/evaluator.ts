@@ -388,6 +388,7 @@ export class Evaluator extends BaseDatasetEntity {
       experiment_id: experimentId,
       experiment_run_id: experimentRunId,
       evaluator_version: evaluatorVersion,
+      evaluator_slug: evaluatorName,
       task_id: taskId,
       input_schema_mapping: inputSchemaMapping,
     };
