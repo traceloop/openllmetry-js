@@ -511,7 +511,7 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
     delete attributes[AI_RESPONSE_FINISH_REASON];
   }
 };
-
+ 
 
 const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   if ("ai.toolCall.name" in attributes) {
