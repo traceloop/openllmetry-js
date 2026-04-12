@@ -50,7 +50,7 @@ import {
   ATTR_GEN_AI_REQUEST_TOP_K,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
-  ATTR_GEN_AI_RESPONSE_MODEL,
+
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
@@ -74,9 +74,8 @@ const cohereFinishReasonMap: Record<string, string> = {
   STOP_SEQUENCE: FinishReasons.STOP,
   TOOL_USE: FinishReasons.TOOL_CALL,
   ERROR: FinishReasons.ERROR,
-  // generate API uses lowercase
-  COMPLETE_lower: FinishReasons.STOP,
-  // Some responses use these values
+  // generate API uses lowercase variants
+  complete: FinishReasons.STOP,
   stop: FinishReasons.STOP,
   max_tokens: FinishReasons.LENGTH,
 };
@@ -308,9 +307,15 @@ export class CohereInstrumentation extends InstrumentationBase {
           type === GEN_AI_OPERATION_NAME_VALUE_CHAT &&
           "message" in params
         ) {
+          const cohereRoleMap: Record<string, string> = {
+            USER: "user",
+            CHATBOT: "assistant",
+            SYSTEM: "system",
+            TOOL: "tool",
+          };
           const messages = [
             ...(params.chatHistory ?? []).map((msg) => ({
-              role: msg.role.toLowerCase(),
+              role: cohereRoleMap[msg.role] ?? msg.role.toLowerCase(),
               content: "message" in msg ? (msg.message ?? "") : "",
             })),
             { role: "user", content: params.message },
@@ -417,13 +422,6 @@ export class CohereInstrumentation extends InstrumentationBase {
   ) {
     try {
       if ("meta" in result) {
-        if (result.meta?.billedUnits?.searchUnits !== undefined) {
-          span.setAttribute(
-            SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
-            result.meta?.billedUnits?.searchUnits,
-          );
-        }
-
         if (this._shouldSendPrompts()) {
           const outputParts = result.results.map((each) => ({
             relevanceScore: each.relevanceScore,
@@ -506,12 +504,6 @@ export class CohereInstrumentation extends InstrumentationBase {
         );
       }
 
-      if (
-        "responseId" in result &&
-        typeof result.responseId === "string"
-      ) {
-        span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.responseId);
-      }
     } catch (e) {
       this._diag.debug(e);
       this._config.exceptionLogger?.(e);
