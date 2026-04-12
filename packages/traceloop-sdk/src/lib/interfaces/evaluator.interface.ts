@@ -10,6 +10,7 @@ export interface StreamEvent {
 
 export interface EvaluatorRunOptions {
   experimentId: string;
+  experimentSlug: string;
   experimentRunId?: string;
   taskId: string;
   taskResult: Record<string, any>;
@@ -29,6 +30,7 @@ export interface EvaluatorResult {
 
 export interface TriggerEvaluatorRequest {
   experimentId: string;
+  experimentSlug: string;
   experimentRunId?: string;
   taskId?: string;
   evaluator: EvaluatorDetails;

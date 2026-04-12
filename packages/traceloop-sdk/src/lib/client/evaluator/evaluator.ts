@@ -322,6 +322,7 @@ export class Evaluator extends BaseDatasetEntity {
   ): Promise<ExecutionResponse[]> {
     const {
       experimentId,
+      experimentSlug,
       experimentRunId,
       taskId,
       taskResult,
@@ -333,6 +334,7 @@ export class Evaluator extends BaseDatasetEntity {
 
     const triggerResponse = await this.triggerExperimentEvaluator({
       experimentId,
+      experimentSlug,
       experimentRunId,
       taskId,
       evaluator,
@@ -360,11 +362,11 @@ export class Evaluator extends BaseDatasetEntity {
   async triggerExperimentEvaluator(
     request: TriggerEvaluatorRequest,
   ): Promise<TriggerEvaluatorResponse> {
-    const { experimentId, experimentRunId, taskId, evaluator, taskResult } =
+    const { experimentId, experimentSlug, experimentRunId, taskId, evaluator, taskResult } =
       request;
 
-    if (!experimentId || !taskResult) {
-      throw new Error("experimentId, evaluator, and taskResult are required");
+    if (!experimentSlug || !taskResult) {
+      throw new Error("experimentSlug, evaluator, and taskResult are required");
     }
 
     // Handle string, EvaluatorWithVersion, and EvaluatorWithConfig types
@@ -399,7 +401,7 @@ export class Evaluator extends BaseDatasetEntity {
     }
 
     const response = await this.client.post(
-      `/v2/experiments/${experimentId}/runs/${experimentRunId}/tasks/${taskId}`,
+      `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/tasks/${taskId}`,
       payload,
     );
     const data = await this.handleResponse(response);

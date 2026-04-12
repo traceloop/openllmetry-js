@@ -179,6 +179,7 @@ export class Experiment {
               const singleEvaluationResult =
                 await this.evaluator.runExperimentEvaluator({
                   experimentId: experimentResponse.experiment.id,
+                  experimentSlug: experimentSlug,
                   experimentRunId: experimentResponse.run.id,
                   taskId,
                   evaluator,
