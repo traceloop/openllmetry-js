@@ -92,6 +92,8 @@ describe("Test Gemini GenerativeModel Instrumentation", () => {
   let contextManager: AsyncHooksContextManager;
   let vertexAi: typeof vertexAiImport;
   let originalGetAccessToken: typeof GoogleAuth.prototype.getAccessToken;
+  let origProjectId: string | undefined;
+  let origLocation: string | undefined;
 
   setupPolly({
     adapters: ["node-http", "fetch"],
@@ -99,6 +101,8 @@ describe("Test Gemini GenerativeModel Instrumentation", () => {
   });
 
   before(async () => {
+    origProjectId = process.env.VERTEXAI_PROJECT_ID;
+    origLocation = process.env.VERTEXAI_LOCATION;
     process.env.VERTEXAI_PROJECT_ID = "test-project";
     process.env.VERTEXAI_LOCATION = "us-central1";
     // Stub Google Auth to return a fake token so no real OAuth request is made
@@ -116,6 +120,16 @@ describe("Test Gemini GenerativeModel Instrumentation", () => {
   after(() => {
     if (originalGetAccessToken) {
       GoogleAuth.prototype.getAccessToken = originalGetAccessToken;
+    }
+    if (origProjectId === undefined) {
+      delete process.env.VERTEXAI_PROJECT_ID;
+    } else {
+      process.env.VERTEXAI_PROJECT_ID = origProjectId;
+    }
+    if (origLocation === undefined) {
+      delete process.env.VERTEXAI_LOCATION;
+    } else {
+      process.env.VERTEXAI_LOCATION = origLocation;
     }
   });
 
