@@ -159,13 +159,13 @@ export class VertexAIInstrumentation extends InstrumentationBase {
 
       if (instance["generationConfig"]) {
         attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] =
-          instance["generationConfig"].max_output_tokens;
+          instance["generationConfig"].maxOutputTokens;
         attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] =
           instance["generationConfig"].temperature;
         attributes[ATTR_GEN_AI_REQUEST_TOP_P] =
-          instance["generationConfig"].top_p;
+          instance["generationConfig"].topP;
         attributes[SpanAttributes.LLM_TOP_K] =
-          instance["generationConfig"].top_k;
+          instance["generationConfig"].topK;
       }
 
       if (this._shouldSendPrompts() && "contents" in params) {

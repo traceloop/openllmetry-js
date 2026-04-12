@@ -19,30 +19,143 @@ import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import { VertexAIInstrumentation } from "../src/vertexai-instrumentation";
 import * as assert from "assert";
 import {
-  BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
+import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import type * as vertexAiImport from "@google-cloud/vertexai";
+import { GoogleAuth } from "google-auth-library";
+import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
+import NodeHttpAdapter from "@pollyjs/adapter-node-http";
+import FetchAdapter from "@pollyjs/adapter-fetch";
+import {
+  ATTR_GEN_AI_REQUEST_MAX_TOKENS,
+  ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_MODEL,
+  ATTR_GEN_AI_SYSTEM,
+} from "@opentelemetry/semantic-conventions/incubating";
 
 const memoryExporter = new InMemorySpanExporter();
 
-describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
-  const provider = new BasicTracerProvider();
+Polly.register(NodeHttpAdapter);
+Polly.register(FetchAdapter);
+
+const GENERATE_CONTENT_RESPONSE = JSON.stringify({
+  candidates: [
+    {
+      content: {
+        parts: [
+          {
+            text: "Node.js is a JavaScript runtime built on Chrome's V8 JavaScript engine.",
+          },
+        ],
+        role: "model",
+      },
+      finishReason: "STOP",
+      index: 0,
+    },
+  ],
+  usageMetadata: {
+    promptTokenCount: 6,
+    candidatesTokenCount: 14,
+    totalTokenCount: 20,
+  },
+});
+
+const STREAM_CONTENT_RESPONSE =
+  `data: ${JSON.stringify({
+    candidates: [
+      {
+        content: {
+          parts: [
+            { text: "The four cardinal directions are North, South, East, and West." },
+          ],
+          role: "model",
+        },
+        finishReason: "STOP",
+        index: 0,
+      },
+    ],
+    usageMetadata: {
+      promptTokenCount: 9,
+      candidatesTokenCount: 13,
+      totalTokenCount: 22,
+    },
+  })}\n\n`;
+
+describe("Test Gemini GenerativeModel Instrumentation", () => {
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(memoryExporter)],
+  });
   let instrumentation: VertexAIInstrumentation;
   let contextManager: AsyncHooksContextManager;
   let vertexAi: typeof vertexAiImport;
+  let originalGetAccessToken: typeof GoogleAuth.prototype.getAccessToken;
+  let origProjectId: string | undefined;
+  let origLocation: string | undefined;
 
-  before(() => {
-    provider.addSpanProcessor(new SimpleSpanProcessor(memoryExporter));
+  setupPolly({
+    adapters: ["node-http", "fetch"],
+    mode: "passthrough",
+  });
+
+  before(async () => {
+    origProjectId = process.env.VERTEXAI_PROJECT_ID;
+    origLocation = process.env.VERTEXAI_LOCATION;
+    process.env.VERTEXAI_PROJECT_ID = "test-project";
+    process.env.VERTEXAI_LOCATION = "us-central1";
+    // Stub Google Auth to return a fake token so no real OAuth request is made
+    originalGetAccessToken = GoogleAuth.prototype.getAccessToken;
+    GoogleAuth.prototype.getAccessToken = () =>
+      Promise.resolve("fake-token") as any;
+
     instrumentation = new VertexAIInstrumentation();
     instrumentation.setTracerProvider(provider);
+    instrumentation.enable();
     vertexAi = require("@google-cloud/vertexai");
   });
 
-  beforeEach(() => {
+  after(() => {
+    if (originalGetAccessToken) {
+      GoogleAuth.prototype.getAccessToken = originalGetAccessToken;
+    }
+    if (origProjectId === undefined) {
+      delete process.env.VERTEXAI_PROJECT_ID;
+    } else {
+      process.env.VERTEXAI_PROJECT_ID = origProjectId;
+    }
+    if (origLocation === undefined) {
+      delete process.env.VERTEXAI_LOCATION;
+    } else {
+      process.env.VERTEXAI_LOCATION = origLocation;
+    }
+  });
+
+  beforeEach(function () {
     contextManager = new AsyncHooksContextManager().enable();
     context.setGlobalContextManager(contextManager);
+
+    const { server } = this.polly as Polly;
+    // Intercept all VertexAI API calls and return mock responses
+    server
+      .post(
+        "https://us-central1-aiplatform.googleapis.com/v1/projects/test-project/locations/us-central1/publishers/google/models/gemini-pro-vision:generateContent",
+      )
+      .intercept((_req, res) => {
+        res.status(200).json(JSON.parse(GENERATE_CONTENT_RESPONSE));
+      });
+
+    server
+      .post(
+        "https://us-central1-aiplatform.googleapis.com/v1/projects/test-project/locations/us-central1/publishers/google/models/gemini-pro-vision:streamGenerateContent",
+      )
+      .intercept((_req, res) => {
+        res
+          .status(200)
+          .setHeader("content-type", "text/event-stream")
+          .send(STREAM_CONTENT_RESPONSE);
+      });
   });
 
   afterEach(() => {
@@ -52,13 +165,13 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
   it("should set request and response attributes in span for Text prompts with non-stream response", async () => {
     const vertexAI = new vertexAi.VertexAI({
-      project: process.env.VERTEXAI_PROJECT_ID ?? "",
-      location: process.env.VERTEXAI_LOCATION ?? "",
+      project: process.env.VERTEXAI_PROJECT_ID ?? "test-project",
+      location: process.env.VERTEXAI_LOCATION ?? "us-central1",
     });
 
     const model = "gemini-pro-vision";
 
-    const generativeModel = vertexAI.preview.getGenerativeModel({
+    const generativeModel = vertexAI.getGenerativeModel({
       model,
       generationConfig: {
         topP: 0.9,
@@ -100,13 +213,13 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
 
   it("should set request and response attributes in span for Text prompts with streaming response", async () => {
     const vertexAI = new vertexAi.VertexAI({
-      project: process.env.VERTEXAI_PROJECT_ID ?? "",
-      location: process.env.VERTEXAI_LOCATION ?? "",
+      project: process.env.VERTEXAI_PROJECT_ID ?? "test-project",
+      location: process.env.VERTEXAI_LOCATION ?? "us-central1",
     });
 
     const model = "gemini-pro-vision";
 
-    const generativeModel = vertexAI.preview.getGenerativeModel({
+    const generativeModel = vertexAI.getGenerativeModel({
       model,
       generationConfig: {
         topP: 0.9,
@@ -124,10 +237,14 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
     };
     const responseStream = await generativeModel.generateContentStream(request);
 
-    const fullTextResponse = [];
-    for await (const item of responseStream.stream) {
-      fullTextResponse.push(item.candidates![0].content.parts[0].text);
+    // Consume the stream
+    for await (const _item of responseStream.stream) {
+      // intentionally empty — drain the stream so the span is finalized
     }
+
+    const aggregatedResponse = await responseStream.response;
+    const fullTextResponse =
+      aggregatedResponse.candidates![0].content.parts[0].text;
 
     assert.ok(fullTextResponse);
 
@@ -146,12 +263,9 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
     assert.strictEqual(attributes["gen_ai.prompt.0.role"], "user");
     assert.strictEqual(attributes[ATTR_GEN_AI_RESPONSE_MODEL], model);
     assert.strictEqual(attributes["gen_ai.completion.0.role"], "model");
-
-    fullTextResponse.forEach((resp, index) => {
-      assert.strictEqual(
-        attributes[`gen_ai.completion.${index}.content`],
-        resp,
-      );
-    });
+    assert.strictEqual(
+      attributes["gen_ai.completion.0.content"],
+      fullTextResponse,
+    );
   });
 });
