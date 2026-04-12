@@ -335,6 +335,9 @@ importers:
       '@traceloop/ai-semantic-conventions':
         specifier: workspace:*
         version: link:../ai-semantic-conventions
+      '@traceloop/instrumentation-utils':
+        specifier: workspace:*
+        version: link:../instrumentation-utils
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -472,7 +475,7 @@ importers:
     devDependencies:
       '@llamaindex/openai':
         specifier: ^0.4.10
-        version: 0.4.12(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
+        version: 0.4.12(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
       '@opentelemetry/context-async-hooks':
         specifier: ^2.0.1
         version: 2.0.1(@opentelemetry/api@1.9.0)
@@ -865,7 +868,7 @@ importers:
         version: 1.0.1(@langchain/core@1.1.39(@opentelemetry/api@1.9.0)(@opentelemetry/exporter-trace-otlp-proto@0.203.0(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@2.0.1(@opentelemetry/api@1.9.0))(openai@6.32.0(ws@8.18.3)(zod@3.25.76))(ws@8.18.3))
       '@llamaindex/openai':
         specifier: ^0.4.10
-        version: 0.4.12(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
+        version: 0.4.12(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
       '@modelcontextprotocol/sdk':
         specifier: ^1.25.2
         version: 1.25.2(@cfworker/json-schema@4.1.1)(hono@4.11.4)(supports-color@10.0.0)(zod@3.25.76)
@@ -3299,6 +3302,9 @@ packages:
     resolution: {integrity: sha512-hUTEWrR8zH+/Z3bp/R1aLm6DW8vB/BB7KH7Yeg4fMfrvSwxegiLVW9uJFAzWkK4mzEagmj/Dti85Yg9MN13t0g==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
     deprecated: This package is an implementation detail of Lerna and is no longer published separately.
+
+  '@llamaindex/core@0.6.17':
+    resolution: {integrity: sha512-ZdELOt3qsuNkZy+iUdEPMp2KxKGUa+qE+B67RkN90gi47Bq+ED/pUFkJ3fstDjGvEmY5CuRKrrNgVhVbZQaHkA==}
 
   '@llamaindex/core@0.6.22':
     resolution: {integrity: sha512-/BXyemkvpxMaUhOkbwJ2PTvzKjSWkL8+6QLpz/n+pk8xBwMMe1GVBgli/J57gCyi8GbrlBafBj6GaPOgWub2Eg==}
@@ -12416,6 +12422,17 @@ snapshots:
       - supports-color
       - typescript
 
+  '@llamaindex/core@0.6.17':
+    dependencies:
+      '@llamaindex/env': 0.1.30
+      '@types/node': 24.0.15
+      magic-bytes.js: 1.12.1
+      zod: 3.25.76
+      zod-to-json-schema: 3.25.0(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@huggingface/transformers'
+      - gpt-tokenizer
+
   '@llamaindex/core@0.6.22':
     dependencies:
       '@finom/zod-to-json-schema': 3.24.11(zod@3.25.76)
@@ -12441,9 +12458,9 @@ snapshots:
       tree-sitter: 0.22.4
       web-tree-sitter: 0.24.7
 
-  '@llamaindex/openai@0.4.12(@llamaindex/core@0.6.22)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)':
+  '@llamaindex/openai@0.4.12(@llamaindex/core@0.6.17)(@llamaindex/env@0.1.30)(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)':
     dependencies:
-      '@llamaindex/core': 0.6.22
+      '@llamaindex/core': 0.6.17
       '@llamaindex/env': 0.1.30
       openai: 4.104.0(encoding@0.1.13)(ws@8.18.3)(zod@3.25.76)
     transitivePeerDependencies:

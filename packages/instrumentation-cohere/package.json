@@ -43,6 +43,7 @@
     "@opentelemetry/instrumentation": "^0.203.0",
     "@opentelemetry/semantic-conventions": "^1.38.0",
     "@traceloop/ai-semantic-conventions": "workspace:*",
+    "@traceloop/instrumentation-utils": "workspace:*",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

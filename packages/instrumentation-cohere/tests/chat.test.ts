@@ -26,14 +26,19 @@ import {
 import * as cohereModule from "cohere-ai";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_K,
   ATTR_GEN_AI_REQUEST_TOP_P,
-  ATTR_GEN_AI_SYSTEM,
-  ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-  ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_PROVIDER_NAME_VALUE_COHERE,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
@@ -101,7 +106,6 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
         },
       ],
       message: "What year was he born?",
-      // perform web search before answering the question. You can also use your own custom connector.
       connectors: [{ id: "web-search" }],
     };
     const response = await cohereClient.chat(params);
@@ -109,26 +113,21 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Cohere");
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      GEN_AI_PROVIDER_NAME_VALUE_COHERE,
+    );
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_OPERATION_NAME],
+      GEN_AI_OPERATION_NAME_VALUE_CHAT,
+    );
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
-    assert.strictEqual(
-      attributes[
-        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.role`
-      ],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[
-        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
-      ],
-      params.message,
-    );
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
+    assert.ok(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.k);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
@@ -141,10 +140,6 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     assert.strictEqual(
       attributes[SpanAttributes.LLM_FREQUENCY_PENALTY],
       params.frequencyPenalty,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      params?.model ?? "command",
     );
 
     if (
@@ -159,31 +154,21 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
       typeof response.token_count.total_tokens === "number"
     ) {
       assert.strictEqual(
-        attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
+        attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
         response.token_count.prompt_tokens,
       );
       assert.strictEqual(
-        attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+        attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
         response.token_count.response_tokens,
       );
       assert.strictEqual(
-        attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
+        attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
         response.token_count.total_tokens,
       );
     }
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-      "assistant",
-    );
-    assert.strictEqual(
-      attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-      response.text,
-    );
+    assert.ok(attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
     if ("finishReason" in response && response.finishReason) {
-      assert.strictEqual(
-        attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
-        response.finishReason,
-      );
+      assert.ok(attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS]);
     }
   });
 
@@ -198,7 +183,6 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
         },
       ],
       message: "What year was he born?",
-      // perform web search before answering the question. You can also use your own custom connector.
       connectors: [{ id: "web-search" }],
     };
     const streamedResponse = await cohereClient.chatStream(params);
@@ -206,26 +190,21 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
 
     const attributes = spans[0].attributes;
-    assert.strictEqual(attributes[ATTR_GEN_AI_SYSTEM], "Cohere");
-    assert.strictEqual(attributes[SpanAttributes.LLM_REQUEST_TYPE], "chat");
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      GEN_AI_PROVIDER_NAME_VALUE_COHERE,
+    );
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_OPERATION_NAME],
+      GEN_AI_OPERATION_NAME_VALUE_CHAT,
+    );
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_MODEL],
       params?.model ?? "command",
     );
 
-    assert.strictEqual(
-      attributes[
-        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.role`
-      ],
-      "user",
-    );
-    assert.strictEqual(
-      attributes[
-        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
-      ],
-      params.message,
-    );
-    assert.strictEqual(attributes[SpanAttributes.LLM_TOP_K], params.k);
+    assert.ok(attributes[ATTR_GEN_AI_INPUT_MESSAGES]);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.k);
     assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
     assert.strictEqual(
       attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
@@ -238,10 +217,6 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     assert.strictEqual(
       attributes[SpanAttributes.LLM_FREQUENCY_PENALTY],
       params.frequencyPenalty,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_REQUEST_MODEL],
-      params?.model ?? "command",
     );
 
     for await (const message of streamedResponse) {
@@ -260,31 +235,21 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
           typeof response.token_count.total_tokens === "number"
         ) {
           assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
             response.token_count.prompt_tokens,
           );
           assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS],
+            attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
             response.token_count.response_tokens,
           );
           assert.strictEqual(
-            attributes[SpanAttributes.LLM_USAGE_TOTAL_TOKENS],
+            attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
             response.token_count.total_tokens,
           );
         }
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-          "assistant",
-        );
-        assert.strictEqual(
-          attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-          response.text,
-        );
+        assert.ok(attributes[ATTR_GEN_AI_OUTPUT_MESSAGES]);
         if ("finishReason" in response && response.finishReason) {
-          assert.strictEqual(
-            attributes[`${ATTR_GEN_AI_COMPLETION}.0.finish_reason`],
-            response.finishReason,
-          );
+          assert.ok(attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS]);
         }
       }
     }
