@@ -31,6 +31,7 @@ import {
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
@@ -235,6 +236,7 @@ function makeMockChat(options: {
     return {
       message: { role: "assistant", content: responseContent },
       raw: {
+        id: "chatcmpl-test123",
         choices: [{ finish_reason: finishReason }],
         usage: {
           prompt_tokens: promptTokens,
@@ -264,6 +266,7 @@ function makeMockChatWithStreamUsage(options: {
         yield {
           delta: responseContent,
           raw: {
+            id: "chatcmpl-test123",
             choices: [{ finish_reason: finishReason }],
             usage: {
               prompt_tokens: promptTokens,
@@ -433,6 +436,38 @@ describe("CustomLLMInstrumentation — OTel 1.40 attributes", () => {
       assert.deepStrictEqual(
         span.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS],
         [FinishReasons.STOP],
+      );
+    });
+
+    it("sets gen_ai.response.id", async () => {
+      const instr = makeInstrumentation();
+      const chat = makeMockChat({});
+      const wrapped = instr.chatWrapper({ className: "OpenAI" })(chat as any);
+      await wrapped.call(
+        { metadata: mockLLMMeta },
+        { messages: [{ role: "user", content: "hi" }] },
+      );
+
+      const span = otelExporter.getFinishedSpans()[0];
+      assert.strictEqual(
+        span.attributes[ATTR_GEN_AI_RESPONSE_ID],
+        "chatcmpl-test123",
+      );
+    });
+
+    it("unknown finish_reason passes through as-is to span attribute", async () => {
+      const instr = makeInstrumentation();
+      const chat = makeMockChat({ finishReason: "some_future_reason" });
+      const wrapped = instr.chatWrapper({ className: "OpenAI" })(chat as any);
+      await wrapped.call(
+        { metadata: mockLLMMeta },
+        { messages: [{ role: "user", content: "hi" }] },
+      );
+
+      const span = otelExporter.getFinishedSpans()[0];
+      assert.deepStrictEqual(
+        span.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS],
+        ["some_future_reason"],
       );
     });
 

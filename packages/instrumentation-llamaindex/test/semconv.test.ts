@@ -16,10 +16,7 @@ import {
   formatOutputMessage,
   mapOpenAIContentBlock,
 } from "@traceloop/instrumentation-utils";
-import {
-  GEN_AI_OPERATION_NAME_VALUE_CHAT,
-  GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
-} from "@opentelemetry/semantic-conventions/incubating";
+import { GEN_AI_OPERATION_NAME_VALUE_CHAT } from "@opentelemetry/semantic-conventions/incubating";
 import { openAIFinishReasonMap } from "../src/custom-llm-instrumentation";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -44,10 +41,6 @@ function assertValidOtelJsonArray(value: unknown, label: string): any[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("OTel provider and operation name constants", () => {
-  it("GEN_AI_PROVIDER_NAME_VALUE_OPENAI is openai", () => {
-    assert.strictEqual(GEN_AI_PROVIDER_NAME_VALUE_OPENAI, "openai");
-  });
-
   it("GEN_AI_OPERATION_NAME_VALUE_CHAT is chat", () => {
     assert.strictEqual(GEN_AI_OPERATION_NAME_VALUE_CHAT, "chat");
   });

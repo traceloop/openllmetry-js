@@ -24,6 +24,7 @@ import {
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
@@ -48,6 +49,8 @@ type AsyncResponseType =
 
 const classNameToProviderName: Record<string, string> = {
   OpenAI: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+  // Future providers: Anthropic: "anthropic", Gemini: "gcp.gemini", etc.
+  // See well-known values: https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#gen-ai-provider-name
 };
 
 export const openAIFinishReasonMap: Record<string, string> = {
@@ -151,6 +154,9 @@ export class CustomLLMInstrumentation {
 
     try {
       const raw = (result as any).raw;
+      if (raw?.id) {
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, raw.id);
+      }
       const finishReason: string | null =
         raw?.choices?.[0]?.finish_reason ?? null;
 
@@ -219,6 +225,9 @@ export class CustomLLMInstrumentation {
         // response — available when stream_options: { include_usage: true }
         // is set on the LLM (OpenAI sends usage in the final streaming chunk).
         const lastRaw = lastChunk?.raw as any;
+        if (lastRaw?.id) {
+          span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, lastRaw.id);
+        }
         const finishReason: string | null =
           lastRaw?.choices?.[0]?.finish_reason ?? null;
         const usage = lastRaw?.usage ?? null;
@@ -244,6 +253,16 @@ export class CustomLLMInstrumentation {
           );
         }
 
+        if (!finishReason && !usage) {
+          this.diag.debug(
+            "LlamaIndex streaming: no finish_reason or usage in last chunk. " +
+              "Set stream_options: { include_usage: true } on the LLM to capture token usage.",
+          );
+        }
+
+        // Note: streaming only produces text parts — LlamaIndex's streaming interface
+        // yields text deltas only, not full content blocks. Tool calls or multi-modal
+        // content are collapsed into a single text string by llmGeneratorWrapper.
         if (shouldSendPrompts(this.config())) {
           span.setAttribute(
             ATTR_GEN_AI_OUTPUT_MESSAGES,
