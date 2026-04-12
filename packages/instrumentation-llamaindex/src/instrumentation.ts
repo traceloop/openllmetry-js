@@ -36,19 +36,29 @@ import { version } from "../package.json";
 
 export class LlamaIndexInstrumentation extends InstrumentationBase {
   declare protected _config: LlamaIndexInstrumentationConfig;
+  private customLLMInstrumentation!: CustomLLMInstrumentation;
 
   constructor(config: LlamaIndexInstrumentationConfig = {}) {
     super("@traceloop/instrumentation-llamaindex", version, config);
+    this.customLLMInstrumentation = new CustomLLMInstrumentation(
+      () => this._config,
+      this._diag,
+      () => this.tracer,
+    );
   }
 
   public override setConfig(config: LlamaIndexInstrumentationConfig = {}) {
     super.setConfig(config);
   }
 
-  public manuallyInstrument(module: typeof llamaindex) {
+  public manuallyInstrument(module: typeof llamaindex, openaiModule?: any) {
     this._diag.debug("Manually instrumenting llamaindex");
 
     this.patch(module);
+
+    if (openaiModule) {
+      this.patchOpenAI(openaiModule);
+    }
   }
 
   protected init(): InstrumentationModuleDefinition[] {
@@ -94,12 +104,6 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
   private patch(moduleExports: typeof llamaindex, moduleVersion?: string) {
     this._diag.debug(`Patching llamaindex@${moduleVersion}`);
 
-    const customLLMInstrumentation = new CustomLLMInstrumentation(
-      this._config,
-      this._diag,
-      () => this.tracer, // this is on purpose. Tracer may change
-    );
-
     this._wrap(
       moduleExports.RetrieverQueryEngine.prototype,
       "query",
@@ -133,7 +137,7 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
         this._wrap(
           cls.prototype,
           "chat",
-          customLLMInstrumentation.chatWrapper({ className: cls.name }),
+          this.customLLMInstrumentation.chatWrapper({ className: cls.name }),
         );
       } else if (this.isEmbedding(cls.prototype)) {
         this._wrap(
@@ -202,7 +206,16 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
   private patchOpenAI(moduleExports: any, moduleVersion?: string) {
     this._diag.debug(`Patching @llamaindex/openai@${moduleVersion}`);
 
-    // Instrument OpenAIAgent if it exists
+    if (moduleExports.OpenAI && this.isLLM(moduleExports.OpenAI.prototype)) {
+      this._wrap(
+        moduleExports.OpenAI.prototype,
+        "chat",
+        this.customLLMInstrumentation.chatWrapper({
+          className: moduleExports.OpenAI.name,
+        }),
+      );
+    }
+
     if (moduleExports.OpenAIAgent && moduleExports.OpenAIAgent.prototype) {
       this._wrap(
         moduleExports.OpenAIAgent.prototype,
@@ -223,7 +236,10 @@ export class LlamaIndexInstrumentation extends InstrumentationBase {
   private unpatchOpenAI(moduleExports: any, moduleVersion?: string) {
     this._diag.debug(`Unpatching @llamaindex/openai@${moduleVersion}`);
 
-    // Unwrap OpenAIAgent if it exists
+    if (moduleExports.OpenAI && moduleExports.OpenAI.prototype) {
+      this._unwrap(moduleExports.OpenAI.prototype, "chat");
+    }
+
     if (moduleExports.OpenAIAgent && moduleExports.OpenAIAgent.prototype) {
       this._unwrap(moduleExports.OpenAIAgent.prototype, "chat");
     }

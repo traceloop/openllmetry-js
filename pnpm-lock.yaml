@@ -415,11 +415,14 @@ importers:
         specifier: ^0.203.0
         version: 0.203.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions':
-        specifier: ^1.38.0
-        version: 1.38.0
+        specifier: ^1.40.0
+        version: 1.40.0
       '@traceloop/ai-semantic-conventions':
         specifier: workspace:*
         version: link:../ai-semantic-conventions
+      '@traceloop/instrumentation-utils':
+        specifier: workspace:*
+        version: link:../instrumentation-utils
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
