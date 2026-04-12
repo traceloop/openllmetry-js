@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.24.1](https://github.com/traceloop/openllmetry-js/compare/v0.24.0...v0.24.1) (2026-04-12)
+
+### Bug Fixes
+
+- **evaluator:** Update routes url ([#928](https://github.com/traceloop/openllmetry-js/issues/928)) ([116e033](https://github.com/traceloop/openllmetry-js/commit/116e033f6d773d29248d95f0972b53b9e940d520))
+
 # [0.24.0](https://github.com/traceloop/openllmetry-js/compare/v0.23.0...v0.24.0) (2026-04-06)
 
 ### Features
