@@ -248,7 +248,7 @@ export class Experiment {
     };
 
     const response = await this.client.post(
-      `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/task`,
+      `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/tasks`,
       body,
     );
 

@@ -225,7 +225,7 @@ export class Evaluator extends BaseDatasetEntity {
   ): Promise<EvaluatorExecuteResponse> {
     this.validateIdentifier(identifier);
     const response = await this.client.post(
-      `/v2/evaluators/${encodeURIComponent(identifier)}/executions`,
+      `/v2/evaluators/${encodeURIComponent(identifier)}/execute`,
       { input: options.input },
     );
     const data = await this.handleResponse(response);
@@ -398,7 +398,7 @@ export class Evaluator extends BaseDatasetEntity {
     }
 
     const response = await this.client.post(
-      `/v2/evaluators/slug/${evaluatorName}/execute`,
+      `/v2/experiments/${experimentId}/runs/${experimentRunId}/tasks/${taskId}`,
       payload,
     );
     const data = await this.handleResponse(response);
