@@ -9,4 +9,6 @@ export {
   mapAnthropicContentBlock,
   mapOpenAIContentBlock,
   mapBedrockContentBlock,
+  mapAiSdkContentPart,
+  mapAiSdkMessageContent,
 } from "./content-block-mappers";

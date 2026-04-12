@@ -24,8 +24,10 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_INPUT_MESSAGES,
   ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
-  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 import * as traceloop from "../../src";
@@ -112,21 +114,22 @@ describe("Test AI SDK Integration with Recording", function () {
 
     const spans = memoryExporter.getFinishedSpans();
 
+    // OTel 1.40: span name is "chat {model}"
     const generateTextSpan = spans.find(
-      (span) => span.name === "text.generate",
+      (span) => span.name === "chat gpt-3.5-turbo",
     );
 
     assert.ok(result);
     assert.ok(result.text);
     assert.ok(generateTextSpan);
 
-    // Verify span name (should be transformed from ai.generateText.doGenerate to text.generate)
-    assert.strictEqual(generateTextSpan.name, "text.generate");
+    // Verify span name (OTel 1.40 format: "chat {model}")
+    assert.strictEqual(generateTextSpan.name, "chat gpt-3.5-turbo");
 
-    // Verify vendor
+    // Verify vendor (OTel 1.40 lowercase provider name)
     assert.strictEqual(
-      generateTextSpan.attributes[ATTR_GEN_AI_SYSTEM],
-      "OpenAI",
+      generateTextSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "openai",
     );
 
     // Verify model information
@@ -135,27 +138,24 @@ describe("Test AI SDK Integration with Recording", function () {
       "gpt-3.5-turbo",
     );
 
-    // Verify prompt
-    assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.prompt.0.role"],
-      "user",
+    // Verify prompt (gen_ai.input.messages)
+    const inputMsgs = JSON.parse(
+      generateTextSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
-    assert.ok(generateTextSpan.attributes["gen_ai.prompt.0.content"]);
+    assert.strictEqual(inputMsgs[0].role, "user");
+    assert.ok(inputMsgs[0].parts[0].content);
 
-    // Verify response
-    assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.completion.0.role"],
-      "assistant",
+    // Verify response (gen_ai.output.messages)
+    const outputMsgs = JSON.parse(
+      generateTextSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
-    assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.completion.0.content"],
-      result.text,
-    );
+    assert.strictEqual(outputMsgs[0].role, "assistant");
+    assert.strictEqual(outputMsgs[0].parts[0].content, result.text);
 
-    // Verify token usage - should be transformed to input/output tokens
+    // Verify token usage
     assert.ok(generateTextSpan.attributes["gen_ai.usage.input_tokens"]);
     assert.ok(generateTextSpan.attributes["gen_ai.usage.output_tokens"]);
-    assert.ok(generateTextSpan.attributes["llm.usage.total_tokens"]);
+    assert.ok(generateTextSpan.attributes["gen_ai.usage.total_tokens"]);
   });
 
   it("should capture Google Gemini provider spans correctly with recording", async () => {
@@ -180,10 +180,10 @@ describe("Test AI SDK Integration with Recording", function () {
 
     const spans = memoryExporter.getFinishedSpans();
 
-    // Find the Google span specifically (should have workflow name test_google_workflow)
+    // Find the Google span specifically (OTel 1.40 name: "chat {model}")
     const generateTextSpan = spans.find(
       (span) =>
-        span.name === "text.generate" &&
+        span.name === "chat gemini-1.5-flash" &&
         span.attributes["traceloop.workflow.name"] === "test_google_workflow",
     );
 
@@ -191,13 +191,13 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(result.text);
     assert.ok(generateTextSpan, "Could not find Google generateText span");
 
-    // Verify span name (should be transformed from ai.generateText.doGenerate to text.generate)
-    assert.strictEqual(generateTextSpan.name, "text.generate");
+    // Verify span name (OTel 1.40 format)
+    assert.strictEqual(generateTextSpan.name, "chat gemini-1.5-flash");
 
-    // Verify vendor
+    // Verify vendor (OTel 1.40 well-known value for Google Gemini)
     assert.strictEqual(
-      generateTextSpan.attributes[ATTR_GEN_AI_SYSTEM],
-      "Google",
+      generateTextSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "gcp.gemini",
     );
 
     // Verify model information
@@ -206,27 +206,24 @@ describe("Test AI SDK Integration with Recording", function () {
       "gemini-1.5-flash",
     );
 
-    // Verify prompt
-    assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.prompt.0.role"],
-      "user",
+    // Verify prompt (gen_ai.input.messages)
+    const inputMsgsGoog = JSON.parse(
+      generateTextSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
-    assert.ok(generateTextSpan.attributes["gen_ai.prompt.0.content"]);
+    assert.strictEqual(inputMsgsGoog[0].role, "user");
+    assert.ok(inputMsgsGoog[0].parts[0].content);
 
-    // Verify response
-    assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.completion.0.role"],
-      "assistant",
+    // Verify response (gen_ai.output.messages)
+    const outputMsgsGoog = JSON.parse(
+      generateTextSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
-    assert.strictEqual(
-      generateTextSpan.attributes["gen_ai.completion.0.content"],
-      result.text,
-    );
+    assert.strictEqual(outputMsgsGoog[0].role, "assistant");
+    assert.strictEqual(outputMsgsGoog[0].parts[0].content, result.text);
 
-    // Verify token usage - should be transformed to input/output tokens
+    // Verify token usage
     assert.ok(generateTextSpan.attributes["gen_ai.usage.input_tokens"]);
     assert.ok(generateTextSpan.attributes["gen_ai.usage.output_tokens"]);
-    assert.ok(generateTextSpan.attributes["llm.usage.total_tokens"]);
+    assert.ok(generateTextSpan.attributes["gen_ai.usage.total_tokens"]);
   });
 
   it("should set LLM_INPUT_MESSAGES and LLM_OUTPUT_MESSAGES attributes for chat completions", async () => {
@@ -247,7 +244,7 @@ describe("Test AI SDK Integration with Recording", function () {
     assert.ok(result.text);
 
     const spans = memoryExporter.getFinishedSpans();
-    const aiSdkSpan = spans.find((span) => span.name === "text.generate");
+    const aiSdkSpan = spans.find((span) => span.name === "chat gpt-3.5-turbo");
 
     assert.ok(aiSdkSpan);
 
@@ -314,11 +311,14 @@ describe("Test AI SDK Integration with Recording", function () {
     await traceloop.forceFlush();
 
     const spans = memoryExporter.getFinishedSpans();
+    // After OTel 1.40 migration, both ai.generateText and ai.generateText.doGenerate
+    // are renamed to "chat {model}". Cache tokens live on the doGenerate (inner) span.
+    // Find the span within this workflow that has the cache token attribute set.
     const generateTextSpan = spans.find(
       (span) =>
-        span.name === "text.generate" &&
-        span.attributes["traceloop.workflow.name"] ===
-          "test_anthropic_cache_workflow",
+        span.name.startsWith("chat ") &&
+        span.attributes[ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS] !==
+          undefined,
     );
 
     assert.ok(result);
@@ -329,8 +329,8 @@ describe("Test AI SDK Integration with Recording", function () {
     );
 
     assert.strictEqual(
-      generateTextSpan.attributes[ATTR_GEN_AI_SYSTEM],
-      "Anthropic",
+      generateTextSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "anthropic",
     );
 
     assert.ok(
@@ -341,19 +341,19 @@ describe("Test AI SDK Integration with Recording", function () {
 
     assert.ok(
       generateTextSpan.attributes[
-        SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
+        ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
       ] !== undefined,
       "cache_creation_input_tokens should be present",
     );
     assert.strictEqual(
       typeof generateTextSpan.attributes[
-        SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
+        ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
       ],
       "number",
     );
     assert.ok(
       (generateTextSpan.attributes[
-        SpanAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
+        ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS
       ] as number) > 0,
       "cache_creation_input_tokens should be greater than 0",
     );
@@ -389,7 +389,7 @@ describe("Test AI SDK Integration with Recording", function () {
     const spans = memoryExporter.getFinishedSpans();
     const generateTextSpan = spans.find(
       (span) =>
-        span.name === "text.generate" &&
+        span.name === "chat gpt-4o-mini" &&
         span.attributes["traceloop.workflow.name"] ===
           "test_openai_cache_workflow",
     );
@@ -402,8 +402,8 @@ describe("Test AI SDK Integration with Recording", function () {
     );
 
     assert.strictEqual(
-      generateTextSpan.attributes[ATTR_GEN_AI_SYSTEM],
-      "OpenAI",
+      generateTextSpan.attributes[ATTR_GEN_AI_PROVIDER_NAME],
+      "openai",
     );
 
     assert.strictEqual(
@@ -412,19 +412,18 @@ describe("Test AI SDK Integration with Recording", function () {
     );
 
     if (
-      generateTextSpan.attributes[
-        SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
-      ] !== undefined
+      generateTextSpan.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS] !==
+      undefined
     ) {
       assert.strictEqual(
         typeof generateTextSpan.attributes[
-          SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
+          ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
         ],
         "number",
       );
       assert.ok(
         (generateTextSpan.attributes[
-          SpanAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
+          ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS
         ] as number) >= 0,
         "cache_read_input_tokens should be a valid number",
       );

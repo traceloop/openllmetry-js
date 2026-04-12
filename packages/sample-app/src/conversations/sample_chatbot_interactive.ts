@@ -1,6 +1,6 @@
 import * as traceloop from "@traceloop/node-server-sdk";
 import { openai } from "@ai-sdk/openai";
-import { streamText, CoreMessage, tool, stepCountIs } from "ai";
+import { streamText, ModelMessage, tool, stepCountIs } from "ai";
 import * as readline from "readline";
 import { z } from "zod";
 
@@ -23,7 +23,7 @@ const colors = {
 };
 
 class InteractiveChatbot {
-  private conversationHistory: CoreMessage[] = [];
+  private conversationHistory: ModelMessage[] = [];
   private rl: readline.Interface;
   private conversationId: string;
   private userId: string;

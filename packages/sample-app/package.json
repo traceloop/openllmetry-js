@@ -59,7 +59,8 @@
     "node": ">=14"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.19",
+    "@ai-sdk/anthropic": "^3.0.68",
+    "@ai-sdk/openai": "^3.0.52",
     "@anthropic-ai/sdk": "^0.80.0",
     "@aws-sdk/client-bedrock-runtime": "^3.969.0",
     "@azure/identity": "^4.4.1",
@@ -80,7 +81,7 @@
     "@traceloop/instrumentation-langchain": "workspace:*",
     "@traceloop/node-server-sdk": "workspace:*",
     "@types/jimp": "^0.2.28",
-    "ai": "^5.0.52",
+    "ai": "6.0.132",
     "cheerio": "^1.1.2",
     "chromadb": "^3.0.9",
     "cohere-ai": "^7.17.1",
