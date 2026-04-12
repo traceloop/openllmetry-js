@@ -362,8 +362,14 @@ export class Evaluator extends BaseDatasetEntity {
   async triggerExperimentEvaluator(
     request: TriggerEvaluatorRequest,
   ): Promise<TriggerEvaluatorResponse> {
-    const { experimentId, experimentSlug, experimentRunId, taskId, evaluator, taskResult } =
-      request;
+    const {
+      experimentId,
+      experimentSlug,
+      experimentRunId,
+      taskId,
+      evaluator,
+      taskResult,
+    } = request;
 
     if (!experimentSlug || !taskResult) {
       throw new Error("experimentSlug, evaluator, and taskResult are required");
