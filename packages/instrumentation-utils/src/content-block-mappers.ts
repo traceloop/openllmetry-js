@@ -459,7 +459,12 @@ export const mapAiSdkContentPart = (part: any): any => {
       if (typeof fileSrc === "string") {
         if (fileSrc.startsWith("data:")) {
           const [, data] = fileSrc.split(",");
-          return { type: "blob", modality, mime_type: mimeType, content: data || "" };
+          return {
+            type: "blob",
+            modality,
+            mime_type: mimeType,
+            content: data || "",
+          };
         }
         return { type: "uri", modality, uri: fileSrc, mime_type: mimeType };
       }
