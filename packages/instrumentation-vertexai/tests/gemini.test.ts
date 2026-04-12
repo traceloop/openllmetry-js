@@ -114,7 +114,6 @@ describe("Test Gemini GenerativeModel Instrumentation", () => {
     instrumentation.setTracerProvider(provider);
     instrumentation.enable();
     vertexAi = require("@google-cloud/vertexai");
-    instrumentation.manuallyInstrument(vertexAi);
   });
 
   after(() => {
