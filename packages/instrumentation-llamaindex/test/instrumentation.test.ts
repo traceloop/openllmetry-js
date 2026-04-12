@@ -30,6 +30,7 @@ import {
   ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_RESPONSE_MODEL,
@@ -299,7 +300,7 @@ describe("CustomLLMInstrumentation — OTel 1.40 attributes", () => {
   });
   let contextManager: AsyncHooksContextManager;
 
-  const mockLLMMeta = { model: "gpt-4o", topP: 1 };
+  const mockLLMMeta = { model: "gpt-4o", topP: 1, temperature: 0.7 };
 
   before(() => {
     otelProvider.register();
@@ -382,6 +383,19 @@ describe("CustomLLMInstrumentation — OTel 1.40 attributes", () => {
       const span = otelExporter.getFinishedSpans()[0];
       assert.strictEqual(span.attributes[ATTR_GEN_AI_REQUEST_MODEL], "gpt-4o");
       assert.strictEqual(span.attributes[ATTR_GEN_AI_RESPONSE_MODEL], "gpt-4o");
+    });
+
+    it("sets gen_ai.request.temperature", async () => {
+      const instr = makeInstrumentation();
+      const chat = makeMockChat({});
+      const wrapped = instr.chatWrapper({ className: "OpenAI" })(chat as any);
+      await wrapped.call(
+        { metadata: mockLLMMeta },
+        { messages: [{ role: "user", content: "hi" }] },
+      );
+
+      const span = otelExporter.getFinishedSpans()[0];
+      assert.strictEqual(span.attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE], 0.7);
     });
 
     it("sets gen_ai.input.messages with correct structure", async () => {
@@ -646,6 +660,10 @@ describe("CustomLLMInstrumentation — OTel 1.40 attributes", () => {
       assert.strictEqual(
         span.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
         15,
+      );
+      assert.strictEqual(
+        span.attributes[ATTR_GEN_AI_RESPONSE_ID],
+        "chatcmpl-test123",
       );
     });
   });

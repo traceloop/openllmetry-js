@@ -22,6 +22,7 @@ import {
   ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_RESPONSE_ID,
@@ -93,6 +94,10 @@ export class CustomLLMInstrumentation {
             GEN_AI_OPERATION_NAME_VALUE_CHAT,
           );
           span.setAttribute(ATTR_GEN_AI_REQUEST_TOP_P, this.metadata.topP);
+          span.setAttribute(
+            ATTR_GEN_AI_REQUEST_TEMPERATURE,
+            this.metadata.temperature,
+          );
           if (shouldSendPrompts(plugin.config()) && messages) {
             span.setAttribute(
               ATTR_GEN_AI_INPUT_MESSAGES,
