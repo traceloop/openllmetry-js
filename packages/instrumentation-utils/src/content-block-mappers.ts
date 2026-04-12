@@ -343,6 +343,19 @@ export const mapBedrockContentBlock = (block: any): object => {
 //   <unknown>               → GenericPart
 
 /**
+ * Content part type values as emitted by the Vercel AI SDK v6 in span attributes.
+ * Source: @ai-sdk/provider-utils ToolCallPart / ToolResultPart / ImagePart / FilePart / ReasoningPart
+ */
+const enum AiSdkPartType {
+  Text = "text",
+  Reasoning = "reasoning",
+  ToolCall = "tool-call",
+  ToolResult = "tool-result",
+  Image = "image",
+  File = "file",
+}
+
+/**
  * Maps a single Vercel AI SDK content part to its OTel-compliant part object.
  *
  * Field names follow AI SDK v6:
@@ -354,18 +367,18 @@ export const mapBedrockContentBlock = (block: any): object => {
  */
 export const mapAiSdkContentPart = (part: any): any => {
   if (!part || typeof part !== "object") {
-    return { type: "text", content: String(part ?? "") };
+    return { type: AiSdkPartType.Text, content: String(part ?? "") };
   }
 
   switch (part.type) {
-    case "text":
-      return { type: "text", content: part.text ?? "" };
+    case AiSdkPartType.Text:
+      return { type: AiSdkPartType.Text, content: part.text ?? "" };
 
     // OTel type is "reasoning", AI SDK v6 field is `text`
-    case "reasoning":
-      return { type: "reasoning", content: part.text ?? "" };
+    case AiSdkPartType.Reasoning:
+      return { type: AiSdkPartType.Reasoning, content: part.text ?? "" };
 
-    case "tool-call":
+    case AiSdkPartType.ToolCall:
       // AI SDK v6: toolCallId, toolName, input
       return {
         type: "tool_call",
@@ -374,7 +387,7 @@ export const mapAiSdkContentPart = (part: any): any => {
         arguments: part.input,
       };
 
-    case "tool-result": {
+    case AiSdkPartType.ToolResult: {
       // AI SDK v6: output is ToolResultOutput — { type: 'text'|'json', value } union
       // Unwrap to the actual value for tracing; fall back to the full object if unknown shape
       const output = part.output;
@@ -389,7 +402,7 @@ export const mapAiSdkContentPart = (part: any): any => {
       };
     }
 
-    case "image": {
+    case AiSdkPartType.Image: {
       // AI SDK v6: image is DataContent | URL; optional mediaType
       const imgSrc = part.image ?? null;
       const mimeType = part.mediaType ?? null;
@@ -435,7 +448,7 @@ export const mapAiSdkContentPart = (part: any): any => {
       return { type: "blob", modality: "image", content: "" };
     }
 
-    case "file": {
+    case AiSdkPartType.File: {
       // AI SDK v6: data is DataContent | URL; mediaType is required
       const fileSrc = part.data ?? null;
       const mimeType = part.mediaType ?? null;

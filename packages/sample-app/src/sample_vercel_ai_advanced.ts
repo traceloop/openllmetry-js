@@ -1,7 +1,7 @@
 /**
- * Vercel AI SDK - OTel 1.40 Migration Validation Sample
+ * Vercel AI SDK - Advanced Usage Sample
  *
- * Covers all major use cases to validate span shapes after the OTel 1.40 migration:
+ * Covers all major use cases with OpenAI and Anthropic:
  *   1. generateText  - OpenAI + Anthropic (basic chat)
  *   2. streamText    - OpenAI streaming
  *   3. generateObject - structured output
@@ -10,17 +10,6 @@
  *   6. Conversation ID propagation
  *
  * Run via run.sh (sets OPENAI_API_KEY, ANTHROPIC_API_KEY, TRACELOOP_API_KEY).
- *
- * Key attributes to verify in Traceloop dashboard:
- *   - gen_ai.provider.name  → "openai" / "anthropic"  (OTel 1.40 lowercase)
- *   - gen_ai.request.model  → model name
- *   - gen_ai.operation.name → "chat" / "execute_tool"
- *   - gen_ai.input.messages → [{role, parts:[{type:"text",content:...}]}]
- *   - gen_ai.output.messages → [{role,finish_reason,parts:[...]}]
- *   - gen_ai.usage.input_tokens / output_tokens
- *   - gen_ai.response.finish_reasons → ["stop"] / ["tool_call"]
- *   - gen_ai.tool.definitions → JSON array of tool objects (source format)
- *   - Span name format: "chat {model}" / "execute_tool {toolName}"
  */
 
 import * as traceloop from "@traceloop/node-server-sdk";
@@ -36,7 +25,7 @@ import {
 import { z } from "zod";
 
 traceloop.initialize({
-  appName: "sample_vercel_ai_otel140",
+  appName: "sample_vercel_ai_advanced",
   disableBatch: true,
 });
 
@@ -273,7 +262,6 @@ async function testConversationId() {
 
 async function main() {
   console.log("=".repeat(60));
-  console.log("  Vercel AI SDK — OTel 1.40 Migration Validation");
   console.log("=".repeat(60));
 
   await testGenerateTextOpenAI();
