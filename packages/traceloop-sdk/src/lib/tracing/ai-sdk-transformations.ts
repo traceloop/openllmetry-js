@@ -512,6 +512,7 @@ const transformFinishReason = (attributes: Record<string, any>): void => {
   }
 };
 
+
 const transformToolCallAttributes = (attributes: Record<string, any>): void => {
   if ("ai.toolCall.name" in attributes) {
     setIfAbsent(
