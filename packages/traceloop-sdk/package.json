@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/node-server-sdk",
-  "version": "0.24.1",
+  "version": "0.25.0",
   "description": "Traceloop Software Development Kit (SDK) for Node.js",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -66,7 +66,6 @@
     "@opentelemetry/sdk-trace-node": "^2.0.1",
     "@opentelemetry/semantic-conventions": "^1.40.0",
     "@traceloop/ai-semantic-conventions": "workspace:*",
-    "@traceloop/instrumentation-utils": "workspace:*",
     "@traceloop/instrumentation-anthropic": "workspace:*",
     "@traceloop/instrumentation-bedrock": "workspace:*",
     "@traceloop/instrumentation-chromadb": "workspace:*",
@@ -78,6 +77,7 @@
     "@traceloop/instrumentation-pinecone": "workspace:*",
     "@traceloop/instrumentation-qdrant": "workspace:*",
     "@traceloop/instrumentation-together": "workspace:*",
+    "@traceloop/instrumentation-utils": "workspace:*",
     "@traceloop/instrumentation-vertexai": "workspace:*",
     "@types/nunjucks": "^3.2.6",
     "cross-fetch": "^4.1.0",

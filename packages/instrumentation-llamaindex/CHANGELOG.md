@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.25.0](https://github.com/traceloop/openllmetry-js/compare/v0.24.1...v0.25.0) (2026-04-13)
+
+### Features
+
+- **instrumentation-llamaindex:** migrate to OTel 1.40 GenAI semantic conventions ([#925](https://github.com/traceloop/openllmetry-js/issues/925)) ([4c8becd](https://github.com/traceloop/openllmetry-js/commit/4c8becde55f035d8129d84ed3ae5c5fd14d87960))
+
 # [0.24.0](https://github.com/traceloop/openllmetry-js/compare/v0.23.0...v0.24.0) (2026-04-06)
 
 **Note:** Version bump only for package @traceloop/instrumentation-llamaindex
