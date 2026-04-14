@@ -15,6 +15,7 @@
 
 import {
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_OPERATION_NAME_VALUE_GENERATE_CONTENT,
   GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
 } from "@opentelemetry/semantic-conventions/incubating";
 
@@ -260,7 +261,7 @@ export function formatInputMessagesFromPrompt(
  * @param content - Array of content blocks or string completion
  * @param stopReason - The stop reason from the LLM response
  * @param finishReasonMap - Mapping of provider-specific stop reasons to standard finish reasons
- * @param type - Type of completion: "chat" or "text_completion" (use GEN_AI_OPERATION_NAME_VALUE_* constants)
+ * @param type - Type of completion: "chat", "generate_content", or "text_completion" (use GEN_AI_OPERATION_NAME_VALUE_* constants)
  * @param contentBlockMapper - Provider-specific function to map a content block to an OTel part
  * @returns JSON string — array with a single assistant OutputMessage
  */
@@ -284,7 +285,11 @@ export function formatOutputMessage(
   };
 
   if (traceContent) {
-    if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT && Array.isArray(content)) {
+    if (
+      (type === GEN_AI_OPERATION_NAME_VALUE_CHAT ||
+        type === GEN_AI_OPERATION_NAME_VALUE_GENERATE_CONTENT) &&
+      Array.isArray(content)
+    ) {
       outputMessage.parts = content.map(contentBlockMapper);
     } else if (
       type === GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION &&
