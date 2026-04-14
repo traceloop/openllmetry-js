@@ -270,12 +270,16 @@ export class GoogleGenAIInstrumentation extends InstrumentationBase {
         this._endSpan(span, result as any);
         return result;
       })
-      .catch((error: Error) => {
+      .catch((error: unknown) => {
+        const message =
+          error instanceof Error ? error.message : String(error);
         span.setStatus({
           code: SpanStatusCode.ERROR,
-          message: error.message,
+          message,
         });
-        span.recordException(error);
+        span.recordException(
+          error instanceof Error ? error : new Error(message),
+        );
         span.end();
         throw error;
       });
@@ -327,11 +331,14 @@ export class GoogleGenAIInstrumentation extends InstrumentationBase {
 
       return instrumentedStream();
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       span.setStatus({
         code: SpanStatusCode.ERROR,
-        message: (error as Error).message,
+        message,
       });
-      span.recordException(error as Error);
+      span.recordException(
+        error instanceof Error ? error : new Error(message),
+      );
       span.end();
       throw error;
     }
