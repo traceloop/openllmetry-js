@@ -529,6 +529,7 @@ describe("Test SDK Decorators", () => {
       completionSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
       result.choices[0].message.content,
     );
+    // withLLMCall/reportResponse sets the legacy llm.usage.total_tokens attribute
     assert.ok(
       completionSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
     );
@@ -663,20 +664,23 @@ describe("Test SDK Decorators", () => {
 
     const spans = memoryExporter.getFinishedSpans();
 
+    // OTel 1.40: span name is "{operation} {model}" (e.g. "chat gpt-3.5-turbo")
     const generateTextSpan = spans.find(
-      (span) => span.name === "text.generate",
+      (span) => span.name === "chat gpt-3.5-turbo",
     );
 
     assert.ok(result);
     assert.ok(generateTextSpan);
-    assert.strictEqual(
-      generateTextSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.role`],
-      "user",
+
+    const inputMessages = JSON.parse(
+      generateTextSpan.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
     );
+    assert.strictEqual(inputMessages[0].role, "user");
     assert.strictEqual(
-      generateTextSpan.attributes[`${ATTR_GEN_AI_PROMPT}.0.content`],
+      inputMessages[0].parts[0].content,
       "What is the capital of France?",
     );
+
     assert.strictEqual(
       generateTextSpan.attributes[`${ATTR_GEN_AI_REQUEST_MODEL}`],
       "gpt-3.5-turbo",
@@ -685,14 +689,13 @@ describe("Test SDK Decorators", () => {
       generateTextSpan.attributes[`${ATTR_GEN_AI_RESPONSE_MODEL}`],
       "gpt-3.5-turbo-0125",
     );
-    assert.strictEqual(
-      generateTextSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.role`],
-      "assistant",
+
+    const outputMessages = JSON.parse(
+      generateTextSpan.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
     );
-    assert.strictEqual(
-      generateTextSpan.attributes[`${ATTR_GEN_AI_COMPLETION}.0.content`],
-      result.text,
-    );
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.strictEqual(outputMessages[0].parts[0].content, result.text);
+
     assert.strictEqual(
       generateTextSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`],
       14,
@@ -702,7 +705,9 @@ describe("Test SDK Decorators", () => {
       8,
     );
     assert.strictEqual(
-      generateTextSpan.attributes[`${SpanAttributes.LLM_USAGE_TOTAL_TOKENS}`],
+      generateTextSpan.attributes[
+        `${SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS}`
+      ],
       22,
     );
   }).timeout(30000);

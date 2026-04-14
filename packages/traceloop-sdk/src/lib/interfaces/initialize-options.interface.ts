@@ -98,6 +98,8 @@ export interface InitializeOptions {
     together?: typeof together.Together;
     langchain?: boolean;
     llamaIndex?: typeof llamaindex;
+    /** Only meaningful when `llamaIndex` is also provided. */
+    llamaIndexOpenAI?: any;
     chromadb?: typeof chromadb;
     qdrant?: typeof qdrant;
     mcp?: typeof mcp;

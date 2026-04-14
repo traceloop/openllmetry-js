@@ -1,5 +1,7 @@
 import * as traceloop from "@traceloop/node-server-sdk";
+import * as llamaindex from "llamaindex";
 import { VectorStoreIndex, Document, Settings } from "llamaindex";
+import * as llamaIndexOpenAI from "@llamaindex/openai";
 import { OpenAIEmbedding, OpenAI } from "@llamaindex/openai";
 import { readFile } from "fs/promises";
 
@@ -7,10 +9,17 @@ traceloop.initialize({
   appName: "sample_llamaindex",
   apiKey: process.env.TRACELOOP_API_KEY,
   disableBatch: true,
+  instrumentModules: {
+    llamaIndex: llamaindex,
+    llamaIndexOpenAI,
+  },
 });
 
 Settings.embedModel = new OpenAIEmbedding();
-Settings.llm = new OpenAI();
+// OpenAI only sends usage in the final streaming chunk if stream_options: { include_usage: true }
+Settings.llm = new OpenAI({
+  additionalChatOptions: { stream_options: { include_usage: true } },
+});
 
 class SampleLlamaIndex {
   async query() {

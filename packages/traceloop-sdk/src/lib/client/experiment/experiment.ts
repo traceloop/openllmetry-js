@@ -179,6 +179,7 @@ export class Experiment {
               const singleEvaluationResult =
                 await this.evaluator.runExperimentEvaluator({
                   experimentId: experimentResponse.experiment.id,
+                  experimentSlug: experimentSlug,
                   experimentRunId: experimentResponse.run.id,
                   taskId,
                   evaluator,
@@ -248,7 +249,7 @@ export class Experiment {
     };
 
     const response = await this.client.post(
-      `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/task`,
+      `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/tasks`,
       body,
     );
 

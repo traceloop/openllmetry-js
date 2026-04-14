@@ -1,4 +1,3 @@
-import * as lodash from "lodash";
 import type * as llamaindex from "llamaindex";
 
 import {
@@ -13,15 +12,31 @@ import {
 } from "@opentelemetry/api";
 import { safeExecuteInTheMiddle } from "@opentelemetry/instrumentation";
 
-import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
-  ATTR_GEN_AI_COMPLETION,
-  ATTR_GEN_AI_PROMPT,
+  SpanAttributes,
+  FinishReasons,
+} from "@traceloop/ai-semantic-conventions";
+import {
+  ATTR_GEN_AI_INPUT_MESSAGES,
+  ATTR_GEN_AI_OPERATION_NAME,
+  ATTR_GEN_AI_OUTPUT_MESSAGES,
+  ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
   ATTR_GEN_AI_REQUEST_TOP_P,
+  ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_RESPONSE_MODEL,
-  ATTR_GEN_AI_SYSTEM,
+  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
+  GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
 } from "@opentelemetry/semantic-conventions/incubating";
+import {
+  formatInputMessages,
+  formatOutputMessage,
+  mapOpenAIContentBlock,
+} from "@traceloop/instrumentation-utils";
 
 import { LlamaIndexInstrumentationConfig } from "./types";
 import { shouldSendPrompts, llmGeneratorWrapper } from "./utils";
@@ -33,9 +48,23 @@ type AsyncResponseType =
   | AsyncIterable<llamaindex.ChatResponseChunk>
   | AsyncIterable<llamaindex.CompletionResponse>;
 
+const classNameToProviderName: Record<string, string> = {
+  OpenAI: GEN_AI_PROVIDER_NAME_VALUE_OPENAI,
+  // Future providers: Anthropic: "anthropic", Gemini: "gcp.gemini", etc.
+  // See well-known values: https://opentelemetry.io/docs/specs/semconv/registry/attributes/gen-ai/#gen-ai-provider-name
+};
+
+export const openAIFinishReasonMap: Record<string, string> = {
+  stop: FinishReasons.STOP,
+  length: FinishReasons.LENGTH,
+  tool_calls: FinishReasons.TOOL_CALL,
+  content_filter: FinishReasons.CONTENT_FILTER,
+  function_call: FinishReasons.TOOL_CALL,
+};
+
 export class CustomLLMInstrumentation {
   constructor(
-    private config: LlamaIndexInstrumentationConfig,
+    private config: () => LlamaIndexInstrumentationConfig,
     private diag: DiagLogger,
     private tracer: () => Tracer,
   ) {}
@@ -50,44 +79,34 @@ export class CustomLLMInstrumentation {
         const messages = params?.messages;
         const streaming = params?.stream;
 
-        const span = plugin
-          .tracer()
-          .startSpan(`llamaindex.${lodash.snakeCase(className)}.chat`, {
-            kind: SpanKind.CLIENT,
-          });
+        const span = plugin.tracer().startSpan(`chat ${this.metadata.model}`, {
+          kind: SpanKind.CLIENT,
+        });
 
         try {
-          span.setAttribute(ATTR_GEN_AI_SYSTEM, className);
+          span.setAttribute(
+            ATTR_GEN_AI_PROVIDER_NAME,
+            classNameToProviderName[className] ?? className.toLowerCase(),
+          );
           span.setAttribute(ATTR_GEN_AI_REQUEST_MODEL, this.metadata.model);
-          span.setAttribute(SpanAttributes.LLM_REQUEST_TYPE, "chat");
+          span.setAttribute(
+            ATTR_GEN_AI_OPERATION_NAME,
+            GEN_AI_OPERATION_NAME_VALUE_CHAT,
+          );
           span.setAttribute(ATTR_GEN_AI_REQUEST_TOP_P, this.metadata.topP);
-          if (shouldSendPrompts(plugin.config)) {
-            for (const messageIdx in messages) {
-              const content = messages[messageIdx].content;
-              if (typeof content === "string") {
-                span.setAttribute(
-                  `${ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
-                  content as string,
-                );
-              } else if (
-                (content as llamaindex.MessageContentDetail[])[0].type ===
-                "text"
-              ) {
-                span.setAttribute(
-                  `${ATTR_GEN_AI_PROMPT}.${messageIdx}.content`,
-                  (content as llamaindex.MessageContentTextDetail[])[0].text,
-                );
-              }
-
-              span.setAttribute(
-                `${ATTR_GEN_AI_PROMPT}.${messageIdx}.role`,
-                messages[messageIdx].role,
-              );
-            }
+          span.setAttribute(
+            ATTR_GEN_AI_REQUEST_TEMPERATURE,
+            this.metadata.temperature,
+          );
+          if (shouldSendPrompts(plugin.config()) && messages) {
+            span.setAttribute(
+              ATTR_GEN_AI_INPUT_MESSAGES,
+              formatInputMessages(messages, mapOpenAIContentBlock),
+            );
           }
         } catch (e) {
           plugin.diag.warn(e);
-          plugin.config.exceptionLogger?.(e);
+          plugin.config().exceptionLogger?.(e);
         }
 
         const execContext = trace.setSpan(context.active(), span);
@@ -138,36 +157,62 @@ export class CustomLLMInstrumentation {
   ): T {
     span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
 
-    if (!shouldSendPrompts(this.config)) {
-      span.setStatus({ code: SpanStatusCode.OK });
-      span.end();
-      return result;
-    }
-
     try {
-      if ((result as llamaindex.ChatResponse).message) {
-        span.setAttribute(
-          `${ATTR_GEN_AI_COMPLETION}.0.role`,
-          (result as llamaindex.ChatResponse).message.role,
-        );
-        const content = (result as llamaindex.ChatResponse).message.content;
-        if (typeof content === "string") {
-          span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.content`, content);
-        } else if (content[0].type === "text") {
-          span.setAttribute(
-            `${ATTR_GEN_AI_COMPLETION}.0.content`,
-            content[0].text,
-          );
-        }
-        span.setStatus({ code: SpanStatusCode.OK });
+      const raw = (result as any).raw;
+      if (raw?.id) {
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, raw.id);
       }
+      const finishReason: string | null =
+        raw?.choices?.[0]?.finish_reason ?? null;
+
+      // finish_reasons: metadata, not content — always set outside shouldSendPrompts
+      if (finishReason != null) {
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
+          openAIFinishReasonMap[finishReason] ?? finishReason,
+        ]);
+      }
+
+      // Token usage: always set when available
+      const usage = raw?.usage;
+      if (usage) {
+        span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.prompt_tokens);
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+          usage.completion_tokens,
+        );
+        span.setAttribute(
+          SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+          usage.total_tokens,
+        );
+      }
+
+      // output messages: content — always set inside shouldSendPrompts
+      if (
+        shouldSendPrompts(this.config()) &&
+        (result as llamaindex.ChatResponse).message
+      ) {
+        const content = (result as llamaindex.ChatResponse).message.content;
+        // Normalize to array so mapOpenAIContentBlock handles both string and block array
+        const contentArray = typeof content === "string" ? [content] : content;
+        span.setAttribute(
+          ATTR_GEN_AI_OUTPUT_MESSAGES,
+          formatOutputMessage(
+            contentArray,
+            finishReason,
+            openAIFinishReasonMap,
+            GEN_AI_OPERATION_NAME_VALUE_CHAT,
+            mapOpenAIContentBlock,
+          ),
+        );
+      }
+
+      span.setStatus({ code: SpanStatusCode.OK });
     } catch (e) {
       this.diag.warn(e);
-      this.config.exceptionLogger?.(e);
+      this.config().exceptionLogger?.(e);
     }
 
     span.end();
-
     return result;
   }
 
@@ -178,14 +223,67 @@ export class CustomLLMInstrumentation {
     metadata: llamaindex.LLMMetadata,
   ): T {
     span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, metadata.model);
-    if (!shouldSendPrompts(this.config)) {
-      span.setStatus({ code: SpanStatusCode.OK });
-      span.end();
-      return result;
-    }
 
-    return llmGeneratorWrapper(result, execContext, (message) => {
-      span.setAttribute(`${ATTR_GEN_AI_COMPLETION}.0.content`, message);
+    return llmGeneratorWrapper(result, execContext, (message, lastChunk) => {
+      try {
+        // Extract finish_reason and usage from the last chunk's raw OpenAI
+        // response — available when stream_options: { include_usage: true }
+        // is set on the LLM (OpenAI sends usage in the final streaming chunk).
+        const lastRaw = lastChunk?.raw as any;
+        if (lastRaw?.id) {
+          span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, lastRaw.id);
+        }
+        const finishReason: string | null =
+          lastRaw?.choices?.[0]?.finish_reason ?? null;
+        const usage = lastRaw?.usage ?? null;
+
+        if (finishReason != null) {
+          span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
+            openAIFinishReasonMap[finishReason] ?? finishReason,
+          ]);
+        }
+
+        if (usage) {
+          span.setAttribute(
+            ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+            usage.prompt_tokens,
+          );
+          span.setAttribute(
+            ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+            usage.completion_tokens,
+          );
+          span.setAttribute(
+            SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+            usage.total_tokens,
+          );
+        }
+
+        if (!finishReason && !usage) {
+          this.diag.debug(
+            "LlamaIndex streaming: no finish_reason or usage in last chunk. " +
+              "Set stream_options: { include_usage: true } on the LLM to capture token usage.",
+          );
+        }
+
+        // Note: streaming only produces text parts — LlamaIndex's streaming interface
+        // yields text deltas only, not full content blocks. Tool calls or multi-modal
+        // content are collapsed into a single text string by llmGeneratorWrapper.
+        if (shouldSendPrompts(this.config())) {
+          span.setAttribute(
+            ATTR_GEN_AI_OUTPUT_MESSAGES,
+            formatOutputMessage(
+              [message],
+              finishReason,
+              openAIFinishReasonMap,
+              GEN_AI_OPERATION_NAME_VALUE_CHAT,
+              mapOpenAIContentBlock,
+            ),
+          );
+        }
+      } catch (e) {
+        this.diag.warn(e);
+        this.config().exceptionLogger?.(e);
+      }
       span.setStatus({ code: SpanStatusCode.OK });
       span.end();
     }) as any;

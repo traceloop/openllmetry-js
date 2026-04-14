@@ -395,7 +395,7 @@ export class Dataset extends BaseDatasetEntity {
   async fromCSV(
     csvContent: string,
     options: CSVImportOptions = {},
-  ): Promise<void> {
+  ): Promise<Row[]> {
     if (this._deleted) {
       throw new Error("Cannot import CSV to a deleted dataset");
     }
@@ -412,11 +412,14 @@ export class Dataset extends BaseDatasetEntity {
       throw new Error("No data found in CSV");
     }
 
+    const allRows: Row[] = [];
     const batchSize = 100;
     for (let i = 0; i < rows.length; i += batchSize) {
       const batch = rows.slice(i, i + batchSize);
-      await this.addRows(batch);
+      const created = await this.addRows(batch);
+      allRows.push(...created);
     }
+    return allRows;
   }
 
   async getVersions(): Promise<DatasetVersionsResponse> {

@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.25.0](https://github.com/traceloop/openllmetry-js/compare/v0.24.1...v0.25.0) (2026-04-13)
+
+### Features
+
+- **ai-sdk:** migrate ai-sdk to opentelemtry 1.40 semantic conventions ([#924](https://github.com/traceloop/openllmetry-js/issues/924)) ([4e3ffd5](https://github.com/traceloop/openllmetry-js/commit/4e3ffd5851ecb78a09da1e761af67f73617cbf9c))
+- **instrumentation-llamaindex:** migrate to OTel 1.40 GenAI semantic conventions ([#925](https://github.com/traceloop/openllmetry-js/issues/925)) ([4c8becd](https://github.com/traceloop/openllmetry-js/commit/4c8becde55f035d8129d84ed3ae5c5fd14d87960))
+
+## [0.24.1](https://github.com/traceloop/openllmetry-js/compare/v0.24.0...v0.24.1) (2026-04-12)
+
+### Bug Fixes
+
+- **evaluator:** Update routes url ([#928](https://github.com/traceloop/openllmetry-js/issues/928)) ([116e033](https://github.com/traceloop/openllmetry-js/commit/116e033f6d773d29248d95f0972b53b9e940d520))
+
 # [0.24.0](https://github.com/traceloop/openllmetry-js/compare/v0.23.0...v0.24.0) (2026-04-06)
 
 ### Features

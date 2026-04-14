@@ -225,7 +225,7 @@ export class Evaluator extends BaseDatasetEntity {
   ): Promise<EvaluatorExecuteResponse> {
     this.validateIdentifier(identifier);
     const response = await this.client.post(
-      `/v2/evaluators/${encodeURIComponent(identifier)}/executions`,
+      `/v2/evaluators/${encodeURIComponent(identifier)}/execute`,
       { input: options.input },
     );
     const data = await this.handleResponse(response);
@@ -322,6 +322,7 @@ export class Evaluator extends BaseDatasetEntity {
   ): Promise<ExecutionResponse[]> {
     const {
       experimentId,
+      experimentSlug,
       experimentRunId,
       taskId,
       taskResult,
@@ -333,6 +334,7 @@ export class Evaluator extends BaseDatasetEntity {
 
     const triggerResponse = await this.triggerExperimentEvaluator({
       experimentId,
+      experimentSlug,
       experimentRunId,
       taskId,
       evaluator,
@@ -360,11 +362,17 @@ export class Evaluator extends BaseDatasetEntity {
   async triggerExperimentEvaluator(
     request: TriggerEvaluatorRequest,
   ): Promise<TriggerEvaluatorResponse> {
-    const { experimentId, experimentRunId, taskId, evaluator, taskResult } =
-      request;
+    const {
+      experimentId,
+      experimentSlug,
+      experimentRunId,
+      taskId,
+      evaluator,
+      taskResult,
+    } = request;
 
-    if (!experimentId || !taskResult) {
-      throw new Error("experimentId, evaluator, and taskResult are required");
+    if (!experimentSlug || !taskResult) {
+      throw new Error("experimentSlug, evaluator, and taskResult are required");
     }
 
     // Handle string, EvaluatorWithVersion, and EvaluatorWithConfig types
@@ -388,6 +396,7 @@ export class Evaluator extends BaseDatasetEntity {
       experiment_id: experimentId,
       experiment_run_id: experimentRunId,
       evaluator_version: evaluatorVersion,
+      evaluator_slug: evaluatorName,
       task_id: taskId,
       input_schema_mapping: inputSchemaMapping,
     };
@@ -398,7 +407,7 @@ export class Evaluator extends BaseDatasetEntity {
     }
 
     const response = await this.client.post(
-      `/v2/evaluators/slug/${evaluatorName}/execute`,
+      `/v2/experiments/${experimentSlug}/runs/${experimentRunId}/tasks/${taskId}`,
       payload,
     );
     const data = await this.handleResponse(response);

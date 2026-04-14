@@ -804,7 +804,7 @@ describe("StandaloneEvaluators", () => {
   // ─── run ─────────────────────────────────────────────────────────────────────
 
   describe("run", () => {
-    it("should POST to /v2/evaluators/:id/executions and return result", async () => {
+    it("should POST to /v2/evaluators/:id/execute and return result", async () => {
       let capturedUrl: string | undefined;
       let capturedMethod: string | undefined;
       let capturedBody: string | undefined;
@@ -828,7 +828,7 @@ describe("StandaloneEvaluators", () => {
 
       assert.strictEqual(
         capturedUrl,
-        "https://api.traceloop.com/v2/evaluators/eval-123/executions",
+        "https://api.traceloop.com/v2/evaluators/eval-123/execute",
       );
       assert.strictEqual(capturedMethod, "POST");
       assert.strictEqual(result.executionId, "exec-abc");
@@ -858,7 +858,7 @@ describe("StandaloneEvaluators", () => {
 
       assert.strictEqual(
         capturedUrl,
-        "https://api.traceloop.com/v2/evaluators/quality-judge/executions",
+        "https://api.traceloop.com/v2/evaluators/quality-judge/execute",
       );
     });
 

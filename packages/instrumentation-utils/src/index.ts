@@ -10,4 +10,6 @@ export {
   mapOpenAIContentBlock,
   mapBedrockContentBlock,
   mapGoogleGenAIContentBlock,
+  mapAiSdkContentPart,
+  mapAiSdkMessageContent,
 } from "./content-block-mappers";
