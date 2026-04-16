@@ -408,30 +408,29 @@ export class GenAIInstrumentation extends InstrumentationBase {
         attributes[SpanAttributes.GEN_AI_REQUEST_THINKING_BUDGET_TOKENS] =
           params.config.thinkingConfig.thinkingBudget;
 
-      // Tool definitions — structural metadata, not user content
-      if (params.config?.tools) {
-        const toolDefs = Array.isArray(params.config.tools)
-          ? params.config.tools
-          : [params.config.tools];
-        if (toolDefs.length > 0) {
-          attributes[ATTR_GEN_AI_TOOL_DEFINITIONS] = JSON.stringify(toolDefs);
-        }
-      }
-
-      // System instructions — static model config, not user content
-      if (params.config?.systemInstruction) {
-        const siParts = extractSystemInstructionParts(
-          params.config.systemInstruction,
-        );
-        if (siParts.length > 0) {
-          attributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS] = JSON.stringify(
-            siParts.map(mapGenAIContentBlock),
-          );
-        }
-      }
-
-      // Input messages — user data, gated by traceContent
+      // Tool definitions, system instructions, and input messages — all gated by
+      // traceContent (aligned with Python openllmetry repo).
       if (this._shouldSendPrompts()) {
+        if (params.config?.tools) {
+          const toolDefs = Array.isArray(params.config.tools)
+            ? params.config.tools
+            : [params.config.tools];
+          if (toolDefs.length > 0) {
+            attributes[ATTR_GEN_AI_TOOL_DEFINITIONS] = JSON.stringify(toolDefs);
+          }
+        }
+
+        if (params.config?.systemInstruction) {
+          const siParts = extractSystemInstructionParts(
+            params.config.systemInstruction,
+          );
+          if (siParts.length > 0) {
+            attributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS] = JSON.stringify(
+              siParts.map(mapGenAIContentBlock),
+            );
+          }
+        }
+
         if (params.contents) {
           const normalized = normalizeContents(params.contents);
           if (normalized.length > 0) {

@@ -1702,7 +1702,7 @@ describe("GenAIInstrumentation — OTel 1.40 attributes", () => {
       );
     });
 
-    it("sets gen_ai.tool.definitions even when traceContent is false", async () => {
+    it("does NOT set gen_ai.tool.definitions when traceContent is false", async () => {
       const instr = makeInstrumentation(false);
       const mockModule = makeMockGenAIModule({});
       instr.manuallyInstrument(
@@ -1723,14 +1723,13 @@ describe("GenAIInstrumentation — OTel 1.40 attributes", () => {
       });
 
       const span = memoryExporter.getFinishedSpans()[0];
-      const tools = JSON.parse(
-        span.attributes[ATTR_GEN_AI_TOOL_DEFINITIONS] as string,
+      assert.strictEqual(
+        span.attributes[ATTR_GEN_AI_TOOL_DEFINITIONS],
+        undefined,
       );
-      assert.ok(Array.isArray(tools));
-      assert.strictEqual(tools[0].functionDeclarations[0].name, "search");
     });
 
-    it("sets gen_ai.system_instructions even when traceContent is false", async () => {
+    it("does NOT set gen_ai.system_instructions when traceContent is false", async () => {
       const instr = makeInstrumentation(false);
       const mockModule = makeMockGenAIModule({});
       instr.manuallyInstrument(
@@ -1745,12 +1744,10 @@ describe("GenAIInstrumentation — OTel 1.40 attributes", () => {
       });
 
       const span = memoryExporter.getFinishedSpans()[0];
-      const si = JSON.parse(
-        span.attributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS] as string,
+      assert.strictEqual(
+        span.attributes[ATTR_GEN_AI_SYSTEM_INSTRUCTIONS],
+        undefined,
       );
-      assert.ok(Array.isArray(si));
-      assert.strictEqual(si[0].type, "text");
-      assert.strictEqual(si[0].content, "You are a concise assistant.");
     });
 
     it("still sets finish_reasons (metadata, not content)", async () => {
