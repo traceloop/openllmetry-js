@@ -1,0 +1,61 @@
+{
+  "name": "@traceloop/instrumentation-google-generativeai",
+  "version": "0.24.1",
+  "description": "Google Gen AI SDK Instrumentation",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "repository": "traceloop/openllmetry-js",
+  "scripts": {
+    "build": "rollup -c",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "ts-mocha -p tsconfig.test.json 'tests/**/*.test.ts' --timeout 20000"
+  },
+  "keywords": [
+    "opentelemetry",
+    "nodejs",
+    "tracing",
+    "attributes",
+    "semantic conventions",
+    "google",
+    "gemini",
+    "genai"
+  ],
+  "author": "Traceloop",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.mjs",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "doc",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/core": "^2.0.1",
+    "@opentelemetry/instrumentation": "^0.203.0",
+    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@traceloop/ai-semantic-conventions": "workspace:*",
+    "@traceloop/instrumentation-utils": "workspace:*",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@google/genai": "^1.50.1",
+    "@opentelemetry/context-async-hooks": "^2.0.1",
+    "@opentelemetry/sdk-trace-base": "^2.0.1",
+    "@opentelemetry/sdk-trace-node": "^2.0.1",
+    "@types/mocha": "^10.0.10",
+    "ts-mocha": "^11.1.0"
+  },
+  "homepage": "https://github.com/traceloop/openllmetry-js/tree/main/packages/instrumentation-google-generativeai"
+}

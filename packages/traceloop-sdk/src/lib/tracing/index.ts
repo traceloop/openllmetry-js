@@ -24,6 +24,7 @@ import { ChromaDBInstrumentation } from "@traceloop/instrumentation-chromadb";
 import { QdrantInstrumentation } from "@traceloop/instrumentation-qdrant";
 import { TogetherInstrumentation } from "@traceloop/instrumentation-together";
 import { McpInstrumentation } from "@traceloop/instrumentation-mcp";
+import { GenAIInstrumentation } from "@traceloop/instrumentation-google-generativeai";
 import {
   ALL_INSTRUMENTATION_LIBRARIES,
   createSpanProcessor,
@@ -46,6 +47,7 @@ let chromadbInstrumentation: ChromaDBInstrumentation | undefined;
 let qdrantInstrumentation: QdrantInstrumentation | undefined;
 let togetherInstrumentation: TogetherInstrumentation | undefined;
 let mcpInstrumentation: McpInstrumentation | undefined;
+let genaiInstrumentation: GenAIInstrumentation | undefined;
 
 const instrumentations: Instrumentation[] = [];
 
@@ -127,6 +129,9 @@ export const initInstrumentations = (apiKey?: string, baseUrl?: string) => {
 
   mcpInstrumentation = new McpInstrumentation({ exceptionLogger });
   instrumentations.push(mcpInstrumentation);
+
+  genaiInstrumentation = new GenAIInstrumentation({ exceptionLogger });
+  instrumentations.push(genaiInstrumentation);
 };
 
 export const manuallyInitInstrumentations = (
@@ -247,6 +252,12 @@ export const manuallyInitInstrumentations = (
     instrumentations.push(mcpInstrumentation);
     mcpInstrumentation.manuallyInstrument(instrumentModules.mcp);
   }
+
+  if (instrumentModules?.google_genai) {
+    genaiInstrumentation = new GenAIInstrumentation({ exceptionLogger });
+    instrumentations.push(genaiInstrumentation);
+    genaiInstrumentation.manuallyInstrument(instrumentModules.google_genai);
+  }
 };
 
 /**
@@ -292,6 +303,9 @@ export const startTracing = (options: InitializeOptions) => {
       traceContent: false,
     });
     togetherInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    genaiInstrumentation?.setConfig({
       traceContent: false,
     });
   }

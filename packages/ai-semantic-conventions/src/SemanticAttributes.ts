@@ -162,4 +162,5 @@ export const FinishReasons = {
   TOOL_CALL: "tool_call",
   CONTENT_FILTER: "content_filter",
   ERROR: "error",
+  FINISH_REASON_UNSPECIFIED: "",
 } as const;
