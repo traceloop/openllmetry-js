@@ -87,6 +87,7 @@ export * from "./tracing/association";
 export * from "./tracing/custom-metric";
 export * from "./tracing/span-processor";
 export * from "./prompts";
+export * from "./guardrail";
 export { AssociationProperty } from "./associations/associations";
 
 // Instrumentations are now initialized only when initialize() is called
