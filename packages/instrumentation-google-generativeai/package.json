@@ -1,6 +1,6 @@
 {
   "name": "@traceloop/instrumentation-google-generativeai",
-  "version": "0.24.1",
+  "version": "0.26.0",
   "description": "Google Gen AI SDK Instrumentation",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
