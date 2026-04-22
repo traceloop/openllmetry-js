@@ -473,6 +473,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             arguments: chunk.choices[0].delta.function_call.arguments,
           };
         }
+        if (chunk.usage) {
+          result.usage = chunk.usage;
+        }
         for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {
           if (
             (result.choices[0].message.tool_calls?.length ?? 0) <
@@ -515,7 +518,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         this._addLogProbsEvent(span, result.choices[0].logprobs);
       }
 
-      if (this._config.enrichTokens) {
+      if ((result.usage === undefined) && (this._config.enrichTokens)) {
         let promptTokens = 0;
         for (const message of params.messages) {
           promptTokens +=
