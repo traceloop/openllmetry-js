@@ -12,13 +12,24 @@ async function create_joke() {
   const responseStream = await traceloop.withTask(
     { name: "joke_creation" },
     () => {
-      return openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "user", content: "Tell me a joke about opentelemetry" },
-        ],
-        stream: true,
-      });
+      if (process.env.OPENAI_ENABLE_STREAMING_OPTION_USAGE === "true") {
+        return openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "user", content: "Tell me a joke about opentelemetry" },
+          ],
+          stream: true,
+          stream_options: { "include_usage": true },
+        });
+      } else {
+        return openai.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "user", content: "Tell me a joke about opentelemetry" },
+          ],
+          stream: true,
+        });
+      }
     },
   );
   let result = "";
