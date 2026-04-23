@@ -17,7 +17,6 @@
 
 export const SpanAttributes = {
   // Guardrail attributes (custom — not yet in OTel core spec)
-  // See guardrails-semconv-decisions.md for rationale (Option C hybrid)
 
   // Parent guardrail span (gen_ai.operation.name = "guardrail.run")
   GEN_AI_GUARDRAIL_NAME: "gen_ai.guardrail.name",
