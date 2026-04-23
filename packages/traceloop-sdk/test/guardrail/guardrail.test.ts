@@ -644,6 +644,7 @@ describe("Guardrails", () => {
   describe("AbortController timeout", () => {
     it("guard throws GuardExecutionError when API hangs past timeoutMs", async () => {
       // Fetch that hangs forever — simulates a slow/unresponsive API
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       global.fetch = (() => new Promise(() => {})) as typeof global.fetch;
 
       const toxGuard = toxicityGuard({ timeoutMs: 150 });
