@@ -1,8 +1,8 @@
 import { trace } from "@opentelemetry/api";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { getClient } from "../configuration";
 import { isTrue } from "./conditions";
 import { Guard } from "./model";
-import { GuardrailSpanAttributes } from "./span-attributes";
 
 export interface PrebuiltGuardOptions {
   /** Override the default pass/fail condition. Default: isTrue() */
@@ -32,8 +32,9 @@ const CONDITION_FIELDS = {
   IS_VALID_SQL:                "is_valid_sql",
   IS_VALID_REGEX:              "is_valid_regex",
 
-  // Similarity — boolean, true = similar enough
-  IS_SIMILAR:                  "is_similar",
+  // Similarity — numeric 0-1 score, pass when >= 0.7
+  // API returns "similarity_score" not "is_similar" — verified against staging 2026-04-22
+  SIMILARITY_SCORE:            "similarity_score",
 
   // Perplexity — boolean
   IS_VALID:                    "is_valid",
@@ -95,6 +96,7 @@ function createPrebuiltGuard(
       const response = await client.post(
         `/v2/guardrails/${encodeURIComponent(slug)}/execute`,
         body,
+        controller.signal,
       );
 
       if (!response.ok) {
@@ -127,7 +129,7 @@ function createPrebuiltGuard(
     const activeSpan = trace.getActiveSpan();
     if (activeSpan) {
       activeSpan.setAttribute(
-        GuardrailSpanAttributes.OUTPUT,
+        SpanAttributes.GEN_AI_GUARDRAIL_OUTPUT,
         JSON.stringify(result),
       );
     }
@@ -206,7 +208,13 @@ export function instructionAdherenceGuard(options?: PrebuiltGuardOptions): Guard
 }
 
 export function semanticSimilarityGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(GUARD_SLUGS.SEMANTIC_SIMILARITY, CONDITION_FIELDS.IS_SIMILAR, options);
+  // Returns similarity_score (0-1). Pass when score >= 0.7.
+  // Requires input fields: "text" (or "completion") + "reference".
+  // API returns "similarity_score" — verified against staging 2026-04-22.
+  return createPrebuiltGuard(GUARD_SLUGS.SEMANTIC_SIMILARITY, CONDITION_FIELDS.SIMILARITY_SCORE, {
+    ...options,
+    condition: options?.condition ?? ((v) => typeof v === "number" && v >= 0.7),
+  });
 }
 
 export function promptPerplexityGuard(options?: PrebuiltGuardOptions): Guard {
@@ -223,7 +231,11 @@ export function uncertaintyGuard(options?: PrebuiltGuardOptions): Guard {
 }
 
 export function toneDetectionGuard(options?: PrebuiltGuardOptions): Guard {
-  // Returns { tone: string, score: float }. Pass when score >= 0.5.
+  // Returns { tone: string, score: float } where score = confidence in the detected tone.
+  // Default condition (score >= 0.5) checks that a tone was confidently detected —
+  // it does NOT filter by tone type. Both positive and negative tones can score >= 0.5.
+  // To filter by specific tone, override condition: e.g. eq("joy"), eq("neutral").
+  // Verified against staging 2026-04-22.
   return createPrebuiltGuard(GUARD_SLUGS.TONE_DETECTION, CONDITION_FIELDS.TONE_SCORE, {
     ...options,
     condition: options?.condition ?? ((v) => typeof v === "number" && v >= 0.5),
@@ -291,23 +303,18 @@ export function customEvaluatorGuard(
       );
     }
 
-    // Step 2: Poll for result via stream URL
-    const baseUrl: string = (client as any).baseUrl;
-    const fullStreamUrl = `${baseUrl}/v2${streamUrl}`;
-    const apiKey: string = (client as any).apiKey;
-
+    // Step 2: Poll for result via stream URL using client.get() so auth headers
+    // are handled internally — no need to access private baseUrl/apiKey fields.
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     let resultData: Record<string, unknown>;
     try {
-      const resultResponse = await fetch(fullStreamUrl, {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          Accept: "application/json",
-          "Cache-Control": "no-cache",
-        },
-        signal: controller.signal,
+      // Accept: text/event-stream matches Python SDK behavior — server holds the
+      // connection open (blocking long-poll) until the LLM job completes, then
+      // returns the result as JSON and closes the connection.
+      const resultResponse = await client.get(`/v2${streamUrl}`, controller.signal, {
+        Accept: "text/event-stream",
       });
 
       if (!resultResponse.ok) {
@@ -342,7 +349,7 @@ export function customEvaluatorGuard(
     const activeSpan = trace.getActiveSpan();
     if (activeSpan) {
       activeSpan.setAttribute(
-        GuardrailSpanAttributes.OUTPUT,
+        SpanAttributes.GEN_AI_GUARDRAIL_OUTPUT,
         JSON.stringify(evaluatorResult),
       );
     }

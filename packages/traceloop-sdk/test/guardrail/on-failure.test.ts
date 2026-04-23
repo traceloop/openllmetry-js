@@ -50,15 +50,9 @@ describe("OnFailure", () => {
   describe("log()", () => {
     it("returns the original result", () => {
       const handler = OnFailure.log();
-      // Suppress console output during test
-      const warnOrig = console.warn;
-      console.warn = () => {};
-      try {
-        const result = handler(dummyGuardedResult);
-        assert.strictEqual(result, "some response");
-      } finally {
-        console.warn = warnOrig;
-      }
+      // diag is silent by default in tests (no logger registered) — no suppression needed
+      const result = handler(dummyGuardedResult);
+      assert.strictEqual(result, "some response");
     });
   });
 
@@ -99,14 +93,9 @@ describe("resolveOnFailure()", () => {
 
   it('"log" resolves to a function that returns original result', () => {
     const handler = resolveOnFailure("log");
-    const warnOrig = console.warn;
-    console.warn = () => {};
-    try {
-      const result = handler(dummyGuardedResult);
-      assert.strictEqual(result, "some response");
-    } finally {
-      console.warn = warnOrig;
-    }
+    // diag is silent by default in tests — no console suppression needed
+    const result = handler(dummyGuardedResult);
+    assert.strictEqual(result, "some response");
   });
 
   it('"ignore" resolves to noop', () => {

@@ -4,6 +4,7 @@ import {
   ATTR_GEN_AI_EVALUATION_NAME,
   ATTR_GEN_AI_EVALUATION_SCORE_LABEL,
 } from "@opentelemetry/semantic-conventions/incubating";
+import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { getTracer } from "../tracing/tracing";
 import { defaultInputMapper, resolveGuardInputs } from "./default-mapper";
 import {
@@ -14,7 +15,11 @@ import {
   InputMapper,
 } from "./model";
 import { OnFailureHandler, resolveOnFailure } from "./on-failure";
-import { GuardrailOperationNames, GuardrailSpanAttributes } from "./span-attributes";
+
+const GuardrailOperationNames = {
+  RUN: "guardrail.run",
+  GUARD: "guard",
+} as const;
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,18 +69,7 @@ export class Guardrails {
   private readonly _parallel: boolean;
   private readonly _inputMapper?: InputMapper;
 
-  constructor(...args: (Guard | GuardrailsOptions)[]) {
-    const guards: Guard[] = [];
-    let options: GuardrailsOptions = {};
-
-    for (const arg of args) {
-      if (typeof arg === "function") {
-        guards.push(arg as Guard);
-      } else if (arg !== null && typeof arg === "object") {
-        options = arg as GuardrailsOptions;
-      }
-    }
-
+  constructor(options: GuardrailsOptions, guards: Guard[]) {
     this.guards = guards;
     this._onFailure = resolveOnFailure(options.onFailure ?? "raise");
     this._name = options.name ?? "";
@@ -124,7 +118,6 @@ export class Guardrails {
 
   private _clone(overrides: Partial<GuardrailsOptions>): Guardrails {
     return new Guardrails(
-      ...this.guards,
       {
         onFailure: this._onFailure,
         name: this._name,
@@ -133,6 +126,7 @@ export class Guardrails {
         inputMapper: this._inputMapper,
         ...overrides,
       },
+      this.guards,
     );
   }
 
@@ -172,8 +166,8 @@ export class Guardrails {
       {
         attributes: {
           [ATTR_GEN_AI_OPERATION_NAME]: GuardrailOperationNames.RUN,
-          [GuardrailSpanAttributes.NAME]: this._name,
-          [GuardrailSpanAttributes.GUARD_COUNT]: this.guards.length,
+          [SpanAttributes.GEN_AI_GUARDRAIL_NAME]: this._name,
+          [SpanAttributes.GEN_AI_GUARDRAIL_GUARD_COUNT]: this.guards.length,
         },
       },
       parentContext,
@@ -190,16 +184,15 @@ export class Guardrails {
       const executionErrors = guardResults.filter((r) => r.error);
 
       guardrailSpan.setAttributes({
-        [GuardrailSpanAttributes.STATUS]: failedResults.length === 0 ? "PASSED" : "FAILED",
-        [GuardrailSpanAttributes.DURATION]: Math.round(duration),
-        [GuardrailSpanAttributes.FAILED_GUARD_COUNT]: failedResults.length,
+        [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]: failedResults.length === 0 ? "PASSED" : "FAILED",
+        [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
+        [SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT]: failedResults.length,
       });
-
-      guardrailSpan.end();
 
       // Guard threw an unexpected exception
       if (executionErrors.length > 0) {
         const first = executionErrors[0];
+        guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
         throw new GuardExecutionError(
           first.error!,
           guardInputs[first.index],
@@ -217,8 +210,9 @@ export class Guardrails {
       return this._onFailure(guardedResult) as T;
     } catch (err) {
       guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
-      guardrailSpan.end();
       throw err;
+    } finally {
+      guardrailSpan.end();
     }
   }
 
@@ -227,7 +221,7 @@ export class Guardrails {
   async validate(
     guardInputs: Record<string, unknown>[],
     onFailure?: string | OnFailureHandler,
-  ): Promise<boolean> {
+  ): Promise<GuardResult[]> {
     const parentContext = context.active();
     const guardNames = this.guards.map(
       (g, i) => (g as any).guardName ?? `guard_${i}`,
@@ -243,8 +237,8 @@ export class Guardrails {
       {
         attributes: {
           [ATTR_GEN_AI_OPERATION_NAME]: GuardrailOperationNames.RUN,
-          [GuardrailSpanAttributes.NAME]: this._name,
-          [GuardrailSpanAttributes.GUARD_COUNT]: this.guards.length,
+          [SpanAttributes.GEN_AI_GUARDRAIL_NAME]: this._name,
+          [SpanAttributes.GEN_AI_GUARDRAIL_GUARD_COUNT]: this.guards.length,
         },
       },
       parentContext,
@@ -260,17 +254,22 @@ export class Guardrails {
       const failedResults = guardResults.filter((r) => !r.passed);
 
       guardrailSpan.setAttributes({
-        [GuardrailSpanAttributes.STATUS]: failedResults.length === 0 ? "PASSED" : "FAILED",
-        [GuardrailSpanAttributes.DURATION]: Math.round(duration),
-        [GuardrailSpanAttributes.FAILED_GUARD_COUNT]: failedResults.length,
+        [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]: failedResults.length === 0 ? "PASSED" : "FAILED",
+        [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
+        [SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT]: failedResults.length,
       });
 
-      guardrailSpan.end();
-      return failedResults.length === 0;
+      return guardResults.map((r) => ({
+        name: r.name,
+        passed: r.passed,
+        duration: r.duration,
+        ...(r.error ? { error: r.error } : {}),
+      }));
     } catch (err) {
       guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
-      guardrailSpan.end();
       throw err;
+    } finally {
+      guardrailSpan.end();
     }
   }
 
@@ -339,9 +338,9 @@ export class Guardrails {
       {
         attributes: {
           [ATTR_GEN_AI_OPERATION_NAME]: GuardrailOperationNames.GUARD,
-          [GuardrailSpanAttributes.NAME]: name,
+          [SpanAttributes.GEN_AI_GUARDRAIL_NAME]: name,
           [ATTR_GEN_AI_EVALUATION_NAME]: name,
-          [GuardrailSpanAttributes.INPUT]: JSON.stringify(input),
+          [SpanAttributes.GEN_AI_GUARDRAIL_INPUT]: JSON.stringify(input),
         },
       },
       parentContext,
@@ -355,9 +354,9 @@ export class Guardrails {
       const duration = performance.now() - startTime;
 
       guardSpan.setAttributes({
-        [GuardrailSpanAttributes.STATUS]: passed ? "PASSED" : "FAILED",
+        [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]: passed ? "PASSED" : "FAILED",
         [ATTR_GEN_AI_EVALUATION_SCORE_LABEL]: passed ? "PASSED" : "FAILED",
-        [GuardrailSpanAttributes.DURATION]: Math.round(duration),
+        [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
       });
       guardSpan.end();
 
@@ -367,10 +366,10 @@ export class Guardrails {
       const err = error instanceof Error ? error : new Error(String(error));
 
       guardSpan.setAttributes({
-        [GuardrailSpanAttributes.STATUS]: "FAILED",
-        [GuardrailSpanAttributes.DURATION]: Math.round(duration),
-        [GuardrailSpanAttributes.ERROR_TYPE]: err.constructor.name,
-        [GuardrailSpanAttributes.ERROR_MESSAGE]: err.message,
+        [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]: "FAILED",
+        [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
+        [SpanAttributes.GEN_AI_GUARDRAIL_ERROR_TYPE]: err.constructor.name,
+        [SpanAttributes.GEN_AI_GUARDRAIL_ERROR_MESSAGE]: err.message,
       });
       guardSpan.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
       guardSpan.recordException(err);
@@ -397,7 +396,7 @@ export function guard<A extends unknown[], R>(
   guards: Guard[],
   options?: GuardOptions,
 ): (...args: A) => Promise<R> {
-  const g = new Guardrails(...guards, options ?? {});
+  const g = new Guardrails(options ?? {}, guards);
   return (...args: A) => g.run(fn as (...args: unknown[]) => Promise<R>, ...args);
 }
 
@@ -417,11 +416,13 @@ export async function validate(
   guards: Guard[],
   options?: ValidateOptions,
 ): Promise<ValidateResult> {
-  const g = new Guardrails(...guards, options ?? {});
+  const g = new Guardrails(options ?? {}, guards);
   const guardInputs = defaultInputMapper(output, guards.length);
-  // Delegates to Guardrails.validate() which handles spans internally
-  const passed = await g.validate(guardInputs, options?.onFailure);
-  return { passed, results: [] };
+  const results = await g.validate(guardInputs, options?.onFailure);
+  return {
+    passed: results.every((r) => r.passed),
+    results,
+  };
 }
 
 // ── Tier 4: @guardrail decorator ──────────────────────────────────────────────
@@ -447,7 +448,7 @@ export function guardrail(
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {
-      const g = new Guardrails(...guards, options ?? {});
+      const g = new Guardrails(options ?? {}, guards);
       return g.run(
         (...innerArgs: unknown[]) => originalMethod.apply(this, innerArgs),
         ...args,

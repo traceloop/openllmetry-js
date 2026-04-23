@@ -1,3 +1,4 @@
+import { diag } from "@opentelemetry/api";
 import { GuardedResult, GuardValidationError } from "./model";
 
 export type OnFailureHandler = (output: GuardedResult) => unknown;
@@ -21,9 +22,9 @@ export const OnFailure = {
     return (output: GuardedResult) => {
       const msg = message ?? "Guardrail failed — returning original result.";
       if (level === "error") {
-        console.error(msg, { result: output.result });
+        diag.error(msg, { result: output.result });
       } else {
-        console.warn(msg, { result: output.result });
+        diag.warn(msg, { result: output.result });
       }
       return output.result;
     };

@@ -50,7 +50,7 @@ export class TraceloopClient {
     this.evaluator = new Evaluator(this);
   }
 
-  async post(path: string, body: Record<string, unknown> | any) {
+  async post(path: string, body: Record<string, unknown> | any, signal?: AbortSignal) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: {
@@ -59,16 +59,19 @@ export class TraceloopClient {
         "X-Traceloop-SDK-Version": this.version,
       },
       body: JSON.stringify(body),
+      signal,
     });
   }
 
-  async get(path: string) {
+  async get(path: string, signal?: AbortSignal, extraHeaders?: Record<string, string>) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         "X-Traceloop-SDK-Version": this.version,
+        ...extraHeaders,
       },
+      signal,
     });
   }
 

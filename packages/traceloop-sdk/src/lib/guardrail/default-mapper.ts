@@ -13,12 +13,11 @@ export function defaultInputMapper(
   numGuards: number,
 ): Record<string, unknown>[] {
   if (typeof output === "string") {
-    const mapped: Record<string, unknown> = {
+    return Array.from({ length: numGuards }, () => ({
       text: output,
       prompt: output,
       completion: output,
-    };
-    return Array(numGuards).fill(mapped);
+    }));
   }
 
   if (output !== null && typeof output === "object" && !Array.isArray(output)) {
@@ -35,7 +34,7 @@ export function defaultInputMapper(
       }
     }
 
-    return Array(numGuards).fill(enriched);
+    return Array.from({ length: numGuards }, () => ({ ...enriched }));
   }
 
   throw new Error(
