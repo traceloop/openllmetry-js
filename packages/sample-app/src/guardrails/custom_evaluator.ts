@@ -55,7 +55,8 @@ import {
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const EVALUATOR_SLUG = "custom-test";
-const FALLBACK = "I can only help with physics questions. Please ask something related to physics.";
+const FALLBACK =
+  "I can only help with physics questions. Please ask something related to physics.";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -64,10 +65,18 @@ function sep(title: string) {
   console.log(`  ${title}`);
   console.log(`${"─".repeat(60)}`);
 }
-function ok(msg: string)     { console.log(`  ✅  ${msg}`); }
-function blocked(msg: string){ console.log(`  🚫  ${msg}`); }
-function info(msg: string)   { console.log(`  ℹ️   ${msg}`); }
-function edge(msg: string)   { console.log(`  ❓  ${msg}`); }
+function ok(msg: string) {
+  console.log(`  ✅  ${msg}`);
+}
+function blocked(msg: string) {
+  console.log(`  🚫  ${msg}`);
+}
+function info(msg: string) {
+  console.log(`  ℹ️   ${msg}`);
+}
+function edge(msg: string) {
+  console.log(`  ❓  ${msg}`);
+}
 
 // ── Guard instance ────────────────────────────────────────────────────────────
 //
@@ -121,7 +130,9 @@ async function runCase(
       ok(`Guard passed — response returned to user.`);
       info(`Evaluator duration: ${Math.round(duration)}ms`);
     } else if (!passed && !expectBlocked) {
-      console.log(`  ⚠️   Guard fired unexpectedly — response was blocked but shouldn't have been.`);
+      console.log(
+        `  ⚠️   Guard fired unexpectedly — response was blocked but shouldn't have been.`,
+      );
       info(`Evaluator duration: ${Math.round(duration)}ms`);
     } else {
       console.log(`  ⚠️   Guard passed but response should have been blocked.`);
@@ -139,16 +150,23 @@ async function main(): Promise<void> {
   console.log(`\n${"═".repeat(60)}`);
   console.log("  PHYSICS EDUCATION APP — TOPIC GUARDRAIL TEST");
   console.log(`  Evaluator: ${EVALUATOR_SLUG}`);
-  console.log(`  Backend:   ${process.env.TRACELOOP_BASE_URL ?? "https://api.traceloop.com"}`);
+  console.log(
+    `  Backend:   ${process.env.TRACELOOP_BASE_URL ?? "https://api.traceloop.com"}`,
+  );
   console.log(`${"═".repeat(60)}`);
-  console.log("\n  Scenario: educational app that only answers physics questions.");
-  console.log("  Guard blocks any LLM response that doesn't contain physics content.");
-  console.log("  Each case invokes a real LLM judge — expect ~2-5s per case.\n");
+  console.log(
+    "\n  Scenario: educational app that only answers physics questions.",
+  );
+  console.log(
+    "  Guard blocks any LLM response that doesn't contain physics content.",
+  );
+  console.log(
+    "  Each case invokes a real LLM judge — expect ~2-5s per case.\n",
+  );
 
   await traceloop.withWorkflow(
     { name: "physics-guardrail-test-workflow" },
     async () => {
-
       // ── Case 1: on-topic physics response ──────────────────────────────────
       // The LLM answered a physics question correctly.
       // Evaluator returns isValid=true → guard passes → response returned to user.
@@ -156,20 +174,22 @@ async function main(): Promise<void> {
       await runCase(
         "physics",
         "Newton's second law states that F = ma, where F is the net force acting on " +
-        "an object, m is its mass, and a is its acceleration. This fundamental principle " +
-        "of classical mechanics explains how objects move under applied forces.",
+          "an object, m is its mass, and a is its acceleration. This fundamental principle " +
+          "of classical mechanics explains how objects move under applied forces.",
         false, // expectBlocked = false → should pass
       );
 
       // ── Case 2: off-topic response ─────────────────────────────────────────
       // The user asked "what's a good dinner recipe?" and the LLM answered.
       // Evaluator returns isValid=false → guard fires → fallback shown instead.
-      sep("CASE 2 — Off-topic response (pasta recipe) → guard blocks → fallback shown");
+      sep(
+        "CASE 2 — Off-topic response (pasta recipe) → guard blocks → fallback shown",
+      );
       await runCase(
         "off-topic",
         "The best pasta recipe uses fresh tomatoes, basil, and garlic. " +
-        "Simmer the sauce for 20 minutes before serving over al dente spaghetti. " +
-        "Season generously with salt and pepper.",
+          "Simmer the sauce for 20 minutes before serving over al dente spaghetti. " +
+          "Season generously with salt and pepper.",
         true, // expectBlocked = true → should fire
       );
 
@@ -179,22 +199,29 @@ async function main(): Promise<void> {
       // correctly ignores non-scientific uses of physics terminology.
       sep("CASE 3 — Borderline: motivational speech using physics vocabulary");
       info("Testing evaluator judgment — should classify this as NOT physics");
-      info("(evaluator system prompt says: ignore metaphorical uses of physics terms)");
-      const results = await g.validate([{
-        llm_response:
-          "You have the energy and force of character to overcome any obstacle. " +
-          "Channel your inner momentum and never lose velocity on your journey to success. " +
-          "The gravity of your ambition will pull opportunities toward you.",
-      }]);
+      info(
+        "(evaluator system prompt says: ignore metaphorical uses of physics terms)",
+      );
+      const results = await g.validate([
+        {
+          llm_response:
+            "You have the energy and force of character to overcome any obstacle. " +
+            "Channel your inner momentum and never lose velocity on your journey to success. " +
+            "The gravity of your ambition will pull opportunities toward you.",
+        },
+      ]);
       const passed = results.every((r) => r.passed);
       const duration = Math.round(results[0]?.duration ?? 0);
       if (!passed) {
-        edge(`Guard fired — evaluator correctly identified this as non-physics. (${duration}ms)`);
+        edge(
+          `Guard fired — evaluator correctly identified this as non-physics. (${duration}ms)`,
+        );
       } else {
-        edge(`Guard passed — evaluator treated motivational physics metaphors as real physics. (${duration}ms)`);
+        edge(
+          `Guard passed — evaluator treated motivational physics metaphors as real physics. (${duration}ms)`,
+        );
         edge(`This may indicate the evaluator needs a stronger system prompt.`);
       }
-
     },
   );
 

@@ -20,49 +20,49 @@ export interface PrebuiltGuardOptions {
 
 const CONDITION_FIELDS = {
   // Safety detectors — boolean, true = content is safe
-  IS_SAFE:                     "is_safe",
+  IS_SAFE: "is_safe",
 
   // Detection guards — boolean, false = nothing detected (pass)
-  HAS_PII:                     "has_pii",
-  HAS_SECRET:                  "has_secret",        // Note: no trailing 's'
-  HAS_INJECTION:               "has_injection",
+  HAS_PII: "has_pii",
+  HAS_SECRET: "has_secret", // Note: no trailing 's'
+  HAS_INJECTION: "has_injection",
 
   // Format validators — boolean, true = content is valid
-  IS_VALID_JSON:               "is_valid_json",
-  IS_VALID_SQL:                "is_valid_sql",
-  IS_VALID_REGEX:              "is_valid_regex",
+  IS_VALID_JSON: "is_valid_json",
+  IS_VALID_SQL: "is_valid_sql",
+  IS_VALID_REGEX: "is_valid_regex",
 
   // Similarity — numeric 0-1 score, pass when >= 0.7
   // API returns "similarity_score" not "is_similar" — verified against staging 2026-04-22
-  SIMILARITY_SCORE:            "similarity_score",
+  SIMILARITY_SCORE: "similarity_score",
 
   // Perplexity — boolean
-  IS_VALID:                    "is_valid",
+  IS_VALID: "is_valid",
 
   // Quality — numeric scores
   INSTRUCTION_ADHERENCE_SCORE: "instruction_adherence_score", // 0-1, pass >= 0.5
-  UNCERTAINTY:                 "uncertainty",                 // 0-1, pass < 0.5 (inverted)
-  TONE_SCORE:                  "score",                       // 0-1, pass >= 0.5
+  UNCERTAINTY: "uncertainty", // 0-1, pass < 0.5 (inverted)
+  TONE_SCORE: "score", // 0-1, pass >= 0.5
 } as const;
 
 // ── Guard slugs ───────────────────────────────────────────────────────────────
 // The evaluator slug used in POST /v2/guardrails/{slug}/execute
 
 const GUARD_SLUGS = {
-  TOXICITY:              "toxicity-detector",
-  PII:                   "pii-detector",
-  SECRETS:               "secrets-detector",
-  PROMPT_INJECTION:      "prompt-injection",
-  PROFANITY:             "profanity-detector",
-  SEXISM:                "sexism-detector",
-  JSON_VALIDATOR:        "json-validator",
-  SQL_VALIDATOR:         "sql-validator",
-  REGEX_VALIDATOR:       "regex-validator",
+  TOXICITY: "toxicity-detector",
+  PII: "pii-detector",
+  SECRETS: "secrets-detector",
+  PROMPT_INJECTION: "prompt-injection",
+  PROFANITY: "profanity-detector",
+  SEXISM: "sexism-detector",
+  JSON_VALIDATOR: "json-validator",
+  SQL_VALIDATOR: "sql-validator",
+  REGEX_VALIDATOR: "regex-validator",
   INSTRUCTION_ADHERENCE: "instruction-adherence",
-  SEMANTIC_SIMILARITY:   "semantic-similarity",
-  PROMPT_PERPLEXITY:     "prompt-perplexity",
-  UNCERTAINTY:           "uncertainty-detector",
-  TONE_DETECTION:        "tone-detection",
+  SEMANTIC_SIMILARITY: "semantic-similarity",
+  PROMPT_PERPLEXITY: "prompt-perplexity",
+  UNCERTAINTY: "uncertainty-detector",
+  TONE_DETECTION: "tone-detection",
 } as const;
 
 // ── Internal factory ──────────────────────────────────────────────────────────
@@ -101,9 +101,7 @@ function createPrebuiltGuard(
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
-        throw new Error(
-          `Guardrail API returned ${response.status}: ${text}`,
-        );
+        throw new Error(`Guardrail API returned ${response.status}: ${text}`);
       }
 
       data = await response.json();
@@ -145,7 +143,11 @@ function createPrebuiltGuard(
 // ── Pre-built guard factories ────────────────────────────────────────────────
 
 export function toxicityGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(GUARD_SLUGS.TOXICITY, CONDITION_FIELDS.IS_SAFE, options);
+  return createPrebuiltGuard(
+    GUARD_SLUGS.TOXICITY,
+    CONDITION_FIELDS.IS_SAFE,
+    options,
+  );
 }
 
 export function piiGuard(options?: PrebuiltGuardOptions): Guard {
@@ -167,34 +169,60 @@ export function secretsGuard(options?: PrebuiltGuardOptions): Guard {
 export function promptInjectionGuard(options?: PrebuiltGuardOptions): Guard {
   // Passes when injection is NOT detected (has_injection === false)
   // API requires input field "prompt" — default mapper always includes it.
-  return createPrebuiltGuard(GUARD_SLUGS.PROMPT_INJECTION, CONDITION_FIELDS.HAS_INJECTION, {
-    ...options,
-    condition: options?.condition ?? ((v) => v === false),
-  });
+  return createPrebuiltGuard(
+    GUARD_SLUGS.PROMPT_INJECTION,
+    CONDITION_FIELDS.HAS_INJECTION,
+    {
+      ...options,
+      condition: options?.condition ?? ((v) => v === false),
+    },
+  );
 }
 
 export function profanityGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(GUARD_SLUGS.PROFANITY, CONDITION_FIELDS.IS_SAFE, options);
+  return createPrebuiltGuard(
+    GUARD_SLUGS.PROFANITY,
+    CONDITION_FIELDS.IS_SAFE,
+    options,
+  );
 }
 
 export function sexismGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(GUARD_SLUGS.SEXISM, CONDITION_FIELDS.IS_SAFE, options);
+  return createPrebuiltGuard(
+    GUARD_SLUGS.SEXISM,
+    CONDITION_FIELDS.IS_SAFE,
+    options,
+  );
 }
 
 export function jsonValidatorGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(GUARD_SLUGS.JSON_VALIDATOR, CONDITION_FIELDS.IS_VALID_JSON, options);
+  return createPrebuiltGuard(
+    GUARD_SLUGS.JSON_VALIDATOR,
+    CONDITION_FIELDS.IS_VALID_JSON,
+    options,
+  );
 }
 
 export function sqlValidatorGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(GUARD_SLUGS.SQL_VALIDATOR, CONDITION_FIELDS.IS_VALID_SQL, options);
+  return createPrebuiltGuard(
+    GUARD_SLUGS.SQL_VALIDATOR,
+    CONDITION_FIELDS.IS_VALID_SQL,
+    options,
+  );
 }
 
 export function regexValidatorGuard(options?: PrebuiltGuardOptions): Guard {
   // Config: { regex: string, should_match?: boolean, case_sensitive?: boolean, ... }
-  return createPrebuiltGuard(GUARD_SLUGS.REGEX_VALIDATOR, CONDITION_FIELDS.IS_VALID_REGEX, options);
+  return createPrebuiltGuard(
+    GUARD_SLUGS.REGEX_VALIDATOR,
+    CONDITION_FIELDS.IS_VALID_REGEX,
+    options,
+  );
 }
 
-export function instructionAdherenceGuard(options?: PrebuiltGuardOptions): Guard {
+export function instructionAdherenceGuard(
+  options?: PrebuiltGuardOptions,
+): Guard {
   // Returns a 0-1 score. Pass when score >= 0.5.
   // Requires input fields: "instructions" + "response".
   return createPrebuiltGuard(
@@ -202,7 +230,8 @@ export function instructionAdherenceGuard(options?: PrebuiltGuardOptions): Guard
     CONDITION_FIELDS.INSTRUCTION_ADHERENCE_SCORE,
     {
       ...options,
-      condition: options?.condition ?? ((v) => typeof v === "number" && v >= 0.5),
+      condition:
+        options?.condition ?? ((v) => typeof v === "number" && v >= 0.5),
     },
   );
 }
@@ -211,23 +240,37 @@ export function semanticSimilarityGuard(options?: PrebuiltGuardOptions): Guard {
   // Returns similarity_score (0-1). Pass when score >= 0.7.
   // Requires input fields: "text" (or "completion") + "reference".
   // API returns "similarity_score" — verified against staging 2026-04-22.
-  return createPrebuiltGuard(GUARD_SLUGS.SEMANTIC_SIMILARITY, CONDITION_FIELDS.SIMILARITY_SCORE, {
-    ...options,
-    condition: options?.condition ?? ((v) => typeof v === "number" && v >= 0.7),
-  });
+  return createPrebuiltGuard(
+    GUARD_SLUGS.SEMANTIC_SIMILARITY,
+    CONDITION_FIELDS.SIMILARITY_SCORE,
+    {
+      ...options,
+      condition:
+        options?.condition ?? ((v) => typeof v === "number" && v >= 0.7),
+    },
+  );
 }
 
 export function promptPerplexityGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(GUARD_SLUGS.PROMPT_PERPLEXITY, CONDITION_FIELDS.IS_VALID, options);
+  return createPrebuiltGuard(
+    GUARD_SLUGS.PROMPT_PERPLEXITY,
+    CONDITION_FIELDS.IS_VALID,
+    options,
+  );
 }
 
 export function uncertaintyGuard(options?: PrebuiltGuardOptions): Guard {
   // Returns a 0-1 uncertainty score. Pass when uncertainty is LOW (< 0.5).
   // Requires input fields: "prompt" + "completion".
-  return createPrebuiltGuard(GUARD_SLUGS.UNCERTAINTY, CONDITION_FIELDS.UNCERTAINTY, {
-    ...options,
-    condition: options?.condition ?? ((v) => typeof v === "number" && v < 0.5),
-  });
+  return createPrebuiltGuard(
+    GUARD_SLUGS.UNCERTAINTY,
+    CONDITION_FIELDS.UNCERTAINTY,
+    {
+      ...options,
+      condition:
+        options?.condition ?? ((v) => typeof v === "number" && v < 0.5),
+    },
+  );
 }
 
 export function toneDetectionGuard(options?: PrebuiltGuardOptions): Guard {
@@ -236,10 +279,15 @@ export function toneDetectionGuard(options?: PrebuiltGuardOptions): Guard {
   // it does NOT filter by tone type. Both positive and negative tones can score >= 0.5.
   // To filter by specific tone, override condition: e.g. eq("joy"), eq("neutral").
   // Verified against staging 2026-04-22.
-  return createPrebuiltGuard(GUARD_SLUGS.TONE_DETECTION, CONDITION_FIELDS.TONE_SCORE, {
-    ...options,
-    condition: options?.condition ?? ((v) => typeof v === "number" && v >= 0.5),
-  });
+  return createPrebuiltGuard(
+    GUARD_SLUGS.TONE_DETECTION,
+    CONDITION_FIELDS.TONE_SCORE,
+    {
+      ...options,
+      condition:
+        options?.condition ?? ((v) => typeof v === "number" && v >= 0.5),
+    },
+  );
 }
 
 // ── Custom evaluator guard ───────────────────────────────────────────────────
@@ -294,7 +342,8 @@ export function customEvaluatorGuard(
     }
 
     const triggerData = await triggerResponse.json();
-    const executionId: string = triggerData.executionId ?? triggerData.execution_id;
+    const executionId: string =
+      triggerData.executionId ?? triggerData.execution_id;
     const streamUrl: string = triggerData.streamUrl ?? triggerData.stream_url;
 
     if (!executionId || !streamUrl) {
@@ -313,9 +362,13 @@ export function customEvaluatorGuard(
       // Accept: text/event-stream matches Python SDK behavior — server holds the
       // connection open (blocking long-poll) until the LLM job completes, then
       // returns the result as JSON and closes the connection.
-      const resultResponse = await client.get(`/v2${streamUrl}`, controller.signal, {
-        Accept: "text/event-stream",
-      });
+      const resultResponse = await client.get(
+        `/v2${streamUrl}`,
+        controller.signal,
+        {
+          Accept: "text/event-stream",
+        },
+      );
 
       if (!resultResponse.ok) {
         const text = await resultResponse.text().catch(() => "");

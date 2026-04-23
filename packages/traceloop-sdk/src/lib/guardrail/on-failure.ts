@@ -18,7 +18,7 @@ export const OnFailure = {
   },
 
   /** Log a warning and return the original result unchanged. */
-  log(level: string = "warn", message?: string): OnFailureHandler {
+  log(level = "warn", message?: string): OnFailureHandler {
     return (output: GuardedResult) => {
       const msg = message ?? "Guardrail failed — returning original result.";
       if (level === "error") {

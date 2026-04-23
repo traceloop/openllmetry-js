@@ -48,7 +48,10 @@ describe("defaultInputMapper", () => {
     });
 
     it("does not overwrite existing keys with synonyms", () => {
-      const result = defaultInputMapper({ text: "text val", completion: "completion val" }, 1);
+      const result = defaultInputMapper(
+        { text: "text val", completion: "completion val" },
+        1,
+      );
       assert.strictEqual(result[0].text, "text val");
       assert.strictEqual(result[0].completion, "completion val");
     });
@@ -92,7 +95,12 @@ describe("resolveGuardInputs", () => {
       { text: text as string },
       { prompt: text as string },
     ];
-    const result = resolveGuardInputs("hello", 2, guardNames, inputMapper as any);
+    const result = resolveGuardInputs(
+      "hello",
+      2,
+      guardNames,
+      inputMapper as any,
+    );
     assert.strictEqual(result[0].text, "hello");
     assert.strictEqual(result[1].prompt, "hello");
     assert.strictEqual(result[1].text, undefined);
@@ -103,7 +111,12 @@ describe("resolveGuardInputs", () => {
       "toxicity-detector": { text: text as string },
       "pii-detector": { content: text as string },
     });
-    const result = resolveGuardInputs("hello", 2, guardNames, inputMapper as any);
+    const result = resolveGuardInputs(
+      "hello",
+      2,
+      guardNames,
+      inputMapper as any,
+    );
     assert.strictEqual(result[0].text, "hello");
     assert.strictEqual(result[1].content, "hello");
   });

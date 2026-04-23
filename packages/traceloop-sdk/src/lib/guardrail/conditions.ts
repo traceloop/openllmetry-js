@@ -20,7 +20,7 @@ export function isTruthy(): (v: unknown) => boolean {
 
 /** Pass if value is falsy (loose). */
 export function isFalsy(): (v: unknown) => boolean {
-  return (v) => !Boolean(v);
+  return (v) => !v;
 }
 
 function toNum(v: unknown): number | null {
@@ -31,27 +31,42 @@ function toNum(v: unknown): number | null {
 
 /** Pass if value > n. Returns false for null/undefined/NaN. */
 export function gt(n: number): (v: unknown) => boolean {
-  return (v) => { const num = toNum(v); return num !== null && num > n; };
+  return (v) => {
+    const num = toNum(v);
+    return num !== null && num > n;
+  };
 }
 
 /** Pass if value < n. Returns false for null/undefined/NaN. */
 export function lt(n: number): (v: unknown) => boolean {
-  return (v) => { const num = toNum(v); return num !== null && num < n; };
+  return (v) => {
+    const num = toNum(v);
+    return num !== null && num < n;
+  };
 }
 
 /** Pass if value >= n. Returns false for null/undefined/NaN. */
 export function gte(n: number): (v: unknown) => boolean {
-  return (v) => { const num = toNum(v); return num !== null && num >= n; };
+  return (v) => {
+    const num = toNum(v);
+    return num !== null && num >= n;
+  };
 }
 
 /** Pass if value <= n. Returns false for null/undefined/NaN. */
 export function lte(n: number): (v: unknown) => boolean {
-  return (v) => { const num = toNum(v); return num !== null && num <= n; };
+  return (v) => {
+    const num = toNum(v);
+    return num !== null && num <= n;
+  };
 }
 
 /** Pass if min <= value <= max (inclusive). Returns false for null/undefined/NaN. */
 export function between(min: number, max: number): (v: unknown) => boolean {
-  return (v) => { const num = toNum(v); return num !== null && num >= min && num <= max; };
+  return (v) => {
+    const num = toNum(v);
+    return num !== null && num >= min && num <= max;
+  };
 }
 
 /** Pass if value === expected (strict equality). Works for any type. */

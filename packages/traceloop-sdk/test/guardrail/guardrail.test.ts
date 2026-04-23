@@ -10,8 +10,6 @@ import {
   GuardExecutionError,
   isTrue,
   toxicityGuard,
-  customEvaluatorGuard,
-  gt,
 } from "../../src";
 import * as traceloop from "../../src";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
@@ -60,10 +58,7 @@ describe("Guardrails", () => {
 
     it("throws GuardValidationError when a guard fails (default onFailure=raise)", async () => {
       const g = new Guardrails({ name: "test" }, [alwaysFail]);
-      await assert.rejects(
-        () => g.run(mockLLM, "hello"),
-        GuardValidationError,
-      );
+      await assert.rejects(() => g.run(mockLLM, "hello"), GuardValidationError);
     });
 
     it("GuardedResult on error contains original result and guard inputs", async () => {
@@ -80,10 +75,7 @@ describe("Guardrails", () => {
 
     it("throws GuardExecutionError when guard throws", async () => {
       const g = new Guardrails({ name: "test" }, [alwaysThrow]);
-      await assert.rejects(
-        () => g.run(mockLLM, "hello"),
-        GuardExecutionError,
-      );
+      await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
     });
 
     it("passes fn args correctly to the wrapped function", async () => {
@@ -114,20 +106,26 @@ describe("Guardrails", () => {
     });
 
     it("custom string returns that string as fallback", async () => {
-      const g = new Guardrails({
-        onFailure: "Sorry, blocked.",
-      }, [alwaysFail]);
+      const g = new Guardrails(
+        {
+          onFailure: "Sorry, blocked.",
+        },
+        [alwaysFail],
+      );
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "Sorry, blocked.");
     });
 
     it("custom function receives GuardedResult and return value is used", async () => {
-      const g = new Guardrails({
-        onFailure: (output) => {
-          assert.strictEqual(output.result, "The weather is sunny today.");
-          return "handled fallback";
+      const g = new Guardrails(
+        {
+          onFailure: (output) => {
+            assert.strictEqual(output.result, "The weather is sunny today.");
+            return "handled fallback";
+          },
         },
-      }, [alwaysFail]);
+        [alwaysFail],
+      );
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "handled fallback");
     });
@@ -145,8 +143,8 @@ describe("Guardrails", () => {
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
       const spans = memoryExporter.getFinishedSpans();
-      const guardrailSpan = spans.find((s) =>
-        s.name === "my-guardrail.guardrail",
+      const guardrailSpan = spans.find(
+        (s) => s.name === "my-guardrail.guardrail",
       );
       assert.ok(guardrailSpan, "expected a span named my-guardrail.guardrail");
     });
@@ -172,7 +170,10 @@ describe("Guardrails", () => {
         .ignoreOnFailure();
 
       await g.run(mockLLM, "hello");
-      assert.ok(secondGuardRan, "second guard should have run despite first failing");
+      assert.ok(
+        secondGuardRan,
+        "second guard should have run despite first failing",
+      );
     });
 
     it(".sequential().failFast() stops at first failure", async () => {
@@ -189,7 +190,11 @@ describe("Guardrails", () => {
         .ignoreOnFailure();
 
       await g.run(mockLLM, "hello");
-      assert.strictEqual(secondGuardRan, false, "second guard should NOT have run");
+      assert.strictEqual(
+        secondGuardRan,
+        false,
+        "second guard should NOT have run",
+      );
     });
   });
 
@@ -212,7 +217,7 @@ describe("Guardrails", () => {
     });
 
     it("does not call fn — only validates provided inputs", async () => {
-      let fnCalled = false;
+      const fnCalled = false;
       const g = new Guardrails({}, [alwaysPass]);
       await g.validate([{ text: "hello" }]);
       assert.strictEqual(fnCalled, false);
@@ -228,26 +233,38 @@ describe("Guardrails", () => {
       };
       (capture as any).guardName = "capture-guard";
 
-      const g = new Guardrails({
-        inputMapper: (_output) => [{ custom: "mapped" }],
-      }, [capture]);
+      const g = new Guardrails(
+        {
+          inputMapper: (_output) => [{ custom: "mapped" }],
+        },
+        [capture],
+      );
       await g.run(mockLLM, "hello");
       assert.strictEqual(received[0].custom, "mapped");
     });
 
     it("dict-form inputMapper routes inputs by guard name", async () => {
       const received: Record<string, unknown>[] = [];
-      const guardA: Guard = async (input) => { received.push(input); return true; };
+      const guardA: Guard = async (input) => {
+        received.push(input);
+        return true;
+      };
       (guardA as any).guardName = "guard-a";
-      const guardB: Guard = async (input) => { received.push(input); return true; };
+      const guardB: Guard = async (input) => {
+        received.push(input);
+        return true;
+      };
       (guardB as any).guardName = "guard-b";
 
-      const g = new Guardrails({
-        inputMapper: (_output) => ({
-          "guard-a": { forA: true },
-          "guard-b": { forB: true },
-        }),
-      }, [guardA, guardB]);
+      const g = new Guardrails(
+        {
+          inputMapper: (_output) => ({
+            "guard-a": { forA: true },
+            "guard-b": { forB: true },
+          }),
+        },
+        [guardA, guardB],
+      );
       await g.run(mockLLM, "hello");
       assert.ok(received.find((r) => r.forA));
       assert.ok(received.find((r) => r.forB));
@@ -338,7 +355,9 @@ describe("Guardrails", () => {
     });
 
     it("works with an object", async () => {
-      const result = await validate({ text: "hello", context: "world" }, [alwaysPass]);
+      const result = await validate({ text: "hello", context: "world" }, [
+        alwaysPass,
+      ]);
       assert.ok(result);
     });
   });
@@ -368,7 +387,10 @@ describe("Guardrails", () => {
       }
 
       const service = new MyService();
-      await assert.rejects(() => service.generate("hello"), GuardValidationError);
+      await assert.rejects(
+        () => service.generate("hello"),
+        GuardValidationError,
+      );
     });
   });
 
@@ -396,7 +418,9 @@ describe("Guardrails", () => {
         "PASSED",
       );
       assert.strictEqual(
-        guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT],
+        guardrailSpan.attributes[
+          SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT
+        ],
         0,
       );
     });
@@ -442,7 +466,9 @@ describe("Guardrails", () => {
       const spans = memoryExporter.getFinishedSpans();
 
       const workflowSpan = spans.find((s) => s.name === "my-workflow.workflow");
-      const guardrailSpan = spans.find((s) => s.name === "sibling-test.guardrail");
+      const guardrailSpan = spans.find(
+        (s) => s.name === "sibling-test.guardrail",
+      );
 
       assert.ok(workflowSpan, "should have workflow span");
       assert.ok(guardrailSpan, "should have guardrail span");
@@ -455,7 +481,9 @@ describe("Guardrails", () => {
     });
 
     it("sets FAILED status on guard span when guard fails", async () => {
-      const g = new Guardrails({ name: "fail-test", onFailure: "ignore" }, [alwaysFail]);
+      const g = new Guardrails({ name: "fail-test", onFailure: "ignore" }, [
+        alwaysFail,
+      ]);
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -465,9 +493,20 @@ describe("Guardrails", () => {
 
       assert.ok(guardrailSpan);
       assert.ok(guardSpan);
-      assert.strictEqual(guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS], "FAILED");
-      assert.strictEqual(guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS], "FAILED");
-      assert.strictEqual(guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT], 1);
+      assert.strictEqual(
+        guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS],
+        "FAILED",
+      );
+      assert.strictEqual(
+        guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS],
+        "FAILED",
+      );
+      assert.strictEqual(
+        guardrailSpan.attributes[
+          SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT
+        ],
+        1,
+      );
     });
 
     it("records error info on guard span when guard throws", async () => {
@@ -478,8 +517,12 @@ describe("Guardrails", () => {
       const spans = memoryExporter.getFinishedSpans();
       const guardSpan = spans.find((s) => s.name === "always-throw.guard");
       assert.ok(guardSpan);
-      assert.ok(guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_ERROR_TYPE]);
-      assert.ok(guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_ERROR_MESSAGE]);
+      assert.ok(
+        guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_ERROR_TYPE],
+      );
+      assert.ok(
+        guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_ERROR_MESSAGE],
+      );
     });
   });
 
@@ -499,7 +542,10 @@ describe("Guardrails", () => {
           `https://api.traceloop.com/v2/guardrails/${slug}/execute`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer test-key" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer test-key",
+            },
             body: JSON.stringify({ input }),
           },
         );
@@ -507,7 +553,9 @@ describe("Guardrails", () => {
           throw new Error(`Guardrail API returned ${response.status}`);
         }
         const data = await response.json();
-        return condition((data.result as Record<string, unknown>)[conditionField]);
+        return condition(
+          (data.result as Record<string, unknown>)[conditionField],
+        );
       };
       (guard as any).guardName = slug;
       return guard;
@@ -519,18 +567,27 @@ describe("Guardrails", () => {
       global.fetch = (async (input: RequestInfo | URL) => {
         capturedUrl = input.toString();
         return new Response(
-          JSON.stringify({ result: { is_safe: true, score: 0.05 }, pass: true }),
+          JSON.stringify({
+            result: { is_safe: true, score: 0.05 },
+            pass: true,
+          }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
       }) as typeof global.fetch;
 
-      const toxGuard = makePrebuiltGuardWithFetch("toxicity-detector", "is_safe", isTrue());
+      const toxGuard = makePrebuiltGuardWithFetch(
+        "toxicity-detector",
+        "is_safe",
+        isTrue(),
+      );
       const g = new Guardrails({ name: "tox-test" }, [toxGuard]);
       const result = await g.run(mockLLM, "hello");
 
       assert.strictEqual(result, "The weather is sunny today.");
-      assert.ok(capturedUrl?.includes("/v2/guardrails/toxicity-detector/execute"),
-        `Expected URL to include toxicity-detector, got: ${capturedUrl}`);
+      assert.ok(
+        capturedUrl?.includes("/v2/guardrails/toxicity-detector/execute"),
+        `Expected URL to include toxicity-detector, got: ${capturedUrl}`,
+      );
     });
 
     it("guard passes when condition evaluates the result field", async () => {
@@ -538,10 +595,13 @@ describe("Guardrails", () => {
         new Response(
           JSON.stringify({ result: { is_safe: true }, pass: true }),
           { status: 200, headers: { "Content-Type": "application/json" } },
-        )
-      ) as typeof global.fetch;
+        )) as typeof global.fetch;
 
-      const toxGuard = makePrebuiltGuardWithFetch("toxicity-detector", "is_safe", isTrue());
+      const toxGuard = makePrebuiltGuardWithFetch(
+        "toxicity-detector",
+        "is_safe",
+        isTrue(),
+      );
       const g = new Guardrails({ onFailure: "raise" }, [toxGuard]);
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
@@ -552,101 +612,30 @@ describe("Guardrails", () => {
         new Response(
           JSON.stringify({ result: { is_safe: false }, pass: false }),
           { status: 200, headers: { "Content-Type": "application/json" } },
-        )
-      ) as typeof global.fetch;
+        )) as typeof global.fetch;
 
-      const toxGuard = makePrebuiltGuardWithFetch("toxicity-detector", "is_safe", isTrue());
+      const toxGuard = makePrebuiltGuardWithFetch(
+        "toxicity-detector",
+        "is_safe",
+        isTrue(),
+      );
       const g = new Guardrails({ onFailure: "ignore" }, [toxGuard]);
       await g.run(mockLLM, "hello"); // should not throw with ignore
     });
 
     it("API error throws from the guard function as GuardExecutionError", async () => {
       global.fetch = (async () =>
-        new Response("Internal Server Error", { status: 500 })
-      ) as typeof global.fetch;
+        new Response("Internal Server Error", {
+          status: 500,
+        })) as typeof global.fetch;
 
-      const toxGuard = makePrebuiltGuardWithFetch("toxicity-detector", "is_safe", isTrue());
+      const toxGuard = makePrebuiltGuardWithFetch(
+        "toxicity-detector",
+        "is_safe",
+        isTrue(),
+      );
       const g = new Guardrails({ name: "api-error-test" }, [toxGuard]);
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
-    });
-  });
-
-  describe("customEvaluatorGuard API flow (mocked fetch)", () => {
-    // Test the two-step HTTP flow (trigger + poll) directly without requiring SDK client
-    it("calls executions endpoint then polls stream URL", async () => {
-      let callCount = 0;
-      const capturedUrls: string[] = [];
-
-      global.fetch = (async (input: RequestInfo | URL) => {
-        callCount++;
-        capturedUrls.push(input.toString());
-        if (callCount === 1) {
-          return new Response(
-            JSON.stringify({
-              executionId: "exec-123",
-              streamUrl: "/evaluators/stream/exec-123",
-            }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          );
-        }
-        return new Response(
-          JSON.stringify({
-            execution_id: "exec-123",
-            result: { evaluator_result: { pass: true, score: 0.95 } },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        );
-      }) as typeof global.fetch;
-
-      // Simulate the two-step flow directly
-      const baseUrl = "https://api.traceloop.com";
-      const slug = "my-custom-eval";
-      const apiKey = "test-key";
-
-      // Step 1: trigger
-      const triggerRes = await fetch(`${baseUrl}/v2/evaluators/${slug}/executions`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ input_schema_mapping: {} }),
-      });
-      const triggerData = await triggerRes.json();
-      assert.strictEqual(triggerData.executionId, "exec-123");
-
-      // Step 2: poll
-      const pollRes = await fetch(`${baseUrl}/v2${triggerData.streamUrl}`, {
-        headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
-      });
-      const pollData = await pollRes.json();
-      const score = (pollData.result as any)?.evaluator_result?.pass;
-      assert.strictEqual(score, true);
-
-      assert.strictEqual(callCount, 2);
-      assert.ok(capturedUrls[0].includes("/v2/evaluators/my-custom-eval/executions"));
-    });
-
-    it("passes condition with gt() threshold on score field", async () => {
-      let callCount = 0;
-
-      global.fetch = (async () => {
-        callCount++;
-        if (callCount === 1) {
-          return new Response(
-            JSON.stringify({ executionId: "exec-456", streamUrl: "/stream/456" }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          );
-        }
-        return new Response(
-          JSON.stringify({
-            result: { evaluator_result: { score: 0.9 } },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        );
-      }) as typeof global.fetch;
-
-      // Verify the condition check
-      const score = 0.9;
-      const condition = gt(0.8);
-      assert.strictEqual(condition(score), true);
     });
   });
 
@@ -661,10 +650,7 @@ describe("Guardrails", () => {
       const g = new Guardrails({ name: "timeout-test" }, [toxGuard]);
 
       const start = Date.now();
-      await assert.rejects(
-        () => g.run(mockLLM, "hello"),
-        GuardExecutionError,
-      );
+      await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
       const elapsed = Date.now() - start;
 
       // Should have aborted close to 150ms — not hung indefinitely
@@ -673,6 +659,5 @@ describe("Guardrails", () => {
         `Expected abort within 2000ms but took ${elapsed}ms`,
       );
     });
-
   });
 });

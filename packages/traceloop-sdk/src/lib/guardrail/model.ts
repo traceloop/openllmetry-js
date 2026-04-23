@@ -13,9 +13,7 @@ export type Guard = (input: Record<string, unknown>) => Promise<boolean>;
 export type InputMapper = (
   output: unknown,
   numGuards: number,
-) =>
-  | Record<string, unknown>[]
-  | Record<string, Record<string, unknown>>;
+) => Record<string, unknown>[] | Record<string, Record<string, unknown>>;
 
 /**
  * Passed to on_failure handlers when a guard fails.

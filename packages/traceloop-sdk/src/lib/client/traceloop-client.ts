@@ -50,7 +50,11 @@ export class TraceloopClient {
     this.evaluator = new Evaluator(this);
   }
 
-  async post(path: string, body: Record<string, unknown> | any, signal?: AbortSignal) {
+  async post(
+    path: string,
+    body: Record<string, unknown> | any,
+    signal?: AbortSignal,
+  ) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
       headers: {
@@ -63,7 +67,11 @@ export class TraceloopClient {
     });
   }
 
-  async get(path: string, signal?: AbortSignal, extraHeaders?: Record<string, string>) {
+  async get(
+    path: string,
+    signal?: AbortSignal,
+    extraHeaders?: Record<string, string>,
+  ) {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "GET",
       headers: {

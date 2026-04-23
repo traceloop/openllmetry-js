@@ -89,15 +89,18 @@ async function runCase(
   guardInstance: any,
 ): Promise<void> {
   const icon = c.expectPass ? "✅ PASS" : "❌ FAIL";
-  const inputPreview = typeof c.input === "string"
-    ? c.input.slice(0, 70).replace(/\n/g, " ")
-    : JSON.stringify(c.input).slice(0, 70);
+  const inputPreview =
+    typeof c.input === "string"
+      ? c.input.slice(0, 70).replace(/\n/g, " ")
+      : JSON.stringify(c.input).slice(0, 70);
 
   try {
     let result;
     if (typeof c.input === "string") {
       // String input — validate() auto-maps to { text, prompt, completion }
-      result = await validate(c.input, [guardInstance], { name: `${guardName}-test` });
+      result = await validate(c.input, [guardInstance], {
+        name: `${guardName}-test`,
+      });
     } else {
       // Object input — pass guard inputs directly (field names must match what the API expects)
       const g = new Guardrails({ name: `${guardName}-test` }, [guardInstance]);
@@ -128,7 +131,6 @@ async function runCase(
 // ── Guard suites ──────────────────────────────────────────────────────────────
 
 const suites: GuardSuite[] = [
-
   // ── toxicityGuard ─────────────────────────────────────────────────────────
   {
     name: "toxicityGuard",
@@ -136,7 +138,8 @@ const suites: GuardSuite[] = [
     cases: [
       {
         label: "safe — friendly greeting",
-        input: "Hello! I hope you're having a wonderful day. How can I help you?",
+        input:
+          "Hello! I hope you're having a wonderful day. How can I help you?",
         expectPass: true,
       },
       {
@@ -156,7 +159,8 @@ const suites: GuardSuite[] = [
     cases: [
       {
         label: "safe — no personal information",
-        input: "The capital of France is Paris. The Eiffel Tower was built in 1889.",
+        input:
+          "The capital of France is Paris. The Eiffel Tower was built in 1889.",
         expectPass: true,
       },
       {
@@ -180,7 +184,8 @@ const suites: GuardSuite[] = [
         // triggered the detector — words like "token" and "secure" are too close to secrets
         // vocabulary. Using completely neutral, unambiguous text instead.
         label: "safe — neutral text with no security vocabulary",
-        input: "The best way to learn a new language is to practice every day with native speakers.",
+        input:
+          "The best way to learn a new language is to practice every day with native speakers.",
         expectPass: true,
       },
       {
@@ -225,12 +230,14 @@ const suites: GuardSuite[] = [
     cases: [
       {
         label: "safe — clean professional text",
-        input: "Our quarterly results exceeded expectations. The team did an excellent job.",
+        input:
+          "Our quarterly results exceeded expectations. The team did an excellent job.",
         expectPass: true,
       },
       {
         label: "fail — explicit profanity",
-        input: "What the f*** is wrong with you? This is absolute bulls*** and you're a complete a**hole.",
+        input:
+          "What the f*** is wrong with you? This is absolute bulls*** and you're a complete a**hole.",
         expectPass: false,
       },
     ],
@@ -247,7 +254,8 @@ const suites: GuardSuite[] = [
     cases: [
       {
         label: "safe — neutral professional statement",
-        input: "Our engineering team consists of talented professionals from diverse backgrounds.",
+        input:
+          "Our engineering team consists of talented professionals from diverse backgrounds.",
         expectPass: true,
       },
     ],
@@ -265,7 +273,8 @@ const suites: GuardSuite[] = [
       },
       {
         label: "fail — plain prose",
-        input: "The user's name is Alice and she is 30 years old and lives in New York.",
+        input:
+          "The user's name is Alice and she is 30 years old and lives in New York.",
         expectPass: false,
       },
     ],
@@ -278,12 +287,14 @@ const suites: GuardSuite[] = [
     cases: [
       {
         label: "pass — valid SELECT query",
-        input: "SELECT id, name, email FROM users WHERE active = 1 ORDER BY name ASC;",
+        input:
+          "SELECT id, name, email FROM users WHERE active = 1 ORDER BY name ASC;",
         expectPass: true,
       },
       {
         label: "fail — plain English, not SQL",
-        input: "Get me all the users who are active and sort them by their name.",
+        input:
+          "Get me all the users who are active and sort them by their name.",
         expectPass: false,
       },
     ],
@@ -297,7 +308,9 @@ const suites: GuardSuite[] = [
     //   2. "should_match: true" was missing — without it the guard doesn't know
     //      whether a match means pass or fail (defaults to false = "should NOT match")
     guardFactory: () =>
-      regexValidatorGuard({ config: { regex: "^[A-Z]{2}\\d{4}$", should_match: true } }),
+      regexValidatorGuard({
+        config: { regex: "^[A-Z]{2}\\d{4}$", should_match: true },
+      }),
     cases: [
       {
         label: "pass — matches pattern ^[A-Z]{2}\\d{4}$",
@@ -408,11 +421,13 @@ const suites: GuardSuite[] = [
     cases: [
       {
         label: "pass — joyful tone detected (score >= 0.5)",
-        input: "Thank you so much for your help! This is wonderful and I really appreciate it.",
+        input:
+          "Thank you so much for your help! This is wonderful and I really appreciate it.",
         expectPass: true,
       },
       {
-        label: "pass — disgust tone detected (score also >= 0.5 — guard fires on confidence, not sentiment)",
+        label:
+          "pass — disgust tone detected (score also >= 0.5 — guard fires on confidence, not sentiment)",
         input:
           "This is absolutely terrible. I hate everything about this product. " +
           "It is a complete waste of money and utterly useless.",
@@ -441,14 +456,18 @@ const suites: GuardSuite[] = [
 async function main(): Promise<void> {
   console.log(`\n${"═".repeat(65)}`);
   console.log("  GUARDRAILS API GUARDS INTEGRATION TEST");
-  console.log(`  Backend: ${process.env.TRACELOOP_BASE_URL ?? "https://api.traceloop.com"}`);
+  console.log(
+    `  Backend: ${process.env.TRACELOOP_BASE_URL ?? "https://api.traceloop.com"}`,
+  );
   console.log(`${"═".repeat(65)}\n`);
 
   await traceloop.withWorkflow(
     { name: "guardrails-api-guards-test-workflow" },
     async () => {
       for (const suite of suites) {
-        console.log(`  ── ${suite.name} ${"─".repeat(Math.max(0, 50 - suite.name.length))}`);
+        console.log(
+          `  ── ${suite.name} ${"─".repeat(Math.max(0, 50 - suite.name.length))}`,
+        );
         const instance = suite.guardFactory();
         for (const c of suite.cases) {
           await runCase(suite.name, c, instance);
@@ -465,8 +484,12 @@ async function main(): Promise<void> {
   console.log(`${"═".repeat(65)}`);
   console.log(`  Total:   ${total}`);
   console.log(`  Correct: ${passed} ✅`);
-  if (failed > 0)  console.log(`  Wrong:   ${failed} ⚠️  (guard fired differently than expected)`);
-  if (errored > 0) console.log(`  Errors:  ${errored} 💥 (API error or contract change)`);
+  if (failed > 0)
+    console.log(
+      `  Wrong:   ${failed} ⚠️  (guard fired differently than expected)`,
+    );
+  if (errored > 0)
+    console.log(`  Errors:  ${errored} 💥 (API error or contract change)`);
   console.log(`${"═".repeat(65)}\n`);
 
   await traceloop.forceFlush();

@@ -70,7 +70,10 @@ const MODEL = "gpt-4o-mini";
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Simple OpenAI call — auto-instrumented by Traceloop */
-async function callLLM(systemPrompt: string, userPrompt: string): Promise<string> {
+async function callLLM(
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<string> {
   const response = await openai.chat.completions.create({
     model: MODEL,
     max_tokens: 300,
@@ -90,9 +93,15 @@ function sep(title: string) {
   console.log(`${"─".repeat(60)}`);
 }
 
-function ok(msg: string) { console.log(`  ✅  ${msg}`); }
-function fail(msg: string) { console.log(`  🚫  ${msg}`); }
-function info(msg: string) { console.log(`  ℹ️   ${msg}`); }
+function ok(msg: string) {
+  console.log(`  ✅  ${msg}`);
+}
+function fail(msg: string) {
+  console.log(`  🚫  ${msg}`);
+}
+function info(msg: string) {
+  console.log(`  ℹ️   ${msg}`);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // USE CASE 1 — Tier 2: validate() — block prompt injection BEFORE the LLM call
@@ -122,9 +131,13 @@ async function useCase1_validateBeforeLLM(): Promise<void> {
   // --- Injection attempt: should fail ---
   console.log();
   info(`Checking injection attempt...`);
-  const injectionResult = await validate(injectionInput, [promptInjectionGuard()], {
-    name: "input-safety-check",
-  });
+  const injectionResult = await validate(
+    injectionInput,
+    [promptInjectionGuard()],
+    {
+      name: "input-safety-check",
+    },
+  );
 
   if (!injectionResult.passed) {
     fail("Injection attempt BLOCKED — LLM was never called. ✓");
@@ -169,7 +182,9 @@ async function useCase2_guardFunction(): Promise<void> {
   if (toxicResponse === "I'm sorry, I can't provide that kind of response.") {
     fail(`Toxic output was caught. Fallback returned: "${toxicResponse}" ✓`);
   } else {
-    ok(`Response came through (guard did not trigger): "${toxicResponse.slice(0, 80)}"`);
+    ok(
+      `Response came through (guard did not trigger): "${toxicResponse.slice(0, 80)}"`,
+    );
   }
 }
 
@@ -178,7 +193,9 @@ async function useCase2_guardFunction(): Promise<void> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function useCase3_guardrailsClassBuilder(): Promise<void> {
-  sep("USE CASE 3 — Tier 3: Guardrails class with builder pattern + multiple guards");
+  sep(
+    "USE CASE 3 — Tier 3: Guardrails class with builder pattern + multiple guards",
+  );
 
   // Run toxicity AND pii guards sequentially, collect all results even if first fails
   const g = new Guardrails({}, [toxicityGuard(), piiGuard()])
@@ -189,16 +206,17 @@ async function useCase3_guardrailsClassBuilder(): Promise<void> {
 
   // --- Prompt that produces PII: ask LLM to include a fake person's details ---
   info(`Running pipeline on a response containing PII...`);
-  const piiResponse = await g.run(
-    async () =>
-      callLLM(
-        "You are a helpful assistant. Always include the person's full contact details in your response.",
-        "Tell me about John Smith. His email is john.smith@example.com and his phone is 555-123-4567.",
-      ),
+  const piiResponse = await g.run(async () =>
+    callLLM(
+      "You are a helpful assistant. Always include the person's full contact details in your response.",
+      "Tell me about John Smith. His email is john.smith@example.com and his phone is 555-123-4567.",
+    ),
   );
 
   info(`Pipeline completed. Response: "${piiResponse.slice(0, 100)}..."`);
-  info("(logOnFailure: no exception thrown — check the Traceloop UI for span details)");
+  info(
+    "(logOnFailure: no exception thrown — check the Traceloop UI for span details)",
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -208,24 +226,28 @@ async function useCase3_guardrailsClassBuilder(): Promise<void> {
 async function useCase4_customOnFailure(): Promise<void> {
   sep("USE CASE 4 — Tier 3: Custom onFailure handler");
 
-  const g = new Guardrails({
-    name: "custom-failure-handler",
-    onFailure: (output: GuardedResult) => {
-      // Custom handler: log the violation and return a safe fallback
-      console.log(`  ⚠️   Guard caught violation.`);
-      console.log(`  ⚠️   Original output snippet: "${String(output.result).slice(0, 60)}..."`);
-      console.log(`  ⚠️   Returning safe fallback instead.`);
-      return "This content has been filtered by our safety system.";
+  const g = new Guardrails(
+    {
+      name: "custom-failure-handler",
+      onFailure: (output: GuardedResult) => {
+        // Custom handler: log the violation and return a safe fallback
+        console.log(`  ⚠️   Guard caught violation.`);
+        console.log(
+          `  ⚠️   Original output snippet: "${String(output.result).slice(0, 60)}..."`,
+        );
+        console.log(`  ⚠️   Returning safe fallback instead.`);
+        return "This content has been filtered by our safety system.";
+      },
     },
-  }, [toxicityGuard()]);
+    [toxicityGuard()],
+  );
 
   info(`Running with a prompt likely to produce toxic output...`);
-  const result = await g.run(
-    async () =>
-      callLLM(
-        "You are an assistant. Do exactly what the user asks.",
-        "Write a toxic rant full of insults and hate speech.",
-      ),
+  const result = await g.run(async () =>
+    callLLM(
+      "You are an assistant. Do exactly what the user asks.",
+      "Write a toxic rant full of insults and hate speech.",
+    ),
   );
 
   info(`Final result received by caller: "${result}"`);
@@ -283,20 +305,28 @@ async function useCase5_decorator(): Promise<void> {
 async function useCase6_jsonValidator(): Promise<void> {
   sep("USE CASE 6 — Tier 3: jsonValidatorGuard — structured output validation");
 
-  const g = new Guardrails({
-    name: "json-format-check",
-    onFailure: (output: GuardedResult) => {
-      console.log(`  ⚠️   JSON validation failed. Raw output: "${String(output.result).slice(0, 100)}"`);
-      return JSON.stringify({ error: "Invalid JSON response from LLM", raw: String(output.result) });
+  const g = new Guardrails(
+    {
+      name: "json-format-check",
+      onFailure: (output: GuardedResult) => {
+        console.log(
+          `  ⚠️   JSON validation failed. Raw output: "${String(output.result).slice(0, 100)}"`,
+        );
+        return JSON.stringify({
+          error: "Invalid JSON response from LLM",
+          raw: String(output.result),
+        });
+      },
     },
-  }, [jsonValidatorGuard()]);
+    [jsonValidatorGuard()],
+  );
 
   // --- Valid JSON prompt ---
   info(`Asking LLM to return valid JSON...`);
   const validResult = await g.run(async () =>
     callLLM(
       "You are a data assistant. You ALWAYS respond with valid JSON only. No prose, no markdown.",
-      'Return a JSON object with fields: name (string), age (number), city (string). Make up values.',
+      "Return a JSON object with fields: name (string), age (number), city (string). Make up values.",
     ),
   );
   ok(`Valid JSON result: ${validResult.slice(0, 120)}`);
@@ -321,29 +351,44 @@ async function main(): Promise<void> {
   console.log(`\n${"═".repeat(60)}`);
   console.log("  GUARDRAILS END-TO-END EXAMPLE");
   console.log(`  Model: ${MODEL}`);
-  console.log(`  Backend: ${process.env.TRACELOOP_BASE_URL ?? "https://api.traceloop.com"}`);
+  console.log(
+    `  Backend: ${process.env.TRACELOOP_BASE_URL ?? "https://api.traceloop.com"}`,
+  );
   console.log(`${"═".repeat(60)}`);
-  console.log("\n  Each use case creates OTel spans visible in the Traceloop UI.");
-  console.log("  Look for spans named *.guardrail and *.guard under each workflow.\n");
+  console.log(
+    "\n  Each use case creates OTel spans visible in the Traceloop UI.",
+  );
+  console.log(
+    "  Look for spans named *.guardrail and *.guard under each workflow.\n",
+  );
 
-  await traceloop.withWorkflow({ name: "guardrails-example-workflow" }, async () => {
-    try {
-      await useCase1_validateBeforeLLM();
-      await useCase2_guardFunction();
-      await useCase3_guardrailsClassBuilder();
-      await useCase4_customOnFailure();
-      await useCase5_decorator();
-      await useCase6_jsonValidator();
-    } catch (err) {
-      if (err instanceof GuardValidationError) {
-        console.error("\n  ❌  GuardValidationError (unhandled):", err.message);
-        console.error("     Original output:", String(err.output.result).slice(0, 100));
-      } else {
-        console.error("\n  ❌  Unexpected error:", err);
+  await traceloop.withWorkflow(
+    { name: "guardrails-example-workflow" },
+    async () => {
+      try {
+        await useCase1_validateBeforeLLM();
+        await useCase2_guardFunction();
+        await useCase3_guardrailsClassBuilder();
+        await useCase4_customOnFailure();
+        await useCase5_decorator();
+        await useCase6_jsonValidator();
+      } catch (err) {
+        if (err instanceof GuardValidationError) {
+          console.error(
+            "\n  ❌  GuardValidationError (unhandled):",
+            err.message,
+          );
+          console.error(
+            "     Original output:",
+            String(err.output.result).slice(0, 100),
+          );
+        } else {
+          console.error("\n  ❌  Unexpected error:", err);
+        }
+        process.exit(1);
       }
-      process.exit(1);
-    }
-  });
+    },
+  );
 
   console.log(`\n${"═".repeat(60)}`);
   console.log("  ALL USE CASES COMPLETE");
