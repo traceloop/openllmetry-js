@@ -1,9 +1,5 @@
 import { context, trace, SpanStatusCode } from "@opentelemetry/api";
-import {
-  ATTR_GEN_AI_OPERATION_NAME,
-  ATTR_GEN_AI_EVALUATION_NAME,
-  ATTR_GEN_AI_EVALUATION_SCORE_LABEL,
-} from "@opentelemetry/semantic-conventions/incubating";
+import { ATTR_GEN_AI_OPERATION_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { getTracer } from "../tracing/tracing";
 import { defaultInputMapper, resolveGuardInputs } from "./default-mapper";
@@ -13,6 +9,7 @@ import {
   GuardExecutionError,
   GuardResult,
   InputMapper,
+  FailFastGuardResult,
 } from "./model";
 import { OnFailureHandler, resolveOnFailure } from "./on-failure";
 
@@ -56,7 +53,6 @@ interface GuardExecutionResult {
   name: string;
   passed: boolean;
   duration: number;
-  error?: Error;
 }
 
 // ── Guardrails class (Tier 3) ────────────────────────────────────────────────
@@ -143,12 +139,10 @@ export class Guardrails {
     // Execute the user's LLM function — instrumentation spans fire here
     const result = await fn(...args);
 
-    const guardNames = this.guards.map(
-      (g, i) => (g as any).guardName ?? `guard_${i}`,
-    );
+    const guardNames = this.guards.map((g, i) => g.guardName ?? `guard_${i}`);
 
     const guardInputs = resolveGuardInputs(
-      result,
+      result as string | Record<string, unknown>,
       this.guards.length,
       guardNames,
       this._inputMapper,
@@ -183,7 +177,6 @@ export class Guardrails {
 
       const duration = performance.now() - startTime;
       const failedResults = guardResults.filter((r) => !r.passed);
-      const executionErrors = guardResults.filter((r) => r.error);
 
       guardrailSpan.setAttributes({
         [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]:
@@ -193,24 +186,16 @@ export class Guardrails {
           failedResults.length,
       });
 
-      // Guard threw an unexpected exception
-      if (executionErrors.length > 0) {
-        const first = executionErrors[0];
-        guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
-        throw new GuardExecutionError(
-          first.error!,
-          guardInputs[first.index],
-          first.index,
-        );
-      }
-
       // All guards passed
       if (failedResults.length === 0) {
         return result;
       }
 
       // Some guards failed — call on_failure handler
-      const guardedResult: GuardedResult = { result, guardInputs };
+      const guardedResult: GuardedResult = {
+        result: result as string | Record<string, unknown>,
+        guardInputs,
+      };
       return this._onFailure(guardedResult) as T;
     } catch (err) {
       guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
@@ -224,12 +209,9 @@ export class Guardrails {
 
   async validate(
     guardInputs: Record<string, unknown>[],
-    onFailure?: string | OnFailureHandler,
   ): Promise<GuardResult[]> {
     const parentContext = context.active();
-    const guardNames = this.guards.map(
-      (g, i) => (g as any).guardName ?? `guard_${i}`,
-    );
+    const guardNames = this.guards.map((g, i) => g.guardName ?? `guard_${i}`);
 
     const spanName = this._name ? `${this._name}.guardrail` : "guardrail";
 
@@ -271,7 +253,6 @@ export class Guardrails {
         name: r.name,
         passed: r.passed,
         duration: r.duration,
-        ...(r.error ? { error: r.error } : {}),
       }));
     } catch (err) {
       guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
@@ -289,20 +270,27 @@ export class Guardrails {
     parentContext: ReturnType<typeof trace.setSpan>,
   ): Promise<GuardExecutionResult[]> {
     if (this._parallel) {
-      // Run all guards concurrently
-      const promises = this.guards.map((guard, i) =>
-        this._runSingleGuard(
-          guard,
-          guardInputs[i],
-          guardNames[i],
-          i,
-          parentContext,
-        ),
-      );
-
       if (this._runAll) {
         // Collect ALL results even if some fail
+        const promises = this.guards.map((guard, i) =>
+          this._runSingleGuard(
+            guard,
+            guardInputs[i],
+            guardNames[i],
+            i,
+            parentContext,
+          ),
+        );
         const settled = await Promise.allSettled(promises);
+        // Re-throw the first GuardExecutionError — real errors always propagate
+        for (const s of settled) {
+          if (
+            s.status === "rejected" &&
+            s.reason instanceof GuardExecutionError
+          ) {
+            throw s.reason;
+          }
+        }
         return settled.map((s, i) =>
           s.status === "fulfilled"
             ? s.value
@@ -311,15 +299,37 @@ export class Guardrails {
                 name: guardNames[i],
                 passed: false,
                 duration: 0,
-                error:
-                  s.reason instanceof Error
-                    ? s.reason
-                    : new Error(String(s.reason)),
               },
         );
       } else {
-        // Fail-fast — Promise.all rejects on first rejection
-        return Promise.all(promises);
+        // parallel().failFast() — _runSingleGuard throws FailFastGuardResult on
+        // logical failure so Promise.all rejects immediately. Real errors
+        // (GuardExecutionError) propagate directly through Promise.all.
+        const promises = this.guards.map((guard, i) =>
+          this._runSingleGuard(
+            guard,
+            guardInputs[i],
+            guardNames[i],
+            i,
+            parentContext,
+            true,
+          ),
+        );
+        try {
+          return await Promise.all(promises);
+        } catch (err) {
+          if (err instanceof FailFastGuardResult) {
+            return [
+              {
+                index: err.index,
+                name: err.name,
+                passed: err.passed,
+                duration: err.duration,
+              },
+            ];
+          }
+          throw err;
+        }
       }
     } else {
       // Sequential execution
@@ -347,6 +357,7 @@ export class Guardrails {
     name: string,
     index: number,
     parentContext: ReturnType<typeof trace.setSpan>,
+    throwOnFail = false,
   ): Promise<GuardExecutionResult> {
     const tracer = getTracer();
 
@@ -356,7 +367,6 @@ export class Guardrails {
         attributes: {
           [ATTR_GEN_AI_OPERATION_NAME]: GuardrailOperationNames.GUARD,
           [SpanAttributes.GEN_AI_GUARDRAIL_NAME]: name,
-          [ATTR_GEN_AI_EVALUATION_NAME]: name,
           [SpanAttributes.GEN_AI_GUARDRAIL_INPUT]: JSON.stringify(input),
         },
       },
@@ -366,18 +376,9 @@ export class Guardrails {
     const guardContext = trace.setSpan(parentContext, guardSpan);
     const startTime = performance.now();
 
+    let passed: boolean;
     try {
-      const passed = await context.with(guardContext, () => guard(input));
-      const duration = performance.now() - startTime;
-
-      guardSpan.setAttributes({
-        [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]: passed ? "PASSED" : "FAILED",
-        [ATTR_GEN_AI_EVALUATION_SCORE_LABEL]: passed ? "PASSED" : "FAILED",
-        [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
-      });
-      guardSpan.end();
-
-      return { index, name, passed, duration };
+      passed = await context.with(guardContext, () => guard(input));
     } catch (error) {
       const duration = performance.now() - startTime;
       const err = error instanceof Error ? error : new Error(String(error));
@@ -392,8 +393,26 @@ export class Guardrails {
       guardSpan.recordException(err);
       guardSpan.end();
 
-      return { index, name, passed: false, duration, error: err };
+      throw new GuardExecutionError(err, input, index);
     }
+
+    const duration = performance.now() - startTime;
+    guardSpan.setAttributes({
+      [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]: passed ? "PASSED" : "FAILED",
+      [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
+    });
+    guardSpan.end();
+
+    const executionResult: GuardExecutionResult = {
+      index,
+      name,
+      passed,
+      duration,
+    };
+    if (!passed && throwOnFail) {
+      throw new FailFastGuardResult(index, name, false, duration);
+    }
+    return executionResult;
   }
 }
 
@@ -434,9 +453,9 @@ export async function validate(
   guards: Guard[],
   options?: ValidateOptions,
 ): Promise<ValidateResult> {
-  const g = new Guardrails(options ?? {}, guards);
+  const g = new Guardrails({ runAll: true, ...options }, guards);
   const guardInputs = defaultInputMapper(output, guards.length);
-  const results = await g.validate(guardInputs, options?.onFailure);
+  const results = await g.validate(guardInputs);
   return {
     passed: results.every((r) => r.passed),
     results,

@@ -1,7 +1,9 @@
 import { diag } from "@opentelemetry/api";
 import { GuardedResult, GuardValidationError } from "./model";
 
-export type OnFailureHandler = (output: GuardedResult) => unknown;
+export type OnFailureHandler = (
+  output: GuardedResult,
+) => string | Record<string, unknown>;
 
 /**
  * Built-in failure strategy factories.
@@ -18,7 +20,7 @@ export const OnFailure = {
   },
 
   /** Log a warning and return the original result unchanged. */
-  log(level = "warn", message?: string): OnFailureHandler {
+  log(level: "error" | "warn" = "warn", message?: string): OnFailureHandler {
     return (output: GuardedResult) => {
       const msg = message ?? "Guardrail failed — returning original result.";
       if (level === "error") {
@@ -36,7 +38,7 @@ export const OnFailure = {
   },
 
   /** Return a fixed fallback value instead of the original result. */
-  returnValue(value: unknown): OnFailureHandler {
+  returnValue(value: string | Record<string, unknown>): OnFailureHandler {
     return (_output: GuardedResult) => value;
   },
 } as const;

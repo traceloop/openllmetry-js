@@ -1,12 +1,12 @@
 import { trace } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { getClient } from "../configuration";
-import { isTrue } from "./conditions";
+import { isTrue, ConditionValue } from "./conditions";
 import { Guard } from "./model";
 
 export interface PrebuiltGuardOptions {
   /** Override the default pass/fail condition. Default: isTrue() */
-  condition?: (v: unknown) => boolean;
+  condition?: (v: ConditionValue) => boolean;
   /** Maximum time to wait for the evaluator API response in ms. Default: 60000 */
   timeoutMs?: number;
   /** Evaluator-specific configuration (e.g. threshold). */
@@ -132,11 +132,11 @@ function createPrebuiltGuard(
       );
     }
 
-    return condition(value);
+    return condition(value as ConditionValue);
   };
 
   // Tag the guard function with its name for span naming
-  (guard as any).guardName = slug;
+  guard.guardName = slug;
   return guard;
 }
 
@@ -298,7 +298,7 @@ export interface CustomEvaluatorGuardOptions {
   /** Which field in result to check. Default: "pass" */
   conditionField?: string;
   /** Override the default condition. Default: isTrue() */
-  condition?: (v: unknown) => boolean;
+  condition?: (v: ConditionValue) => boolean;
   /** Maximum time to wait for result in ms. Default: 60000 */
   timeoutMs?: number;
 }
@@ -320,45 +320,46 @@ export function customEvaluatorGuard(
   const guard: Guard = async (input: Record<string, unknown>) => {
     const client = getClient();
 
-    // Step 1: Trigger evaluator execution
-    const payload: Record<string, unknown> = {
-      input_schema_mapping: Object.fromEntries(
-        Object.entries(input).map(([k, v]) => [k, { source: v }]),
-      ),
-    };
-    if (evaluatorVersion) payload.evaluator_version = evaluatorVersion;
-    if (evaluatorConfig) payload.evaluator_config = evaluatorConfig;
-
-    const triggerResponse = await client.post(
-      `/v2/evaluators/${encodeURIComponent(slug)}/executions`,
-      payload,
-    );
-
-    if (!triggerResponse.ok) {
-      const text = await triggerResponse.text().catch(() => "");
-      throw new Error(
-        `Custom evaluator trigger returned ${triggerResponse.status}: ${text}`,
-      );
-    }
-
-    const triggerData = await triggerResponse.json();
-    const executionId: string =
-      triggerData.executionId ?? triggerData.execution_id;
-    const streamUrl: string = triggerData.streamUrl ?? triggerData.stream_url;
-
-    if (!executionId || !streamUrl) {
-      throw new Error(
-        `Custom evaluator trigger response missing executionId or streamUrl: ${JSON.stringify(triggerData)}`,
-      );
-    }
-
-    // Step 2: Poll for result via stream URL using client.get() so auth headers
-    // are handled internally — no need to access private baseUrl/apiKey fields.
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     let resultData: Record<string, unknown>;
     try {
+      // Step 1: Trigger evaluator execution
+      const payload: Record<string, unknown> = {
+        input_schema_mapping: Object.fromEntries(
+          Object.entries(input).map(([k, v]) => [k, { source: v }]),
+        ),
+      };
+      if (evaluatorVersion) payload.evaluator_version = evaluatorVersion;
+      if (evaluatorConfig) payload.evaluator_config = evaluatorConfig;
+
+      const triggerResponse = await client.post(
+        `/v2/evaluators/${encodeURIComponent(slug)}/executions`,
+        payload,
+        controller.signal,
+      );
+
+      if (!triggerResponse.ok) {
+        const text = await triggerResponse.text().catch(() => "");
+        throw new Error(
+          `Custom evaluator trigger returned ${triggerResponse.status}: ${text}`,
+        );
+      }
+
+      const triggerData = await triggerResponse.json();
+      const executionId: string =
+        triggerData.executionId ?? triggerData.execution_id;
+      const streamUrl: string = triggerData.streamUrl ?? triggerData.stream_url;
+
+      if (!executionId || !streamUrl) {
+        throw new Error(
+          `Custom evaluator trigger response missing executionId or streamUrl: ${JSON.stringify(triggerData)}`,
+        );
+      }
+
+      // Step 2: Poll for result via stream URL using client.get() so auth headers
+      // are handled internally — no need to access private baseUrl/apiKey fields.
       // Accept: text/event-stream matches Python SDK behavior — server holds the
       // connection open (blocking long-poll) until the LLM job completes, then
       // returns the result as JSON and closes the connection.
@@ -407,9 +408,9 @@ export function customEvaluatorGuard(
       );
     }
 
-    return condition(value);
+    return condition(value as ConditionValue);
   };
 
-  (guard as any).guardName = slug;
+  guard.guardName = slug;
   return guard;
 }

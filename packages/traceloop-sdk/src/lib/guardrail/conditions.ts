@@ -1,36 +1,39 @@
+export type ConditionValue = string | number | boolean | null | undefined;
+
 /**
  * Predicate factory functions for use as guard conditions.
- * Each returns a (value: unknown) => boolean function.
+ * Each returns a (value: ConditionValue) => boolean function.
  */
 
 /** Pass only if value is strictly true (boolean). */
-export function isTrue(): (v: unknown) => boolean {
+export function isTrue(): (v: ConditionValue) => boolean {
   return (v) => v === true;
 }
 
 /** Pass only if value is strictly false (boolean). */
-export function isFalse(): (v: unknown) => boolean {
+export function isFalse(): (v: ConditionValue) => boolean {
   return (v) => v === false;
 }
 
 /** Pass if value is truthy (loose). */
-export function isTruthy(): (v: unknown) => boolean {
+export function isTruthy(): (v: ConditionValue) => boolean {
   return (v) => Boolean(v);
 }
 
 /** Pass if value is falsy (loose). */
-export function isFalsy(): (v: unknown) => boolean {
+export function isFalsy(): (v: ConditionValue) => boolean {
   return (v) => !v;
 }
 
-function toNum(v: unknown): number | null {
+function toNum(v: ConditionValue): number | null {
   if (v === null || v === undefined) return null;
-  const num = Number(v);
-  return isNaN(num) ? null : num;
+  if (typeof v !== "number" && typeof v !== "string") return null;
+  const num = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(num) ? num : null;
 }
 
 /** Pass if value > n. Returns false for null/undefined/NaN. */
-export function gt(n: number): (v: unknown) => boolean {
+export function gt(n: number): (v: ConditionValue) => boolean {
   return (v) => {
     const num = toNum(v);
     return num !== null && num > n;
@@ -38,7 +41,7 @@ export function gt(n: number): (v: unknown) => boolean {
 }
 
 /** Pass if value < n. Returns false for null/undefined/NaN. */
-export function lt(n: number): (v: unknown) => boolean {
+export function lt(n: number): (v: ConditionValue) => boolean {
   return (v) => {
     const num = toNum(v);
     return num !== null && num < n;
@@ -46,7 +49,7 @@ export function lt(n: number): (v: unknown) => boolean {
 }
 
 /** Pass if value >= n. Returns false for null/undefined/NaN. */
-export function gte(n: number): (v: unknown) => boolean {
+export function gte(n: number): (v: ConditionValue) => boolean {
   return (v) => {
     const num = toNum(v);
     return num !== null && num >= n;
@@ -54,7 +57,7 @@ export function gte(n: number): (v: unknown) => boolean {
 }
 
 /** Pass if value <= n. Returns false for null/undefined/NaN. */
-export function lte(n: number): (v: unknown) => boolean {
+export function lte(n: number): (v: ConditionValue) => boolean {
   return (v) => {
     const num = toNum(v);
     return num !== null && num <= n;
@@ -62,14 +65,17 @@ export function lte(n: number): (v: unknown) => boolean {
 }
 
 /** Pass if min <= value <= max (inclusive). Returns false for null/undefined/NaN. */
-export function between(min: number, max: number): (v: unknown) => boolean {
+export function between(
+  min: number,
+  max: number,
+): (v: ConditionValue) => boolean {
   return (v) => {
     const num = toNum(v);
     return num !== null && num >= min && num <= max;
   };
 }
 
-/** Pass if value === expected (strict equality). Works for any type. */
-export function eq(expected: unknown): (v: unknown) => boolean {
+/** Pass if value === expected (strict equality). */
+export function eq(expected: ConditionValue): (v: ConditionValue) => boolean {
   return (v) => v === expected;
 }

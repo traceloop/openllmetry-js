@@ -75,9 +75,9 @@ export class TraceloopClient {
     return await fetch(`${this.baseUrl}${path}`, {
       method: "GET",
       headers: {
+        ...extraHeaders,
         Authorization: `Bearer ${this.apiKey}`,
         "X-Traceloop-SDK-Version": this.version,
-        ...extraHeaders,
       },
       signal,
     });

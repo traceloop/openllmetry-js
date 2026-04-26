@@ -4,14 +4,16 @@ import { TraceloopError, SEVERITY } from "../errors";
  * Core Guard type — any async function that takes a dict input and returns a boolean.
  * A guard returns true = pass, false = fail.
  */
-export type Guard = (input: Record<string, unknown>) => Promise<boolean>;
+export type Guard = ((input: Record<string, unknown>) => Promise<boolean>) & {
+  guardName?: string;
+};
 
 /**
  * Maps the LLM function output to one guard input per guard.
  * Can return a list (index-matched to guards) or a dict (keyed by guard name).
  */
 export type InputMapper = (
-  output: unknown,
+  output: string | Record<string, unknown>,
   numGuards: number,
 ) => Record<string, unknown>[] | Record<string, Record<string, unknown>>;
 
@@ -19,7 +21,7 @@ export type InputMapper = (
  * Passed to on_failure handlers when a guard fails.
  */
 export interface GuardedResult {
-  result: unknown;
+  result: string | Record<string, unknown>;
   guardInputs: Record<string, unknown>[];
 }
 
@@ -30,7 +32,18 @@ export interface GuardResult {
   name: string;
   passed: boolean;
   duration: number;
-  error?: Error;
+}
+
+// ── Internal: used by parallel failFast to carry a failed GuardExecutionResult
+// through Promise.all rejection without losing span/timing data.
+
+export class FailFastGuardResult {
+  constructor(
+    public readonly index: number,
+    public readonly name: string,
+    public readonly passed: false,
+    public readonly duration: number,
+  ) {}
 }
 
 // ── Error hierarchy ──────────────────────────────────────────────────────────
@@ -67,6 +80,7 @@ export class GuardExecutionError extends GuardrailError {
     );
     this.name = "GuardExecutionError";
     this.originalException = originalException;
+    this.underlyingCause = originalException;
     this.guardInput = guardInput;
     this.guardIndex = guardIndex;
   }

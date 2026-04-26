@@ -196,6 +196,25 @@ describe("Guardrails", () => {
         "second guard should NOT have run",
       );
     });
+
+    it(".parallel().failFast() returns only the first failing result", async () => {
+      // Use a slow guard so the fast-failing guard wins the race
+      const slowPass: Guard = async () => {
+        await new Promise((r) => setTimeout(r, 50));
+        return true;
+      };
+      (slowPass as any).guardName = "slow-pass";
+
+      const g = new Guardrails({}, [alwaysFail, slowPass])
+        .parallel()
+        .failFast()
+        .ignoreOnFailure();
+
+      const results = await g.validate([{ text: "a" }, { text: "b" }]);
+      assert.strictEqual(results.length, 1);
+      assert.strictEqual(results[0].passed, false);
+      assert.strictEqual(results[0].name, "always-fail");
+    });
   });
 
   describe("validate() method — UC-C", () => {
@@ -214,13 +233,6 @@ describe("Guardrails", () => {
       assert.ok(Array.isArray(results));
       assert.strictEqual(results.length, 1);
       assert.strictEqual(results[0].passed, false);
-    });
-
-    it("does not call fn — only validates provided inputs", async () => {
-      const fnCalled = false;
-      const g = new Guardrails({}, [alwaysPass]);
-      await g.validate([{ text: "hello" }]);
-      assert.strictEqual(fnCalled, false);
     });
   });
 

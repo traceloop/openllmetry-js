@@ -9,7 +9,7 @@ import { InputMapper } from "./model";
  * - anything else → throws (user must provide a custom inputMapper)
  */
 export function defaultInputMapper(
-  output: unknown,
+  output: string | Record<string, unknown>,
   numGuards: number,
 ): Record<string, unknown>[] {
   if (typeof output === "string") {
@@ -21,7 +21,7 @@ export function defaultInputMapper(
   }
 
   if (output !== null && typeof output === "object" && !Array.isArray(output)) {
-    const dict = output as Record<string, unknown>;
+    const dict = output;
     const enriched: Record<string, unknown> = { ...dict };
 
     // Add synonym aliases for each key in the object
@@ -48,7 +48,7 @@ export function defaultInputMapper(
  * Handles both list form (index-matched) and dict form (keyed by guard name).
  */
 export function resolveGuardInputs(
-  output: unknown,
+  output: string | Record<string, unknown>,
   numGuards: number,
   guardNames: string[],
   inputMapper?: InputMapper,
@@ -73,7 +73,7 @@ export function resolveGuardInputs(
   // Dict form — keyed by guard name, resolve to ordered list
   const result: Record<string, unknown>[] = [];
   for (const name of guardNames) {
-    if (!(name in mapped)) {
+    if (!Object.hasOwn(mapped, name)) {
       throw new Error(
         `inputMapper returned a dict but no entry found for guard "${name}". ` +
           `Available keys: ${Object.keys(mapped).join(", ")}`,
