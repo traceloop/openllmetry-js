@@ -315,6 +315,10 @@ export class Guardrails {
             true,
           ),
         );
+        // Suppress unhandled rejections from guards that settle AFTER Promise.all
+        // already rejected. Without this, Node emits UnhandledPromiseRejection
+        // warnings when two or more guards fail concurrently.
+        promises.forEach((p) => p.catch(() => undefined));
         try {
           return await Promise.all(promises);
         } catch (err) {
