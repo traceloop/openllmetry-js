@@ -36,7 +36,6 @@ export interface GuardOptions {
 }
 
 export interface ValidateOptions {
-  onFailure?: string | OnFailureHandler;
   name?: string;
   parallel?: boolean;
 }
@@ -196,7 +195,8 @@ export class Guardrails {
         result: result as string | Record<string, unknown>,
         guardInputs,
       };
-      return this._onFailure(guardedResult) as T;
+      const fallback = this._onFailure(guardedResult);
+      return (fallback ?? result) as T;
     } catch (err) {
       guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
       throw err;

@@ -138,6 +138,7 @@ async function main() {
     arguments: { x: 4, y: 7 },
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   console.log(
     `   Result: ${((multiplyResult as any).content[0] as any).text}\n`,
   );
