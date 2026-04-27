@@ -101,10 +101,7 @@ async function main(): Promise<void> {
         "Token: ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789abc",
         [secretsGuard()],
       );
-      console.log(
-        "GitHub token:",
-        result.passed ? "✅ passed" : "🚫 blocked",
-      );
+      console.log("GitHub token:", result.passed ? "✅ passed" : "🚫 blocked");
 
       console.log(
         "\n── promptInjectionGuard ───────────────────────────────────",
