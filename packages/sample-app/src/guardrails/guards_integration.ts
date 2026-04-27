@@ -96,14 +96,13 @@ async function main(): Promise<void> {
       );
       console.log("No secrets:", result.passed ? "✅ passed" : "🚫 blocked");
 
-      // Using real-format tokens (fabricated values) so the pattern matcher triggers.
+      // Using a real-format GitHub token (fabricated value) so the pattern matcher triggers.
       result = await validate(
-        "Token: ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789abc\n" +
-          "JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U",
+        "Token: ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456789abc",
         [secretsGuard()],
       );
       console.log(
-        "GitHub token + JWT:",
+        "GitHub token:",
         result.passed ? "✅ passed" : "🚫 blocked",
       );
 
