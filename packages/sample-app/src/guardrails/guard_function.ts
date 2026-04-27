@@ -82,7 +82,7 @@ function info(msg: string) {
 
 // ── guard() — guarded function wrapper ───────────────────────────────────────
 
-async function useCase2_guardFunction(): Promise<void> {
+async function guardFunction(): Promise<void> {
   sep("guard() — guarded function wrapper");
 
   // Wrap once — safeGenerate has the exact same signature as the inner function.
@@ -97,12 +97,21 @@ async function useCase2_guardFunction(): Promise<void> {
     },
   );
 
+  const fallback = JSON.stringify({ error: "Response was not valid JSON" });
+
   // --- Safe call: ask for JSON — should pass ---
   info(`Calling with prompt that returns valid JSON...`);
   const validResponse = await safeGenerate(
     "Return a JSON object with fields: name (string), city (string). Make up values. Respond with JSON only, no markdown.",
   );
-  ok(`Guard passed — JSON response: "${validResponse.slice(0, 100)}"`);
+
+  if (validResponse !== fallback) {
+    ok(`Guard passed — JSON response: "${validResponse.slice(0, 100)}"`);
+  } else {
+    fail(
+      `Guard fired on the JSON prompt (LLM returned non-JSON) — fallback returned`,
+    );
+  }
 
   // --- Fail call: ask for prose — guard fires ---
   console.log();
@@ -111,7 +120,6 @@ async function useCase2_guardFunction(): Promise<void> {
     "Tell me a fun fact about penguins in plain English.",
   );
 
-  const fallback = JSON.stringify({ error: "Response was not valid JSON" });
   if (proseResponse === fallback) {
     fail(`JSON guard fired — fallback returned ✓`);
   } else {
@@ -133,7 +141,7 @@ class DataService {
   }
 }
 
-async function useCase5_decorator(): Promise<void> {
+async function decorator(): Promise<void> {
   sep("@guardrail decorator");
 
   const service = new DataService();
@@ -161,7 +169,7 @@ async function useCase5_decorator(): Promise<void> {
 
 // ── guard() with custom condition + timeoutMs ─────────────────────────────────
 
-async function useCase11_customConditionAndTimeout(): Promise<void> {
+async function customConditionAndTimeout(): Promise<void> {
   sep("guard() with custom condition override + timeoutMs");
 
   // promptInjectionGuard default condition: passes when has_injection === false.
@@ -217,9 +225,9 @@ async function main(): Promise<void> {
     { name: "guard-function-examples-workflow" },
     async () => {
       try {
-        await useCase2_guardFunction();
-        await useCase5_decorator();
-        await useCase11_customConditionAndTimeout();
+        await guardFunction();
+        await decorator();
+        await customConditionAndTimeout();
       } catch (err) {
         if (err instanceof GuardValidationError) {
           console.error(

@@ -78,7 +78,7 @@ function info(msg: string) {
 
 // ── validate() — pre-call prompt injection check ─────────────────────────────
 
-async function useCase1_validateBeforeLLM(): Promise<void> {
+async function validateBeforeLLM(): Promise<void> {
   sep("validate() — pre-call prompt injection check");
 
   const safeInput = "What is the capital of France?";
@@ -111,15 +111,15 @@ async function useCase1_validateBeforeLLM(): Promise<void> {
   );
 
   if (!injectionResult.passed) {
-    fail("Injection attempt BLOCKED — LLM was never called. ✓");
+    ok("Injection attempt BLOCKED — LLM was never called. ✓");
   } else {
-    ok("Injection attempt passed (guard did not trigger).");
+    fail("Injection attempt passed (guard did not trigger).");
   }
 }
 
 // ── validate() with custom inputMapper ───────────────────────────────────────
 
-async function useCase1b_validateWithInputMapper(): Promise<void> {
+async function validateWithInputMapper(): Promise<void> {
   sep("validate() with custom inputMapper on structured output");
 
   // When the output is a structured object, use inputMapper to tell each guard
@@ -141,9 +141,9 @@ async function useCase1b_validateWithInputMapper(): Promise<void> {
   });
 
   if (!result.passed) {
-    fail(`Injection detected in "answer" field — blocked ✓`);
+    ok(`Injection detected in "answer" field — blocked ✓`);
   } else {
-    ok(`Passed (guard did not trigger on the answer field).`);
+    fail(`Passed (guard did not trigger on the answer field).`);
   }
 }
 
@@ -162,8 +162,8 @@ async function main(): Promise<void> {
     { name: "validate-examples-workflow" },
     async () => {
       try {
-        await useCase1_validateBeforeLLM();
-        await useCase1b_validateWithInputMapper();
+        await validateBeforeLLM();
+        await validateWithInputMapper();
       } catch (err) {
         if (err instanceof GuardValidationError) {
           console.error(

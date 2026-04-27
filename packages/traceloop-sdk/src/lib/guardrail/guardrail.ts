@@ -43,7 +43,7 @@ export interface GuardrailsOptions {
    */
   parallel?: boolean;
   /**
-   * Maps the LLM function output to one input dict per guard.
+   * Maps the guarded function's output to one input dict per guard.
    * Use this when the output is a structured object and different guards
    * need different fields. If omitted, the default mapper handles strings
    * and plain objects automatically.

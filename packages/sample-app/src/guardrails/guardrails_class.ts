@@ -83,7 +83,7 @@ function info(msg: string) {
 
 // ── Guardrails class + builder + sequential + runAll ──────────────────────────
 
-async function useCase3_guardrailsClassBuilder(): Promise<void> {
+async function guardrailsClassBuilder(): Promise<void> {
   sep("Guardrails class — builder pattern + multiple guards");
 
   // Run toxicity AND pii guards sequentially, collect all results even if first fails
@@ -110,7 +110,7 @@ async function useCase3_guardrailsClassBuilder(): Promise<void> {
 
 // ── Custom onFailure handler ──────────────────────────────────────────────────
 
-async function useCase4_customOnFailure(): Promise<void> {
+async function customOnFailure(): Promise<void> {
   sep("Guardrails class — custom onFailure handler");
 
   // Using jsonValidatorGuard — deterministic: prose always fails JSON validation.
@@ -148,7 +148,7 @@ async function useCase4_customOnFailure(): Promise<void> {
 
 // ── jsonValidatorGuard — structured output validation ─────────────────────────
 
-async function useCase6_jsonValidator(): Promise<void> {
+async function jsonValidator(): Promise<void> {
   sep("jsonValidatorGuard — structured output validation");
 
   const g = new Guardrails(
@@ -191,7 +191,7 @@ async function useCase6_jsonValidator(): Promise<void> {
 
 // ── parallel() — run guards concurrently ─────────────────────────────────────
 
-async function useCase8_parallel(): Promise<void> {
+async function parallel(): Promise<void> {
   sep("parallel() — run guards concurrently");
 
   // Default behavior is already parallel, but this makes it explicit.
@@ -219,7 +219,7 @@ async function useCase8_parallel(): Promise<void> {
 
 // ── Custom inputMapper — route structured output to guards ────────────────────
 
-async function useCase9_customInputMapper(): Promise<void> {
+async function customInputMapper(): Promise<void> {
   sep("custom inputMapper — route structured output to guards");
 
   // When the LLM returns a structured object (not a plain string), the default
@@ -269,11 +269,11 @@ async function main(): Promise<void> {
     { name: "guardrails-class-examples-workflow" },
     async () => {
       try {
-        await useCase3_guardrailsClassBuilder();
-        await useCase4_customOnFailure();
-        await useCase6_jsonValidator();
-        await useCase8_parallel();
-        await useCase9_customInputMapper();
+        await guardrailsClassBuilder();
+        await customOnFailure();
+        await jsonValidator();
+        await parallel();
+        await customInputMapper();
       } catch (err) {
         if (err instanceof GuardValidationError) {
           console.error(

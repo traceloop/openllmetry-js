@@ -55,7 +55,7 @@ function info(msg: string) {
 
 // ── sequential().failFast() — stop at first failure ──────────────────────────
 
-async function useCase7_sequentialFailFast(): Promise<void> {
+async function sequentialFailFast(): Promise<void> {
   sep("sequential().failFast() — stop at first failure");
 
   // Run toxicity first, then PII. If toxicity fails, PII never runs.
@@ -107,13 +107,13 @@ async function useCase7_sequentialFailFast(): Promise<void> {
   if (ranGuards.includes("piiGuard")) {
     fail(`piiGuard ran — failFast did NOT work as expected ✗`);
   } else {
-    fail(`toxicityGuard fired — piiGuard was skipped ✓`);
+    ok(`toxicityGuard fired — piiGuard was skipped ✓`);
   }
 }
 
 // ── onFailure shorthands — "log" and "ignore" ─────────────────────────────────
 
-async function useCase10_onFailureShorthands(): Promise<void> {
+async function onFailureShorthands(): Promise<void> {
   sep('onFailure shorthands — "log" and "ignore"');
 
   // Using jsonValidatorGuard with pre-canned prose — no LLM needed.
@@ -160,8 +160,8 @@ async function main(): Promise<void> {
     { name: "guards-basic-examples-workflow" },
     async () => {
       try {
-        await useCase7_sequentialFailFast();
-        await useCase10_onFailureShorthands();
+        await sequentialFailFast();
+        await onFailureShorthands();
       } catch (err) {
         if (err instanceof GuardValidationError) {
           console.error(
