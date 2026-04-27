@@ -1,11 +1,11 @@
 /**
  * Validate Examples
  * ==================
- * Demonstrates the standalone validate() API (Tier 2) for pre-call input checks.
+ * Demonstrates the standalone validate() API for pre-call input checks.
  *
- * Use cases:
- *   1.  validate() — block prompt injection BEFORE the LLM is called
- *   1b. validate() with custom inputMapper — validate a structured object
+ * Examples:
+ *   - validate() — block prompt injection BEFORE the LLM is called
+ *   - validate() with custom inputMapper — validate a structured object
  *
  * Run:
  *   npm run build && node dist/src/guardrails/validate_examples.js
@@ -76,10 +76,10 @@ function info(msg: string) {
   console.log(`  ℹ️   ${msg}`);
 }
 
-// ── Use Case 1 ────────────────────────────────────────────────────────────────
+// ── validate() — pre-call prompt injection check ─────────────────────────────
 
 async function useCase1_validateBeforeLLM(): Promise<void> {
-  sep("USE CASE 1 — Tier 2: validate() — pre-call prompt injection check");
+  sep("validate() — pre-call prompt injection check");
 
   const safeInput = "What is the capital of France?";
   const injectionInput =
@@ -117,12 +117,10 @@ async function useCase1_validateBeforeLLM(): Promise<void> {
   }
 }
 
-// ── Use Case 1b ───────────────────────────────────────────────────────────────
+// ── validate() with custom inputMapper ───────────────────────────────────────
 
 async function useCase1b_validateWithInputMapper(): Promise<void> {
-  sep(
-    "USE CASE 1b — Tier 2: validate() with custom inputMapper on structured output",
-  );
+  sep("validate() with custom inputMapper on structured output");
 
   // When the output is a structured object, use inputMapper to tell each guard
   // which field to look at instead of passing the whole object.

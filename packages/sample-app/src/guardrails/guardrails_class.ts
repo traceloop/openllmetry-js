@@ -1,15 +1,15 @@
 /**
  * Guardrails Class Examples
  * ==========================
- * Demonstrates the Guardrails class builder pattern (Tier 3) for full control
+ * Demonstrates the Guardrails class builder pattern for full control
  * over guard pipelines.
  *
- * Use cases:
- *   3.  Guardrails class + builder + sequential + runAll
- *   4.  Custom onFailure handler with GuardedResult
- *   6.  jsonValidatorGuard — format/structure validation
- *   8.  parallel() — run all guards concurrently
- *   9.  Custom inputMapper — control what each guard receives
+ * Examples:
+ *   - Guardrails class + builder + sequential + runAll
+ *   - Custom onFailure handler with GuardedResult
+ *   - jsonValidatorGuard — format/structure validation
+ *   - parallel() — run all guards concurrently
+ *   - Custom inputMapper — control what each guard receives
  *
  * Run:
  *   npm run build && node dist/src/guardrails/guardrails_class.js
@@ -81,12 +81,10 @@ function info(msg: string) {
   console.log(`  ℹ️   ${msg}`);
 }
 
-// ── Use Case 3 ────────────────────────────────────────────────────────────────
+// ── Guardrails class + builder + sequential + runAll ──────────────────────────
 
 async function useCase3_guardrailsClassBuilder(): Promise<void> {
-  sep(
-    "USE CASE 3 — Tier 3: Guardrails class with builder pattern + multiple guards",
-  );
+  sep("Guardrails class — builder pattern + multiple guards");
 
   // Run toxicity AND pii guards sequentially, collect all results even if first fails
   const g = new Guardrails({}, [toxicityGuard(), piiGuard()])
@@ -110,10 +108,10 @@ async function useCase3_guardrailsClassBuilder(): Promise<void> {
   );
 }
 
-// ── Use Case 4 ────────────────────────────────────────────────────────────────
+// ── Custom onFailure handler ──────────────────────────────────────────────────
 
 async function useCase4_customOnFailure(): Promise<void> {
-  sep("USE CASE 4 — Tier 3: Custom onFailure handler");
+  sep("Guardrails class — custom onFailure handler");
 
   // Using jsonValidatorGuard — deterministic: prose always fails JSON validation.
   // The custom onFailure handler receives the original output and can log/transform it.
@@ -148,10 +146,10 @@ async function useCase4_customOnFailure(): Promise<void> {
   );
 }
 
-// ── Use Case 6 ────────────────────────────────────────────────────────────────
+// ── jsonValidatorGuard — structured output validation ─────────────────────────
 
 async function useCase6_jsonValidator(): Promise<void> {
-  sep("USE CASE 6 — Tier 3: jsonValidatorGuard — structured output validation");
+  sep("jsonValidatorGuard — structured output validation");
 
   const g = new Guardrails(
     {
@@ -191,10 +189,10 @@ async function useCase6_jsonValidator(): Promise<void> {
   info(`Result after onFailure: ${invalidResult.slice(0, 120)}`);
 }
 
-// ── Use Case 8 ────────────────────────────────────────────────────────────────
+// ── parallel() — run guards concurrently ─────────────────────────────────────
 
 async function useCase8_parallel(): Promise<void> {
-  sep("USE CASE 8 — Tier 3: parallel() — run guards concurrently");
+  sep("parallel() — run guards concurrently");
 
   // Default behavior is already parallel, but this makes it explicit.
   // All guards fire at the same time — faster for independent checks.
@@ -219,10 +217,10 @@ async function useCase8_parallel(): Promise<void> {
   ok(`Response: "${result.slice(0, 80)}"`);
 }
 
-// ── Use Case 9 ────────────────────────────────────────────────────────────────
+// ── Custom inputMapper — route structured output to guards ────────────────────
 
 async function useCase9_customInputMapper(): Promise<void> {
-  sep("USE CASE 9 — Tier 3: custom inputMapper");
+  sep("custom inputMapper — route structured output to guards");
 
   // When the LLM returns a structured object (not a plain string), the default
   // mapper can't know which field to pass to which guard. Use inputMapper to

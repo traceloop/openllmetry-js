@@ -142,7 +142,7 @@ async function main(): Promise<void> {
       console.log("Clean text:", result.passed ? "✅ passed" : "🚫 blocked");
 
       result = await validate(
-        "What the f*** is wrong with you? This is absolute bulls***.",
+        "What the fuck is wrong with you? This is absolute bullshit.",
         [profanityGuard()],
       );
       console.log("Profanity:", result.passed ? "✅ passed" : "🚫 blocked");

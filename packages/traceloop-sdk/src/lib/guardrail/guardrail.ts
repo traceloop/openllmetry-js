@@ -282,10 +282,15 @@ export class Guardrails {
    * @returns Per-guard results: `[{ name, passed, duration }, ...]`
    *
    * @example
+   * // Check a user prompt for injection before calling the LLM
+   * const g = new Guardrails({}, [promptInjectionGuard(), piiGuard()]);
    * const results = await g.validate([
-   *   { text: "some output", prompt: "some output", completion: "some output" },
-   *   { text: "some output", prompt: "some output", completion: "some output" },
+   *   { prompt: userPrompt },
+   *   { text: userPrompt },
    * ]);
+   * if (results.every(r => r.passed)) {
+   *   const response = await callLLM(userPrompt);
+   * }
    */
   async validate(
     guardInputs: Record<string, unknown>[],

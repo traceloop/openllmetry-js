@@ -25,54 +25,32 @@ export function isFalsy(): (v: ConditionValue) => boolean {
   return (v) => !v;
 }
 
-function toNum(v: ConditionValue): number | null {
-  if (v === null || v === undefined) return null;
-  if (typeof v !== "number" && typeof v !== "string") return null;
-  const num = typeof v === "number" ? v : Number(v);
-  return Number.isFinite(num) ? num : null;
-}
-
-/** Pass if value > n. Returns false for null/undefined/NaN. */
+/** Pass if value > n. Returns false for non-numbers. */
 export function gt(n: number): (v: ConditionValue) => boolean {
-  return (v) => {
-    const num = toNum(v);
-    return num !== null && num > n;
-  };
+  return (v) => typeof v === "number" && v > n;
 }
 
-/** Pass if value < n. Returns false for null/undefined/NaN. */
+/** Pass if value < n. Returns false for non-numbers. */
 export function lt(n: number): (v: ConditionValue) => boolean {
-  return (v) => {
-    const num = toNum(v);
-    return num !== null && num < n;
-  };
+  return (v) => typeof v === "number" && v < n;
 }
 
-/** Pass if value >= n. Returns false for null/undefined/NaN. */
+/** Pass if value >= n. Returns false for non-numbers. */
 export function gte(n: number): (v: ConditionValue) => boolean {
-  return (v) => {
-    const num = toNum(v);
-    return num !== null && num >= n;
-  };
+  return (v) => typeof v === "number" && v >= n;
 }
 
-/** Pass if value <= n. Returns false for null/undefined/NaN. */
+/** Pass if value <= n. Returns false for non-numbers. */
 export function lte(n: number): (v: ConditionValue) => boolean {
-  return (v) => {
-    const num = toNum(v);
-    return num !== null && num <= n;
-  };
+  return (v) => typeof v === "number" && v <= n;
 }
 
-/** Pass if min <= value <= max (inclusive). Returns false for null/undefined/NaN. */
+/** Pass if min <= value <= max (inclusive). Returns false for non-numbers. */
 export function between(
   min: number,
   max: number,
 ): (v: ConditionValue) => boolean {
-  return (v) => {
-    const num = toNum(v);
-    return num !== null && num >= min && num <= max;
-  };
+  return (v) => typeof v === "number" && v >= min && v <= max;
 }
 
 /** Pass if value === expected (strict equality). */

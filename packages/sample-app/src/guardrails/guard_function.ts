@@ -1,12 +1,12 @@
 /**
  * Guard Function Examples
  * ========================
- * Demonstrates the guard() wrapper (Tier 1) and @guardrail decorator (Tier 4).
+ * Demonstrates the guard() wrapper and @guardrail decorator.
  *
- * Use cases:
- *   2.  guard()              — wrap a function once, guard every call
- *   5.  @guardrail decorator — class-based usage
- *   11. guard() with custom condition + timeoutMs override
+ * Examples:
+ *   - guard()              — wrap a function once, guard every call
+ *   - @guardrail decorator — class-based usage
+ *   - guard() with custom condition + timeoutMs override
  *
  * Run:
  *   npm run build && node dist/src/guardrails/guard_function.js
@@ -80,10 +80,10 @@ function info(msg: string) {
   console.log(`  ℹ️   ${msg}`);
 }
 
-// ── Use Case 2 ────────────────────────────────────────────────────────────────
+// ── guard() — guarded function wrapper ───────────────────────────────────────
 
 async function useCase2_guardFunction(): Promise<void> {
-  sep("USE CASE 2 — Tier 1: guard() — guarded function wrapper");
+  sep("guard() — guarded function wrapper");
 
   // Wrap once — safeGenerate has the exact same signature as the inner function.
   // Using jsonValidatorGuard — deterministic: valid JSON always passes, prose always fails.
@@ -93,7 +93,7 @@ async function useCase2_guardFunction(): Promise<void> {
     [jsonValidatorGuard()],
     {
       name: "json-format-check",
-      onFailure: '{"error":"Response was not valid JSON"}',
+      onFailure: () => JSON.stringify({ error: "Response was not valid JSON" }),
     },
   );
 
@@ -111,7 +111,8 @@ async function useCase2_guardFunction(): Promise<void> {
     "Tell me a fun fact about penguins in plain English.",
   );
 
-  if (proseResponse === '{"error":"Response was not valid JSON"}') {
+  const fallback = JSON.stringify({ error: "Response was not valid JSON" });
+  if (proseResponse === fallback) {
     fail(`JSON guard fired — fallback returned ✓`);
   } else {
     ok(
@@ -120,12 +121,12 @@ async function useCase2_guardFunction(): Promise<void> {
   }
 }
 
-// ── Use Case 5 ────────────────────────────────────────────────────────────────
+// ── @guardrail decorator ──────────────────────────────────────────────────────
 
 class DataService {
   @guardrail([jsonValidatorGuard()], {
     name: "json-format-guard",
-    onFailure: '{"error":"Response was not valid JSON"}',
+    onFailure: "Response was not valid JSON.",
   })
   async generateData(prompt: string): Promise<string> {
     return callLLM("You are a data assistant.", prompt);
@@ -133,7 +134,7 @@ class DataService {
 }
 
 async function useCase5_decorator(): Promise<void> {
-  sep("USE CASE 5 — Tier 4: @guardrail decorator");
+  sep("@guardrail decorator");
 
   const service = new DataService();
 
@@ -151,17 +152,17 @@ async function useCase5_decorator(): Promise<void> {
     "Tell me a fun fact about the ocean in plain English.",
   );
 
-  if (proseResult === '{"error":"Response was not valid JSON"}') {
+  if (proseResult === "Response was not valid JSON.") {
     fail(`JSON guard fired — fallback returned ✓`);
   } else {
     ok(`Response came through: "${proseResult.slice(0, 120)}"`);
   }
 }
 
-// ── Use Case 11 ───────────────────────────────────────────────────────────────
+// ── guard() with custom condition + timeoutMs ─────────────────────────────────
 
 async function useCase11_customConditionAndTimeout(): Promise<void> {
-  sep("USE CASE 11 — Tier 1: custom condition override + timeoutMs");
+  sep("guard() with custom condition override + timeoutMs");
 
   // promptInjectionGuard default condition: passes when has_injection === false.
   // Here we override the condition to isFalse() explicitly (same semantics) and

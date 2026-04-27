@@ -3,9 +3,9 @@
  * ======================
  * Demonstrates sequential failFast pipelines and onFailure shorthands.
  *
- * Use cases:
- *   7.  sequential().failFast() — stop at first failure
- *   10. onFailure shorthands — "log" and "ignore" modes
+ * Examples:
+ *   - sequential().failFast() — stop at first failure
+ *   - onFailure shorthands — "log" and "ignore" modes
  *
  * Run:
  *   npm run build && node dist/src/guardrails/guards_basic.js
@@ -53,10 +53,10 @@ function info(msg: string) {
   console.log(`  ℹ️   ${msg}`);
 }
 
-// ── Use Case 7 ────────────────────────────────────────────────────────────────
+// ── sequential().failFast() — stop at first failure ──────────────────────────
 
 async function useCase7_sequentialFailFast(): Promise<void> {
-  sep("USE CASE 7 — Tier 3: sequential().failFast() — stop at first failure");
+  sep("sequential().failFast() — stop at first failure");
 
   // Run toxicity first, then PII. If toxicity fails, PII never runs.
   // Useful when guards are expensive — skip the rest once you know it failed.
@@ -111,10 +111,10 @@ async function useCase7_sequentialFailFast(): Promise<void> {
   }
 }
 
-// ── Use Case 10 ───────────────────────────────────────────────────────────────
+// ── onFailure shorthands — "log" and "ignore" ─────────────────────────────────
 
 async function useCase10_onFailureShorthands(): Promise<void> {
-  sep('USE CASE 10 — Tier 3: onFailure shorthands — "log" and "ignore"');
+  sep('onFailure shorthands — "log" and "ignore"');
 
   // Using jsonValidatorGuard with pre-canned prose — no LLM needed.
   // Plain prose always fails JSON validation — predictable and instant.
