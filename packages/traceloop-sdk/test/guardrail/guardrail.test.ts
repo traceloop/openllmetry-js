@@ -372,6 +372,27 @@ describe("Guardrails", () => {
       ]);
       assert.ok(result);
     });
+
+    it("applies a custom inputMapper when provided", async () => {
+      let receivedInput: Record<string, unknown> | undefined;
+      const capturingGuard: Guard = async (input) => {
+        receivedInput = input;
+        return true;
+      };
+      capturingGuard.guardName = "capturing-guard";
+
+      await validate(
+        { answer: "Paris", confidence: "high" },
+        [capturingGuard],
+        {
+          inputMapper: (output) => [
+            { text: (output as { answer: string }).answer },
+          ],
+        },
+      );
+
+      assert.deepStrictEqual(receivedInput, { text: "Paris" });
+    });
   });
 
   // ── Tier 4: @guardrail decorator ─────────────────────────────────────────────

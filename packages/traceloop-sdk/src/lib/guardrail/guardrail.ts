@@ -2,7 +2,7 @@ import { context, trace, SpanStatusCode } from "@opentelemetry/api";
 import { ATTR_GEN_AI_OPERATION_NAME } from "@opentelemetry/semantic-conventions/incubating";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { getTracer } from "../tracing/tracing";
-import { defaultInputMapper, resolveGuardInputs } from "./default-mapper";
+import { resolveGuardInputs } from "./default-mapper";
 import {
   Guard,
   GuardedResult,
@@ -38,6 +38,7 @@ export interface GuardOptions {
 export interface ValidateOptions {
   name?: string;
   parallel?: boolean;
+  inputMapper?: InputMapper;
 }
 
 export interface ValidateResult {
@@ -458,7 +459,13 @@ export async function validate(
   options?: ValidateOptions,
 ): Promise<ValidateResult> {
   const g = new Guardrails({ runAll: true, ...options }, guards);
-  const guardInputs = defaultInputMapper(output, guards.length);
+  const guardNames = guards.map((guard, i) => guard.guardName ?? `guard_${i}`);
+  const guardInputs = resolveGuardInputs(
+    output,
+    guards.length,
+    guardNames,
+    options?.inputMapper,
+  );
   const results = await g.validate(guardInputs);
   return {
     passed: results.every((r) => r.passed),

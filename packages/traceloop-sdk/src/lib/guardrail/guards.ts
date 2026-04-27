@@ -363,8 +363,11 @@ export function customEvaluatorGuard(
       // Accept: text/event-stream matches Python SDK behavior — server holds the
       // connection open (blocking long-poll) until the LLM job completes, then
       // returns the result as JSON and closes the connection.
+      const resolvedStreamUrl = streamUrl.startsWith("/v2")
+        ? streamUrl
+        : `/v2${streamUrl}`;
       const resultResponse = await client.get(
-        `/v2${streamUrl}`,
+        resolvedStreamUrl,
         controller.signal,
         {
           Accept: "text/event-stream",
