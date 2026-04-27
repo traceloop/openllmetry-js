@@ -4,9 +4,9 @@
  * Shows how to use a custom LLM-as-a-judge evaluator as a guard.
  *
  * Scenario: a physics education app that only answers physics questions.
- * Every user prompt is first validated with validate() to check it's a
- * physics question, then sent to the LLM. The LLM response is then checked
- * with the custom evaluator guard to confirm it actually contains physics.
+ * The LLM response is checked with the custom evaluator guard to confirm
+ * it actually contains physics content. Off-topic responses are blocked
+ * and replaced with a fallback message.
  *
  * The custom evaluator uses a two-call HTTP flow:
  *   1. POST /v2/evaluators/{slug}/executions  — trigger the LLM judge
@@ -45,8 +45,6 @@ traceloop.initialize({
 import {
   Guardrails,
   customEvaluatorGuard,
-  promptInjectionGuard,
-  validate,
   isTrue,
 } from "@traceloop/node-server-sdk";
 
@@ -105,30 +103,6 @@ async function main(): Promise<void> {
     { name: "custom-evaluator-example" },
     async () => {
       console.log(
-        "\n── validate() — check prompt BEFORE calling the LLM ──────",
-      );
-      // validate() is useful for input screening — reject bad prompts early
-      // without wasting an LLM call.
-
-      const offTopicPrompt = "What is the best pasta recipe?";
-      const preCheckResult = await validate(offTopicPrompt, [
-        promptInjectionGuard(),
-      ]);
-
-      if (!preCheckResult.passed) {
-        console.log(`Prompt blocked before LLM call: "${offTopicPrompt}"`);
-      } else {
-        // Also check if the prompt is physics-related using the custom evaluator
-        const topicCheck = await responseGuard.validate([
-          { llm_response: offTopicPrompt },
-        ]);
-        const isPhysics = topicCheck.every((r) => r.passed);
-        console.log(
-          `Prompt "${offTopicPrompt}" is physics-related: ${isPhysics ? "yes" : "no — skipping LLM call"}`,
-        );
-      }
-
-      console.log(
         "\n── guard() on response — physics question → LLM → evaluator ──",
       );
       // A real physics question: LLM answers, custom evaluator confirms it's physics.
@@ -140,14 +114,12 @@ async function main(): Promise<void> {
       const llmResponse = await askLLM(physicsQuestion);
       console.log(`LLM response: "${llmResponse.slice(0, 100)}..."`);
 
-      const guardResults = await responseGuard.validate([
-        { llm_response: llmResponse },
-      ]);
-      const passed = guardResults.every((r) => r.passed);
-      const duration = Math.round(guardResults[0]?.duration ?? 0);
+      const start = Date.now();
+      const physicsResult = await responseGuard.run(async () => llmResponse);
+      const duration = Date.now() - start;
 
       console.log(
-        `Custom evaluator result: ${passed ? "✅ physics confirmed" : "🚫 not physics"} (${duration}ms)`,
+        `Custom evaluator result: ${physicsResult !== FALLBACK ? "✅ physics confirmed" : "🚫 not physics"} (${duration}ms)`,
       );
 
       console.log(
@@ -172,7 +144,7 @@ async function main(): Promise<void> {
       );
       console.log("Check the Traceloop UI for span details.\n");
     },
-  ); // end withWorkflow
+  );
 
   await traceloop.forceFlush();
 }

@@ -1,39 +1,22 @@
 // Auto-generated - DO NOT EDIT
 // Regenerate with: pnpm generate:evaluator-models
 
-import type { EvaluatorWithConfig } from "../../interfaces/experiment.interface";
-import type { components } from "./types";
-import {
-  EVALUATOR_SLUGS,
-  EVALUATOR_SCHEMAS,
-  isValidEvaluatorSlug,
-  type EvaluatorSlug,
-  type EvaluatorSchema,
-} from "./registry";
+import type { EvaluatorWithConfig } from '../../interfaces/experiment.interface';
+import type { components } from './types';
+import { EVALUATOR_SLUGS, EVALUATOR_SCHEMAS, isValidEvaluatorSlug, type EvaluatorSlug, type EvaluatorSchema } from './registry';
 
 // Config type aliases from generated OpenAPI types
-export type AgentFlowQualityConfig =
-  components["schemas"]["request.AgentFlowQualityRequest"]["config"];
-export type AgentGoalCompletenessConfig =
-  components["schemas"]["request.AgentGoalCompletenessRequest"]["config"];
-export type AgentToolTrajectoryConfig =
-  components["schemas"]["request.AgentToolTrajectoryRequest"]["config"];
-export type ContextRelevanceConfig =
-  components["schemas"]["request.ContextRelevanceRequest"]["config"];
-export type JsonValidatorConfig =
-  components["schemas"]["request.JSONValidatorRequest"]["config"];
-export type PiiDetectorConfig =
-  components["schemas"]["request.PIIDetectorRequest"]["config"];
-export type PlaceholderRegexConfig =
-  components["schemas"]["request.PlaceholderRegexRequest"]["config"];
-export type PromptInjectionConfig =
-  components["schemas"]["request.PromptInjectionRequest"]["config"];
-export type RegexValidatorConfig =
-  components["schemas"]["request.RegexValidatorRequest"]["config"];
-export type SexismDetectorConfig =
-  components["schemas"]["request.SexismDetectorRequest"]["config"];
-export type ToxicityDetectorConfig =
-  components["schemas"]["request.ToxicityDetectorRequest"]["config"];
+export type AgentFlowQualityConfig = components['schemas']['request.AgentFlowQualityRequest']['config'];
+export type AgentGoalCompletenessConfig = components['schemas']['request.AgentGoalCompletenessRequest']['config'];
+export type AgentToolTrajectoryConfig = components['schemas']['request.AgentToolTrajectoryRequest']['config'];
+export type ContextRelevanceConfig = components['schemas']['request.ContextRelevanceRequest']['config'];
+export type JsonValidatorConfig = components['schemas']['request.JSONValidatorRequest']['config'];
+export type PiiDetectorConfig = components['schemas']['request.PIIDetectorRequest']['config'];
+export type PlaceholderRegexConfig = components['schemas']['request.PlaceholderRegexRequest']['config'];
+export type PromptInjectionConfig = components['schemas']['request.PromptInjectionRequest']['config'];
+export type RegexValidatorConfig = components['schemas']['request.RegexValidatorRequest']['config'];
+export type SexismDetectorConfig = components['schemas']['request.SexismDetectorRequest']['config'];
+export type ToxicityDetectorConfig = components['schemas']['request.ToxicityDetectorRequest']['config'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utility functions
@@ -44,7 +27,7 @@ export type ToxicityDetectorConfig =
  */
 export function createEvaluator(
   slug: EvaluatorSlug,
-  options?: { version?: string; config?: Record<string, unknown> },
+  options?: { version?: string; config?: Record<string, unknown> }
 ): EvaluatorWithConfig {
   return {
     name: slug,
@@ -58,7 +41,7 @@ export function createEvaluator(
  */
 export function validateEvaluatorInput(
   slug: EvaluatorSlug,
-  taskOutput: Record<string, unknown>,
+  taskOutput: Record<string, unknown>
 ): { valid: boolean; missingFields: string[] } {
   const schema = EVALUATOR_SCHEMAS[slug];
   if (!schema) {
@@ -66,7 +49,7 @@ export function validateEvaluatorInput(
   }
 
   const missingFields = schema.requiredInputFields.filter(
-    (field) => !(field in taskOutput) || taskOutput[field] === undefined,
+    (field) => !(field in taskOutput) || taskOutput[field] === undefined
   );
 
   return {
@@ -85,9 +68,7 @@ export function getAvailableEvaluatorSlugs(): EvaluatorSlug[] {
 /**
  * Get schema information for an evaluator.
  */
-export function getEvaluatorSchemaInfo(
-  slug: EvaluatorSlug,
-): EvaluatorSchema | undefined {
+export function getEvaluatorSchemaInfo(slug: EvaluatorSlug): EvaluatorSchema | undefined {
   return EVALUATOR_SCHEMAS[slug];
 }
 
@@ -109,10 +90,7 @@ export function getEvaluatorSchemaInfo(
  * ```
  */
 export class EvaluatorMadeByTraceloop {
-  static create(
-    slug: EvaluatorSlug,
-    options?: { version?: string; config?: Record<string, unknown> },
-  ): EvaluatorWithConfig {
+  static create(slug: EvaluatorSlug, options?: { version?: string; config?: Record<string, unknown> }): EvaluatorWithConfig {
     return createEvaluator(slug, options);
   }
 
@@ -133,7 +111,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: trajectory_completions, trajectory_prompts
    */
   static agentEfficiency(): EvaluatorWithConfig {
-    return createEvaluator("agent-efficiency");
+    return createEvaluator('agent-efficiency');
   }
 
   /**
@@ -146,12 +124,8 @@ export class EvaluatorMadeByTraceloop {
 - `config.threshold` (number, required): Score threshold for pass/fail determination (0.0-1.0)
    * Required task output fields: trajectory_completions, trajectory_prompts
    */
-  static agentFlowQuality(
-    config?: AgentFlowQualityConfig,
-  ): EvaluatorWithConfig {
-    return createEvaluator("agent-flow-quality", {
-      config: config as Record<string, unknown>,
-    });
+  static agentFlowQuality(config?: AgentFlowQualityConfig): EvaluatorWithConfig {
+    return createEvaluator('agent-flow-quality', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -164,7 +138,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completion, question, reference
    */
   static agentGoalAccuracy(): EvaluatorWithConfig {
-    return createEvaluator("agent-goal-accuracy");
+    return createEvaluator('agent-goal-accuracy');
   }
 
   /**
@@ -176,12 +150,8 @@ export class EvaluatorMadeByTraceloop {
 - `config.threshold` (number, required): Score threshold for pass/fail determination (0.0-1.0)
    * Required task output fields: trajectory_completions, trajectory_prompts
    */
-  static agentGoalCompleteness(
-    config?: AgentGoalCompletenessConfig,
-  ): EvaluatorWithConfig {
-    return createEvaluator("agent-goal-completeness", {
-      config: config as Record<string, unknown>,
-    });
+  static agentGoalCompleteness(config?: AgentGoalCompletenessConfig): EvaluatorWithConfig {
+    return createEvaluator('agent-goal-completeness', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -193,7 +163,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: tool_input, tool_output
    */
   static agentToolErrorDetector(): EvaluatorWithConfig {
-    return createEvaluator("agent-tool-error-detector");
+    return createEvaluator('agent-tool-error-detector');
   }
 
   /**
@@ -208,12 +178,8 @@ export class EvaluatorMadeByTraceloop {
 - `config.input_params_sensitive` (bool, optional): Whether to compare input parameters (default: true)
    * Required task output fields: executed_tool_calls, expected_tool_calls
    */
-  static agentToolTrajectory(
-    config?: AgentToolTrajectoryConfig,
-  ): EvaluatorWithConfig {
-    return createEvaluator("agent-tool-trajectory", {
-      config: config as Record<string, unknown>,
-    });
+  static agentToolTrajectory(config?: AgentToolTrajectoryConfig): EvaluatorWithConfig {
+    return createEvaluator('agent-tool-trajectory', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -226,7 +192,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completion, context, question
    */
   static answerCompleteness(): EvaluatorWithConfig {
-    return createEvaluator("answer-completeness");
+    return createEvaluator('answer-completeness');
   }
 
   /**
@@ -239,7 +205,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completion, ground_truth, question
    */
   static answerCorrectness(): EvaluatorWithConfig {
-    return createEvaluator("answer-correctness");
+    return createEvaluator('answer-correctness');
   }
 
   /**
@@ -251,7 +217,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: answer, question
    */
   static answerRelevancy(): EvaluatorWithConfig {
-    return createEvaluator("answer-relevancy");
+    return createEvaluator('answer-relevancy');
   }
 
   /**
@@ -262,7 +228,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static charCount(): EvaluatorWithConfig {
-    return createEvaluator("char-count");
+    return createEvaluator('char-count');
   }
 
   /**
@@ -274,7 +240,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: denominator_text, numerator_text
    */
   static charCountRatio(): EvaluatorWithConfig {
-    return createEvaluator("char-count-ratio");
+    return createEvaluator('char-count-ratio');
   }
 
   /**
@@ -287,12 +253,8 @@ export class EvaluatorMadeByTraceloop {
 - `config.model` (string, optional): Model to use for evaluation (default: gpt-4o)
    * Required task output fields: completion, context, query
    */
-  static contextRelevance(
-    config?: ContextRelevanceConfig,
-  ): EvaluatorWithConfig {
-    return createEvaluator("context-relevance", {
-      config: config as Record<string, unknown>,
-    });
+  static contextRelevance(config?: ContextRelevanceConfig): EvaluatorWithConfig {
+    return createEvaluator('context-relevance', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -304,7 +266,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completions, prompts
    */
   static conversationQuality(): EvaluatorWithConfig {
-    return createEvaluator("conversation-quality");
+    return createEvaluator('conversation-quality');
   }
 
   /**
@@ -317,7 +279,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completion, context, question
    */
   static faithfulness(): EvaluatorWithConfig {
-    return createEvaluator("faithfulness");
+    return createEvaluator('faithfulness');
   }
 
   /**
@@ -329,7 +291,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: html1, html2
    */
   static htmlComparison(): EvaluatorWithConfig {
-    return createEvaluator("html-comparison");
+    return createEvaluator('html-comparison');
   }
 
   /**
@@ -341,7 +303,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: instructions, response
    */
   static instructionAdherence(): EvaluatorWithConfig {
-    return createEvaluator("instruction-adherence");
+    return createEvaluator('instruction-adherence');
   }
 
   /**
@@ -353,7 +315,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completions, prompts
    */
   static intentChange(): EvaluatorWithConfig {
-    return createEvaluator("intent-change");
+    return createEvaluator('intent-change');
   }
 
   /**
@@ -366,9 +328,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static jsonValidator(config?: JsonValidatorConfig): EvaluatorWithConfig {
-    return createEvaluator("json-validator", {
-      config: config as Record<string, unknown>,
-    });
+    return createEvaluator('json-validator', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -379,7 +339,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: logprobs
    */
   static perplexity(): EvaluatorWithConfig {
-    return createEvaluator("perplexity");
+    return createEvaluator('perplexity');
   }
 
   /**
@@ -391,9 +351,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static piiDetector(config?: PiiDetectorConfig): EvaluatorWithConfig {
-    return createEvaluator("pii-detector", {
-      config: config as Record<string, unknown>,
-    });
+    return createEvaluator('pii-detector', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -409,12 +367,8 @@ export class EvaluatorMadeByTraceloop {
 - `config.multi_line` (bool, optional): Multi-line mode
    * Required task output fields: placeholder_name, placeholder_value, text
    */
-  static placeholderRegex(
-    config?: PlaceholderRegexConfig,
-  ): EvaluatorWithConfig {
-    return createEvaluator("placeholder-regex", {
-      config: config as Record<string, unknown>,
-    });
+  static placeholderRegex(config?: PlaceholderRegexConfig): EvaluatorWithConfig {
+    return createEvaluator('placeholder-regex', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -425,7 +379,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static profanityDetector(): EvaluatorWithConfig {
-    return createEvaluator("profanity-detector");
+    return createEvaluator('profanity-detector');
   }
 
   /**
@@ -437,9 +391,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: prompt
    */
   static promptInjection(config?: PromptInjectionConfig): EvaluatorWithConfig {
-    return createEvaluator("prompt-injection", {
-      config: config as Record<string, unknown>,
-    });
+    return createEvaluator('prompt-injection', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -450,7 +402,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: prompt
    */
   static promptPerplexity(): EvaluatorWithConfig {
-    return createEvaluator("prompt-perplexity");
+    return createEvaluator('prompt-perplexity');
   }
 
   /**
@@ -466,9 +418,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static regexValidator(config?: RegexValidatorConfig): EvaluatorWithConfig {
-    return createEvaluator("regex-validator", {
-      config: config as Record<string, unknown>,
-    });
+    return createEvaluator('regex-validator', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -479,7 +429,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static secretsDetector(): EvaluatorWithConfig {
-    return createEvaluator("secrets-detector");
+    return createEvaluator('secrets-detector');
   }
 
   /**
@@ -491,7 +441,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completion, reference
    */
   static semanticSimilarity(): EvaluatorWithConfig {
-    return createEvaluator("semantic-similarity");
+    return createEvaluator('semantic-similarity');
   }
 
   /**
@@ -503,9 +453,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static sexismDetector(config?: SexismDetectorConfig): EvaluatorWithConfig {
-    return createEvaluator("sexism-detector", {
-      config: config as Record<string, unknown>,
-    });
+    return createEvaluator('sexism-detector', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -516,7 +464,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static sqlValidator(): EvaluatorWithConfig {
-    return createEvaluator("sql-validator");
+    return createEvaluator('sql-validator');
   }
 
   /**
@@ -527,7 +475,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static toneDetection(): EvaluatorWithConfig {
-    return createEvaluator("tone-detection");
+    return createEvaluator('tone-detection');
   }
 
   /**
@@ -540,7 +488,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: completion, question, reference_topics
    */
   static topicAdherence(): EvaluatorWithConfig {
-    return createEvaluator("topic-adherence");
+    return createEvaluator('topic-adherence');
   }
 
   /**
@@ -551,12 +499,8 @@ export class EvaluatorMadeByTraceloop {
 - `config.threshold` (float, optional): Detection threshold (default: 0.5)
    * Required task output fields: text
    */
-  static toxicityDetector(
-    config?: ToxicityDetectorConfig,
-  ): EvaluatorWithConfig {
-    return createEvaluator("toxicity-detector", {
-      config: config as Record<string, unknown>,
-    });
+  static toxicityDetector(config?: ToxicityDetectorConfig): EvaluatorWithConfig {
+    return createEvaluator('toxicity-detector', { config: config as Record<string, unknown> });
   }
 
   /**
@@ -567,7 +511,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: prompt
    */
   static uncertaintyDetector(): EvaluatorWithConfig {
-    return createEvaluator("uncertainty-detector");
+    return createEvaluator('uncertainty-detector');
   }
 
   /**
@@ -578,7 +522,7 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: text
    */
   static wordCount(): EvaluatorWithConfig {
-    return createEvaluator("word-count");
+    return createEvaluator('word-count');
   }
 
   /**
@@ -590,6 +534,6 @@ export class EvaluatorMadeByTraceloop {
    * Required task output fields: denominator_text, numerator_text
    */
   static wordCountRatio(): EvaluatorWithConfig {
-    return createEvaluator("word-count-ratio");
+    return createEvaluator('word-count-ratio');
   }
 }

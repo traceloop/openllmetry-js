@@ -34,7 +34,6 @@ traceloop.initialize({
 import {
   Guardrails,
   validate,
-  guard,
   GuardExecutionError,
 } from "@traceloop/node-server-sdk";
 import type { Guard } from "@traceloop/node-server-sdk";

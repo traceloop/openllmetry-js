@@ -21,10 +21,33 @@ const GuardrailOperationNames = {
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface GuardrailsOptions {
+  /**
+   * Called when any guard returns false. Can be:
+   * - `"raise"`: Throw GuardValidationError (default)
+   * - `"log"`: Log a warning and return the original result
+   * - `"ignore"`: Return the original result silently (shadow/observe mode)
+   * - Any other string: Return that string as a fallback value
+   * - Callable: Custom OnFailureHandler receiving a GuardedResult
+   */
   onFailure?: string | OnFailureHandler;
+  /** Identifier for this guardrail configuration. Used as the span name prefix. */
   name?: string;
+  /**
+   * If true, run all guards before handling failures.
+   * If false (default), stop at the first failure (fail-fast).
+   */
   runAll?: boolean;
+  /**
+   * If true (default), run guards in parallel for lower latency.
+   * If false, run guards sequentially — useful when guard order matters.
+   */
   parallel?: boolean;
+  /**
+   * Maps the LLM function output to one input dict per guard.
+   * Use this when the output is a structured object and different guards
+   * need different fields. If omitted, the default mapper handles strings
+   * and plain objects automatically.
+   */
   inputMapper?: InputMapper;
 }
 
@@ -57,6 +80,20 @@ interface GuardExecutionResult {
 
 // ── Guardrails class (Tier 3) ────────────────────────────────────────────────
 
+/**
+ * Full-control guardrail runner with a fluent builder API.
+ *
+ * @param options - Configuration for this guardrail (onFailure, name, runAll, parallel, inputMapper).
+ * @param guards  - Guard functions to run. Each receives its corresponding input dict
+ *                  and returns a boolean: true = pass, false = fail.
+ *
+ * @example
+ * const g = new Guardrails({ name: "safety", onFailure: "log" }, [toxicityGuard(), piiGuard()])
+ *   .parallel()
+ *   .runAll();
+ *
+ * const result = await g.run(async () => callLLM(prompt));
+ */
 export class Guardrails {
   private readonly guards: Guard[];
   private readonly _onFailure: OnFailureHandler;
@@ -128,6 +165,27 @@ export class Guardrails {
 
   // ── run() — main entry point ─────────────────────────────────────────────
 
+  /**
+   * Runs an async function (typically an LLM call), then evaluates its output
+   * through all configured guards.
+   *
+   * The LLM function runs first and its result is captured. Guards then evaluate
+   * that result. If any guard fails, the configured `onFailure` handler is invoked.
+   * If a guard throws a real error (network failure, API error), a
+   * `GuardExecutionError` is thrown regardless of `onFailure`.
+   *
+   * @param fn   - The async function to run (e.g. your LLM call). Its return value
+   *               is passed to the guards as input.
+   * @param args - Arguments forwarded to `fn`.
+   * @returns    The original return value of `fn` if all guards pass, or the
+   *             `onFailure` handler's return value if any guard fails.
+   *
+   * @example
+   * const result = await g.run(
+   *   async (prompt) => openai.chat.completions.create(...),
+   *   userPrompt,
+   * );
+   */
   async run<T>(
     fn: (...args: unknown[]) => Promise<T>,
     ...args: unknown[]
@@ -208,6 +266,27 @@ export class Guardrails {
 
   // ── validate() — direct validation without wrapping a function ────────────
 
+  /**
+   * Runs guards directly against pre-mapped inputs without wrapping an async function.
+   *
+   * Use this when you already have the guard inputs constructed — for example when
+   * using sequential/failFast execution and you want to pass specific field values
+   * to each guard rather than relying on automatic mapping.
+   *
+   * Unlike the standalone `validate()` function, this method does NOT do any input
+   * mapping — you are responsible for providing one input dict per guard in the
+   * correct order.
+   *
+   * @param guardInputs - Array of input dicts, one per guard, in the same order as
+   *                      the guards passed to the constructor.
+   * @returns Per-guard results: `[{ name, passed, duration }, ...]`
+   *
+   * @example
+   * const results = await g.validate([
+   *   { text: "some output", prompt: "some output", completion: "some output" },
+   *   { text: "some output", prompt: "some output", completion: "some output" },
+   * ]);
+   */
   async validate(
     guardInputs: Record<string, unknown>[],
   ): Promise<GuardResult[]> {

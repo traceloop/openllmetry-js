@@ -6,9 +6,9 @@ export {
   EVALUATOR_SCHEMAS,
   getEvaluatorSchema,
   isValidEvaluatorSlug,
-} from "./registry";
+} from './registry';
 
-export type { EvaluatorSlug, EvaluatorSchema } from "./registry";
+export type { EvaluatorSlug, EvaluatorSchema } from './registry';
 
 export {
   EvaluatorMadeByTraceloop,
@@ -16,7 +16,7 @@ export {
   validateEvaluatorInput,
   getAvailableEvaluatorSlugs,
   getEvaluatorSchemaInfo,
-} from "./mbt-evaluators";
+} from './mbt-evaluators';
 
 // Re-export config types
-export type * from "./mbt-evaluators";
+export type * from './mbt-evaluators';

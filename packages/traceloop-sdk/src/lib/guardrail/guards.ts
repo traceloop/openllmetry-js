@@ -13,56 +13,39 @@ export interface PrebuiltGuardOptions {
   config?: Record<string, unknown>;
 }
 
-// ── API response field names ──────────────────────────────────────────────────
-// Each constant is the key we extract from { result: { ... } } in the API response.
+// ── Guard registry ────────────────────────────────────────────────────────────
+// Each entry binds the evaluator slug (POST /v2/guardrails/{slug}/execute) to
+// the condition field extracted from the API response { result: { ... } }.
 // Verified against staging 2026-04-20. If the defensive check in createPrebuiltGuard
-// throws a "field missing" error, update the relevant constant here.
+// throws a "field missing" error, update the relevant entry here.
 
-const CONDITION_FIELDS = {
-  // Safety detectors — boolean, true = content is safe
-  IS_SAFE: "is_safe",
-
-  // Detection guards — boolean, false = nothing detected (pass)
-  HAS_PII: "has_pii",
-  HAS_SECRET: "has_secret", // Note: no trailing 's'
-  HAS_INJECTION: "has_injection",
-
-  // Format validators — boolean, true = content is valid
-  IS_VALID_JSON: "is_valid_json",
-  IS_VALID_SQL: "is_valid_sql",
-  IS_VALID_REGEX: "is_valid_regex",
-
-  // Similarity — numeric 0-1 score, pass when >= 0.7
-  // API returns "similarity_score" not "is_similar" — verified against staging 2026-04-22
-  SIMILARITY_SCORE: "similarity_score",
-
-  // Perplexity — boolean
-  IS_VALID: "is_valid",
-
-  // Quality — numeric scores
-  INSTRUCTION_ADHERENCE_SCORE: "instruction_adherence_score", // 0-1, pass >= 0.5
-  UNCERTAINTY: "uncertainty", // 0-1, pass < 0.5 (inverted)
-  TONE_SCORE: "score", // 0-1, pass >= 0.5
-} as const;
-
-// ── Guard slugs ───────────────────────────────────────────────────────────────
-// The evaluator slug used in POST /v2/guardrails/{slug}/execute
-
-const GUARD_SLUGS = {
-  TOXICITY: "toxicity-detector",
-  PII: "pii-detector",
-  SECRETS: "secrets-detector",
-  PROMPT_INJECTION: "prompt-injection",
-  PROFANITY: "profanity-detector",
-  SEXISM: "sexism-detector",
-  JSON_VALIDATOR: "json-validator",
-  SQL_VALIDATOR: "sql-validator",
-  REGEX_VALIDATOR: "regex-validator",
-  INSTRUCTION_ADHERENCE: "instruction-adherence",
-  SEMANTIC_SIMILARITY: "semantic-similarity",
-  PROMPT_PERPLEXITY: "prompt-perplexity",
-  UNCERTAINTY: "uncertainty-detector",
-  TONE_DETECTION: "tone-detection",
+const GUARDS = {
+  TOXICITY: { slug: "toxicity-detector", conditionField: "is_safe" },
+  PII: { slug: "pii-detector", conditionField: "has_pii" },
+  SECRETS: { slug: "secrets-detector", conditionField: "has_secret" }, // Note: no trailing 's'
+  PROMPT_INJECTION: {
+    slug: "prompt-injection",
+    conditionField: "has_injection",
+  },
+  PROFANITY: { slug: "profanity-detector", conditionField: "is_safe" },
+  SEXISM: { slug: "sexism-detector", conditionField: "is_safe" },
+  JSON_VALIDATOR: { slug: "json-validator", conditionField: "is_valid_json" },
+  SQL_VALIDATOR: { slug: "sql-validator", conditionField: "is_valid_sql" },
+  REGEX_VALIDATOR: {
+    slug: "regex-validator",
+    conditionField: "is_valid_regex",
+  },
+  INSTRUCTION_ADHERENCE: {
+    slug: "instruction-adherence",
+    conditionField: "instruction_adherence_score",
+  }, // 0-1, pass >= 0.5
+  SEMANTIC_SIMILARITY: {
+    slug: "semantic-similarity",
+    conditionField: "similarity_score",
+  }, // 0-1, pass >= 0.7 — API returns "similarity_score" not "is_similar"
+  PROMPT_PERPLEXITY: { slug: "prompt-perplexity", conditionField: "is_valid" },
+  UNCERTAINTY: { slug: "uncertainty-detector", conditionField: "uncertainty" }, // 0-1, pass < 0.5 (inverted)
+  TONE_DETECTION: { slug: "tone-detection", conditionField: "score" }, // 0-1, pass >= 0.5
 } as const;
 
 // ── Internal factory ──────────────────────────────────────────────────────────
@@ -119,7 +102,7 @@ function createPrebuiltGuard(
       throw new Error(
         `Guard "${slug}": expected field "${conditionField}" in API response but it was missing. ` +
           `Got: ${JSON.stringify(result)}. ` +
-          `This may indicate an API contract change — update CONDITION_FIELDS in guards.ts.`,
+          `This may indicate an API contract change — update GUARDS in guards.ts.`,
       );
     }
 
@@ -144,15 +127,15 @@ function createPrebuiltGuard(
 
 export function toxicityGuard(options?: PrebuiltGuardOptions): Guard {
   return createPrebuiltGuard(
-    GUARD_SLUGS.TOXICITY,
-    CONDITION_FIELDS.IS_SAFE,
+    GUARDS.TOXICITY.slug,
+    GUARDS.TOXICITY.conditionField,
     options,
   );
 }
 
 export function piiGuard(options?: PrebuiltGuardOptions): Guard {
   // Passes when PII is NOT detected (has_pii === false)
-  return createPrebuiltGuard(GUARD_SLUGS.PII, CONDITION_FIELDS.HAS_PII, {
+  return createPrebuiltGuard(GUARDS.PII.slug, GUARDS.PII.conditionField, {
     ...options,
     condition: options?.condition ?? ((v) => v === false),
   });
@@ -160,18 +143,22 @@ export function piiGuard(options?: PrebuiltGuardOptions): Guard {
 
 export function secretsGuard(options?: PrebuiltGuardOptions): Guard {
   // Passes when secrets are NOT detected (has_secret === false)
-  return createPrebuiltGuard(GUARD_SLUGS.SECRETS, CONDITION_FIELDS.HAS_SECRET, {
-    ...options,
-    condition: options?.condition ?? ((v) => v === false),
-  });
+  return createPrebuiltGuard(
+    GUARDS.SECRETS.slug,
+    GUARDS.SECRETS.conditionField,
+    {
+      ...options,
+      condition: options?.condition ?? ((v) => v === false),
+    },
+  );
 }
 
 export function promptInjectionGuard(options?: PrebuiltGuardOptions): Guard {
   // Passes when injection is NOT detected (has_injection === false)
   // API requires input field "prompt" — default mapper always includes it.
   return createPrebuiltGuard(
-    GUARD_SLUGS.PROMPT_INJECTION,
-    CONDITION_FIELDS.HAS_INJECTION,
+    GUARDS.PROMPT_INJECTION.slug,
+    GUARDS.PROMPT_INJECTION.conditionField,
     {
       ...options,
       condition: options?.condition ?? ((v) => v === false),
@@ -181,32 +168,32 @@ export function promptInjectionGuard(options?: PrebuiltGuardOptions): Guard {
 
 export function profanityGuard(options?: PrebuiltGuardOptions): Guard {
   return createPrebuiltGuard(
-    GUARD_SLUGS.PROFANITY,
-    CONDITION_FIELDS.IS_SAFE,
+    GUARDS.PROFANITY.slug,
+    GUARDS.PROFANITY.conditionField,
     options,
   );
 }
 
 export function sexismGuard(options?: PrebuiltGuardOptions): Guard {
   return createPrebuiltGuard(
-    GUARD_SLUGS.SEXISM,
-    CONDITION_FIELDS.IS_SAFE,
+    GUARDS.SEXISM.slug,
+    GUARDS.SEXISM.conditionField,
     options,
   );
 }
 
 export function jsonValidatorGuard(options?: PrebuiltGuardOptions): Guard {
   return createPrebuiltGuard(
-    GUARD_SLUGS.JSON_VALIDATOR,
-    CONDITION_FIELDS.IS_VALID_JSON,
+    GUARDS.JSON_VALIDATOR.slug,
+    GUARDS.JSON_VALIDATOR.conditionField,
     options,
   );
 }
 
 export function sqlValidatorGuard(options?: PrebuiltGuardOptions): Guard {
   return createPrebuiltGuard(
-    GUARD_SLUGS.SQL_VALIDATOR,
-    CONDITION_FIELDS.IS_VALID_SQL,
+    GUARDS.SQL_VALIDATOR.slug,
+    GUARDS.SQL_VALIDATOR.conditionField,
     options,
   );
 }
@@ -214,8 +201,8 @@ export function sqlValidatorGuard(options?: PrebuiltGuardOptions): Guard {
 export function regexValidatorGuard(options?: PrebuiltGuardOptions): Guard {
   // Config: { regex: string, should_match?: boolean, case_sensitive?: boolean, ... }
   return createPrebuiltGuard(
-    GUARD_SLUGS.REGEX_VALIDATOR,
-    CONDITION_FIELDS.IS_VALID_REGEX,
+    GUARDS.REGEX_VALIDATOR.slug,
+    GUARDS.REGEX_VALIDATOR.conditionField,
     options,
   );
 }
@@ -226,8 +213,8 @@ export function instructionAdherenceGuard(
   // Returns a 0-1 score. Pass when score >= 0.5.
   // Requires input fields: "instructions" + "response".
   return createPrebuiltGuard(
-    GUARD_SLUGS.INSTRUCTION_ADHERENCE,
-    CONDITION_FIELDS.INSTRUCTION_ADHERENCE_SCORE,
+    GUARDS.INSTRUCTION_ADHERENCE.slug,
+    GUARDS.INSTRUCTION_ADHERENCE.conditionField,
     {
       ...options,
       condition:
@@ -239,10 +226,9 @@ export function instructionAdherenceGuard(
 export function semanticSimilarityGuard(options?: PrebuiltGuardOptions): Guard {
   // Returns similarity_score (0-1). Pass when score >= 0.7.
   // Requires input fields: "text" (or "completion") + "reference".
-  // API returns "similarity_score" — verified against staging 2026-04-22.
   return createPrebuiltGuard(
-    GUARD_SLUGS.SEMANTIC_SIMILARITY,
-    CONDITION_FIELDS.SIMILARITY_SCORE,
+    GUARDS.SEMANTIC_SIMILARITY.slug,
+    GUARDS.SEMANTIC_SIMILARITY.conditionField,
     {
       ...options,
       condition:
@@ -253,8 +239,8 @@ export function semanticSimilarityGuard(options?: PrebuiltGuardOptions): Guard {
 
 export function promptPerplexityGuard(options?: PrebuiltGuardOptions): Guard {
   return createPrebuiltGuard(
-    GUARD_SLUGS.PROMPT_PERPLEXITY,
-    CONDITION_FIELDS.IS_VALID,
+    GUARDS.PROMPT_PERPLEXITY.slug,
+    GUARDS.PROMPT_PERPLEXITY.conditionField,
     options,
   );
 }
@@ -263,8 +249,8 @@ export function uncertaintyGuard(options?: PrebuiltGuardOptions): Guard {
   // Returns a 0-1 uncertainty score. Pass when uncertainty is LOW (< 0.5).
   // Requires input fields: "prompt" + "completion".
   return createPrebuiltGuard(
-    GUARD_SLUGS.UNCERTAINTY,
-    CONDITION_FIELDS.UNCERTAINTY,
+    GUARDS.UNCERTAINTY.slug,
+    GUARDS.UNCERTAINTY.conditionField,
     {
       ...options,
       condition:
@@ -278,10 +264,9 @@ export function toneDetectionGuard(options?: PrebuiltGuardOptions): Guard {
   // Default condition (score >= 0.5) checks that a tone was confidently detected —
   // it does NOT filter by tone type. Both positive and negative tones can score >= 0.5.
   // To filter by specific tone, override condition: e.g. eq("joy"), eq("neutral").
-  // Verified against staging 2026-04-22.
   return createPrebuiltGuard(
-    GUARD_SLUGS.TONE_DETECTION,
-    CONDITION_FIELDS.TONE_SCORE,
+    GUARDS.TONE_DETECTION.slug,
+    GUARDS.TONE_DETECTION.conditionField,
     {
       ...options,
       condition:
