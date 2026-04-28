@@ -33,7 +33,7 @@ traceloop.initialize({
 
 import {
   Guardrails,
-  validate,
+  validateOutput,
   GuardExecutionError,
 } from "@traceloop/node-server-sdk";
 import type { Guard } from "@traceloop/node-server-sdk";
@@ -61,20 +61,20 @@ const alwaysPass: Guard = Object.assign(
   { guardName: "always-pass" },
 );
 
-// ── Example 1: validate() propagates GuardExecutionError ─────────────────────
+// ── Example 1: validateOutput() propagates GuardExecutionError ─────────────────────
 
 async function example1_validateThrows(): Promise<void> {
-  sep("EXAMPLE 1 — validate() throws GuardExecutionError on real error");
+  sep("EXAMPLE 1 — validateOutput() throws GuardExecutionError on real error");
 
   console.log(
-    "  Running validate() with a guard that throws a network error...",
+    "  Running validateOutput() with a guard that throws a network error...",
   );
 
   try {
-    await validate("some LLM output", [
+    await validateOutput("some LLM output", [
       makeErrorGuard("Simulated network timeout"),
     ]);
-    console.log("  ❌ ERROR: validate() should have thrown but didn't");
+    console.log("  ❌ ERROR: validateOutput() should have thrown but didn't");
   } catch (err) {
     if (err instanceof GuardExecutionError) {
       console.log("  ✅ GuardExecutionError thrown as expected");

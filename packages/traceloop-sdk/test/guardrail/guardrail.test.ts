@@ -3,7 +3,7 @@ import { initializeSharedTraceloop, getSharedExporter } from "../test-setup";
 import {
   Guardrails,
   guard,
-  validate,
+  validateOutput,
   guardrail,
   Guard,
   GuardValidationError,
@@ -327,21 +327,21 @@ describe("Guardrails", () => {
     });
   });
 
-  // ── Tier 2: validate() ───────────────────────────────────────────────────────
+  // ── Tier 2: validateOutput() ───────────────────────────────────────────────────────
 
-  describe("Tier 2: validate() convenience function", () => {
+  describe("Tier 2: validateOutput() convenience function", () => {
     it("returns passed=true when all guards pass", async () => {
-      const result = await validate("some safe text", [alwaysPass]);
+      const result = await validateOutput("some safe text", [alwaysPass]);
       assert.strictEqual(result.passed, true);
     });
 
     it("returns passed=false when a guard fails", async () => {
-      const result = await validate("some unsafe text", [alwaysFail]);
+      const result = await validateOutput("some unsafe text", [alwaysFail]);
       assert.strictEqual(result.passed, false);
     });
 
     it("populates results with per-guard details", async () => {
-      const result = await validate("some text", [alwaysPass, alwaysFail]);
+      const result = await validateOutput("some text", [alwaysPass, alwaysFail]);
       assert.strictEqual(result.results.length, 2);
       assert.strictEqual(result.results[0].name, "always-pass");
       assert.strictEqual(result.results[0].passed, true);
@@ -350,12 +350,12 @@ describe("Guardrails", () => {
     });
 
     it("works with a plain string", async () => {
-      const result = await validate("hello world", [alwaysPass]);
+      const result = await validateOutput("hello world", [alwaysPass]);
       assert.ok(result);
     });
 
     it("works with an object", async () => {
-      const result = await validate({ text: "hello", context: "world" }, [
+      const result = await validateOutput({ text: "hello", context: "world" }, [
         alwaysPass,
       ]);
       assert.ok(result);
@@ -369,7 +369,7 @@ describe("Guardrails", () => {
       };
       capturingGuard.guardName = "capturing-guard";
 
-      await validate(
+      await validateOutput(
         { answer: "Paris", confidence: "high" },
         [capturingGuard],
         {

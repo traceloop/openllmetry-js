@@ -7,8 +7,6 @@ import {
   SemanticSimilarityInput,
   InstructionAdherenceInput,
   UncertaintyInput,
-  ToneDetectionInput,
-  PromptPerplexityInput,
 } from "./model";
 
 export interface PrebuiltGuardOptions {
