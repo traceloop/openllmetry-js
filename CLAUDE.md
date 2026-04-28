@@ -67,6 +67,10 @@ pnpm lint
 pnpm lint:fix
 ```
 
+## Git Commits
+
+Do not add `Co-Authored-By:` trailers for AI assistants (e.g. `Claude <noreply@anthropic.com>`) in this repo. The required `license/cla` status check evaluates every author/co-author; unresolvable no-reply identities cause CLA Assistant to silently fail, leaving the check stuck on "Expected" and blocking merge. Use plain commit messages with no AI co-author trailer.
+
 ## Architecture
 
 ### Monorepo Structure
