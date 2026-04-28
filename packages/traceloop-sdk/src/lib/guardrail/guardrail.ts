@@ -95,14 +95,15 @@ interface GuardExecutionResult {
  * const result = await g.run(async () => callLLM(prompt));
  */
 export class Guardrails {
-  private readonly guards: Guard[];
+  // Guard<any> — class stays internally untyped so no generics bleed onto builder methods
+  private readonly guards: Guard<any>[];
   private readonly _onFailure: OnFailureHandler;
   private readonly _name: string;
   private readonly _runAll: boolean;
   private readonly _parallel: boolean;
   private readonly _inputMapper?: InputMapper;
 
-  constructor(options: GuardrailsOptions, guards: Guard[]) {
+  constructor(options: GuardrailsOptions, guards: Guard<any>[]) {
     this.guards = guards;
     this._onFailure = resolveOnFailure(options.onFailure ?? "raise");
     this._name = options.name ?? "";
@@ -441,7 +442,7 @@ export class Guardrails {
   }
 
   private async _runSingleGuard(
-    guard: Guard,
+    guard: Guard<any>,
     input: Record<string, unknown>,
     name: string,
     index: number,
@@ -518,7 +519,7 @@ export class Guardrails {
  */
 export function guard<A extends unknown[], R>(
   fn: (...args: A) => Promise<R>,
-  guards: Guard[],
+  guards: Guard<any>[],
   options?: GuardOptions,
 ): (...args: A) => Promise<R> {
   const g = new Guardrails(options ?? {}, guards);
@@ -531,15 +532,35 @@ export function guard<A extends unknown[], R>(
 /**
  * Validates a string or object against a set of guards without wrapping a function.
  *
- * @example
+ * @example — simple guards, no inputMapper required:
  * const result = await validate("LLM response text", [toxicityGuard(), piiGuard()]);
  * if (!result.passed) {
  *   console.log("Failed:", result.results.filter(r => !r.passed));
  * }
+ *
+ * @example — complex guard with typed input, inputMapper required:
+ * const result = await validate(llmOutput, [semanticSimilarityGuard()], {
+ *   inputMapper: (output) => [{ text: output as string, reference: expectedAnswer }],
+ * });
  */
+// Overload 1: all guards use the base (untyped) input — inputMapper is optional
 export async function validate(
   output: string | Record<string, unknown>,
-  guards: Guard[],
+  guards: Guard<Record<string, unknown>>[],
+  options?: ValidateOptions,
+): Promise<ValidateResult>;
+// Overload 2: guards use a specific typed input TInput — inputMapper is required and must produce TInput
+export async function validate<TInput extends Record<string, unknown>>(
+  output: string | Record<string, unknown>,
+  guards: Guard<TInput>[],
+  options: ValidateOptions & {
+    inputMapper: InputMapper<string | Record<string, unknown>, TInput>;
+  },
+): Promise<ValidateResult>;
+// Implementation (not user-visible)
+export async function validate(
+  output: string | Record<string, unknown>,
+  guards: Guard<any>[],
   options?: ValidateOptions,
 ): Promise<ValidateResult> {
   const g = new Guardrails({ runAll: true, ...options }, guards);
@@ -569,7 +590,7 @@ export async function validate(
  * }
  */
 export function guardrail(
-  guards: Guard[],
+  guards: Guard<any>[],
   options?: GuardOptions,
 ): MethodDecorator {
   return function (

@@ -3,19 +3,55 @@ import { TraceloopError, SEVERITY } from "../errors";
 /**
  * Core Guard type — any async function that takes a dict input and returns a boolean.
  * A guard returns true = pass, false = fail.
+ *
+ * TInput declares the shape of the input dict this guard expects.
+ * Defaults to Record<string, unknown> (untyped) for simple guards and custom guards.
+ * Complex pre-built guards (e.g. semanticSimilarityGuard) use a specific TInput so
+ * TypeScript can enforce that a matching inputMapper is provided at the call site.
  */
-export type Guard = ((input: Record<string, unknown>) => Promise<boolean>) & {
-  guardName?: string;
-};
+export type Guard<TInput extends Record<string, unknown> = Record<string, unknown>> =
+  ((input: TInput) => Promise<boolean>) & {
+    guardName?: string;
+  };
 
 /**
  * Maps the LLM function output to one guard input per guard.
  * Can return a list (index-matched to guards) or a dict (keyed by guard name).
+ *
+ * TOutput — the type of the LLM output being mapped (defaults to string | object).
+ * TInput  — the shape each guard expects as input (defaults to Record<string, unknown>).
  */
-export type InputMapper = (
-  output: string | Record<string, unknown>,
+export type InputMapper<
+  TOutput extends string | Record<string, unknown> = string | Record<string, unknown>,
+  TInput extends Record<string, unknown> = Record<string, unknown>,
+> = (
+  output: TOutput,
   numGuards: number,
-) => Record<string, unknown>[] | Record<string, Record<string, unknown>>;
+) => TInput[] | Record<string, TInput>;
+
+// ── Named input types for complex pre-built guards ───────────────────────────
+// Using `type` (not `interface`) so they satisfy `extends Record<string, unknown>`
+// and rollup-plugin-dts preserves them as named types in the bundled .d.ts.
+
+/** Input required by semanticSimilarityGuard. */
+export type SemanticSimilarityInput = { text: string; reference: string };
+
+/** Input required by instructionAdherenceGuard. */
+export type InstructionAdherenceInput = {
+  instructions: string;
+  response: string;
+};
+
+/** Input required by uncertaintyGuard. */
+export type UncertaintyInput = { prompt: string; completion: string };
+
+/** Input required by toneDetectionGuard. */
+export type ToneDetectionInput = { text: string };
+
+/** Input required by promptPerplexityGuard. */
+export type PromptPerplexityInput = { prompt: string };
+
+// ── Core result/handler types ────────────────────────────────────────────────
 
 /**
  * Passed to on_failure handlers when a guard fails.

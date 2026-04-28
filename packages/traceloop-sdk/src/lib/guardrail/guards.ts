@@ -2,7 +2,14 @@ import { trace } from "@opentelemetry/api";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import { getClient } from "../configuration";
 import { isTrue, ConditionValue } from "./conditions";
-import { Guard } from "./model";
+import {
+  Guard,
+  SemanticSimilarityInput,
+  InstructionAdherenceInput,
+  UncertaintyInput,
+  ToneDetectionInput,
+  PromptPerplexityInput,
+} from "./model";
 
 export interface PrebuiltGuardOptions {
   /** Override the default pass/fail condition. Default: isTrue() */
@@ -52,12 +59,13 @@ const GUARDS = {
 
 /**
  * Internal factory for pre-built guards that call /v2/guardrails/{slug}/execute.
+ * TInput declares the required input shape for typed complex guards.
  */
-function createPrebuiltGuard(
+function createPrebuiltGuard<TInput extends Record<string, unknown> = Record<string, unknown>>(
   slug: string,
   conditionField: string,
   options?: PrebuiltGuardOptions,
-): Guard {
+): Guard<TInput> {
   const condition = options?.condition ?? isTrue();
   const timeoutMs = options?.timeoutMs ?? 60000;
   const config = options?.config;
@@ -207,12 +215,10 @@ export function regexValidatorGuard(options?: PrebuiltGuardOptions): Guard {
   );
 }
 
-export function instructionAdherenceGuard(
-  options?: PrebuiltGuardOptions,
-): Guard {
+export function instructionAdherenceGuard(options?: PrebuiltGuardOptions) {
   // Returns a 0-1 score. Pass when score >= 0.5.
   // Requires input fields: "instructions" + "response".
-  return createPrebuiltGuard(
+  return createPrebuiltGuard<InstructionAdherenceInput>(
     GUARDS.INSTRUCTION_ADHERENCE.slug,
     GUARDS.INSTRUCTION_ADHERENCE.conditionField,
     {
@@ -223,10 +229,10 @@ export function instructionAdherenceGuard(
   );
 }
 
-export function semanticSimilarityGuard(options?: PrebuiltGuardOptions): Guard {
+export function semanticSimilarityGuard(options?: PrebuiltGuardOptions) {
   // Returns similarity_score (0-1). Pass when score >= 0.7.
-  // Requires input fields: "text" (or "completion") + "reference".
-  return createPrebuiltGuard(
+  // Requires input fields: "text" + "reference".
+  return createPrebuiltGuard<SemanticSimilarityInput>(
     GUARDS.SEMANTIC_SIMILARITY.slug,
     GUARDS.SEMANTIC_SIMILARITY.conditionField,
     {
@@ -237,18 +243,18 @@ export function semanticSimilarityGuard(options?: PrebuiltGuardOptions): Guard {
   );
 }
 
-export function promptPerplexityGuard(options?: PrebuiltGuardOptions): Guard {
-  return createPrebuiltGuard(
+export function promptPerplexityGuard(options?: PrebuiltGuardOptions) {
+  return createPrebuiltGuard<PromptPerplexityInput>(
     GUARDS.PROMPT_PERPLEXITY.slug,
     GUARDS.PROMPT_PERPLEXITY.conditionField,
     options,
   );
 }
 
-export function uncertaintyGuard(options?: PrebuiltGuardOptions): Guard {
+export function uncertaintyGuard(options?: PrebuiltGuardOptions) {
   // Returns a 0-1 uncertainty score. Pass when uncertainty is LOW (< 0.5).
   // Requires input fields: "prompt" + "completion".
-  return createPrebuiltGuard(
+  return createPrebuiltGuard<UncertaintyInput>(
     GUARDS.UNCERTAINTY.slug,
     GUARDS.UNCERTAINTY.conditionField,
     {
@@ -259,12 +265,12 @@ export function uncertaintyGuard(options?: PrebuiltGuardOptions): Guard {
   );
 }
 
-export function toneDetectionGuard(options?: PrebuiltGuardOptions): Guard {
+export function toneDetectionGuard(options?: PrebuiltGuardOptions) {
   // Returns { tone: string, score: float } where score = confidence in the detected tone.
   // Default condition (score >= 0.5) checks that a tone was confidently detected —
   // it does NOT filter by tone type. Both positive and negative tones can score >= 0.5.
   // To filter by specific tone, override condition: e.g. eq("joy"), eq("neutral").
-  return createPrebuiltGuard(
+  return createPrebuiltGuard<ToneDetectionInput>(
     GUARDS.TONE_DETECTION.slug,
     GUARDS.TONE_DETECTION.conditionField,
     {
