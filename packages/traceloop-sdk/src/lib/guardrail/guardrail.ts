@@ -83,12 +83,12 @@ interface GuardExecutionResult {
 /**
  * Full-control guardrail runner with a fluent builder API.
  *
- * @param options - Configuration for this guardrail (onFailure, name, runAll, parallel, inputMapper).
  * @param guards  - Guard functions to run. Each receives its corresponding input dict
  *                  and returns a boolean: true = pass, false = fail.
+ * @param options - Optional configuration (onFailure, name, runAll, parallel, inputMapper).
  *
  * @example
- * const g = new Guardrails({ name: "safety", onFailure: "log" }, [toxicityGuard(), piiGuard()])
+ * const g = new Guardrails([toxicityGuard(), piiGuard()], { name: "safety", onFailure: "log" })
  *   .parallel()
  *   .runAll();
  *
@@ -103,13 +103,13 @@ export class Guardrails {
   private readonly _parallel: boolean;
   private readonly _inputMapper?: InputMapper;
 
-  constructor(options: GuardrailsOptions, guards: Guard<any>[]) {
+  constructor(guards: Guard<any>[], options?: GuardrailsOptions) {
     this.guards = guards;
-    this._onFailure = resolveOnFailure(options.onFailure ?? "raise");
-    this._name = options.name ?? "";
-    this._runAll = options.runAll ?? false;
-    this._parallel = options.parallel ?? true;
-    this._inputMapper = options.inputMapper;
+    this._onFailure = resolveOnFailure(options?.onFailure ?? "raise");
+    this._name = options?.name ?? "";
+    this._runAll = options?.runAll ?? false;
+    this._parallel = options?.parallel ?? true;
+    this._inputMapper = options?.inputMapper;
   }
 
   // ── Builder methods (immutable — each returns a new instance) ────────────
@@ -151,17 +151,14 @@ export class Guardrails {
   }
 
   private _clone(overrides: Partial<GuardrailsOptions>): Guardrails {
-    return new Guardrails(
-      {
-        onFailure: this._onFailure,
-        name: this._name,
-        runAll: this._runAll,
-        parallel: this._parallel,
-        inputMapper: this._inputMapper,
-        ...overrides,
-      },
-      this.guards,
-    );
+    return new Guardrails(this.guards, {
+      onFailure: this._onFailure,
+      name: this._name,
+      runAll: this._runAll,
+      parallel: this._parallel,
+      inputMapper: this._inputMapper,
+      ...overrides,
+    });
   }
 
   // ── run() — main entry point ─────────────────────────────────────────────
@@ -284,7 +281,7 @@ export class Guardrails {
    *
    * @example
    * // Check a user prompt for injection before calling the LLM
-   * const g = new Guardrails({}, [promptInjectionGuard(), piiGuard()]);
+   * const g = new Guardrails([promptInjectionGuard(), piiGuard()]);
    * const results = await g.validate([
    *   { prompt: userPrompt },
    *   { text: userPrompt },
@@ -522,7 +519,7 @@ export function guard<A extends unknown[], R>(
   guards: Guard<any>[],
   options?: GuardOptions,
 ): (...args: A) => Promise<R> {
-  const g = new Guardrails(options ?? {}, guards);
+  const g = new Guardrails(guards, options);
   return (...args: A) =>
     g.run(fn as (...args: unknown[]) => Promise<R>, ...args);
 }
@@ -563,7 +560,7 @@ export async function validate(
   guards: Guard<any>[],
   options?: ValidateOptions,
 ): Promise<ValidateResult> {
-  const g = new Guardrails({ runAll: true, ...options }, guards);
+  const g = new Guardrails(guards, { runAll: true, ...options });
   const guardNames = guards.map((guard, i) => guard.guardName ?? `guard_${i}`);
   const guardInputs = resolveGuardInputs(
     output,
@@ -601,7 +598,7 @@ export function guardrail(
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: unknown[]) {
-      const g = new Guardrails(options ?? {}, guards);
+      const g = new Guardrails(guards, options);
       return g.run(
         (...innerArgs: unknown[]) => originalMethod.apply(this, innerArgs),
         ...args,

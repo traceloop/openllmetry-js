@@ -86,15 +86,12 @@ const physicsContentGuard = customEvaluatorGuard(EVALUATOR_SLUG, {
   timeoutMs: 60000,
 });
 
-const responseGuard = new Guardrails(
-  {
-    name: "physics-response-check",
-    onFailure: FALLBACK,
-    // The custom evaluator template uses {llm_response} — map the LLM output to that field.
-    inputMapper: (output) => [{ llm_response: output as string }],
-  },
-  [physicsContentGuard],
-);
+const responseGuard = new Guardrails([physicsContentGuard], {
+  name: "physics-response-check",
+  onFailure: FALLBACK,
+  // The custom evaluator template uses {llm_response} — map the LLM output to that field.
+  inputMapper: (output) => [{ llm_response: output as string }],
+});
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 

@@ -105,9 +105,10 @@ async function example2_runThrows(): Promise<void> {
     "  Running Guardrails.run() with a guard that throws an HTTP error...",
   );
 
-  const g = new Guardrails({ name: "http-error-test", onFailure: "log" }, [
-    makeErrorGuard("HTTP 503: Service Unavailable"),
-  ]);
+  const g = new Guardrails([makeErrorGuard("HTTP 503: Service Unavailable")], {
+    name: "http-error-test",
+    onFailure: "log",
+  });
 
   try {
     await g.run(async () => "LLM response text");
@@ -144,10 +145,9 @@ async function example3_parallelRunAllThrows(): Promise<void> {
     "  Running 2 guards in parallel (runAll): alwaysPass + errorGuard...",
   );
 
-  const g = new Guardrails({ name: "parallel-error-test" }, [
-    alwaysPass,
-    makeErrorGuard("Evaluator API returned 500"),
-  ])
+  const g = new Guardrails([alwaysPass, makeErrorGuard("Evaluator API returned 500")], {
+    name: "parallel-error-test",
+  })
     .parallel()
     .runAll();
 

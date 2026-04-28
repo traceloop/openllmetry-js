@@ -200,7 +200,7 @@ async function main(): Promise<void> {
         config: { regex: "^[A-Z]{2}\\d{4}$", should_match: true },
       });
 
-      const g = new Guardrails({ name: "regex-example" }, [regexGuard]);
+      const g = new Guardrails([regexGuard], { name: "regex-example" });
 
       let guardResults = await g.validate([{ text: "AB1234" }]);
       console.log(
@@ -220,9 +220,9 @@ async function main(): Promise<void> {
       // Scores how well a response follows the given instructions (0-1, pass >= 0.5).
       // Requires object input with "instructions" and "response" fields.
 
-      const adherenceGuard = new Guardrails({ name: "adherence-example" }, [
-        instructionAdherenceGuard(),
-      ]);
+      const adherenceGuard = new Guardrails([instructionAdherenceGuard()], {
+        name: "adherence-example",
+      });
 
       guardResults = await adherenceGuard.validate([
         {
@@ -252,9 +252,9 @@ async function main(): Promise<void> {
       // Measures semantic similarity between output and a reference string (0-1, pass >= 0.7).
       // Requires "text" (or "completion") and "reference" fields.
 
-      const similarityGuard = new Guardrails({ name: "similarity-example" }, [
-        semanticSimilarityGuard(),
-      ]);
+      const similarityGuard = new Guardrails([semanticSimilarityGuard()], {
+        name: "similarity-example",
+      });
 
       guardResults = await similarityGuard.validate([
         {
@@ -286,9 +286,9 @@ async function main(): Promise<void> {
       // Measures response uncertainty (0-1). Pass when uncertainty < 0.5 (confident).
       // Requires "prompt" and "completion" fields.
 
-      const uncertainGuard = new Guardrails({ name: "uncertainty-example" }, [
-        uncertaintyGuard(),
-      ]);
+      const uncertainGuard = new Guardrails([uncertaintyGuard()], {
+        name: "uncertainty-example",
+      });
 
       guardResults = await uncertainGuard.validate([
         {

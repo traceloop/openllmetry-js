@@ -75,7 +75,7 @@ async function sequentialFailFast(): Promise<void> {
   };
   trackingPii.guardName = "piiGuard";
 
-  const g = new Guardrails({}, [trackingToxicity, trackingPii])
+  const g = new Guardrails([trackingToxicity, trackingPii])
     .sequential()
     .failFast()
     .named("fail-fast-pipeline");
@@ -121,10 +121,10 @@ async function onFailureShorthands(): Promise<void> {
   const PROSE = "This is plain English, not JSON.";
 
   // "log" — logs a warning via OTel diag and returns the original result
-  const logGuard = new Guardrails(
-    { name: "log-on-failure", onFailure: "log" },
-    [jsonValidatorGuard()],
-  );
+  const logGuard = new Guardrails([jsonValidatorGuard()], {
+    name: "log-on-failure",
+    onFailure: "log",
+  });
 
   info(
     '"log" mode — prose input will fail JSON guard but result is still returned...',
@@ -135,10 +135,10 @@ async function onFailureShorthands(): Promise<void> {
 
   // "ignore" — silently returns the original result, no logging
   console.log();
-  const ignoreGuard = new Guardrails(
-    { name: "ignore-on-failure", onFailure: "ignore" },
-    [jsonValidatorGuard()],
-  );
+  const ignoreGuard = new Guardrails([jsonValidatorGuard()], {
+    name: "ignore-on-failure",
+    onFailure: "ignore",
+  });
 
   info('"ignore" mode — guard fails silently, original result returned...');
   const ignoreResult = await ignoreGuard.run(async () => PROSE);

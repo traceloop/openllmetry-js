@@ -45,12 +45,6 @@ export type InstructionAdherenceInput = {
 /** Input required by uncertaintyGuard. */
 export type UncertaintyInput = { prompt: string; completion: string };
 
-/** Input required by toneDetectionGuard. */
-export type ToneDetectionInput = { text: string };
-
-/** Input required by promptPerplexityGuard. */
-export type PromptPerplexityInput = { prompt: string };
-
 // ── Core result/handler types ────────────────────────────────────────────────
 
 /**

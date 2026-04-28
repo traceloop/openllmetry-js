@@ -87,7 +87,7 @@ async function guardrailsClassBuilder(): Promise<void> {
   sep("Guardrails class — builder pattern + multiple guards");
 
   // Run toxicity AND pii guards sequentially, collect all results even if first fails
-  const g = new Guardrails({}, [toxicityGuard(), piiGuard()])
+  const g = new Guardrails([toxicityGuard(), piiGuard()])
     .sequential()
     .runAll()
     .logOnFailure()
@@ -115,23 +115,20 @@ async function customOnFailure(): Promise<void> {
 
   // Using jsonValidatorGuard — deterministic: prose always fails JSON validation.
   // The custom onFailure handler receives the original output and can log/transform it.
-  const g = new Guardrails(
-    {
-      name: "custom-failure-handler",
-      onFailure: (output: GuardedResult) => {
-        console.log(`  ⚠️   Guard caught violation.`);
-        console.log(
-          `  ⚠️   Original output snippet: "${String(output.result).slice(0, 60)}..."`,
-        );
-        console.log(`  ⚠️   Returning structured fallback instead.`);
-        return JSON.stringify({
-          error: "LLM did not return valid JSON",
-          raw: String(output.result).slice(0, 100),
-        });
-      },
+  const g = new Guardrails([jsonValidatorGuard()], {
+    name: "custom-failure-handler",
+    onFailure: (output: GuardedResult) => {
+      console.log(`  ⚠️   Guard caught violation.`);
+      console.log(
+        `  ⚠️   Original output snippet: "${String(output.result).slice(0, 60)}..."`,
+      );
+      console.log(`  ⚠️   Returning structured fallback instead.`);
+      return JSON.stringify({
+        error: "LLM did not return valid JSON",
+        raw: String(output.result).slice(0, 100),
+      });
     },
-    [jsonValidatorGuard()],
-  );
+  });
 
   info(`Asking LLM for plain prose (will fail JSON validation)...`);
   const result = await g.run(async () =>
@@ -151,21 +148,18 @@ async function customOnFailure(): Promise<void> {
 async function jsonValidator(): Promise<void> {
   sep("jsonValidatorGuard — structured output validation");
 
-  const g = new Guardrails(
-    {
-      name: "json-format-check",
-      onFailure: (output: GuardedResult) => {
-        console.log(
-          `  ⚠️   JSON validation failed. Raw output: "${String(output.result).slice(0, 100)}"`,
-        );
-        return JSON.stringify({
-          error: "Invalid JSON response from LLM",
-          raw: String(output.result),
-        });
-      },
+  const g = new Guardrails([jsonValidatorGuard()], {
+    name: "json-format-check",
+    onFailure: (output: GuardedResult) => {
+      console.log(
+        `  ⚠️   JSON validation failed. Raw output: "${String(output.result).slice(0, 100)}"`,
+      );
+      return JSON.stringify({
+        error: "Invalid JSON response from LLM",
+        raw: String(output.result),
+      });
     },
-    [jsonValidatorGuard()],
-  );
+  });
 
   // --- Valid JSON prompt ---
   info(`Asking LLM to return valid JSON...`);
@@ -196,7 +190,7 @@ async function parallel(): Promise<void> {
 
   // Default behavior is already parallel, but this makes it explicit.
   // All guards fire at the same time — faster for independent checks.
-  const g = new Guardrails({}, [toxicityGuard(), piiGuard(), profanityGuard()])
+  const g = new Guardrails([toxicityGuard(), piiGuard(), profanityGuard()])
     .parallel()
     .runAll()
     .logOnFailure()
@@ -228,16 +222,13 @@ async function customInputMapper(): Promise<void> {
   //
   // Here the LLM returns { answer: string, confidence: string }.
   // We pass the "answer" field to the guard as the "text" field it expects.
-  const g = new Guardrails(
-    {
-      name: "structured-output-check",
-      inputMapper: (output) => {
-        const o = output as { answer: string };
-        return [{ text: o.answer, prompt: o.answer, completion: o.answer }];
-      },
+  const g = new Guardrails([toxicityGuard()], {
+    name: "structured-output-check",
+    inputMapper: (output) => {
+      const o = output as { answer: string };
+      return [{ text: o.answer, prompt: o.answer, completion: o.answer }];
     },
-    [toxicityGuard()],
-  );
+  });
 
   info("Running guard on structured LLM output with custom inputMapper...");
   const result = await g.run(async () => {

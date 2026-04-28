@@ -51,18 +51,18 @@ describe("Guardrails", () => {
 
   describe("new Guardrails().run() — UC-A", () => {
     it("returns LLM result when all guards pass", async () => {
-      const g = new Guardrails({ name: "test" }, [alwaysPass]);
+      const g = new Guardrails([alwaysPass], { name: "test" });
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
     });
 
     it("throws GuardValidationError when a guard fails (default onFailure=raise)", async () => {
-      const g = new Guardrails({ name: "test" }, [alwaysFail]);
+      const g = new Guardrails([alwaysFail], { name: "test" });
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardValidationError);
     });
 
     it("GuardedResult on error contains original result and guard inputs", async () => {
-      const g = new Guardrails({ name: "test" }, [alwaysFail]);
+      const g = new Guardrails([alwaysFail], { name: "test" });
       try {
         await g.run(mockLLM, "hello");
         assert.fail("should have thrown");
@@ -74,7 +74,7 @@ describe("Guardrails", () => {
     });
 
     it("throws GuardExecutionError when guard throws", async () => {
-      const g = new Guardrails({ name: "test" }, [alwaysThrow]);
+      const g = new Guardrails([alwaysThrow], { name: "test" });
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
     });
 
@@ -85,7 +85,7 @@ describe("Guardrails", () => {
         return "response";
       }
 
-      const g = new Guardrails({}, [alwaysPass]);
+      const g = new Guardrails([alwaysPass]);
       await g.run(captureArg, "my specific prompt");
       assert.strictEqual(receivedArg, "my specific prompt");
     });
@@ -93,39 +93,33 @@ describe("Guardrails", () => {
 
   describe("onFailure behaviors", () => {
     it('"log" returns original result without throwing', async () => {
-      const g = new Guardrails({ onFailure: "log" }, [alwaysFail]);
+      const g = new Guardrails([alwaysFail], { onFailure: "log" });
       // diag is silent by default in tests — no console suppression needed
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
     });
 
     it('"ignore" returns original result silently', async () => {
-      const g = new Guardrails({ onFailure: "ignore" }, [alwaysFail]);
+      const g = new Guardrails([alwaysFail], { onFailure: "ignore" });
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
     });
 
     it("custom string returns that string as fallback", async () => {
-      const g = new Guardrails(
-        {
-          onFailure: "Sorry, blocked.",
-        },
-        [alwaysFail],
-      );
+      const g = new Guardrails([alwaysFail], {
+        onFailure: "Sorry, blocked.",
+      });
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "Sorry, blocked.");
     });
 
     it("custom function receives GuardedResult and return value is used", async () => {
-      const g = new Guardrails(
-        {
-          onFailure: (output) => {
-            assert.strictEqual(output.result, "The weather is sunny today.");
-            return "handled fallback";
-          },
+      const g = new Guardrails([alwaysFail], {
+        onFailure: (output) => {
+          assert.strictEqual(output.result, "The weather is sunny today.");
+          return "handled fallback";
         },
-        [alwaysFail],
-      );
+      });
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "handled fallback");
     });
@@ -133,13 +127,13 @@ describe("Guardrails", () => {
 
   describe("Builder pattern — UC-B", () => {
     it("builder methods return a new instance (immutable)", () => {
-      const original = new Guardrails({}, [alwaysPass]);
+      const original = new Guardrails([alwaysPass]);
       const modified = original.sequential();
       assert.notStrictEqual(original, modified);
     });
 
     it(".named() sets the name used in spans", async () => {
-      const g = new Guardrails({}, [alwaysPass]).named("my-guardrail");
+      const g = new Guardrails([alwaysPass]).named("my-guardrail");
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
       const spans = memoryExporter.getFinishedSpans();
@@ -150,7 +144,7 @@ describe("Guardrails", () => {
     });
 
     it(".logOnFailure() does not throw on failure", async () => {
-      const g = new Guardrails({}, [alwaysFail]).logOnFailure();
+      const g = new Guardrails([alwaysFail]).logOnFailure();
       // diag is silent by default in tests — no console suppression needed
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
@@ -164,7 +158,7 @@ describe("Guardrails", () => {
       };
       (secondGuard as any).guardName = "second-guard";
 
-      const g = new Guardrails({}, [alwaysFail, secondGuard])
+      const g = new Guardrails([alwaysFail, secondGuard])
         .sequential()
         .runAll()
         .ignoreOnFailure();
@@ -184,7 +178,7 @@ describe("Guardrails", () => {
       };
       (secondGuard as any).guardName = "second-guard";
 
-      const g = new Guardrails({}, [alwaysFail, secondGuard])
+      const g = new Guardrails([alwaysFail, secondGuard])
         .sequential()
         .failFast()
         .ignoreOnFailure();
@@ -205,7 +199,7 @@ describe("Guardrails", () => {
       };
       (slowPass as any).guardName = "slow-pass";
 
-      const g = new Guardrails({}, [alwaysFail, slowPass])
+      const g = new Guardrails([alwaysFail, slowPass])
         .parallel()
         .failFast()
         .ignoreOnFailure();
@@ -219,7 +213,7 @@ describe("Guardrails", () => {
 
   describe("validate() method — UC-C", () => {
     it("returns all-passed results when all guards pass", async () => {
-      const g = new Guardrails({}, [alwaysPass]);
+      const g = new Guardrails([alwaysPass]);
       const results = await g.validate([{ text: "hello" }]);
       assert.ok(Array.isArray(results));
       assert.strictEqual(results.length, 1);
@@ -228,7 +222,7 @@ describe("Guardrails", () => {
     });
 
     it("returns failed result when a guard fails", async () => {
-      const g = new Guardrails({}, [alwaysFail]);
+      const g = new Guardrails([alwaysFail]);
       const results = await g.validate([{ text: "hello" }]);
       assert.ok(Array.isArray(results));
       assert.strictEqual(results.length, 1);
@@ -245,12 +239,9 @@ describe("Guardrails", () => {
       };
       (capture as any).guardName = "capture-guard";
 
-      const g = new Guardrails(
-        {
-          inputMapper: (_output) => [{ custom: "mapped" }],
-        },
-        [capture],
-      );
+      const g = new Guardrails([capture], {
+        inputMapper: (_output) => [{ custom: "mapped" }],
+      });
       await g.run(mockLLM, "hello");
       assert.strictEqual(received[0].custom, "mapped");
     });
@@ -268,15 +259,12 @@ describe("Guardrails", () => {
       };
       (guardB as any).guardName = "guard-b";
 
-      const g = new Guardrails(
-        {
-          inputMapper: (_output) => ({
-            "guard-a": { forA: true },
-            "guard-b": { forB: true },
-          }),
-        },
-        [guardA, guardB],
-      );
+      const g = new Guardrails([guardA, guardB], {
+        inputMapper: (_output) => ({
+          "guard-a": { forA: true },
+          "guard-b": { forB: true },
+        }),
+      });
       await g.run(mockLLM, "hello");
       assert.ok(received.find((r) => r.forA));
       assert.ok(received.find((r) => r.forB));
@@ -292,7 +280,7 @@ describe("Guardrails", () => {
       };
       (lambdaGuard as any).guardName = "lambda";
 
-      const g = new Guardrails({}, [lambdaGuard]);
+      const g = new Guardrails([lambdaGuard]);
       await g.run(mockLLM, "hello");
       assert.ok(receivedInput);
       assert.strictEqual(receivedInput.text, "The weather is sunny today.");
@@ -303,7 +291,7 @@ describe("Guardrails", () => {
       const syncLike: Guard = async (input) => typeof input.text === "string";
       (syncLike as any).guardName = "sync-like";
 
-      const g = new Guardrails({}, [syncLike]);
+      const g = new Guardrails([syncLike]);
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
     });
@@ -431,7 +419,7 @@ describe("Guardrails", () => {
 
   describe("OTel span structure", () => {
     it("creates a parent guardrail span", async () => {
-      const g = new Guardrails({ name: "span-test" }, [alwaysPass]);
+      const g = new Guardrails([alwaysPass], { name: "span-test" });
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -459,7 +447,7 @@ describe("Guardrails", () => {
     });
 
     it("creates a child guard span", async () => {
-      const g = new Guardrails({ name: "span-test" }, [alwaysPass]);
+      const g = new Guardrails([alwaysPass], { name: "span-test" });
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -473,7 +461,7 @@ describe("Guardrails", () => {
     });
 
     it("guard span is a child of the guardrail span", async () => {
-      const g = new Guardrails({ name: "span-test" }, [alwaysPass]);
+      const g = new Guardrails([alwaysPass], { name: "span-test" });
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -489,7 +477,7 @@ describe("Guardrails", () => {
     });
 
     it("guardrail span is a sibling of LLM spans (same parent as workflow)", async () => {
-      const g = new Guardrails({ name: "sibling-test" }, [alwaysPass]);
+      const g = new Guardrails([alwaysPass], { name: "sibling-test" });
 
       await traceloop.withWorkflow({ name: "my-workflow" }, async () => {
         await g.run(mockLLM, "hello");
@@ -514,9 +502,7 @@ describe("Guardrails", () => {
     });
 
     it("sets FAILED status on guard span when guard fails", async () => {
-      const g = new Guardrails({ name: "fail-test", onFailure: "ignore" }, [
-        alwaysFail,
-      ]);
+      const g = new Guardrails([alwaysFail], { name: "fail-test", onFailure: "ignore" });
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -543,7 +529,7 @@ describe("Guardrails", () => {
     });
 
     it("records error info on guard span when guard throws", async () => {
-      const g = new Guardrails({ name: "error-test" }, [alwaysThrow]);
+      const g = new Guardrails([alwaysThrow], { name: "error-test" });
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
       await traceloop.forceFlush();
 
@@ -613,7 +599,7 @@ describe("Guardrails", () => {
         "is_safe",
         isTrue(),
       );
-      const g = new Guardrails({ name: "tox-test" }, [toxGuard]);
+      const g = new Guardrails([toxGuard], { name: "tox-test" });
       const result = await g.run(mockLLM, "hello");
 
       assert.strictEqual(result, "The weather is sunny today.");
@@ -635,7 +621,7 @@ describe("Guardrails", () => {
         "is_safe",
         isTrue(),
       );
-      const g = new Guardrails({ onFailure: "raise" }, [toxGuard]);
+      const g = new Guardrails([toxGuard], { onFailure: "raise" });
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
     });
@@ -652,7 +638,7 @@ describe("Guardrails", () => {
         "is_safe",
         isTrue(),
       );
-      const g = new Guardrails({ onFailure: "ignore" }, [toxGuard]);
+      const g = new Guardrails([toxGuard], { onFailure: "ignore" });
       await g.run(mockLLM, "hello"); // should not throw with ignore
     });
 
@@ -667,7 +653,7 @@ describe("Guardrails", () => {
         "is_safe",
         isTrue(),
       );
-      const g = new Guardrails({ name: "api-error-test" }, [toxGuard]);
+      const g = new Guardrails([toxGuard], { name: "api-error-test" });
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
     });
   });
@@ -681,7 +667,7 @@ describe("Guardrails", () => {
       global.fetch = (() => new Promise(() => {})) as typeof global.fetch;
 
       const toxGuard = toxicityGuard({ timeoutMs: 150 });
-      const g = new Guardrails({ name: "timeout-test" }, [toxGuard]);
+      const g = new Guardrails([toxGuard], { name: "timeout-test" });
 
       const start = Date.now();
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
