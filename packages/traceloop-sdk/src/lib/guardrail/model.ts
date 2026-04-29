@@ -1,8 +1,8 @@
 import { TraceloopError, SEVERITY } from "../errors";
 
 /**
- * Core Guard type — any async function that takes a dict input and returns a boolean.
- * A guard returns true = pass, false = fail.
+ * Core Guard type — any async function that takes a dict input and returns a boolean
+ * or a GuardCallResult (pre-built guards return the raw API response alongside the bool).
  *
  * TInput declares the shape of the input dict this guard expects.
  * Defaults to Record<string, unknown> (untyped) for simple guards and custom guards.
@@ -10,7 +10,7 @@ import { TraceloopError, SEVERITY } from "../errors";
  * TypeScript can enforce that a matching inputMapper is provided at the call site.
  */
 export type Guard<TInput extends Record<string, unknown> = Record<string, unknown>> =
-  ((input: TInput) => Promise<boolean>) & {
+  ((input: TInput) => Promise<boolean | GuardCallResult>) & {
     guardName?: string;
   };
 
@@ -62,6 +62,18 @@ export interface GuardResult {
   name: string;
   passed: boolean;
   duration: number;
+  /** Raw API response fields, e.g. { similarity_score: 0.12 } or { is_safe: false }. */
+  output?: Record<string, unknown>;
+}
+
+/**
+ * Internal return type for pre-built guards that want to carry the raw API
+ * response alongside the pass/fail boolean. Custom user guards still return
+ * plain `boolean` — _runSingleGuard accepts both via a union check.
+ */
+export interface GuardCallResult {
+  passed: boolean;
+  output: Record<string, unknown>;
 }
 
 // ── Internal: used by parallel failFast to carry a failed GuardExecutionResult
@@ -73,6 +85,7 @@ export class FailFastGuardResult {
     public readonly name: string,
     public readonly passed: false,
     public readonly duration: number,
+    public readonly output?: Record<string, unknown>,
   ) {}
 }
 

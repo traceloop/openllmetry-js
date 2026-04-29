@@ -266,6 +266,7 @@ async function main(): Promise<void> {
       console.log(
         "Semantically similar:",
         guardResults[0].passed ? "✅ passed" : "🚫 blocked",
+        guardResults[0].output ?? "",
       );
 
       guardResults = await similarityGuard.validate([
@@ -278,6 +279,7 @@ async function main(): Promise<void> {
       console.log(
         "Semantically different:",
         guardResults[0].passed ? "✅ passed" : "🚫 blocked",
+        guardResults[0].output ?? "",
       );
 
       console.log(
@@ -299,6 +301,7 @@ async function main(): Promise<void> {
       console.log(
         "Confident response:",
         guardResults[0].passed ? "✅ passed" : "🚫 blocked",
+        guardResults[0].output ?? "",
       );
 
       guardResults = await uncertainGuard.validate([
@@ -312,6 +315,7 @@ async function main(): Promise<void> {
       console.log(
         "Uncertain response:",
         guardResults[0].passed ? "✅ passed" : "🚫 blocked",
+        guardResults[0].output ?? "",
       );
 
       console.log(

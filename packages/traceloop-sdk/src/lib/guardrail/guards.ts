@@ -4,6 +4,7 @@ import { getClient } from "../configuration";
 import { isTrue, ConditionValue } from "./conditions";
 import {
   Guard,
+  GuardCallResult,
   SemanticSimilarityInput,
   InstructionAdherenceInput,
   UncertaintyInput,
@@ -68,7 +69,7 @@ function createPrebuiltGuard<TInput extends Record<string, unknown> = Record<str
   const timeoutMs = options?.timeoutMs ?? 60000;
   const config = options?.config;
 
-  const guard: Guard = async (input: Record<string, unknown>) => {
+  const guard: Guard = async (input: Record<string, unknown>): Promise<GuardCallResult> => {
     // Client resolved LAZILY — safe to create guards before initialize()
     const client = getClient();
 
@@ -121,7 +122,7 @@ function createPrebuiltGuard<TInput extends Record<string, unknown> = Record<str
       );
     }
 
-    return condition(value as ConditionValue);
+    return { passed: condition(value as ConditionValue), output: result };
   };
 
   // Tag the guard function with its name for span naming
@@ -242,7 +243,7 @@ export function semanticSimilarityGuard(options?: PrebuiltGuardOptions) {
 }
 
 export function promptPerplexityGuard(options?: PrebuiltGuardOptions) {
-  return createPrebuiltGuard<PromptPerplexityInput>(
+  return createPrebuiltGuard(
     GUARDS.PROMPT_PERPLEXITY.slug,
     GUARDS.PROMPT_PERPLEXITY.conditionField,
     options,
@@ -268,7 +269,7 @@ export function toneDetectionGuard(options?: PrebuiltGuardOptions) {
   // Default condition (score >= 0.5) checks that a tone was confidently detected —
   // it does NOT filter by tone type. Both positive and negative tones can score >= 0.5.
   // To filter by specific tone, override condition: e.g. eq("joy"), eq("neutral").
-  return createPrebuiltGuard<ToneDetectionInput>(
+  return createPrebuiltGuard(
     GUARDS.TONE_DETECTION.slug,
     GUARDS.TONE_DETECTION.conditionField,
     {
@@ -306,7 +307,7 @@ export function customEvaluatorGuard(
   const evaluatorVersion = options?.evaluatorVersion;
   const evaluatorConfig = options?.evaluatorConfig;
 
-  const guard: Guard = async (input: Record<string, unknown>) => {
+  const guard: Guard = async (input: Record<string, unknown>): Promise<GuardCallResult> => {
     const client = getClient();
 
     const controller = new AbortController();
@@ -400,7 +401,10 @@ export function customEvaluatorGuard(
       );
     }
 
-    return condition(value as ConditionValue);
+    return {
+      passed: condition(value as ConditionValue),
+      output: evaluatorResult as Record<string, unknown>,
+    };
   };
 
   guard.guardName = slug;

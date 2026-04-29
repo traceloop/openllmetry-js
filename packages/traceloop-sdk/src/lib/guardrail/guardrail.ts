@@ -5,6 +5,7 @@ import { getTracer } from "../tracing/tracing";
 import { resolveGuardInputs } from "./default-mapper";
 import {
   Guard,
+  GuardCallResult,
   GuardedResult,
   GuardExecutionError,
   GuardResult,
@@ -76,6 +77,7 @@ interface GuardExecutionResult {
   name: string;
   passed: boolean;
   duration: number;
+  output?: Record<string, unknown>;
 }
 
 // ── Guardrails class (Tier 3) ────────────────────────────────────────────────
@@ -336,6 +338,7 @@ export class Guardrails {
         name: r.name,
         passed: r.passed,
         duration: r.duration,
+        ...(r.output !== undefined && { output: r.output }),
       }));
     } catch (err) {
       guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
@@ -412,6 +415,7 @@ export class Guardrails {
                 name: err.name,
                 passed: err.passed,
                 duration: err.duration,
+                output: err.output,
               },
             ];
           }
@@ -464,8 +468,20 @@ export class Guardrails {
     const startTime = performance.now();
 
     let passed: boolean;
+    let output: Record<string, unknown> | undefined;
     try {
-      passed = await context.with(guardContext, () => guard(input));
+      const raw = await context.with(guardContext, () =>
+        guard(input) as Promise<boolean | GuardCallResult>,
+      );
+      // Pre-built guards return GuardCallResult ({ passed, output }) so the raw
+      // API response is available to the caller. Custom user guards return a plain
+      // boolean. Both are valid — the typeof check discriminates the union.
+      if (typeof raw === "object" && raw !== null) {
+        passed = raw.passed;
+        output = raw.output;
+      } else {
+        passed = raw;
+      }
     } catch (error) {
       const duration = performance.now() - startTime;
       const err = error instanceof Error ? error : new Error(String(error));
@@ -495,9 +511,10 @@ export class Guardrails {
       name,
       passed,
       duration,
+      output,
     };
     if (!passed && throwOnFail) {
-      throw new FailFastGuardResult(index, name, false, duration);
+      throw new FailFastGuardResult(index, name, false, duration, output);
     }
     return executionResult;
   }
