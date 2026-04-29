@@ -190,8 +190,8 @@ export class Guardrails {
     fn: (...args: unknown[]) => Promise<T>,
     ...args: unknown[]
   ): Promise<T> {
-    // Capture parent context BEFORE fn() runs.
-    // This ensures the guardrail span is a SIBLING of the LLM span, not a child.
+    // Capture parent context BEFORE fn() runs so guard spans are siblings of
+    // the LLM span, not children of it.
     const parentContext = context.active();
 
     // Execute the user's LLM function — instrumentation spans fire here
@@ -206,62 +206,24 @@ export class Guardrails {
       this._inputMapper,
     );
 
-    const spanName = this._name ? `${this._name}.guardrail` : "guardrail";
-
-    const tracer = getTracer();
-
-    // Create parent guardrail span as a SIBLING of LLM span
-    const guardrailSpan = tracer.startSpan(
-      spanName,
-      {
-        attributes: {
-          [ATTR_GEN_AI_OPERATION_NAME]: GuardrailOperationNames.RUN,
-          [SpanAttributes.GEN_AI_GUARDRAIL_NAME]: this._name,
-          [SpanAttributes.GEN_AI_GUARDRAIL_GUARD_COUNT]: this.guards.length,
-        },
-      },
+    const guardResults = await this._executeGuards(
+      guardInputs,
+      guardNames,
       parentContext,
     );
 
-    const guardrailContext = trace.setSpan(parentContext, guardrailSpan);
-    const startTime = performance.now();
+    const failedResults = guardResults.filter((r) => !r.passed);
 
-    try {
-      const guardResults = await this._executeGuards(
-        guardInputs,
-        guardNames,
-        guardrailContext,
-      );
-
-      const duration = performance.now() - startTime;
-      const failedResults = guardResults.filter((r) => !r.passed);
-
-      guardrailSpan.setAttributes({
-        [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]:
-          failedResults.length === 0 ? "PASSED" : "FAILED",
-        [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
-        [SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT]:
-          failedResults.length,
-      });
-
-      // All guards passed
-      if (failedResults.length === 0) {
-        return result;
-      }
-
-      // Some guards failed — call on_failure handler
-      const guardedResult: GuardedResult = {
-        result: result as string | Record<string, unknown>,
-        guardInputs,
-      };
-      const fallback = this._onFailure(guardedResult);
-      return (fallback ?? result) as T;
-    } catch (err) {
-      guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
-      throw err;
-    } finally {
-      guardrailSpan.end();
+    if (failedResults.length === 0) {
+      return result;
     }
+
+    const guardedResult: GuardedResult = {
+      result: result as string | Record<string, unknown>,
+      guardInputs,
+    };
+    const fallback = this._onFailure(guardedResult);
+    return (fallback ?? result) as T;
   }
 
   // ── validate() — direct validation without wrapping a function ────────────
@@ -298,54 +260,18 @@ export class Guardrails {
     const parentContext = context.active();
     const guardNames = this.guards.map((g, i) => g.guardName ?? `guard_${i}`);
 
-    const spanName = this._name ? `${this._name}.guardrail` : "guardrail";
-
-    const tracer = getTracer();
-    const guardrailSpan = tracer.startSpan(
-      spanName,
-      {
-        attributes: {
-          [ATTR_GEN_AI_OPERATION_NAME]: GuardrailOperationNames.RUN,
-          [SpanAttributes.GEN_AI_GUARDRAIL_NAME]: this._name,
-          [SpanAttributes.GEN_AI_GUARDRAIL_GUARD_COUNT]: this.guards.length,
-        },
-      },
+    const guardResults = await this._executeGuards(
+      guardInputs,
+      guardNames,
       parentContext,
     );
 
-    const guardrailContext = trace.setSpan(parentContext, guardrailSpan);
-    const startTime = performance.now();
-
-    try {
-      const guardResults = await this._executeGuards(
-        guardInputs,
-        guardNames,
-        guardrailContext,
-      );
-
-      const duration = performance.now() - startTime;
-      const failedResults = guardResults.filter((r) => !r.passed);
-
-      guardrailSpan.setAttributes({
-        [SpanAttributes.GEN_AI_GUARDRAIL_STATUS]:
-          failedResults.length === 0 ? "PASSED" : "FAILED",
-        [SpanAttributes.GEN_AI_GUARDRAIL_DURATION]: Math.round(duration),
-        [SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT]:
-          failedResults.length,
-      });
-
-      return guardResults.map((r) => ({
-        name: r.name,
-        passed: r.passed,
-        duration: r.duration,
-        ...(r.output !== undefined && { output: r.output }),
-      }));
-    } catch (err) {
-      guardrailSpan.setStatus({ code: SpanStatusCode.ERROR });
-      throw err;
-    } finally {
-      guardrailSpan.end();
-    }
+    return guardResults.map((r) => ({
+      name: r.name,
+      passed: r.passed,
+      duration: r.duration,
+      ...(r.output !== undefined && { output: r.output }),
+    }));
   }
 
   // ── Internal guard execution ─────────────────────────────────────────────
