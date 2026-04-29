@@ -8,7 +8,6 @@
  * Each example verifies:
  *   - GuardExecutionError is thrown to the caller
  *   - The guard span gets ERROR OTel status + error.type/error.message attributes
- *   - The parent guardrail span gets ERROR status with NO aggregated attrs
  *
  * Check the Traceloop UI after running — look for spans with red ERROR status.
  *
@@ -164,9 +163,7 @@ async function example3_parallelRunAllThrows(): Promise<void> {
         `     .originalException: "${err.originalException.message}"`,
       );
       console.log(`     .guardIndex:        ${err.guardIndex}`);
-      console.log(
-        "  ℹ️  Check Traceloop UI: always-pass.guard → PASSED,",
-      );
+      console.log("  ℹ️  Check Traceloop UI: always-pass.guard → PASSED,");
       console.log("      error-guard.guard → ERROR with full exception event");
     } else {
       console.log("  ❌ Wrong error type thrown:", err);
