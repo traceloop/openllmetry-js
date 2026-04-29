@@ -137,10 +137,8 @@ describe("Guardrails", () => {
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
       const spans = memoryExporter.getFinishedSpans();
-      const guardrailSpan = spans.find(
-        (s) => s.name === "my-guardrail.guardrail",
-      );
-      assert.ok(guardrailSpan, "expected a span named my-guardrail.guardrail");
+      const guardSpan = spans.find((s) => s.name === "always-pass.guard");
+      assert.ok(guardSpan, "expected a guard span named always-pass.guard");
     });
 
     it(".logOnFailure() does not throw on failure", async () => {
@@ -421,31 +419,21 @@ describe("Guardrails", () => {
   // ── OTel Span assertions ──────────────────────────────────────────────────────
 
   describe("OTel span structure", () => {
-    it("creates a parent guardrail span", async () => {
+    it("creates a guard span with correct attributes", async () => {
       const g = new Guardrails([alwaysPass], { name: "span-test" });
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
       const spans = memoryExporter.getFinishedSpans();
-      const guardrailSpan = spans.find((s) => s.name === "span-test.guardrail");
-      assert.ok(guardrailSpan, "should have a parent guardrail span");
+      const guardSpan = spans.find((s) => s.name === "always-pass.guard");
+      assert.ok(guardSpan, "should have a guard span");
       assert.strictEqual(
-        guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_NAME],
-        "span-test",
+        guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_NAME],
+        "always-pass",
       );
       assert.strictEqual(
-        guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_GUARD_COUNT],
-        1,
-      );
-      assert.strictEqual(
-        guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS],
+        guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS],
         "PASSED",
-      );
-      assert.strictEqual(
-        guardrailSpan.attributes[
-          SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT
-        ],
-        0,
       );
     });
 
@@ -463,23 +451,31 @@ describe("Guardrails", () => {
       );
     });
 
-    it("guard span is a child of the guardrail span", async () => {
+    it("guard span is a direct child of the parent context (no container span)", async () => {
       const g = new Guardrails([alwaysPass], { name: "span-test" });
-      await g.run(mockLLM, "hello");
-      await traceloop.forceFlush();
 
+      await traceloop.withWorkflow({ name: "my-workflow" }, async () => {
+        await g.run(mockLLM, "hello");
+      });
+
+      await traceloop.forceFlush();
       const spans = memoryExporter.getFinishedSpans();
-      const guardrailSpan = spans.find((s) => s.name === "span-test.guardrail");
+
+      const workflowSpan = spans.find((s) => s.name === "my-workflow.workflow");
       const guardSpan = spans.find((s) => s.name === "always-pass.guard");
 
-      assert.ok(guardrailSpan && guardSpan);
+      assert.ok(workflowSpan && guardSpan);
+      // Guard span should be a direct child of the workflow span — no intermediate container
       assert.strictEqual(
         guardSpan.parentSpanContext?.spanId,
-        guardrailSpan.spanContext().spanId,
+        workflowSpan.spanContext().spanId,
       );
+      // No container span should exist
+      const containerSpan = spans.find((s) => s.name === "span-test.guardrail");
+      assert.strictEqual(containerSpan, undefined);
     });
 
-    it("guardrail span is a sibling of LLM spans (same parent as workflow)", async () => {
+    it("guard spans are siblings of LLM spans (direct children of workflow)", async () => {
       const g = new Guardrails([alwaysPass], { name: "sibling-test" });
 
       await traceloop.withWorkflow({ name: "my-workflow" }, async () => {
@@ -490,16 +486,14 @@ describe("Guardrails", () => {
       const spans = memoryExporter.getFinishedSpans();
 
       const workflowSpan = spans.find((s) => s.name === "my-workflow.workflow");
-      const guardrailSpan = spans.find(
-        (s) => s.name === "sibling-test.guardrail",
-      );
+      const guardSpan = spans.find((s) => s.name === "always-pass.guard");
 
       assert.ok(workflowSpan, "should have workflow span");
-      assert.ok(guardrailSpan, "should have guardrail span");
+      assert.ok(guardSpan, "should have guard span");
 
-      // Guardrail span's parent should be the workflow span
+      // Guard span's parent should be the workflow span directly
       assert.strictEqual(
-        guardrailSpan.parentSpanContext?.spanId,
+        guardSpan.parentSpanContext?.spanId,
         workflowSpan.spanContext().spanId,
       );
     });
@@ -513,24 +507,12 @@ describe("Guardrails", () => {
       await traceloop.forceFlush();
 
       const spans = memoryExporter.getFinishedSpans();
-      const guardrailSpan = spans.find((s) => s.name === "fail-test.guardrail");
       const guardSpan = spans.find((s) => s.name === "always-fail.guard");
 
-      assert.ok(guardrailSpan);
       assert.ok(guardSpan);
-      assert.strictEqual(
-        guardrailSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS],
-        "FAILED",
-      );
       assert.strictEqual(
         guardSpan.attributes[SpanAttributes.GEN_AI_GUARDRAIL_STATUS],
         "FAILED",
-      );
-      assert.strictEqual(
-        guardrailSpan.attributes[
-          SpanAttributes.GEN_AI_GUARDRAIL_FAILED_GUARD_COUNT
-        ],
-        1,
       );
     });
 
