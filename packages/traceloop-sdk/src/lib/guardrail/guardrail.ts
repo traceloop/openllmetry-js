@@ -257,6 +257,13 @@ export class Guardrails {
   async validate(
     guardInputs: Record<string, unknown>[],
   ): Promise<GuardResult[]> {
+    if (guardInputs.length !== this.guards.length) {
+      throw new Error(
+        `validate() expected ${this.guards.length} guard inputs, got ${guardInputs.length}. ` +
+          `Provide exactly one input object per guard in the same order.`,
+      );
+    }
+
     const parentContext = context.active();
     const guardNames = this.guards.map((g, i) => g.guardName ?? `guard_${i}`);
 
