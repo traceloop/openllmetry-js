@@ -341,7 +341,10 @@ describe("Guardrails", () => {
     });
 
     it("populates results with per-guard details", async () => {
-      const result = await validateOutput("some text", [alwaysPass, alwaysFail]);
+      const result = await validateOutput("some text", [
+        alwaysPass,
+        alwaysFail,
+      ]);
       assert.strictEqual(result.results.length, 2);
       assert.strictEqual(result.results[0].name, "always-pass");
       assert.strictEqual(result.results[0].passed, true);
@@ -502,7 +505,10 @@ describe("Guardrails", () => {
     });
 
     it("sets FAILED status on guard span when guard fails", async () => {
-      const g = new Guardrails([alwaysFail], { name: "fail-test", onFailure: "ignore" });
+      const g = new Guardrails([alwaysFail], {
+        name: "fail-test",
+        onFailure: "ignore",
+      });
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 

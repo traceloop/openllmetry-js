@@ -132,13 +132,17 @@ async function validateWithInputMapper(): Promise<void> {
   info(`Validating structured output with custom inputMapper...`);
   info(`Input: ${JSON.stringify(structuredOutput)}`);
 
-  const result = await validateOutput(structuredOutput, [promptInjectionGuard()], {
-    name: "structured-input-safety-check",
-    inputMapper: (output) => {
-      const o = output as { answer: string };
-      return [{ text: o.answer, prompt: o.answer, completion: o.answer }];
+  const result = await validateOutput(
+    structuredOutput,
+    [promptInjectionGuard()],
+    {
+      name: "structured-input-safety-check",
+      inputMapper: (output) => {
+        const o = output as { answer: string };
+        return [{ text: o.answer, prompt: o.answer, completion: o.answer }];
+      },
     },
-  });
+  );
 
   if (!result.passed) {
     ok(`Injection detected in "answer" field — blocked ✓`);

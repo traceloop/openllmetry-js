@@ -145,9 +145,12 @@ async function example3_parallelRunAllThrows(): Promise<void> {
     "  Running 2 guards in parallel (runAll): alwaysPass + errorGuard...",
   );
 
-  const g = new Guardrails([alwaysPass, makeErrorGuard("Evaluator API returned 500")], {
-    name: "parallel-error-test",
-  })
+  const g = new Guardrails(
+    [alwaysPass, makeErrorGuard("Evaluator API returned 500")],
+    {
+      name: "parallel-error-test",
+    },
+  )
     .parallel()
     .runAll();
 
