@@ -3,7 +3,7 @@ import { initializeSharedTraceloop, getSharedExporter } from "../test-setup";
 import {
   Guardrails,
   guard,
-  validateOutput,
+  validateContent,
   guardrail,
   Guard,
   GuardValidationError,
@@ -325,21 +325,21 @@ describe("Guardrails", () => {
     });
   });
 
-  // ── Tier 2: validateOutput() ───────────────────────────────────────────────────────
+  // ── Tier 2: validateContent() ───────────────────────────────────────────────────────
 
-  describe("Tier 2: validateOutput() convenience function", () => {
+  describe("Tier 2: validateContent() convenience function", () => {
     it("returns passed=true when all guards pass", async () => {
-      const result = await validateOutput("some safe text", [alwaysPass]);
+      const result = await validateContent("some safe text", [alwaysPass]);
       assert.strictEqual(result.passed, true);
     });
 
     it("returns passed=false when a guard fails", async () => {
-      const result = await validateOutput("some unsafe text", [alwaysFail]);
+      const result = await validateContent("some unsafe text", [alwaysFail]);
       assert.strictEqual(result.passed, false);
     });
 
     it("populates results with per-guard details", async () => {
-      const result = await validateOutput("some text", [
+      const result = await validateContent("some text", [
         alwaysPass,
         alwaysFail,
       ]);
@@ -351,14 +351,15 @@ describe("Guardrails", () => {
     });
 
     it("works with a plain string", async () => {
-      const result = await validateOutput("hello world", [alwaysPass]);
+      const result = await validateContent("hello world", [alwaysPass]);
       assert.ok(result);
     });
 
     it("works with an object", async () => {
-      const result = await validateOutput({ text: "hello", context: "world" }, [
-        alwaysPass,
-      ]);
+      const result = await validateContent(
+        { text: "hello", context: "world" },
+        [alwaysPass],
+      );
       assert.ok(result);
     });
 
@@ -370,7 +371,7 @@ describe("Guardrails", () => {
       };
       capturingGuard.guardName = "capturing-guard";
 
-      await validateOutput(
+      await validateContent(
         { answer: "Paris", confidence: "high" },
         [capturingGuard],
         {

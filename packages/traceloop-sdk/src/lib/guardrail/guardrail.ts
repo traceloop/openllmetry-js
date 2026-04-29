@@ -468,30 +468,30 @@ export function guard<A extends unknown[], R>(
     g.run(fn as (...args: unknown[]) => Promise<R>, ...args);
 }
 
-// ── Tier 2: validateOutput() — standalone validation ────────────────────────────────
+// ── Tier 2: validateContent() — standalone validation ────────────────────────────────
 
 /**
  * Validates a string or object against a set of guards without wrapping a function.
  *
  * @example — simple guards, no inputMapper required:
- * const result = await validateOutput("LLM response text", [toxicityGuard(), piiGuard()]);
+ * const result = await validateContent("LLM response text", [toxicityGuard(), piiGuard()]);
  * if (!result.passed) {
  *   console.log("Failed:", result.results.filter(r => !r.passed));
  * }
  *
  * @example — complex guard with typed input, inputMapper required:
- * const result = await validateOutput(llmOutput, [semanticSimilarityGuard()], {
+ * const result = await validateContent(llmOutput, [semanticSimilarityGuard()], {
  *   inputMapper: (output) => [{ text: output as string, reference: expectedAnswer }],
  * });
  */
 // Overload 1: all guards use the base (untyped) input — inputMapper is optional
-export async function validateOutput(
+export async function validateContent(
   output: string | Record<string, unknown>,
   guards: Guard<Record<string, unknown>>[],
   options?: ValidateOptions,
 ): Promise<ValidateResult>;
 // Overload 2: guards use a specific typed input TInput — inputMapper is required and must produce TInput
-export async function validateOutput<TInput extends Record<string, unknown>>(
+export async function validateContent<TInput extends Record<string, unknown>>(
   output: string | Record<string, unknown>,
   guards: Guard<TInput>[],
   options: ValidateOptions & {
@@ -499,7 +499,7 @@ export async function validateOutput<TInput extends Record<string, unknown>>(
   },
 ): Promise<ValidateResult>;
 // Implementation (not user-visible)
-export async function validateOutput(
+export async function validateContent(
   output: string | Record<string, unknown>,
   guards: Guard<any>[],
   options?: ValidateOptions,

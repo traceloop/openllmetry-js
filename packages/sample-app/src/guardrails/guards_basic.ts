@@ -80,7 +80,7 @@ async function sequentialFailFast(): Promise<void> {
     .failFast()
     .named("fail-fast-pipeline");
 
-  // Use validateOutput() with a pre-canned toxic string — no LLM call needed.
+  // Use g.validate() with pre-mapped inputs — no LLM call or mapper needed.
   // The point here is to demonstrate guard sequencing, not LLM output.
   info("Validating a toxic string through sequential fail-fast pipeline...");
   const results = await g.validate([

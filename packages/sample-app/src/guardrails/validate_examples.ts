@@ -1,11 +1,11 @@
 /**
  * Validate Examples
  * ==================
- * Demonstrates the standalone validateOutput() API for pre-call input checks.
+ * Demonstrates the standalone validateContent() API for pre-call input checks.
  *
  * Examples:
- *   - validateOutput() — block prompt injection BEFORE the LLM is called
- *   - validateOutput() with custom inputMapper — validate a structured object
+ *   - validateContent() — block prompt injection BEFORE the LLM is called
+ *   - validateContent() with custom inputMapper — validate a structured object
  *
  * Run:
  *   npm run build && node dist/src/guardrails/validate_examples.js
@@ -33,7 +33,7 @@ traceloop.initialize({
 });
 
 import {
-  validateOutput,
+  validateContent,
   promptInjectionGuard,
   GuardValidationError,
 } from "@traceloop/node-server-sdk";
@@ -76,10 +76,10 @@ function info(msg: string) {
   console.log(`  ℹ️   ${msg}`);
 }
 
-// ── validateOutput() — pre-call prompt injection check ─────────────────────────────
+// ── validateContent() — pre-call prompt injection check ─────────────────────────────
 
 async function validateBeforeLLM(): Promise<void> {
-  sep("validateOutput() — pre-call prompt injection check");
+  sep("validateContent() — pre-call prompt injection check");
 
   const safeInput = "What is the capital of France?";
   const injectionInput =
@@ -87,9 +87,13 @@ async function validateBeforeLLM(): Promise<void> {
 
   // --- Safe input: should pass ---
   info(`Checking safe input: "${safeInput}"`);
-  const safeResult = await validateOutput(safeInput, [promptInjectionGuard()], {
-    name: "input-safety-check",
-  });
+  const safeResult = await validateContent(
+    safeInput,
+    [promptInjectionGuard()],
+    {
+      name: "input-safety-check",
+    },
+  );
 
   if (safeResult.passed) {
     ok("Safe input passed the prompt injection guard — calling LLM...");
@@ -102,7 +106,7 @@ async function validateBeforeLLM(): Promise<void> {
   // --- Injection attempt: should fail ---
   console.log();
   info(`Checking injection attempt...`);
-  const injectionResult = await validateOutput(
+  const injectionResult = await validateContent(
     injectionInput,
     [promptInjectionGuard()],
     {
@@ -117,10 +121,10 @@ async function validateBeforeLLM(): Promise<void> {
   }
 }
 
-// ── validateOutput() with custom inputMapper ───────────────────────────────────────
+// ── validateContent() with custom inputMapper ───────────────────────────────────────
 
 async function validateWithInputMapper(): Promise<void> {
-  sep("validateOutput() with custom inputMapper on structured output");
+  sep("validateContent() with custom inputMapper on structured output");
 
   // When the output is a structured object, use inputMapper to tell each guard
   // which field to look at instead of passing the whole object.
@@ -132,7 +136,7 @@ async function validateWithInputMapper(): Promise<void> {
   info(`Validating structured output with custom inputMapper...`);
   info(`Input: ${JSON.stringify(structuredOutput)}`);
 
-  const result = await validateOutput(
+  const result = await validateContent(
     structuredOutput,
     [promptInjectionGuard()],
     {

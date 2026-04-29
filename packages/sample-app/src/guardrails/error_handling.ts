@@ -33,7 +33,7 @@ traceloop.initialize({
 
 import {
   Guardrails,
-  validateOutput,
+  validateContent,
   GuardExecutionError,
 } from "@traceloop/node-server-sdk";
 import type { Guard } from "@traceloop/node-server-sdk";
@@ -61,20 +61,20 @@ const alwaysPass: Guard = Object.assign(
   { guardName: "always-pass" },
 );
 
-// ── Example 1: validateOutput() propagates GuardExecutionError ─────────────────────
+// ── Example 1: validateContent() propagates GuardExecutionError ─────────────────────
 
 async function example1_validateThrows(): Promise<void> {
-  sep("EXAMPLE 1 — validateOutput() throws GuardExecutionError on real error");
+  sep("EXAMPLE 1 — validateContent() throws GuardExecutionError on real error");
 
   console.log(
-    "  Running validateOutput() with a guard that throws a network error...",
+    "  Running validateContent() with a guard that throws a network error...",
   );
 
   try {
-    await validateOutput("some LLM output", [
+    await validateContent("some LLM output", [
       makeErrorGuard("Simulated network timeout"),
     ]);
-    console.log("  ❌ ERROR: validateOutput() should have thrown but didn't");
+    console.log("  ❌ ERROR: validateContent() should have thrown but didn't");
   } catch (err) {
     if (err instanceof GuardExecutionError) {
       console.log("  ✅ GuardExecutionError thrown as expected");
@@ -123,10 +123,7 @@ async function example2_runThrows(): Promise<void> {
         `     .originalException: "${err.originalException.message}"`,
       );
       console.log(
-        "  ℹ️  Check Traceloop UI: http-error-test.guardrail span → ERROR status,",
-      );
-      console.log(
-        "      NO gen_ai.guardrail.status / duration / failed_guard_count (short-circuited)",
+        "  ℹ️  Check Traceloop UI: error-guard.guard span → ERROR status",
       );
     } else {
       console.log("  ❌ Wrong error type thrown:", err);
@@ -168,10 +165,7 @@ async function example3_parallelRunAllThrows(): Promise<void> {
       );
       console.log(`     .guardIndex:        ${err.guardIndex}`);
       console.log(
-        "  ℹ️  Check Traceloop UI: parallel-error-test.guardrail → ERROR,",
-      );
-      console.log(
-        "      always-pass.guard → PASSED (completed before error re-throw),",
+        "  ℹ️  Check Traceloop UI: always-pass.guard → PASSED,",
       );
       console.log("      error-guard.guard → ERROR with full exception event");
     } else {
