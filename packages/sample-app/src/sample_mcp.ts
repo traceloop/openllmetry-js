@@ -137,10 +137,12 @@ async function main() {
     name: "multiply",
     arguments: { x: 4, y: 7 },
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   console.log(
     `   Result: ${((multiplyResult as any).content[0] as any).text}\n`,
   );
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   // 4. List available resources
   console.log("4. Listing available resources...");
