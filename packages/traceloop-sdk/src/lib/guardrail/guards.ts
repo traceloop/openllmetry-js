@@ -60,7 +60,9 @@ const GUARDS = {
  * Internal factory for pre-built guards that call /v2/guardrails/{slug}/execute.
  * TInput declares the required input shape for typed complex guards.
  */
-function createPrebuiltGuard<TInput extends Record<string, unknown> = Record<string, unknown>>(
+function createPrebuiltGuard<
+  TInput extends Record<string, unknown> = Record<string, unknown>,
+>(
   slug: string,
   conditionField: string,
   options?: PrebuiltGuardOptions,
@@ -69,7 +71,9 @@ function createPrebuiltGuard<TInput extends Record<string, unknown> = Record<str
   const timeoutMs = options?.timeoutMs ?? 60000;
   const config = options?.config;
 
-  const guard: Guard = async (input: Record<string, unknown>): Promise<GuardCallResult> => {
+  const guard: Guard = async (
+    input: Record<string, unknown>,
+  ): Promise<GuardCallResult> => {
     // Client resolved LAZILY — safe to create guards before initialize()
     const client = getClient();
 
@@ -307,7 +311,9 @@ export function customEvaluatorGuard(
   const evaluatorVersion = options?.evaluatorVersion;
   const evaluatorConfig = options?.evaluatorConfig;
 
-  const guard: Guard = async (input: Record<string, unknown>): Promise<GuardCallResult> => {
+  const guard: Guard = async (
+    input: Record<string, unknown>,
+  ): Promise<GuardCallResult> => {
     const client = getClient();
 
     const controller = new AbortController();

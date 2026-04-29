@@ -396,8 +396,9 @@ export class Guardrails {
     let passed: boolean;
     let output: Record<string, unknown> | undefined;
     try {
-      const raw = await context.with(guardContext, () =>
-        guard(input) as Promise<boolean | GuardCallResult>,
+      const raw = await context.with(
+        guardContext,
+        () => guard(input) as Promise<boolean | GuardCallResult>,
       );
       // Pre-built guards return GuardCallResult ({ passed, output }) so the raw
       // API response is available to the caller. Custom user guards return a plain

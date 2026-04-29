@@ -9,10 +9,11 @@ import { TraceloopError, SEVERITY } from "../errors";
  * Complex pre-built guards (e.g. semanticSimilarityGuard) use a specific TInput so
  * TypeScript can enforce that a matching inputMapper is provided at the call site.
  */
-export type Guard<TInput extends Record<string, unknown> = Record<string, unknown>> =
-  ((input: TInput) => Promise<boolean | GuardCallResult>) & {
-    guardName?: string;
-  };
+export type Guard<
+  TInput extends Record<string, unknown> = Record<string, unknown>,
+> = ((input: TInput) => Promise<boolean | GuardCallResult>) & {
+  guardName?: string;
+};
 
 /**
  * Maps the LLM function output to one guard input per guard.
@@ -22,12 +23,11 @@ export type Guard<TInput extends Record<string, unknown> = Record<string, unknow
  * TInput  — the shape each guard expects as input (defaults to Record<string, unknown>).
  */
 export type InputMapper<
-  TOutput extends string | Record<string, unknown> = string | Record<string, unknown>,
+  TOutput extends string | Record<string, unknown> =
+    | string
+    | Record<string, unknown>,
   TInput extends Record<string, unknown> = Record<string, unknown>,
-> = (
-  output: TOutput,
-  numGuards: number,
-) => TInput[] | Record<string, TInput>;
+> = (output: TOutput, numGuards: number) => TInput[] | Record<string, TInput>;
 
 // ── Named input types for complex pre-built guards ───────────────────────────
 // Using `type` (not `interface`) so they satisfy `extends Record<string, unknown>`
