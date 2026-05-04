@@ -189,7 +189,7 @@ export class Guardrails {
   async run<T>(
     fn: (...args: unknown[]) => Promise<T>,
     ...args: unknown[]
-  ): Promise<T> {
+  ): Promise<T | string | Record<string, unknown>> {
     // Capture parent context BEFORE fn() runs so guard spans are siblings of
     // the LLM span, not children of it.
     const parentContext = context.active();
@@ -223,7 +223,7 @@ export class Guardrails {
       guardInputs,
     };
     const fallback = this._onFailure(guardedResult);
-    return (fallback ?? result) as T;
+    return fallback ?? result;
   }
 
   // ── validate() — direct validation without wrapping a function ────────────
@@ -469,7 +469,7 @@ export function guard<A extends unknown[], R>(
   fn: (...args: A) => Promise<R>,
   guards: Guard<any>[],
   options?: GuardOptions,
-): (...args: A) => Promise<R> {
+): (...args: A) => Promise<R | string | Record<string, unknown>> {
   const g = new Guardrails(guards, options);
   return (...args: A) =>
     g.run(fn as (...args: unknown[]) => Promise<R>, ...args);
