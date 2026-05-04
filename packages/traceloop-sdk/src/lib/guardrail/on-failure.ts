@@ -24,9 +24,9 @@ export const OnFailure = {
     return (output: GuardedResult) => {
       const msg = message ?? "Guardrail failed — returning original result.";
       if (level === "error") {
-        diag.error(msg, { result: output.result });
+        diag.error(msg);
       } else {
-        diag.warn(msg, { result: output.result });
+        diag.warn(msg);
       }
       return output.result;
     };
