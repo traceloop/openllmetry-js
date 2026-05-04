@@ -77,8 +77,7 @@ async function sequentialFailFast(): Promise<void> {
 
   const g = new Guardrails([trackingToxicity, trackingPii])
     .sequential()
-    .failFast()
-    .named("fail-fast-pipeline");
+    .failFast();
 
   // Use g.validate() with pre-mapped inputs — no LLM call or mapper needed.
   // The point here is to demonstrate guard sequencing, not LLM output.

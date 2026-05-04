@@ -31,8 +31,6 @@ export interface GuardrailsOptions {
    * - Callable: Custom OnFailureHandler receiving a GuardedResult
    */
   onFailure?: string | OnFailureHandler;
-  /** Identifier for this guardrail configuration. Used as the span name prefix. */
-  name?: string;
   /**
    * If true, run all guards before handling failures.
    * If false (default), stop at the first failure (fail-fast).
@@ -54,13 +52,11 @@ export interface GuardrailsOptions {
 
 export interface GuardOptions {
   onFailure?: string | OnFailureHandler;
-  name?: string;
   parallel?: boolean;
   inputMapper?: InputMapper;
 }
 
 export interface ValidateOptions {
-  name?: string;
   parallel?: boolean;
   inputMapper?: InputMapper;
 }
@@ -100,7 +96,6 @@ export class Guardrails {
   // Guard<any> — class stays internally untyped so no generics bleed onto builder methods
   private readonly guards: Guard<any>[];
   private readonly _onFailure: OnFailureHandler;
-  private readonly _name: string;
   private readonly _runAll: boolean;
   private readonly _parallel: boolean;
   private readonly _inputMapper?: InputMapper;
@@ -108,7 +103,6 @@ export class Guardrails {
   constructor(guards: Guard<any>[], options?: GuardrailsOptions) {
     this.guards = guards;
     this._onFailure = resolveOnFailure(options?.onFailure ?? "raise");
-    this._name = options?.name ?? "";
     this._runAll = options?.runAll ?? false;
     this._parallel = options?.parallel ?? true;
     this._inputMapper = options?.inputMapper;
@@ -148,14 +142,9 @@ export class Guardrails {
     return this._clone({ onFailure: handler });
   }
 
-  named(name: string): Guardrails {
-    return this._clone({ name });
-  }
-
   private _clone(overrides: Partial<GuardrailsOptions>): Guardrails {
     return new Guardrails(this.guards, {
       onFailure: this._onFailure,
-      name: this._name,
       runAll: this._runAll,
       parallel: this._parallel,
       inputMapper: this._inputMapper,

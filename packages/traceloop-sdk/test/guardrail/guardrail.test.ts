@@ -51,18 +51,18 @@ describe("Guardrails", () => {
 
   describe("new Guardrails().run() — UC-A", () => {
     it("returns LLM result when all guards pass", async () => {
-      const g = new Guardrails([alwaysPass], { name: "test" });
+      const g = new Guardrails([alwaysPass]);
       const result = await g.run(mockLLM, "hello");
       assert.strictEqual(result, "The weather is sunny today.");
     });
 
     it("throws GuardValidationError when a guard fails (default onFailure=raise)", async () => {
-      const g = new Guardrails([alwaysFail], { name: "test" });
+      const g = new Guardrails([alwaysFail]);
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardValidationError);
     });
 
     it("GuardedResult on error contains original result and guard inputs", async () => {
-      const g = new Guardrails([alwaysFail], { name: "test" });
+      const g = new Guardrails([alwaysFail]);
       try {
         await g.run(mockLLM, "hello");
         assert.fail("should have thrown");
@@ -74,7 +74,7 @@ describe("Guardrails", () => {
     });
 
     it("throws GuardExecutionError when guard throws", async () => {
-      const g = new Guardrails([alwaysThrow], { name: "test" });
+      const g = new Guardrails([alwaysThrow]);
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
     });
 
@@ -130,15 +130,6 @@ describe("Guardrails", () => {
       const original = new Guardrails([alwaysPass]);
       const modified = original.sequential();
       assert.notStrictEqual(original, modified);
-    });
-
-    it(".named() sets the name used in spans", async () => {
-      const g = new Guardrails([alwaysPass]).named("my-guardrail");
-      await g.run(mockLLM, "hello");
-      await traceloop.forceFlush();
-      const spans = memoryExporter.getFinishedSpans();
-      const guardSpan = spans.find((s) => s.name === "always-pass.guard");
-      assert.ok(guardSpan, "expected a guard span named always-pass.guard");
     });
 
     it(".logOnFailure() does not throw on failure", async () => {
@@ -390,7 +381,7 @@ describe("Guardrails", () => {
   describe("Tier 4: @guardrail decorator", () => {
     it("wraps an async class method", async () => {
       class MyService {
-        @guardrail([alwaysPass], { name: "service-guard" })
+        @guardrail([alwaysPass])
         async generate(prompt: string): Promise<string> {
           return `response to ${prompt}`;
         }
@@ -421,7 +412,7 @@ describe("Guardrails", () => {
 
   describe("OTel span structure", () => {
     it("creates a guard span with correct attributes", async () => {
-      const g = new Guardrails([alwaysPass], { name: "span-test" });
+      const g = new Guardrails([alwaysPass]);
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -439,7 +430,7 @@ describe("Guardrails", () => {
     });
 
     it("creates a child guard span", async () => {
-      const g = new Guardrails([alwaysPass], { name: "span-test" });
+      const g = new Guardrails([alwaysPass]);
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -453,7 +444,7 @@ describe("Guardrails", () => {
     });
 
     it("guard span is a direct child of the parent context (no container span)", async () => {
-      const g = new Guardrails([alwaysPass], { name: "span-test" });
+      const g = new Guardrails([alwaysPass]);
 
       await traceloop.withWorkflow({ name: "my-workflow" }, async () => {
         await g.run(mockLLM, "hello");
@@ -477,7 +468,7 @@ describe("Guardrails", () => {
     });
 
     it("guard spans are siblings of LLM spans (direct children of workflow)", async () => {
-      const g = new Guardrails([alwaysPass], { name: "sibling-test" });
+      const g = new Guardrails([alwaysPass]);
 
       await traceloop.withWorkflow({ name: "my-workflow" }, async () => {
         await g.run(mockLLM, "hello");
@@ -500,10 +491,7 @@ describe("Guardrails", () => {
     });
 
     it("sets FAILED status on guard span when guard fails", async () => {
-      const g = new Guardrails([alwaysFail], {
-        name: "fail-test",
-        onFailure: "ignore",
-      });
+      const g = new Guardrails([alwaysFail], { onFailure: "ignore" });
       await g.run(mockLLM, "hello");
       await traceloop.forceFlush();
 
@@ -518,7 +506,7 @@ describe("Guardrails", () => {
     });
 
     it("records error info on guard span when guard throws", async () => {
-      const g = new Guardrails([alwaysThrow], { name: "error-test" });
+      const g = new Guardrails([alwaysThrow]);
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
       await traceloop.forceFlush();
 
@@ -588,7 +576,7 @@ describe("Guardrails", () => {
         "is_safe",
         isTrue(),
       );
-      const g = new Guardrails([toxGuard], { name: "tox-test" });
+      const g = new Guardrails([toxGuard]);
       const result = await g.run(mockLLM, "hello");
 
       assert.strictEqual(result, "The weather is sunny today.");
@@ -642,7 +630,7 @@ describe("Guardrails", () => {
         "is_safe",
         isTrue(),
       );
-      const g = new Guardrails([toxGuard], { name: "api-error-test" });
+      const g = new Guardrails([toxGuard]);
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);
     });
   });
@@ -656,7 +644,7 @@ describe("Guardrails", () => {
       global.fetch = (() => new Promise(() => {})) as typeof global.fetch;
 
       const toxGuard = toxicityGuard({ timeoutMs: 150 });
-      const g = new Guardrails([toxGuard], { name: "timeout-test" });
+      const g = new Guardrails([toxGuard]);
 
       const start = Date.now();
       await assert.rejects(() => g.run(mockLLM, "hello"), GuardExecutionError);

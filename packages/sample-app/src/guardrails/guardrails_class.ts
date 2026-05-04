@@ -90,8 +90,7 @@ async function guardrailsClassBuilder(): Promise<void> {
   const g = new Guardrails([toxicityGuard(), piiGuard()])
     .sequential()
     .runAll()
-    .logOnFailure()
-    .named("content-safety-pipeline");
+    .logOnFailure();
 
   // --- Prompt that produces PII: ask LLM to include a fake person's details ---
   info(`Running pipeline on a response containing PII...`);
@@ -193,8 +192,7 @@ async function parallel(): Promise<void> {
   const g = new Guardrails([toxicityGuard(), piiGuard(), profanityGuard()])
     .parallel()
     .runAll()
-    .logOnFailure()
-    .named("parallel-pipeline");
+    .logOnFailure();
 
   info("Running 3 guards in parallel on a safe response...");
   const start = Date.now();
