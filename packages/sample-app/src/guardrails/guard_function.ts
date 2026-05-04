@@ -92,7 +92,6 @@ async function guardFunction(): Promise<void> {
       callLLM("You are a data assistant.", prompt as string),
     [jsonValidatorGuard()],
     {
-      name: "json-format-check",
       onFailure: () => JSON.stringify({ error: "Response was not valid JSON" }),
     },
   );
@@ -106,7 +105,7 @@ async function guardFunction(): Promise<void> {
   );
 
   if (validResponse !== fallback) {
-    ok(`Guard passed — JSON response: "${validResponse.slice(0, 100)}"`);
+    ok(`Guard passed — JSON response: "${(validResponse as string).slice(0, 100)}"`);
   } else {
     fail(
       `Guard fired on the JSON prompt (LLM returned non-JSON) — fallback returned`,
@@ -124,7 +123,7 @@ async function guardFunction(): Promise<void> {
     fail(`JSON guard fired — fallback returned ✓`);
   } else {
     ok(
-      `Response came through (guard did not trigger): "${proseResponse.slice(0, 80)}"`,
+      `Response came through (guard did not trigger): "${(proseResponse as string).slice(0, 80)}"`,
     );
   }
 }
@@ -133,7 +132,6 @@ async function guardFunction(): Promise<void> {
 
 class DataService {
   @guardrail([jsonValidatorGuard()], {
-    name: "json-format-guard",
     onFailure: "Response was not valid JSON.",
   })
   async generateData(prompt: string): Promise<string> {
@@ -151,7 +149,7 @@ async function decorator(): Promise<void> {
   const validResult = await service.generateData(
     "Return a JSON object with fields: name (string), score (number). Make up values. JSON only, no markdown.",
   );
-  ok(`Guard passed — result: "${validResult.slice(0, 120)}"`);
+  ok(`Guard passed — result: "${(validResult as string).slice(0, 120)}"`);
 
   // --- Prose response: guard fires, fallback returned ---
   console.log();
@@ -191,7 +189,6 @@ async function customConditionAndTimeout(): Promise<void> {
       }),
     ],
     {
-      name: "injection-check",
       onFailure: "Request blocked — prompt injection detected.",
     },
   );
@@ -206,7 +203,7 @@ async function customConditionAndTimeout(): Promise<void> {
   if (injectionResult === "Request blocked — prompt injection detected.") {
     fail(`Injection detected — fallback returned ✓`);
   } else {
-    ok(`Guard did not trigger: "${injectionResult.slice(0, 80)}"`);
+    ok(`Guard did not trigger: "${(injectionResult as string).slice(0, 80)}"`);
   }
 }
 

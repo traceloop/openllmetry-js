@@ -90,9 +90,6 @@ async function validateBeforeLLM(): Promise<void> {
   const safeResult = await validateContent(
     safeInput,
     [promptInjectionGuard()],
-    {
-      name: "input-safety-check",
-    },
   );
 
   if (safeResult.passed) {
@@ -109,9 +106,6 @@ async function validateBeforeLLM(): Promise<void> {
   const injectionResult = await validateContent(
     injectionInput,
     [promptInjectionGuard()],
-    {
-      name: "input-safety-check",
-    },
   );
 
   if (!injectionResult.passed) {
@@ -140,7 +134,6 @@ async function validateWithInputMapper(): Promise<void> {
     structuredOutput,
     [promptInjectionGuard()],
     {
-      name: "structured-input-safety-check",
       inputMapper: (output) => {
         const o = output as { answer: string };
         return [{ text: o.answer, prompt: o.answer, completion: o.answer }];

@@ -121,7 +121,6 @@ async function onFailureShorthands(): Promise<void> {
 
   // "log" — logs a warning via OTel diag and returns the original result
   const logGuard = new Guardrails([jsonValidatorGuard()], {
-    name: "log-on-failure",
     onFailure: "log",
   });
 
@@ -135,7 +134,6 @@ async function onFailureShorthands(): Promise<void> {
   // "ignore" — silently returns the original result, no logging
   console.log();
   const ignoreGuard = new Guardrails([jsonValidatorGuard()], {
-    name: "ignore-on-failure",
     onFailure: "ignore",
   });
 

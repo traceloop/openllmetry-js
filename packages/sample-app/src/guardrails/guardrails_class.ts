@@ -101,7 +101,7 @@ async function guardrailsClassBuilder(): Promise<void> {
     ),
   );
 
-  info(`Pipeline completed. Response: "${piiResponse.slice(0, 100)}..."`);
+  info(`Pipeline completed. Response: "${(piiResponse as string).slice(0, 100)}..."`);
   info(
     "(logOnFailure: no exception thrown — check the Traceloop UI for span details)",
   );
@@ -115,7 +115,6 @@ async function customOnFailure(): Promise<void> {
   // Using jsonValidatorGuard — deterministic: prose always fails JSON validation.
   // The custom onFailure handler receives the original output and can log/transform it.
   const g = new Guardrails([jsonValidatorGuard()], {
-    name: "custom-failure-handler",
     onFailure: (output: GuardedResult) => {
       console.log(`  ⚠️   Guard caught violation.`);
       console.log(
@@ -138,7 +137,7 @@ async function customOnFailure(): Promise<void> {
   );
 
   ok(
-    `Custom onFailure ran — structured fallback returned: ${result.slice(0, 100)}`,
+    `Custom onFailure ran — structured fallback returned: ${(result as string).slice(0, 100)}`,
   );
 }
 
@@ -148,7 +147,6 @@ async function jsonValidator(): Promise<void> {
   sep("jsonValidatorGuard — structured output validation");
 
   const g = new Guardrails([jsonValidatorGuard()], {
-    name: "json-format-check",
     onFailure: (output: GuardedResult) => {
       console.log(
         `  ⚠️   JSON validation failed. Raw output: "${String(output.result).slice(0, 100)}"`,
@@ -168,7 +166,7 @@ async function jsonValidator(): Promise<void> {
       "Return a JSON object with fields: name (string), age (number), city (string). Make up values.",
     ),
   );
-  ok(`Valid JSON result: ${validResult.slice(0, 120)}`);
+  ok(`Valid JSON result: ${(validResult as string).slice(0, 120)}`);
 
   // --- Invalid JSON prompt: force the LLM to return prose ---
   console.log();
@@ -179,7 +177,7 @@ async function jsonValidator(): Promise<void> {
       "What's the weather like today?",
     ),
   );
-  info(`Result after onFailure: ${invalidResult.slice(0, 120)}`);
+  info(`Result after onFailure: ${(invalidResult as string).slice(0, 120)}`);
 }
 
 // ── parallel() — run guards concurrently ─────────────────────────────────────
@@ -206,7 +204,7 @@ async function parallel(): Promise<void> {
 
   ok(`All 3 guards ran concurrently in ${elapsed}ms total.`);
   info(`(Sequential would take ~3x longer — one guard's time per guard.)`);
-  ok(`Response: "${result.slice(0, 80)}"`);
+  ok(`Response: "${(result as string).slice(0, 80)}"`);
 }
 
 // ── Custom inputMapper — route structured output to guards ────────────────────
@@ -221,7 +219,6 @@ async function customInputMapper(): Promise<void> {
   // Here the LLM returns { answer: string, confidence: string }.
   // We pass the "answer" field to the guard as the "text" field it expects.
   const g = new Guardrails([toxicityGuard()], {
-    name: "structured-output-check",
     inputMapper: (output) => {
       const o = output as { answer: string };
       return [{ text: o.answer, prompt: o.answer, completion: o.answer }];
