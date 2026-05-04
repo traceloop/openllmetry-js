@@ -87,10 +87,7 @@ async function validateBeforeLLM(): Promise<void> {
 
   // --- Safe input: should pass ---
   info(`Checking safe input: "${safeInput}"`);
-  const safeResult = await validateContent(
-    safeInput,
-    [promptInjectionGuard()],
-  );
+  const safeResult = await validateContent(safeInput, [promptInjectionGuard()]);
 
   if (safeResult.passed) {
     ok("Safe input passed the prompt injection guard — calling LLM...");
@@ -103,10 +100,9 @@ async function validateBeforeLLM(): Promise<void> {
   // --- Injection attempt: should fail ---
   console.log();
   info(`Checking injection attempt...`);
-  const injectionResult = await validateContent(
-    injectionInput,
-    [promptInjectionGuard()],
-  );
+  const injectionResult = await validateContent(injectionInput, [
+    promptInjectionGuard(),
+  ]);
 
   if (!injectionResult.passed) {
     ok("Injection attempt BLOCKED — LLM was never called. ✓");

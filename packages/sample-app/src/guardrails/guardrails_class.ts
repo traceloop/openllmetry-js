@@ -101,7 +101,9 @@ async function guardrailsClassBuilder(): Promise<void> {
     ),
   );
 
-  info(`Pipeline completed. Response: "${(piiResponse as string).slice(0, 100)}..."`);
+  info(
+    `Pipeline completed. Response: "${(piiResponse as string).slice(0, 100)}..."`,
+  );
   info(
     "(logOnFailure: no exception thrown — check the Traceloop UI for span details)",
   );

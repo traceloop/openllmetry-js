@@ -105,7 +105,9 @@ async function guardFunction(): Promise<void> {
   );
 
   if (validResponse !== fallback) {
-    ok(`Guard passed — JSON response: "${(validResponse as string).slice(0, 100)}"`);
+    ok(
+      `Guard passed — JSON response: "${(validResponse as string).slice(0, 100)}"`,
+    );
   } else {
     fail(
       `Guard fired on the JSON prompt (LLM returned non-JSON) — fallback returned`,
