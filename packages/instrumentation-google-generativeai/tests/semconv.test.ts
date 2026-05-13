@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-google-generativeai/tests/semconv.test.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
