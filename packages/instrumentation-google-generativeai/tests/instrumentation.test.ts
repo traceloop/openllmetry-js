@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-google-generativeai/tests/instrumentation.test.ts module purpose and public usage context */
 import { context, SpanStatusCode } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import * as assert from "assert";
