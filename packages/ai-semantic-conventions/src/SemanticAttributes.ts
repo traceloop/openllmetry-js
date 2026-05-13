@@ -1,3 +1,4 @@
+/** Documents packages/ai-semantic-conventions/src/SemanticAttributes.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
