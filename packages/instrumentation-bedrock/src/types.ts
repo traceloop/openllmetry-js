@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-bedrock/src/types.ts module purpose and public usage context */
 import { InstrumentationConfig } from "@opentelemetry/instrumentation";
 
 export enum BedrockVendor {
