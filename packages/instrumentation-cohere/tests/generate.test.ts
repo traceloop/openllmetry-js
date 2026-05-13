@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-cohere/tests/generate.test.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
