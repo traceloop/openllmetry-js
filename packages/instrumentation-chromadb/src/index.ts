@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-chromadb/src/index.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
