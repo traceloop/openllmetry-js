@@ -84,6 +84,12 @@ type APIPromiseType<T> = Promise<T> & {
   _thenUnwrap: <U>(onFulfilled: (value: T) => U) => APIPromiseType<U>;
 };
 
+// Internal tag for the Responses API instrumentation path. Distinct from the
+// OTel `gen_ai.operation.name` value (which is still `"chat"`); this is only
+// used to discriminate the request/response shape inside this file.
+const RESPONSES_TYPE = "responses" as const;
+type ResponsesType = typeof RESPONSES_TYPE;
+
 // Minimal shape of the Responses API we touch. Defined locally rather than
 // imported from openai/resources/responses to keep this instrumentation
 // compatible with both v4 (no Responses) and v5+/v6 SDKs.
@@ -158,7 +164,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._wrap(
         openaiModule.Responses.prototype,
         "create",
-        this.patchOpenAI("responses"),
+        this.patchOpenAI(RESPONSES_TYPE),
       );
     }
 
@@ -235,7 +241,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         this._wrap(
           Responses.prototype,
           "create",
-          this.patchOpenAI("responses"),
+          this.patchOpenAI(RESPONSES_TYPE),
         );
       }
 
@@ -306,7 +312,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     type:
       | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
       | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION
-      | "responses",
+      | ResponsesType,
     version: "v3" | "v4" = "v4",
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -323,9 +329,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             },
             client: this,
           });
-        } else if (type === "responses") {
+        } else if (type === RESPONSES_TYPE) {
           span = plugin.startSpan({
-            type: "responses",
+            type: RESPONSES_TYPE,
             params: args[0] as ResponsesCreateParams,
             client: this,
           });
