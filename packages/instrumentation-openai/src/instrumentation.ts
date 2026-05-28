@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 import type * as openai from "openai";
-import { context, trace, Span, Attributes, SpanKind } from "@opentelemetry/api";
+import {
+  context,
+  trace,
+  Span,
+  Attributes,
+  SpanKind,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
@@ -107,6 +114,18 @@ import {
   wrapImageEdit,
   wrapImageVariation,
 } from "./image-wrappers";
+
+type ResponsesPrototype = {
+  prototype: { create: (...args: unknown[]) => unknown };
+};
+
+function getResponsesClass(
+  moduleExports: typeof openai,
+): ResponsesPrototype | undefined {
+  return (
+    moduleExports.OpenAI as unknown as { Responses?: ResponsesPrototype }
+  ).Responses;
+}
 
 export class OpenAIInstrumentation extends InstrumentationBase {
   declare protected _config: OpenAIInstrumentationConfig;
@@ -211,13 +230,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION),
       );
 
-      const Responses = (
-        moduleExports.OpenAI as unknown as {
-          Responses?: {
-            prototype: { create: (...args: unknown[]) => unknown };
-          };
-        }
-      ).Responses;
+      const Responses = getResponsesClass(moduleExports);
       if (Responses) {
         this._wrap(
           Responses.prototype,
@@ -276,13 +289,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
       this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
 
-      const Responses = (
-        moduleExports.OpenAI as unknown as {
-          Responses?: {
-            prototype: { create: (...args: unknown[]) => unknown };
-          };
-        }
-      ).Responses;
+      const Responses = getResponsesClass(moduleExports);
       if (Responses) {
         this._unwrap(Responses.prototype, "create");
       }
@@ -353,10 +360,23 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
         if (type === "responses") {
           if (isStream) {
-            // Streaming for Responses API is not yet instrumented — end the
-            // span with request attributes only so we don't leak it, and
-            // return the original stream untouched.
-            span.end();
+            // Streaming for Responses API is not yet instrumented — close the
+            // span with request attributes only. Hook the promise so a failed
+            // API call still records the error on the span before it exports,
+            // and a success closes cleanly. The original stream is returned
+            // untouched to the caller.
+            execPromise.then(
+              () => span.end(),
+              (err: unknown) => {
+                const e = err instanceof Error ? err : new Error(String(err));
+                span.recordException(e);
+                span.setStatus({
+                  code: SpanStatusCode.ERROR,
+                  message: e.message,
+                });
+                span.end();
+              },
+            );
             return context.bind(execContext, execPromise);
           }
           const wrappedPromise = plugin._wrapPromise(
@@ -514,13 +534,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
     try {
       attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
-      if (params.max_output_tokens) {
+      if (params.max_output_tokens != null) {
         attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_output_tokens;
       }
-      if (params.temperature) {
+      if (params.temperature != null) {
         attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
       }
-      if (params.top_p) {
+      if (params.top_p != null) {
         attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       }
 

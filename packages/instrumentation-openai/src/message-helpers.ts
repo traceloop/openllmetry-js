@@ -297,9 +297,9 @@ interface OpenAIResponsesResult {
  * Assembles an OTel output message from an OpenAI Responses API response.
  *
  * The Responses API returns text via `result.output_text` (a convenience
- * aggregator over `result.output[]`). Finish reason is derived from
- * `result.status` — "completed" → stop, "incomplete" + max_output_tokens
- * → length, otherwise pass through.
+ * aggregator over `result.output[]`). Finish reason is mapped into the
+ * standardized OTel gen_ai.response.finish_reasons enum so downstream
+ * dashboards can filter without per-status special cases.
  *
  * @param result - The Responses API Response object
  * @returns Array with a single OTelOutputMessage
@@ -311,12 +311,16 @@ export function buildOpenAIResponsesOutputMessage(
   if (result.status === "completed") {
     finishReason = FinishReasons.STOP;
   } else if (result.status === "incomplete") {
-    finishReason =
-      result.incomplete_details?.reason === "max_output_tokens"
-        ? FinishReasons.LENGTH
-        : (result.incomplete_details?.reason ?? result.status);
-  } else if (result.status) {
-    finishReason = result.status;
+    const reason = result.incomplete_details?.reason;
+    if (reason === "max_output_tokens") {
+      finishReason = FinishReasons.LENGTH;
+    } else if (reason === "content_filter") {
+      finishReason = FinishReasons.CONTENT_FILTER;
+    } else {
+      finishReason = FinishReasons.ERROR;
+    }
+  } else if (result.status === "failed" || result.status === "cancelled") {
+    finishReason = FinishReasons.ERROR;
   }
 
   return [
