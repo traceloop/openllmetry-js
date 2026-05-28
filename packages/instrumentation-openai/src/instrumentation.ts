@@ -364,7 +364,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
         const isStream = (args[0] as { stream?: boolean } | undefined)?.stream;
 
-        if (type === "responses") {
+        if (type === RESPONSES_TYPE) {
           if (isStream) {
             // Streaming for Responses API is not yet instrumented — close the
             // span with request attributes only. Hook the promise so a failed
@@ -386,7 +386,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             return context.bind(execContext, execPromise);
           }
           const wrappedPromise = plugin._wrapPromise(
-            "responses",
+            RESPONSES_TYPE,
             version,
             span,
             execPromise,
@@ -435,12 +435,12 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           client: any;
         }
       | {
-          type: "responses";
+          type: ResponsesType;
           params: ResponsesCreateParams;
           client: unknown;
         },
   ): Span {
-    if (args.type === "responses") {
+    if (args.type === RESPONSES_TYPE) {
       return this._startResponsesSpan(args.params, args.client);
     }
     const { type, params, client } = args;
@@ -793,15 +793,15 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     type:
       | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
       | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION
-      | "responses",
+      | ResponsesType,
     version: "v3" | "v4",
     span: Span,
     promise: APIPromiseType<T>,
   ): APIPromiseType<T> {
     return promise._thenUnwrap((result) => {
-      if (type === "responses") {
+      if (type === RESPONSES_TYPE) {
         this._endSpan({
-          type: "responses",
+          type: RESPONSES_TYPE,
           span,
           result: result as ResponsesResult,
         });
@@ -866,11 +866,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       }
     | {
         span: Span;
-        type: "responses";
+        type: ResponsesType;
         result: ResponsesResult;
       }) {
     try {
-      if (type === "responses") {
+      if (type === RESPONSES_TYPE) {
         this._endResponsesSpan(span, result);
         return;
       }
