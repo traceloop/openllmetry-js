@@ -288,6 +288,41 @@ export function buildOpenAIOutputMessage(
 }
 
 /**
+ * Assembles an OTel output message from an OpenAI Responses API response.
+ *
+ * The Responses API returns text via `result.output_text` (a convenience
+ * aggregator over `result.output[]`). Finish reason is derived from
+ * `result.status` — "completed" → stop, "incomplete" + max_output_tokens
+ * → length, otherwise pass through.
+ *
+ * @param result - The Responses API Response object
+ * @returns Array with a single OTelOutputMessage
+ */
+export function buildOpenAIResponsesOutputMessage(
+  result: any,
+): OTelOutputMessage[] {
+  let finishReason: string = FinishReasons.STOP;
+  if (result.status === "completed") {
+    finishReason = FinishReasons.STOP;
+  } else if (result.status === "incomplete") {
+    finishReason =
+      result.incomplete_details?.reason === "max_output_tokens"
+        ? FinishReasons.LENGTH
+        : (result.incomplete_details?.reason ?? result.status);
+  } else if (result.status) {
+    finishReason = result.status;
+  }
+
+  return [
+    {
+      role: "assistant",
+      finish_reason: finishReason,
+      parts: [{ type: "text", content: result.output_text ?? "" }],
+    },
+  ];
+}
+
+/**
  * Assembles an OTel output message from an OpenAI text completion response.
  *
  * @param choice - A single Completion.Choice (has .text and .finish_reason)
