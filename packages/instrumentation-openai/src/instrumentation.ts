@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 import type * as openai from "openai";
-import { context, trace, Span, Attributes, SpanKind } from "@opentelemetry/api";
+import {
+  context,
+  trace,
+  Span,
+  Attributes,
+  SpanKind,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
@@ -55,6 +62,7 @@ import {
   buildOpenAIInputMessages,
   buildOpenAIOutputMessage,
   buildOpenAICompletionOutputMessage,
+  buildOpenAIResponsesOutputMessage,
   openaiFinishReasonMap,
 } from "./message-helpers";
 import type {
@@ -75,11 +83,54 @@ import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 type APIPromiseType<T> = Promise<T> & {
   _thenUnwrap: <U>(onFulfilled: (value: T) => U) => APIPromiseType<U>;
 };
+
+// Internal tag for the Responses API instrumentation path. Distinct from the
+// OTel `gen_ai.operation.name` value (which is still `"chat"`); this is only
+// used to discriminate the request/response shape inside this file.
+const RESPONSES_TYPE = "responses" as const;
+type ResponsesType = typeof RESPONSES_TYPE;
+
+// Minimal shape of the Responses API we touch. Defined locally rather than
+// imported from openai/resources/responses to keep this instrumentation
+// compatible with both v4 (no Responses) and v5+/v6 SDKs.
+interface ResponsesCreateParams {
+  model: string;
+  input: string | unknown[];
+  max_output_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  stream?: boolean;
+  extraAttributes?: Record<string, unknown>;
+}
+
+interface ResponsesResult {
+  id?: string;
+  model?: string;
+  output_text?: string;
+  status?: string;
+  incomplete_details?: { reason?: string } | null;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    total_tokens?: number;
+  };
+}
 import {
   wrapImageGeneration,
   wrapImageEdit,
   wrapImageVariation,
 } from "./image-wrappers";
+
+type ResponsesPrototype = {
+  prototype: { create: (...args: unknown[]) => unknown };
+};
+
+function getResponsesClass(
+  moduleExports: typeof openai,
+): ResponsesPrototype | undefined {
+  return (moduleExports.OpenAI as unknown as { Responses?: ResponsesPrototype })
+    .Responses;
+}
 
 export class OpenAIInstrumentation extends InstrumentationBase {
   declare protected _config: OpenAIInstrumentationConfig;
@@ -107,6 +158,14 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       "create",
       this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION),
     );
+
+    if (openaiModule.Responses) {
+      this._wrap(
+        openaiModule.Responses.prototype,
+        "create",
+        this.patchOpenAI(RESPONSES_TYPE),
+      );
+    }
 
     if (openaiModule.Images) {
       this._wrap(
@@ -176,6 +235,15 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION),
       );
 
+      const Responses = getResponsesClass(moduleExports);
+      if (Responses) {
+        this._wrap(
+          Responses.prototype,
+          "create",
+          this.patchOpenAI(RESPONSES_TYPE),
+        );
+      }
+
       if (moduleExports.OpenAI.Images) {
         this._wrap(
           moduleExports.OpenAI.Images.prototype,
@@ -226,6 +294,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
       this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
 
+      const Responses = getResponsesClass(moduleExports);
+      if (Responses) {
+        this._unwrap(Responses.prototype, "create");
+      }
+
       if (moduleExports.OpenAI.Images) {
         this._unwrap(moduleExports.OpenAI.Images.prototype, "generate");
         this._unwrap(moduleExports.OpenAI.Images.prototype, "edit");
@@ -237,7 +310,8 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   private patchOpenAI(
     type:
       | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
-      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION
+      | ResponsesType,
     version: "v3" | "v4" = "v4",
   ) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
@@ -245,22 +319,30 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     // eslint-disable-next-line
     return (original: Function) => {
       return function method(this: any, ...args: unknown[]) {
-        const span =
-          type === GEN_AI_OPERATION_NAME_VALUE_CHAT
-            ? plugin.startSpan({
-                type,
-                params: args[0] as ChatCompletionCreateParamsNonStreaming & {
-                  extraAttributes?: Record<string, any>;
-                },
-                client: this,
-              })
-            : plugin.startSpan({
-                type: GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
-                params: args[0] as CompletionCreateParamsNonStreaming & {
-                  extraAttributes?: Record<string, any>;
-                },
-                client: this,
-              });
+        let span: Span;
+        if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
+          span = plugin.startSpan({
+            type,
+            params: args[0] as ChatCompletionCreateParamsNonStreaming & {
+              extraAttributes?: Record<string, any>;
+            },
+            client: this,
+          });
+        } else if (type === RESPONSES_TYPE) {
+          span = plugin.startSpan({
+            type: RESPONSES_TYPE,
+            params: args[0] as ResponsesCreateParams,
+            client: this,
+          });
+        } else {
+          span = plugin.startSpan({
+            type: GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+            params: args[0] as CompletionCreateParamsNonStreaming & {
+              extraAttributes?: Record<string, any>;
+            },
+            client: this,
+          });
+        }
 
         const execContext = trace.setSpan(context.active(), span);
         const execPromise = safeExecuteInTheMiddle(
@@ -279,13 +361,39 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           },
         );
 
-        if (
-          (
-            args[0] as
-              | ChatCompletionCreateParamsStreaming
-              | CompletionCreateParamsStreaming
-          ).stream
-        ) {
+        const isStream = (args[0] as { stream?: boolean } | undefined)?.stream;
+
+        if (type === RESPONSES_TYPE) {
+          if (isStream) {
+            // Streaming for Responses API is not yet instrumented — close the
+            // span with request attributes only. Hook the promise so a failed
+            // API call still records the error on the span before it exports,
+            // and a success closes cleanly. The original stream is returned
+            // untouched to the caller.
+            execPromise.then(
+              () => span.end(),
+              (err: unknown) => {
+                const e = err instanceof Error ? err : new Error(String(err));
+                span.recordException(e);
+                span.setStatus({
+                  code: SpanStatusCode.ERROR,
+                  message: e.message,
+                });
+                span.end();
+              },
+            );
+            return context.bind(execContext, execPromise);
+          }
+          const wrappedPromise = plugin._wrapPromise(
+            RESPONSES_TYPE,
+            version,
+            span,
+            execPromise,
+          );
+          return context.bind(execContext, wrappedPromise);
+        }
+
+        if (isStream) {
           return context.bind(
             execContext,
             plugin._streamingWrapPromise({
@@ -309,25 +417,32 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     };
   }
 
-  private startSpan({
-    type,
-    params,
-    client,
-  }:
-    | {
-        type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
-        params: ChatCompletionCreateParamsNonStreaming & {
-          extraAttributes?: Record<string, any>;
-        };
-        client: any;
-      }
-    | {
-        type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
-        params: CompletionCreateParamsNonStreaming & {
-          extraAttributes?: Record<string, any>;
-        };
-        client: any;
-      }): Span {
+  private startSpan(
+    args:
+      | {
+          type: typeof GEN_AI_OPERATION_NAME_VALUE_CHAT;
+          params: ChatCompletionCreateParamsNonStreaming & {
+            extraAttributes?: Record<string, any>;
+          };
+          client: any;
+        }
+      | {
+          type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
+          params: CompletionCreateParamsNonStreaming & {
+            extraAttributes?: Record<string, any>;
+          };
+          client: any;
+        }
+      | {
+          type: ResponsesType;
+          params: ResponsesCreateParams;
+          client: unknown;
+        },
+  ): Span {
+    if (args.type === RESPONSES_TYPE) {
+      return this._startResponsesSpan(args.params, args.client);
+    }
+    const { type, params, client } = args;
     const { provider } = this._detectVendorFromURL(client);
 
     const attributes: Attributes = {
@@ -407,6 +522,71 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       kind: SpanKind.CLIENT,
       attributes,
     });
+  }
+
+  private _startResponsesSpan(
+    params: ResponsesCreateParams,
+    client: unknown,
+  ): Span {
+    const { provider } = this._detectVendorFromURL(client);
+
+    // Reuse `chat` operation name (and span name) — Responses API is the
+    // chat surface from the OTel gen_ai perspective.
+    const attributes: Attributes = {
+      [ATTR_GEN_AI_PROVIDER_NAME]: provider,
+      [ATTR_GEN_AI_OPERATION_NAME]: GEN_AI_OPERATION_NAME_VALUE_CHAT,
+    };
+
+    try {
+      attributes[ATTR_GEN_AI_REQUEST_MODEL] = params.model;
+      if (params.max_output_tokens != null) {
+        attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_output_tokens;
+      }
+      if (params.temperature != null) {
+        attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
+      }
+      if (params.top_p != null) {
+        attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
+      }
+
+      if (
+        params.extraAttributes !== undefined &&
+        typeof params.extraAttributes === "object"
+      ) {
+        const extra = params.extraAttributes;
+        Object.keys(extra).forEach((key: string) => {
+          const v = extra[key];
+          if (
+            typeof v === "string" ||
+            typeof v === "number" ||
+            typeof v === "boolean"
+          ) {
+            attributes[key] = v;
+          }
+        });
+      }
+
+      if (this._shouldSendPrompts()) {
+        const text =
+          typeof params.input === "string"
+            ? params.input
+            : JSON.stringify(params.input);
+        attributes[ATTR_GEN_AI_INPUT_MESSAGES] = JSON.stringify([
+          { role: "user", parts: [{ type: "text", content: text }] },
+        ]);
+      }
+    } catch (e) {
+      this._diag.debug(e);
+      this._config.exceptionLogger?.(e);
+    }
+
+    return this.tracer.startSpan(
+      `${GEN_AI_OPERATION_NAME_VALUE_CHAT} ${params?.model}`,
+      {
+        kind: SpanKind.CLIENT,
+        attributes,
+      },
+    );
   }
 
   private async *_streamingWrapPromise({
@@ -611,12 +791,21 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   private _wrapPromise<T>(
     type:
       | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
-      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
+      | typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION
+      | ResponsesType,
     version: "v3" | "v4",
     span: Span,
     promise: APIPromiseType<T>,
   ): APIPromiseType<T> {
     return promise._thenUnwrap((result) => {
+      if (type === RESPONSES_TYPE) {
+        this._endSpan({
+          type: RESPONSES_TYPE,
+          span,
+          result: result as ResponsesResult,
+        });
+        return result;
+      }
       if (version === "v3") {
         if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
           this._addLogProbsEvent(
@@ -673,8 +862,17 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         span: Span;
         type: typeof GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION;
         result: Completion;
+      }
+    | {
+        span: Span;
+        type: ResponsesType;
+        result: ResponsesResult;
       }) {
     try {
+      if (type === RESPONSES_TYPE) {
+        this._endResponsesSpan(span, result);
+        return;
+      }
       span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
       if (result.id) {
         span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, result.id);
@@ -728,6 +926,56 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             JSON.stringify(outputMessages),
           );
         }
+      }
+    } catch (e) {
+      this._diag.debug(e);
+      this._config.exceptionLogger?.(e);
+    }
+
+    span.end();
+  }
+
+  private _endResponsesSpan(span: Span, result: ResponsesResult) {
+    try {
+      if (result.model) {
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);
+      }
+      if (result.id) {
+        span.setAttribute(ATTR_GEN_AI_RESPONSE_ID, result.id);
+      }
+      if (result.usage) {
+        const inputTokens = result.usage.input_tokens;
+        const outputTokens = result.usage.output_tokens;
+        if (typeof inputTokens === "number") {
+          span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, inputTokens);
+        }
+        if (typeof outputTokens === "number") {
+          span.setAttribute(ATTR_GEN_AI_USAGE_OUTPUT_TOKENS, outputTokens);
+        }
+        const totalTokens =
+          typeof result.usage.total_tokens === "number"
+            ? result.usage.total_tokens
+            : typeof inputTokens === "number" &&
+                typeof outputTokens === "number"
+              ? inputTokens + outputTokens
+              : undefined;
+        if (typeof totalTokens === "number") {
+          span.setAttribute(
+            SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+            totalTokens,
+          );
+        }
+      }
+
+      const outputMessages = buildOpenAIResponsesOutputMessage(result);
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
+        outputMessages[0].finish_reason,
+      ]);
+      if (this._shouldSendPrompts()) {
+        span.setAttribute(
+          ATTR_GEN_AI_OUTPUT_MESSAGES,
+          JSON.stringify(outputMessages),
+        );
       }
     } catch (e) {
       this._diag.debug(e);

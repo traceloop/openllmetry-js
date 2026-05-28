@@ -287,6 +287,51 @@ export function buildOpenAIOutputMessage(
   ];
 }
 
+interface OpenAIResponsesResult {
+  status?: string;
+  output_text?: string;
+  incomplete_details?: { reason?: string } | null;
+}
+
+/**
+ * Assembles an OTel output message from an OpenAI Responses API response.
+ *
+ * The Responses API returns text via `result.output_text` (a convenience
+ * aggregator over `result.output[]`). Finish reason is mapped into the
+ * standardized OTel gen_ai.response.finish_reasons enum so downstream
+ * dashboards can filter without per-status special cases.
+ *
+ * @param result - The Responses API Response object
+ * @returns Array with a single OTelOutputMessage
+ */
+export function buildOpenAIResponsesOutputMessage(
+  result: OpenAIResponsesResult,
+): OTelOutputMessage[] {
+  let finishReason: string = FinishReasons.STOP;
+  if (result.status === "completed") {
+    finishReason = FinishReasons.STOP;
+  } else if (result.status === "incomplete") {
+    const reason = result.incomplete_details?.reason;
+    if (reason === "max_output_tokens") {
+      finishReason = FinishReasons.LENGTH;
+    } else if (reason === "content_filter") {
+      finishReason = FinishReasons.CONTENT_FILTER;
+    } else {
+      finishReason = FinishReasons.ERROR;
+    }
+  } else if (result.status === "failed" || result.status === "cancelled") {
+    finishReason = FinishReasons.ERROR;
+  }
+
+  return [
+    {
+      role: "assistant",
+      finish_reason: finishReason,
+      parts: [{ type: "text", content: result.output_text ?? "" }],
+    },
+  ];
+}
+
 /**
  * Assembles an OTel output message from an OpenAI text completion response.
  *

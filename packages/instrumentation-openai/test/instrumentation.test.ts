@@ -192,6 +192,46 @@ describe("Test OpenAI instrumentation", async function () {
     assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
   });
 
+  it("should set attributes in span for responses (non-streaming)", async () => {
+    const result = await openai.responses.create({
+      model: "gpt-4o-mini",
+      input: "Tell me a joke about OpenTelemetry",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const span = spans.find((s) => s.name.startsWith("chat "));
+
+    assert.ok(result);
+    assert.ok(span);
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_PROVIDER_NAME], "openai");
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_OPERATION_NAME], "chat");
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_REQUEST_MODEL],
+      "gpt-4o-mini",
+    );
+
+    const inputMessages = JSON.parse(
+      span.attributes[ATTR_GEN_AI_INPUT_MESSAGES] as string,
+    );
+    assert.strictEqual(inputMessages[0].role, "user");
+    assert.strictEqual(
+      inputMessages[0].parts[0].content,
+      "Tell me a joke about OpenTelemetry",
+    );
+
+    const outputMessages = JSON.parse(
+      span.attributes[ATTR_GEN_AI_OUTPUT_MESSAGES] as string,
+    );
+    assert.strictEqual(outputMessages[0].role, "assistant");
+    assert.ok(outputMessages[0].parts[0].content);
+
+    assert.ok(span.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS]);
+    assert.ok(+span.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
+    assert.deepEqual(span.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS], [
+      "stop",
+    ]);
+  });
+
   it("should set attributes in span for streaming chat", async () => {
     const stream = await openai.chat.completions.create({
       messages: [
