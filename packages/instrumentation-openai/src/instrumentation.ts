@@ -76,6 +76,32 @@ import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 type APIPromiseType<T> = Promise<T> & {
   _thenUnwrap: <U>(onFulfilled: (value: T) => U) => APIPromiseType<U>;
 };
+
+// Minimal shape of the Responses API we touch. Defined locally rather than
+// imported from openai/resources/responses to keep this instrumentation
+// compatible with both v4 (no Responses) and v5+/v6 SDKs.
+interface ResponsesCreateParams {
+  model: string;
+  input: string | unknown[];
+  max_output_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  stream?: boolean;
+  extraAttributes?: Record<string, unknown>;
+}
+
+interface ResponsesResult {
+  id?: string;
+  model?: string;
+  output_text?: string;
+  status?: string;
+  incomplete_details?: { reason?: string } | null;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    total_tokens?: number;
+  };
+}
 import {
   wrapImageGeneration,
   wrapImageEdit,
@@ -185,12 +211,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         this.patchOpenAI(GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION),
       );
 
-      if ((moduleExports.OpenAI as any).Responses) {
-        this._wrap(
-          (moduleExports.OpenAI as any).Responses.prototype,
-          "create",
-          this.patchOpenAI("responses"),
-        );
+      const Responses = (
+        moduleExports.OpenAI as unknown as {
+          Responses?: { prototype: { create: (...args: unknown[]) => unknown } };
+        }
+      ).Responses;
+      if (Responses) {
+        this._wrap(Responses.prototype, "create", this.patchOpenAI("responses"));
       }
 
       if (moduleExports.OpenAI.Images) {
@@ -243,11 +270,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       this._unwrap(moduleExports.OpenAI.Chat.Completions.prototype, "create");
       this._unwrap(moduleExports.OpenAI.Completions.prototype, "create");
 
-      if ((moduleExports.OpenAI as any).Responses) {
-        this._unwrap(
-          (moduleExports.OpenAI as any).Responses.prototype,
-          "create",
-        );
+      const Responses = (
+        moduleExports.OpenAI as unknown as {
+          Responses?: { prototype: { create: (...args: unknown[]) => unknown } };
+        }
+      ).Responses;
+      if (Responses) {
+        this._unwrap(Responses.prototype, "create");
       }
 
       if (moduleExports.OpenAI.Images) {
@@ -282,7 +311,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         } else if (type === "responses") {
           span = plugin.startSpan({
             type: "responses",
-            params: args[0] as any,
+            params: args[0] as ResponsesCreateParams,
             client: this,
           });
         } else {
@@ -312,7 +341,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           },
         );
 
-        const isStream = (args[0] as any)?.stream;
+        const isStream = (args[0] as { stream?: boolean } | undefined)?.stream;
 
         if (type === "responses") {
           if (isStream) {
@@ -320,7 +349,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             // span with request attributes only so we don't leak it, and
             // return the original stream untouched.
             span.end();
-            return context.bind(execContext, execPromise as any);
+            return context.bind(execContext, execPromise);
           }
           const wrappedPromise = plugin._wrapPromise(
             "responses",
@@ -328,7 +357,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
             span,
             execPromise,
           );
-          return context.bind(execContext, wrappedPromise as any);
+          return context.bind(execContext, wrappedPromise);
         }
 
         if (isStream) {
@@ -373,8 +402,8 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         }
       | {
           type: "responses";
-          params: any;
-          client: any;
+          params: ResponsesCreateParams;
+          client: unknown;
         },
   ): Span {
     if (args.type === "responses") {
@@ -462,7 +491,10 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     });
   }
 
-  private _startResponsesSpan(params: any, client: any): Span {
+  private _startResponsesSpan(
+    params: ResponsesCreateParams,
+    client: unknown,
+  ): Span {
     const { provider } = this._detectVendorFromURL(client);
 
     // Reuse `chat` operation name (and span name) — Responses API is the
@@ -488,8 +520,16 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         params.extraAttributes !== undefined &&
         typeof params.extraAttributes === "object"
       ) {
-        Object.keys(params.extraAttributes).forEach((key: string) => {
-          attributes[key] = params.extraAttributes[key];
+        const extra = params.extraAttributes;
+        Object.keys(extra).forEach((key: string) => {
+          const v = extra[key];
+          if (
+            typeof v === "string" ||
+            typeof v === "number" ||
+            typeof v === "boolean"
+          ) {
+            attributes[key] = v;
+          }
         });
       }
 
@@ -726,7 +766,11 @@ export class OpenAIInstrumentation extends InstrumentationBase {
   ): APIPromiseType<T> {
     return promise._thenUnwrap((result) => {
       if (type === "responses") {
-        this._endSpan({ type: "responses", span, result: result as any });
+        this._endSpan({
+          type: "responses",
+          span,
+          result: result as ResponsesResult,
+        });
         return result;
       }
       if (version === "v3") {
@@ -789,7 +833,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     | {
         span: Span;
         type: "responses";
-        result: any;
+        result: ResponsesResult;
       }) {
     try {
       if (type === "responses") {
@@ -858,7 +902,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     span.end();
   }
 
-  private _endResponsesSpan(span: Span, result: any) {
+  private _endResponsesSpan(span: Span, result: ResponsesResult) {
     try {
       if (result.model) {
         span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, result.model);

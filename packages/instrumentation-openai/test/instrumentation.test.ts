@@ -193,7 +193,7 @@ describe("Test OpenAI instrumentation", async function () {
   });
 
   it("should set attributes in span for responses (non-streaming)", async () => {
-    const result = await (openai as any).responses.create({
+    const result = await openai.responses.create({
       model: "gpt-4o-mini",
       input: "Tell me a joke about OpenTelemetry",
     });

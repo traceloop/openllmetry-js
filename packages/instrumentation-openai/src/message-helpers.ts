@@ -287,6 +287,12 @@ export function buildOpenAIOutputMessage(
   ];
 }
 
+interface OpenAIResponsesResult {
+  status?: string;
+  output_text?: string;
+  incomplete_details?: { reason?: string } | null;
+}
+
 /**
  * Assembles an OTel output message from an OpenAI Responses API response.
  *
@@ -299,7 +305,7 @@ export function buildOpenAIOutputMessage(
  * @returns Array with a single OTelOutputMessage
  */
 export function buildOpenAIResponsesOutputMessage(
-  result: any,
+  result: OpenAIResponsesResult,
 ): OTelOutputMessage[] {
   let finishReason: string = FinishReasons.STOP;
   if (result.status === "completed") {
