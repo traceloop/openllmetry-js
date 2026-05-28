@@ -128,9 +128,8 @@ type ResponsesPrototype = {
 function getResponsesClass(
   moduleExports: typeof openai,
 ): ResponsesPrototype | undefined {
-  return (
-    moduleExports.OpenAI as unknown as { Responses?: ResponsesPrototype }
-  ).Responses;
+  return (moduleExports.OpenAI as unknown as { Responses?: ResponsesPrototype })
+    .Responses;
 }
 
 export class OpenAIInstrumentation extends InstrumentationBase {
