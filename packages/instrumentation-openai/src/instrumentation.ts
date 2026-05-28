@@ -213,11 +213,17 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
       const Responses = (
         moduleExports.OpenAI as unknown as {
-          Responses?: { prototype: { create: (...args: unknown[]) => unknown } };
+          Responses?: {
+            prototype: { create: (...args: unknown[]) => unknown };
+          };
         }
       ).Responses;
       if (Responses) {
-        this._wrap(Responses.prototype, "create", this.patchOpenAI("responses"));
+        this._wrap(
+          Responses.prototype,
+          "create",
+          this.patchOpenAI("responses"),
+        );
       }
 
       if (moduleExports.OpenAI.Images) {
@@ -272,7 +278,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
       const Responses = (
         moduleExports.OpenAI as unknown as {
-          Responses?: { prototype: { create: (...args: unknown[]) => unknown } };
+          Responses?: {
+            prototype: { create: (...args: unknown[]) => unknown };
+          };
         }
       ).Responses;
       if (Responses) {
@@ -935,10 +943,9 @@ export class OpenAIInstrumentation extends InstrumentationBase {
       }
 
       const outputMessages = buildOpenAIResponsesOutputMessage(result);
-      span.setAttribute(
-        ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
-        [outputMessages[0].finish_reason],
-      );
+      span.setAttribute(ATTR_GEN_AI_RESPONSE_FINISH_REASONS, [
+        outputMessages[0].finish_reason,
+      ]);
       if (this._shouldSendPrompts()) {
         span.setAttribute(
           ATTR_GEN_AI_OUTPUT_MESSAGES,

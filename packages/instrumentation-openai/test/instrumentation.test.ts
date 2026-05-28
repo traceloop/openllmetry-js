@@ -227,10 +227,9 @@ describe("Test OpenAI instrumentation", async function () {
 
     assert.ok(span.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS]);
     assert.ok(+span.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
-    assert.deepEqual(
-      span.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS],
-      ["stop"],
-    );
+    assert.deepEqual(span.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS], [
+      "stop",
+    ]);
   });
 
   it("should set attributes in span for streaming chat", async () => {
