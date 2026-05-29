@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.27.0](https://github.com/traceloop/openllmetry-js/compare/v0.26.0...v0.27.0) (2026-05-29)
+
+### Features
+
+- **guardrails:** Add Guardrails ([#946](https://github.com/traceloop/openllmetry-js/issues/946)) ([7fd93c0](https://github.com/traceloop/openllmetry-js/commit/7fd93c0ed8813b069e087f0af9d373954ea261e2))
+
 # [0.26.0](https://github.com/traceloop/openllmetry-js/compare/v0.25.0...v0.26.0) (2026-04-16)
 
 ### Features
