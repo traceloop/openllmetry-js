@@ -27,7 +27,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 10
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           cache: "pnpm"
           node-version-file: ".nvmrc"
@@ -54,8 +54,6 @@ jobs:
           tag_name: ${{ env.CURRENT_VERSION }}
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npm install -g npm@latest
       - name: Build for Release
         run: pnpm nx run-many --target=build --parallel=3
       - name: Publish

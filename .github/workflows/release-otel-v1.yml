@@ -18,7 +18,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         with:
           version: 10
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           cache: "pnpm"
           node-version-file: ".nvmrc"
@@ -42,8 +42,6 @@ jobs:
           pnpm lerna version $NEW_VERSION --no-private --no-push --yes
           git add .
           git commit -m "chore: version bump to ${NEW_VERSION} for otel-v1 release"
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npm install -g npm@latest
       - name: Build for Release
         run: pnpm nx run-many --target=build --parallel=3
       - name: Publish with otel-v1 tag
