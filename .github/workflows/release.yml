@@ -57,4 +57,4 @@ jobs:
       - name: Build for Release
         run: pnpm nx run-many --target=build --parallel=3
       - name: Publish
-        run: pnpm lerna publish --no-private from-git --yes
+        run: pnpm lerna publish --no-private from-package --yes
