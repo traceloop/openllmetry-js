@@ -24,6 +24,7 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import type * as vertexAiImport from "@google-cloud/vertexai";
+import { ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS } from "@opentelemetry/semantic-conventions/incubating";
 
 const memoryExporter = new InMemorySpanExporter();
 
@@ -153,5 +154,80 @@ describe.skip("Test Gemini GenerativeModel Instrumentation", () => {
         resp,
       );
     });
+  });
+});
+
+describe("Test VertexAI cache token instrumentation", () => {
+  const cacheExporter = new InMemorySpanExporter();
+  const cacheProvider = new BasicTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(cacheExporter)],
+  });
+  let cacheInstrumentation: VertexAIInstrumentation;
+  let contextManager: AsyncHooksContextManager;
+
+  const mockResponse = {
+    candidates: [
+      {
+        content: { role: "model", parts: [{ text: "North, South, East, West." }] },
+        finishReason: "STOP",
+      },
+    ],
+    usageMetadata: {
+      promptTokenCount: 10,
+      candidatesTokenCount: 7,
+      totalTokenCount: 17,
+      cachedContentTokenCount: 5,
+    },
+  };
+
+  class MockGenerativeModel {
+    model = "gemini-1.5-pro";
+    generationConfig = {};
+    async generateContent(_request: unknown) {
+      return { response: Promise.resolve(mockResponse) };
+    }
+    async generateContentStream(_request: unknown) {
+      return { response: Promise.resolve(mockResponse) };
+    }
+  }
+
+  before(() => {
+    cacheInstrumentation = new VertexAIInstrumentation();
+    cacheInstrumentation.setTracerProvider(cacheProvider);
+    cacheInstrumentation.manuallyInstrument({
+      GenerativeModel: MockGenerativeModel,
+    } as unknown as typeof vertexAiImport);
+  });
+
+  after(async () => {
+    await cacheProvider.forceFlush();
+    cacheInstrumentation.disable();
+  });
+
+  beforeEach(() => {
+    contextManager = new AsyncHooksContextManager().enable();
+    context.setGlobalContextManager(contextManager);
+  });
+
+  afterEach(() => {
+    cacheExporter.reset();
+    context.disable();
+  });
+
+  it("should set cache read input tokens in span when cachedContentTokenCount is present", async () => {
+    const model = new MockGenerativeModel();
+
+    await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: "What are the 4 cardinal directions?" }] }],
+    });
+
+    const spans = cacheExporter.getFinishedSpans();
+    assert.ok(spans.length > 0, "expected at least one span");
+    const attributes = spans[0].attributes;
+
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      5,
+    );
   });
 });
