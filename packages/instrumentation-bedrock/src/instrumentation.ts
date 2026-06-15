@@ -48,6 +48,8 @@ import {
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
   GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
   ATTR_GEN_AI_PROVIDER_NAME,
@@ -701,6 +703,18 @@ export class BedrockInstrumentation extends InstrumentationBase {
                 [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage["output_tokens"],
                 [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
                   (usage["input_tokens"] || 0) + (usage["output_tokens"] || 0),
+                ...(usage["cache_read_input_tokens"]
+                  ? {
+                      [ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS]:
+                        usage["cache_read_input_tokens"],
+                    }
+                  : {}),
+                ...(usage["cache_creation_input_tokens"]
+                  ? {
+                      [ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS]:
+                        usage["cache_creation_input_tokens"],
+                    }
+                  : {}),
               }
             : {}),
         };

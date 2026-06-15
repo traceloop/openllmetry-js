@@ -34,6 +34,8 @@ import {
   ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
   // OTel 1.40 new attributes
   ATTR_GEN_AI_PROVIDER_NAME,
   GEN_AI_PROVIDER_NAME_VALUE_AWS_BEDROCK,
@@ -124,6 +126,70 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
   afterEach(() => {
     memoryExporter.reset();
     context.disable();
+  });
+
+  it("should set cache tokens in span for Anthropic messages API with cached tokens", async function () {
+    const { server } = this.polly as Polly;
+    const modelId = "anthropic.claude-3-5-sonnet-20241022-v2-0";
+    server
+      .post(
+        `https://bedrock-runtime.us-east-1.amazonaws.com/model/${modelId}/invoke`,
+      )
+      .intercept((_req, res) => {
+        res.status(200).json({
+          id: "msg_cache_test",
+          type: "message",
+          role: "assistant",
+          content: [
+            { type: "text", text: "North, South, East, West." },
+          ],
+          model: modelId,
+          stop_reason: "end_turn",
+          stop_sequence: null,
+          usage: {
+            input_tokens: 10,
+            cache_creation_input_tokens: 8,
+            cache_read_input_tokens: 5,
+            output_tokens: 7,
+          },
+        });
+      });
+
+    const input = {
+      modelId,
+      contentType: "application/json",
+      accept: "application/json",
+      body: JSON.stringify({
+        anthropic_version: "bedrock-2023-05-31",
+        max_tokens: 300,
+        messages: [
+          { role: "user", content: "What are the 4 cardinal directions?" },
+        ],
+      }),
+    };
+
+    const command = new bedrock.InvokeModelCommand(input);
+    await bedrockRuntimeClient.send(command);
+
+    const spans = memoryExporter.getFinishedSpans();
+    const attributes = spans[0].attributes;
+
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+      10,
+    );
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
+      7,
+    );
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      5,
+    );
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS],
+      8,
+    );
   });
 
   it("should set request and response attributes in span for given prompt", async () => {
