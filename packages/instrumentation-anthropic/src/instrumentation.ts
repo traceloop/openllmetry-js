@@ -533,13 +533,19 @@ export class AnthropicInstrumentation extends InstrumentationBase {
         span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, totalInputTokens);
 
         // Cache token attributes (v1.40)
-        if (result.usage.cache_creation_input_tokens != null) {
+        if (
+          result.usage.cache_creation_input_tokens !== null &&
+          result.usage.cache_creation_input_tokens !== undefined
+        ) {
           span.setAttribute(
             ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
             result.usage.cache_creation_input_tokens,
           );
         }
-        if (result.usage.cache_read_input_tokens != null) {
+        if (
+          result.usage.cache_read_input_tokens !== null &&
+          result.usage.cache_read_input_tokens !== undefined
+        ) {
           span.setAttribute(
             ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
             result.usage.cache_read_input_tokens,

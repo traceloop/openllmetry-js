@@ -495,7 +495,7 @@ export class GenAIInstrumentation extends InstrumentationBase {
           SpanAttributes.GEN_AI_USAGE_REASONING_TOKENS,
           reasoningTokens,
         );
-      if (cachedTokens != null)
+      if (cachedTokens !== null && cachedTokens !== undefined)
         span.setAttribute(
           ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
           cachedTokens,
