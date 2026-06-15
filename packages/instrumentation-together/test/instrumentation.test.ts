@@ -37,6 +37,7 @@ import {
   ATTR_GEN_AI_PROMPT,
   ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 const memoryExporter = new InMemorySpanExporter();
@@ -581,6 +582,49 @@ describe("Test Together instrumentation", async function () {
         ]! as string,
       ),
       { location: "Chicago, IL", unit: "fahrenheit" },
+    );
+  });
+
+  it("should set cache read input tokens in span when cached_tokens is present", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.together.xyz/v1/chat/completions")
+      .intercept((_req, res) => {
+        res.status(200).json({
+          id: "together-cache-test-001",
+          object: "chat.completion",
+          created: 1700000000,
+          model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: "North, South, East, West." },
+              finish_reason: "stop",
+            },
+          ],
+          usage: {
+            prompt_tokens: 20,
+            completion_tokens: 8,
+            total_tokens: 28,
+            cached_tokens: 12,
+          },
+        });
+      });
+
+    await together.chat.completions.create({
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      messages: [{ role: "user", content: "What are the 4 cardinal directions?" }],
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const span = spans.find((s) => s.name === "together.chat");
+
+    assert.ok(span);
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_USAGE_PROMPT_TOKENS], 20);
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_USAGE_COMPLETION_TOKENS], 8);
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      12,
     );
   });
 });

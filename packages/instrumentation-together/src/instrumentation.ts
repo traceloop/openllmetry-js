@@ -36,6 +36,7 @@ import {
   ATTR_GEN_AI_SYSTEM,
   ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { TogetherAIInstrumentationConfig } from "./types";
 import type { Completion } from "together-ai/resources";
@@ -521,6 +522,15 @@ export class TogetherInstrumentation extends InstrumentationBase {
           ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
           result.usage?.prompt_tokens,
         );
+        const cachedTokens = (
+          result.usage as unknown as Record<string, unknown>
+        ).cached_tokens;
+        if (cachedTokens) {
+          span.setAttribute(
+            ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+            cachedTokens as number,
+          );
+        }
       }
 
       if (this._shouldSendPrompts()) {
