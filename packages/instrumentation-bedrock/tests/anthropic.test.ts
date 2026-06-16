@@ -174,13 +174,20 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     const spans = memoryExporter.getFinishedSpans();
     const attributes = spans[0].attributes;
 
+    // Per OTel GenAI semconv (subset semantics), input_tokens includes
+    // cache_read + cache_creation. Raw response: input=10, cache_read=5,
+    // cache_creation=8 → summed input_tokens = 23.
     assert.strictEqual(
       attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
-      10,
+      23,
     );
     assert.strictEqual(
       attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
       7,
+    );
+    assert.strictEqual(
+      attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
+      30,
     );
     assert.strictEqual(
       attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],

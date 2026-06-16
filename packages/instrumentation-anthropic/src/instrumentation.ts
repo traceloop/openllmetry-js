@@ -516,18 +516,21 @@ export class AnthropicInstrumentation extends InstrumentationBase {
       }
 
       if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT && result.usage) {
+        // Per OTel GenAI semconv, cache_read.input_tokens and cache_creation.input_tokens
+        // SHOULD be included in gen_ai.usage.input_tokens (subset semantics).
+        const cacheRead = result.usage.cache_read_input_tokens ?? 0;
+        const cacheCreation = result.usage.cache_creation_input_tokens ?? 0;
+        const totalInputTokens =
+          result.usage.input_tokens + cacheRead + cacheCreation;
         span.setAttribute(
           SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
-          result.usage.input_tokens + result.usage.output_tokens,
+          totalInputTokens + result.usage.output_tokens,
         );
         span.setAttribute(
           ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
           result.usage.output_tokens,
         );
-        span.setAttribute(
-          ATTR_GEN_AI_USAGE_INPUT_TOKENS,
-          result.usage.input_tokens,
-        );
+        span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, totalInputTokens);
 
         // Cache token attributes (v1.40)
         if (result.usage.cache_creation_input_tokens != null) {
