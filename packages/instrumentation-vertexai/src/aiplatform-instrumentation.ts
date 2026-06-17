@@ -45,7 +45,6 @@ import {
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
 import type * as aiplatform from "@google-cloud/aiplatform";
-import type { CallOptions, Callback } from "google-gax";
 import { version } from "../package.json";
 
 export class AIPlatformInstrumentation extends InstrumentationBase {
@@ -103,35 +102,7 @@ export class AIPlatformInstrumentation extends InstrumentationBase {
     const plugin = this;
     // eslint-disable-next-line
     return (original: Function) => {
-      return function method(
-        this: any,
-        ...args:
-          | [
-              request?: aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest,
-              options?: CallOptions,
-            ]
-          | [
-              request: aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest,
-              options: CallOptions,
-              callback: Callback<
-                aiplatform.protos.google.cloud.aiplatform.v1.IPredictResponse,
-                | aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest
-                | null
-                | undefined,
-                object | null | undefined
-              >,
-            ]
-          | [
-              request: aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest,
-              callback: Callback<
-                aiplatform.protos.google.cloud.aiplatform.v1.IPredictResponse,
-                | aiplatform.protos.google.cloud.aiplatform.v1.IPredictRequest
-                | null
-                | undefined,
-                object | null | undefined
-              >,
-            ]
-      ) {
+      return function method(this: any, ...args: any[]) {
         const span = plugin._startSpan({
           params: args[0],
         });
