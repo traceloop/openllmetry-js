@@ -598,7 +598,10 @@ describe("Test Together instrumentation", async function () {
           choices: [
             {
               index: 0,
-              message: { role: "assistant", content: "North, South, East, West." },
+              message: {
+                role: "assistant",
+                content: "North, South, East, West.",
+              },
               finish_reason: "stop",
             },
           ],
@@ -613,7 +616,9 @@ describe("Test Together instrumentation", async function () {
 
     await together.chat.completions.create({
       model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
-      messages: [{ role: "user", content: "What are the 4 cardinal directions?" }],
+      messages: [
+        { role: "user", content: "What are the 4 cardinal directions?" },
+      ],
     });
 
     const spans = memoryExporter.getFinishedSpans();

@@ -168,7 +168,10 @@ describe("Test VertexAI cache token instrumentation", () => {
   const mockResponse = {
     candidates: [
       {
-        content: { role: "model", parts: [{ text: "North, South, East, West." }] },
+        content: {
+          role: "model",
+          parts: [{ text: "North, South, East, West." }],
+        },
         finishReason: "STOP",
       },
     ],
@@ -218,7 +221,12 @@ describe("Test VertexAI cache token instrumentation", () => {
     const model = new MockGenerativeModel();
 
     await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: "What are the 4 cardinal directions?" }] }],
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: "What are the 4 cardinal directions?" }],
+        },
+      ],
     });
 
     const spans = cacheExporter.getFinishedSpans();

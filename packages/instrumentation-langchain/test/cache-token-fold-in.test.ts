@@ -60,13 +60,9 @@ describe("LangChain cache token emission from usage_metadata", () => {
 
   const runChat = async (output: LLMResult): Promise<void> => {
     const runId = `run-${Math.random()}`;
-    await handler.handleChatModelStart(
-      serializedLLM,
-      [[]],
-      runId,
-      undefined,
-      { invocation_params: { model: "claude-3-5-sonnet" } },
-    );
+    await handler.handleChatModelStart(serializedLLM, [[]], runId, undefined, {
+      invocation_params: { model: "claude-3-5-sonnet" },
+    });
     await handler.handleLLMEnd(output, runId);
   };
 
@@ -172,13 +168,9 @@ describe("LangChain cache token emission from usage_metadata", () => {
 
   it("falls back to llmOutput.tokenUsage when usage_metadata is absent (backwards compat)", async () => {
     const runId = `run-${Math.random()}`;
-    await handler.handleChatModelStart(
-      serializedLLM,
-      [[]],
-      runId,
-      undefined,
-      { invocation_params: { model: "gpt-4" } },
-    );
+    await handler.handleChatModelStart(serializedLLM, [[]], runId, undefined, {
+      invocation_params: { model: "gpt-4" },
+    });
     await handler.handleLLMEnd(
       {
         generations: [

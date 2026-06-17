@@ -140,9 +140,7 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
           id: "msg_cache_test",
           type: "message",
           role: "assistant",
-          content: [
-            { type: "text", text: "North, South, East, West." },
-          ],
+          content: [{ type: "text", text: "North, South, East, West." }],
           model: modelId,
           stop_reason: "end_turn",
           stop_sequence: null,
@@ -177,14 +175,8 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     // Per OTel GenAI semconv (subset semantics), input_tokens includes
     // cache_read + cache_creation. Raw response: input=10, cache_read=5,
     // cache_creation=8 → summed input_tokens = 23.
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
-      23,
-    );
-    assert.strictEqual(
-      attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
-      7,
-    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 23);
+    assert.strictEqual(attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS], 7);
     assert.strictEqual(
       attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
       30,

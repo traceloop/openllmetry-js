@@ -60,10 +60,7 @@ describe("Bedrock Anthropic cache token fold-in semantics", () => {
       1250,
       "total_tokens should equal summed input (1200) + output (50)",
     );
-    assert.strictEqual(
-      attrs[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
-      900,
-    );
+    assert.strictEqual(attrs[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS], 900);
     assert.strictEqual(
       attrs[ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS],
       200,
@@ -77,14 +74,8 @@ describe("Bedrock Anthropic cache token fold-in semantics", () => {
       cache_read_input_tokens: 900,
     });
     assert.strictEqual(attrs[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 1000);
-    assert.strictEqual(
-      attrs[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
-      1050,
-    );
-    assert.strictEqual(
-      attrs[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
-      900,
-    );
+    assert.strictEqual(attrs[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS], 1050);
+    assert.strictEqual(attrs[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS], 900);
     assert.strictEqual(
       attrs[ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS],
       undefined,
@@ -98,10 +89,7 @@ describe("Bedrock Anthropic cache token fold-in semantics", () => {
     });
     assert.strictEqual(attrs[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 100);
     assert.strictEqual(attrs[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS], 50);
-    assert.strictEqual(
-      attrs[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
-      150,
-    );
+    assert.strictEqual(attrs[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS], 150);
     assert.strictEqual(
       attrs[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
       undefined,

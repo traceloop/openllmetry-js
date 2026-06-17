@@ -582,9 +582,7 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
 
   // langchain-core's UsageMetadata lives on each AIMessage (generation.message).
   // Returns the first non-empty one found across all generations.
-  private extractUsageMetadataFromGenerations(
-    output: LLMResult,
-  ): {
+  private extractUsageMetadataFromGenerations(output: LLMResult): {
     input_tokens?: number;
     output_tokens?: number;
     total_tokens?: number;
