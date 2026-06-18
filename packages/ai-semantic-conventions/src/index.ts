@@ -1,3 +1,4 @@
+/** Documents packages/ai-semantic-conventions/src/index.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
