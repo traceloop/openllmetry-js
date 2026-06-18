@@ -706,7 +706,7 @@ export class BedrockInstrumentation extends InstrumentationBase {
                 const cacheRead = usage["cache_read_input_tokens"];
                 const cacheCreation = usage["cache_creation_input_tokens"];
                 const totalInputTokens =
-                  inputTokens + cacheRead + cacheCreation;
+                  inputTokens + (cacheRead ?? 0) + (cacheCreation ?? 0);
                 return {
                   [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: totalInputTokens,
                   [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage["output_tokens"],
