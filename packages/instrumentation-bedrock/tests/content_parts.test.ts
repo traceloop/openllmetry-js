@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-bedrock/tests/content_parts.test.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
