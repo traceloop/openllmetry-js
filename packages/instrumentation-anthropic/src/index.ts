@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-anthropic/src/index.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
