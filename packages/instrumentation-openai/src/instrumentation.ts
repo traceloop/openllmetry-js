@@ -970,7 +970,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           );
         }
         const cachedTokens = result.usage.input_tokens_details?.cached_tokens;
-        if (cachedTokens) {
+        if (cachedTokens != null) {
           span.setAttribute(
             ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
             cachedTokens,
