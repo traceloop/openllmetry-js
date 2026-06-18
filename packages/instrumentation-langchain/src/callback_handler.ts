@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-langchain/src/callback_handler.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
