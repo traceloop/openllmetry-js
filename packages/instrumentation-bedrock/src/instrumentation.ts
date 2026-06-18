@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-bedrock/src/instrumentation.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
