@@ -525,10 +525,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
         const cachedTokens = (
           result.usage as unknown as Record<string, unknown>
         ).cached_tokens;
-        if (cachedTokens) {
+        if (typeof cachedTokens === "number") {
           span.setAttribute(
             ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
-            cachedTokens as number,
+            cachedTokens,
           );
         }
       }
