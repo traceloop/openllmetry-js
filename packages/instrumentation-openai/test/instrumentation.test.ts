@@ -43,6 +43,7 @@ import {
   ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
 } from "@opentelemetry/semantic-conventions/incubating";
 
@@ -230,6 +231,23 @@ describe("Test OpenAI instrumentation", async function () {
     assert.deepEqual(span.attributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS], [
       "stop",
     ]);
+  });
+
+  it("should set cache read input tokens in span for responses with cached tokens", async () => {
+    const result = await openai.responses.create({
+      model: "gpt-4o-mini",
+      input: "Tell me a joke about OpenTelemetry",
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    const span = spans.find((s) => s.name.startsWith("chat "));
+
+    assert.ok(result);
+    assert.ok(span);
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      13,
+    );
   });
 
   it("should set attributes in span for streaming chat", async () => {

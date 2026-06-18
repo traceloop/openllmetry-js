@@ -30,6 +30,8 @@ import {
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_RESPONSE_ID,
   ATTR_GEN_AI_AGENT_NAME,
@@ -284,8 +286,52 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       );
     }
 
-    // Add usage metrics if available
-    if (output.llmOutput?.usage) {
+    // Prefer the per-message `usage_metadata` shape — this is langchain-core's
+    // canonical UsageMetadata type, carrying cache token breakdowns in
+    // `input_token_details`. Per the contract, `input_tokens` is already the
+    // sum of all input token types (subset semantics), matching OTel GenAI.
+    const usageMetadata = this.extractUsageMetadataFromGenerations(output);
+    if (usageMetadata) {
+      if (typeof usageMetadata.input_tokens === "number") {
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+          usageMetadata.input_tokens,
+        );
+      }
+      if (typeof usageMetadata.output_tokens === "number") {
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+          usageMetadata.output_tokens,
+        );
+      }
+      if (typeof usageMetadata.total_tokens === "number") {
+        span.setAttribute(
+          SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+          usageMetadata.total_tokens,
+        );
+      } else if (
+        typeof usageMetadata.input_tokens === "number" &&
+        typeof usageMetadata.output_tokens === "number"
+      ) {
+        span.setAttribute(
+          SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+          usageMetadata.input_tokens + usageMetadata.output_tokens,
+        );
+      }
+      const details = usageMetadata.input_token_details;
+      if (details && typeof details.cache_read === "number") {
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+          details.cache_read,
+        );
+      }
+      if (details && typeof details.cache_creation === "number") {
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+          details.cache_creation,
+        );
+      }
+    } else if (output.llmOutput?.usage) {
       const usage = output.llmOutput.usage;
       if (usage.input_tokens || usage.input_tokens === 0) {
         span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.input_tokens);
@@ -305,8 +351,9 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       }
     }
 
-    // Also check for tokenUsage format (for compatibility)
-    if (output.llmOutput?.tokenUsage) {
+    // Also check for tokenUsage format (for compatibility).
+    // Skip when usage_metadata already populated the values.
+    if (!usageMetadata && output.llmOutput?.tokenUsage) {
       const usage = output.llmOutput.tokenUsage;
       if (usage.promptTokens || usage.promptTokens === 0) {
         span.setAttribute(ATTR_GEN_AI_USAGE_INPUT_TOKENS, usage.promptTokens);
@@ -531,6 +578,28 @@ export class TraceloopCallbackHandler extends BaseCallbackHandler {
       | undefined;
     const model = invocationParams?.model ?? invocationParams?.model_name;
     return model && typeof model === "string" ? model : undefined;
+  }
+
+  // langchain-core's UsageMetadata lives on each AIMessage (generation.message).
+  // Returns the first non-empty one found across all generations.
+  private extractUsageMetadataFromGenerations(output: LLMResult): {
+    input_tokens?: number;
+    output_tokens?: number;
+    total_tokens?: number;
+    input_token_details?: { cache_read?: number; cache_creation?: number };
+  } | null {
+    if (!output.generations) return null;
+    for (const group of output.generations) {
+      if (!group) continue;
+      for (const gen of group) {
+        const message = (gen as any)?.message;
+        const usageMetadata = message?.usage_metadata;
+        if (usageMetadata && typeof usageMetadata === "object") {
+          return usageMetadata;
+        }
+      }
+    }
+    return null;
   }
 
   private extractResponseId(output: LLMResult): string | null {

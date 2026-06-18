@@ -42,9 +42,12 @@ import {
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
+  GEN_AI_OPERATION_NAME_VALUE_CHAT,
 } from "@opentelemetry/semantic-conventions/incubating";
 
 const memoryExporter = new InMemorySpanExporter();
@@ -342,4 +345,109 @@ describe("Test Anthropic instrumentation", async function () {
     assert.ok(promptTokens && +promptTokens > 0);
     assert.equal(+promptTokens + +completionTokens, totalTokens);
   }).timeout(30000);
+});
+
+describe("Anthropic cache token fold-in semantics", () => {
+  // Per OTel GenAI semconv, cache_read.input_tokens and cache_creation.input_tokens
+  // SHOULD be included in gen_ai.usage.input_tokens (subset semantics).
+  // These tests exercise _endSpan directly with synthetic Message objects.
+
+  const exporter = new InMemorySpanExporter();
+  const provider = new NodeTracerProvider({
+    spanProcessors: [new SimpleSpanProcessor(exporter)],
+  });
+  const instrumentation = new AnthropicInstrumentation();
+  instrumentation.setTracerProvider(provider);
+
+  afterEach(() => exporter.reset());
+
+  const endSpanWithUsage = (usage: Record<string, unknown>) => {
+    const span = (instrumentation as any).tracer.startSpan("chat test-model");
+    (instrumentation as any)._endSpan({
+      span,
+      type: GEN_AI_OPERATION_NAME_VALUE_CHAT,
+      result: {
+        id: "msg_test",
+        type: "message",
+        model: "test-model",
+        role: "assistant",
+        stop_reason: "end_turn",
+        stop_sequence: null,
+        content: [],
+        usage,
+      },
+    });
+    const spans = exporter.getFinishedSpans();
+    return spans[spans.length - 1];
+  };
+
+  it("folds cache_read + cache_creation into input_tokens and total_tokens", () => {
+    const span = endSpanWithUsage({
+      input_tokens: 100,
+      output_tokens: 50,
+      cache_read_input_tokens: 900,
+      cache_creation_input_tokens: 200,
+    });
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+      1200,
+      "input_tokens should equal 100 + 900 + 200",
+    );
+    assert.strictEqual(
+      span.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
+      1250,
+      "total_tokens should equal summed input (1200) + output (50)",
+    );
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      900,
+      "cache_read should still be emitted separately",
+    );
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS],
+      200,
+      "cache_creation should still be emitted separately",
+    );
+  });
+
+  it("folds only cache_read when cache_creation is absent", () => {
+    const span = endSpanWithUsage({
+      input_tokens: 100,
+      output_tokens: 50,
+      cache_read_input_tokens: 900,
+    });
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 1000);
+    assert.strictEqual(
+      span.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
+      1050,
+    );
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      900,
+    );
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS],
+      undefined,
+    );
+  });
+
+  it("leaves input_tokens unchanged when no cache fields present", () => {
+    const span = endSpanWithUsage({
+      input_tokens: 100,
+      output_tokens: 50,
+    });
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS], 100);
+    assert.strictEqual(
+      span.attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
+      150,
+    );
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      undefined,
+    );
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS],
+      undefined,
+    );
+  });
 });

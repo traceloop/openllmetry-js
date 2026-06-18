@@ -48,6 +48,7 @@ import {
   ATTR_GEN_AI_OUTPUT_MESSAGES,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
   ATTR_GEN_AI_RESPONSE_FINISH_REASONS,
   ATTR_GEN_AI_TOOL_DEFINITIONS,
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
@@ -113,6 +114,9 @@ interface ResponsesResult {
     input_tokens?: number;
     output_tokens?: number;
     total_tokens?: number;
+    input_tokens_details?: {
+      cached_tokens?: number;
+    };
   };
 }
 import {
@@ -963,6 +967,13 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           span.setAttribute(
             SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
             totalTokens,
+          );
+        }
+        const cachedTokens = result.usage.input_tokens_details?.cached_tokens;
+        if (cachedTokens != null) {
+          span.setAttribute(
+            ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+            cachedTokens,
           );
         }
       }

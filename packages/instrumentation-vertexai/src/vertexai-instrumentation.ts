@@ -43,6 +43,7 @@ import {
   ATTR_GEN_AI_SYSTEM,
   ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
 import type * as vertexAI from "@google-cloud/vertexai";
 import { version } from "../package.json";
@@ -250,6 +251,12 @@ export class VertexAIInstrumentation extends InstrumentationBase {
         span.setAttribute(
           ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
           streamResponse.usageMetadata.promptTokenCount,
+        );
+
+      if (streamResponse.usageMetadata?.cachedContentTokenCount != null)
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+          streamResponse.usageMetadata.cachedContentTokenCount,
         );
 
       if (this._shouldSendPrompts()) {

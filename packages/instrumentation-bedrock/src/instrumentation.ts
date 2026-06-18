@@ -48,6 +48,8 @@ import {
   ATTR_GEN_AI_RESPONSE_MODEL,
   ATTR_GEN_AI_USAGE_INPUT_TOKENS,
   ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+  ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
   GEN_AI_OPERATION_NAME_VALUE_CHAT,
   GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
   ATTR_GEN_AI_PROVIDER_NAME,
@@ -694,14 +696,36 @@ export class BedrockInstrumentation extends InstrumentationBase {
                 ],
               }
             : {}),
-          // Anthropic new messages API returns usage on non-streaming response
+          // Anthropic new messages API returns usage on non-streaming response.
+          // Per OTel GenAI semconv, cache_read.input_tokens and cache_creation.input_tokens
+          // SHOULD be included in gen_ai.usage.input_tokens (subset semantics).
           ...(usage
-            ? {
-                [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: usage["input_tokens"],
-                [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage["output_tokens"],
-                [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
-                  (usage["input_tokens"] || 0) + (usage["output_tokens"] || 0),
-              }
+            ? (() => {
+                const inputTokens = usage["input_tokens"] || 0;
+                const outputTokens = usage["output_tokens"] || 0;
+                const cacheRead = usage["cache_read_input_tokens"] || 0;
+                const cacheCreation = usage["cache_creation_input_tokens"] || 0;
+                const totalInputTokens =
+                  inputTokens + cacheRead + cacheCreation;
+                return {
+                  [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: totalInputTokens,
+                  [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage["output_tokens"],
+                  [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
+                    totalInputTokens + outputTokens,
+                  ...(usage["cache_read_input_tokens"] != null
+                    ? {
+                        [ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS]:
+                          usage["cache_read_input_tokens"],
+                      }
+                    : {}),
+                  ...(usage["cache_creation_input_tokens"] != null
+                    ? {
+                        [ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS]:
+                          usage["cache_creation_input_tokens"],
+                      }
+                    : {}),
+                };
+              })()
             : {}),
         };
 
