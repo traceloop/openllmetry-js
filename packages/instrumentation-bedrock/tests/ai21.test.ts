@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-bedrock/tests/ai21.test.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
