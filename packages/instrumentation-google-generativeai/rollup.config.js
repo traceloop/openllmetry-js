@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-google-generativeai/rollup.config.js module purpose and public usage context */
 const dts = require("rollup-plugin-dts");
 const typescript = require("@rollup/plugin-typescript");
 const json = require("@rollup/plugin-json");
