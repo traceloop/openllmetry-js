@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-anthropic/src/types.ts module purpose and public usage context */
 import { InstrumentationConfig } from "@opentelemetry/instrumentation";
 
 export interface AnthropicInstrumentationConfig extends InstrumentationConfig {
