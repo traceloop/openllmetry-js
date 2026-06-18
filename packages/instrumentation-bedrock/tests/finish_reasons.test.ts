@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-bedrock/tests/finish_reasons.test.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
