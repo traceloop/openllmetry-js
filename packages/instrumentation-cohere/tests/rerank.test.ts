@@ -1,3 +1,4 @@
+/** Documents packages/instrumentation-cohere/tests/rerank.test.ts module purpose and public usage context */
 /*
  * Copyright Traceloop
  *
