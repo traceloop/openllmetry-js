@@ -253,7 +253,7 @@ export class VertexAIInstrumentation extends InstrumentationBase {
           streamResponse.usageMetadata.promptTokenCount,
         );
 
-      if (streamResponse.usageMetadata?.cachedContentTokenCount)
+      if (streamResponse.usageMetadata?.cachedContentTokenCount != null)
         span.setAttribute(
           ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
           streamResponse.usageMetadata.cachedContentTokenCount,

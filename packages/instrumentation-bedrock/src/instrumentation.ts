@@ -712,13 +712,13 @@ export class BedrockInstrumentation extends InstrumentationBase {
                   [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: usage["output_tokens"],
                   [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
                     totalInputTokens + outputTokens,
-                  ...(usage["cache_read_input_tokens"]
+                  ...(usage["cache_read_input_tokens"] != null
                     ? {
                         [ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS]:
                           usage["cache_read_input_tokens"],
                       }
                     : {}),
-                  ...(usage["cache_creation_input_tokens"]
+                  ...(usage["cache_creation_input_tokens"] != null
                     ? {
                         [ATTR_GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS]:
                           usage["cache_creation_input_tokens"],
