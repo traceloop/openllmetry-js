@@ -87,7 +87,7 @@ export class LangChainInstrumentation extends InstrumentationBase {
       // eslint-disable-next-line @typescript-eslint/no-this-alias
       const self = this;
       callbackManagerAny._configureSync = function (
-        inheritableHandlers?: unknown[],
+        inheritableHandlers?: unknown,
         localHandlers?: unknown[],
         inheritableTags?: string[],
         localTags?: string[],
@@ -99,10 +99,22 @@ export class LangChainInstrumentation extends InstrumentationBase {
           self.tracer,
           self._shouldSendPrompts(),
         );
-        const updatedInheritableHandlers =
-          inheritableHandlers && Array.isArray(inheritableHandlers)
-            ? [...inheritableHandlers, callbackHandler]
-            : [callbackHandler];
+
+        // LangChain sometimes passes a `CallbackManager` instance here (e.g.
+        // via `runManager.getChild()`) instead of an array. Extract its
+        // handlers instead of discarding them, and drop any handler already
+        // added by us so child runnables don't accumulate duplicates.
+        const existingHandlers = Array.isArray(inheritableHandlers)
+          ? inheritableHandlers
+          : ((inheritableHandlers as { inheritableHandlers?: unknown[] })
+              ?.inheritableHandlers ?? []);
+
+        const updatedInheritableHandlers = existingHandlers
+          .filter(
+            (handler: unknown) =>
+              (handler as { name?: string })?.name !== callbackHandler.name,
+          )
+          .concat(callbackHandler);
 
         return (originalConfigureSync as (...args: unknown[]) => unknown).call(
           this,
