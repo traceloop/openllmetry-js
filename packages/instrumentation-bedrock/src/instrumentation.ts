@@ -599,16 +599,22 @@ export class BedrockInstrumentation extends InstrumentationBase {
                   ],
                 }
               : {}),
-            // Titan includes token counts on the final chunk
+            // Titan includes token counts on the final chunk. Embedding
+            // responses have no output tokens, so guard against
+            // `input + undefined` producing NaN.
             ...(response["inputTextTokenCount"] != null
               ? {
                   [ATTR_GEN_AI_USAGE_INPUT_TOKENS]:
                     response["inputTextTokenCount"],
-                  [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]:
-                    response["totalOutputTextTokenCount"],
+                  ...(response["totalOutputTextTokenCount"] != null
+                    ? {
+                        [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]:
+                          response["totalOutputTextTokenCount"],
+                      }
+                    : {}),
                   [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
                     response["inputTextTokenCount"] +
-                    response["totalOutputTextTokenCount"],
+                    (response["totalOutputTextTokenCount"] ?? 0),
                 }
               : {}),
           };
@@ -642,9 +648,13 @@ export class BedrockInstrumentation extends InstrumentationBase {
           ...(titanInputTokens != null
             ? {
                 [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: titanInputTokens,
-                [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: titanOutputTokens,
+                // Titan embedding responses have no `results` array, so
+                // output tokens are undefined; guard against NaN totals.
+                ...(titanOutputTokens != null
+                  ? { [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: titanOutputTokens }
+                  : {}),
                 [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
-                  titanInputTokens + titanOutputTokens,
+                  titanInputTokens + (titanOutputTokens ?? 0),
               }
             : novaUsage != null
               ? {
