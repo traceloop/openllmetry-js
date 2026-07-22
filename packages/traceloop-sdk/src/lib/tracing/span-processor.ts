@@ -145,6 +145,7 @@ export const traceloopInstrumentationLibraries = [
   "@traceloop/instrumentation-anthropic",
   "@traceloop/instrumentation-llamaindex",
   "@traceloop/instrumentation-vertexai",
+  "@traceloop/instrumentation-google-generativeai",
   "@traceloop/instrumentation-bedrock",
   "@traceloop/instrumentation-cohere",
   "@traceloop/instrumentation-pinecone",
