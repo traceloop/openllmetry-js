@@ -894,6 +894,17 @@ export class OpenAIInstrumentation extends InstrumentationBase {
           ATTR_GEN_AI_USAGE_INPUT_TOKENS,
           result.usage?.prompt_tokens,
         );
+        const cachedTokens = (
+          result.usage as {
+            prompt_tokens_details?: { cached_tokens?: number };
+          }
+        ).prompt_tokens_details?.cached_tokens;
+        if (cachedTokens != null) {
+          span.setAttribute(
+            ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+            cachedTokens,
+          );
+        }
       }
 
       if (type === GEN_AI_OPERATION_NAME_VALUE_CHAT) {
