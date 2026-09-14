@@ -191,6 +191,10 @@ describe("Test OpenAI instrumentation", async function () {
       "15",
     );
     assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
+    assert.equal(
+      completionSpan.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
+      5,
+    );
   });
 
   it("should set attributes in span for responses (non-streaming)", async () => {
