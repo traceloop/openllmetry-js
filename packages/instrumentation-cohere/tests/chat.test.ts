@@ -124,7 +124,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     );
     assert.strictEqual(
       attributes[
-        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
+        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.content`
       ],
       params.message,
     );
@@ -221,7 +221,7 @@ describe.skip("Test Chat with Cohere Instrumentation", () => {
     );
     assert.strictEqual(
       attributes[
-        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
+        `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.content`
       ],
       params.message,
     );
