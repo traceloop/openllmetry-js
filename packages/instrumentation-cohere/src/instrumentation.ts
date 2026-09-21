@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { extractChatTokenUsage } from "./usage";
 import {
   Span,
   Attributes,
@@ -266,7 +267,7 @@ export class CohereInstrumentation extends InstrumentationBase {
             `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.role`
           ] = "user";
           attributes[
-            `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.user`
+            `${ATTR_GEN_AI_PROMPT}.${params.chatHistory?.length ?? 0}.content`
           ] = params.message;
         } else if (type === "rerank" && "query" in params) {
           attributes[`${ATTR_GEN_AI_PROMPT}.0.role`] = "user";
@@ -409,39 +410,24 @@ export class CohereInstrumentation extends InstrumentationBase {
     result: cohere.Cohere.NonStreamedChatResponse,
   ) {
     try {
-      if ("token_count" in result && typeof result.token_count === "object") {
-        if (
-          result.token_count &&
-          "prompt_tokens" in result.token_count &&
-          typeof result.token_count.prompt_tokens === "number"
-        ) {
-          span.setAttribute(
-            ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
-            result.token_count?.prompt_tokens,
-          );
-        }
+      const usage = extractChatTokenUsage(result);
 
-        if (
-          result.token_count &&
-          "response_tokens" in result.token_count &&
-          typeof result.token_count.response_tokens === "number"
-        ) {
-          span.setAttribute(
-            ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
-            result.token_count?.response_tokens,
-          );
-        }
+      if (usage.promptTokens !== undefined) {
+        span.setAttribute(ATTR_GEN_AI_USAGE_PROMPT_TOKENS, usage.promptTokens);
+      }
 
-        if (
-          result.token_count &&
-          "total_tokens" in result.token_count &&
-          typeof result.token_count.total_tokens === "number"
-        ) {
-          span.setAttribute(
-            SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
-            result.token_count?.total_tokens,
-          );
-        }
+      if (usage.completionTokens !== undefined) {
+        span.setAttribute(
+          ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
+          usage.completionTokens,
+        );
+      }
+
+      if (usage.totalTokens !== undefined) {
+        span.setAttribute(
+          SpanAttributes.LLM_USAGE_TOTAL_TOKENS,
+          usage.totalTokens,
+        );
       }
 
       if (this._shouldSendPrompts()) {
