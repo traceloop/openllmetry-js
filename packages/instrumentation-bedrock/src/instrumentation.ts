@@ -604,11 +604,15 @@ export class BedrockInstrumentation extends InstrumentationBase {
               ? {
                   [ATTR_GEN_AI_USAGE_INPUT_TOKENS]:
                     response["inputTextTokenCount"],
-                  [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]:
-                    response["totalOutputTextTokenCount"],
+                  ...(response["totalOutputTextTokenCount"] != null
+                    ? {
+                        [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]:
+                          response["totalOutputTextTokenCount"],
+                      }
+                    : {}),
                   [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
                     response["inputTextTokenCount"] +
-                    response["totalOutputTextTokenCount"],
+                    (response["totalOutputTextTokenCount"] ?? 0),
                 }
               : {}),
           };
@@ -642,9 +646,11 @@ export class BedrockInstrumentation extends InstrumentationBase {
           ...(titanInputTokens != null
             ? {
                 [ATTR_GEN_AI_USAGE_INPUT_TOKENS]: titanInputTokens,
-                [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: titanOutputTokens,
+                ...(titanOutputTokens != null
+                  ? { [ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]: titanOutputTokens }
+                  : {}),
                 [SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS]:
-                  titanInputTokens + titanOutputTokens,
+                  titanInputTokens + (titanOutputTokens ?? 0),
               }
             : novaUsage != null
               ? {
