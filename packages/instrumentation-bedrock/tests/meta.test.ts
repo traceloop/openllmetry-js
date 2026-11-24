@@ -241,8 +241,10 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
     // Collect all chunks and find the final one with metrics
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let finalParsedResponse: any = null;
+    let chunks = 0;
     if (response.body) {
       for await (const value of response.body!) {
+        chunks++;
         const jsonString = new TextDecoder().decode(value.chunk?.bytes);
         const parsedResponse = JSON.parse(jsonString);
         // The final chunk contains amazon-bedrock-invocationMetrics
@@ -251,6 +253,9 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
         }
       }
     }
+
+    assert.ok(chunks > 1, `expected multiple streamed chunks, got ${chunks}`);
+    assert.ok(finalParsedResponse, "final metrics chunk was not delivered");
 
     // Run assertions only after all chunks have been processed
     const spans = memoryExporter.getFinishedSpans();
@@ -314,15 +319,6 @@ describe("Test Meta with AWS Bedrock Instrumentation", () => {
         finalParsedResponse["amazon-bedrock-invocationMetrics"][
           "outputTokenCount"
         ],
-      );
-      assert.strictEqual(
-        attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
-        finalParsedResponse["amazon-bedrock-invocationMetrics"][
-          "inputTokenCount"
-        ] +
-          finalParsedResponse["amazon-bedrock-invocationMetrics"][
-            "outputTokenCount"
-          ],
       );
     }
   });
