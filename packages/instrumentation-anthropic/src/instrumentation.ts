@@ -363,6 +363,9 @@ export class AnthropicInstrumentation extends InstrumentationBase {
                   if (chunk.usage) {
                     Object.assign(result.usage, chunk.usage);
                   }
+                  if (chunk.delta.stop_reason) {
+                    result.stop_reason = chunk.delta.stop_reason;
+                  }
                   break;
                 case "content_block_start":
                   if (result.content.length <= chunk.index) {

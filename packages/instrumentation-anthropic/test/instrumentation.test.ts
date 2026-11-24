@@ -214,6 +214,11 @@ describe("Test Anthropic instrumentation", async function () {
     );
     assert.strictEqual(outputMessages[0].role, "assistant");
     assert.ok(Array.isArray(outputMessages[0].parts));
+    assert.deepStrictEqual(
+      chatSpan.attributes[`${ATTR_GEN_AI_RESPONSE_FINISH_REASONS}`],
+      ["stop"],
+    );
+    assert.strictEqual(outputMessages[0].finish_reason, "stop");
     assert.equal(chatSpan.attributes[`${ATTR_GEN_AI_USAGE_INPUT_TOKENS}`], 17);
     assert.ok(+chatSpan.attributes[`${ATTR_GEN_AI_USAGE_OUTPUT_TOKENS}`]! > 0);
     assert.equal(
