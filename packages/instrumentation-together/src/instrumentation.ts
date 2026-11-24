@@ -209,17 +209,17 @@ export class TogetherInstrumentation extends InstrumentationBase {
       if (params.max_tokens) {
         attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS] = params.max_tokens;
       }
-      if (params.temperature) {
+      if (params.temperature != null) {
         attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE] = params.temperature;
       }
-      if (params.top_p) {
+      if (params.top_p != null) {
         attributes[ATTR_GEN_AI_REQUEST_TOP_P] = params.top_p;
       }
-      if (params.frequency_penalty) {
+      if (params.frequency_penalty != null) {
         attributes[SpanAttributes.LLM_FREQUENCY_PENALTY] =
           params.frequency_penalty;
       }
-      if (params.presence_penalty) {
+      if (params.presence_penalty != null) {
         attributes[SpanAttributes.LLM_PRESENCE_PENALTY] =
           params.presence_penalty;
       }
