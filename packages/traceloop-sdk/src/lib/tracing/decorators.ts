@@ -1,4 +1,4 @@
-import { Span, context } from "@opentelemetry/api";
+import { Span, SpanStatusCode, context } from "@opentelemetry/api";
 import { suppressTracing } from "@opentelemetry/core";
 import {
   AGENT_NAME_KEY,
@@ -153,24 +153,45 @@ function withEntity<
           }
         }
 
-        const res = fn.apply(thisArg, args);
-        if (res instanceof Promise) {
-          return res.then((resolvedRes) => {
-            try {
-              if (shouldSendTraces()) {
-                span.setAttribute(
-                  SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
-                  serialize(resolvedRes),
-                );
-              }
-            } catch (error) {
-              console.debug("Error setting output attributes", error);
-            } finally {
-              span.end();
-            }
-
-            return resolvedRes;
+        const endWithError = (error: unknown) => {
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: error instanceof Error ? error.message : String(error),
           });
+          span.recordException(error as Error);
+          span.end();
+        };
+
+        let res: ReturnType<F>;
+        try {
+          res = fn.apply(thisArg, args);
+        } catch (error) {
+          endWithError(error);
+          throw error;
+        }
+        if (res instanceof Promise) {
+          return res.then(
+            (resolvedRes) => {
+              try {
+                if (shouldSendTraces()) {
+                  span.setAttribute(
+                    SpanAttributes.TRACELOOP_ENTITY_OUTPUT,
+                    serialize(resolvedRes),
+                  );
+                }
+              } catch (error) {
+                console.debug("Error setting output attributes", error);
+              } finally {
+                span.end();
+              }
+
+              return resolvedRes;
+            },
+            (error) => {
+              endWithError(error);
+              throw error;
+            },
+          );
         }
         try {
           if (shouldSendTraces()) {
