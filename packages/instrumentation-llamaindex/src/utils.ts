@@ -45,12 +45,25 @@ export function bindAsyncGenerator<T = unknown, TReturn = any, TNext = unknown>(
 export async function* generatorWrapper(
   streamingResult: AsyncGenerator,
   ctx: Context,
-  fn: () => void,
+  fn: (error?: Error) => void,
 ) {
-  for await (const chunk of bindAsyncGenerator(ctx, streamingResult)) {
-    yield chunk;
+  let fnCalled = false;
+  try {
+    for await (const chunk of bindAsyncGenerator(ctx, streamingResult)) {
+      yield chunk;
+    }
+  } catch (err) {
+    if (!fnCalled) {
+      fnCalled = true;
+      fn(err as Error);
+    }
+    throw err;
+  } finally {
+    if (!fnCalled) {
+      fnCalled = true;
+      fn();
+    }
   }
-  fn();
 }
 
 export async function* llmGeneratorWrapper(
@@ -159,8 +172,16 @@ export function genericWrapper(
         .then((result: any) => {
           return new Promise((resolve) => {
             if (streaming) {
-              result = generatorWrapper(result, execContext, () => {
-                span.setStatus({ code: SpanStatusCode.OK });
+              result = generatorWrapper(result, execContext, (error) => {
+                if (error) {
+                  span.recordException(error);
+                  span.setStatus({
+                    code: SpanStatusCode.ERROR,
+                    message: error.message,
+                  });
+                } else {
+                  span.setStatus({ code: SpanStatusCode.OK });
+                }
                 span.end();
               });
               resolve(result);
