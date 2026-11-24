@@ -297,16 +297,23 @@ describe("Test Anthropic with AWS Bedrock Instrumentation", () => {
     const command = new bedrock.InvokeModelWithResponseStreamCommand(input);
     const response = await bedrockRuntimeClient.send(command);
     if (response.body) {
-      (async function () {
+      await (async function () {
         let content = "";
         let result;
+        let chunks = 0;
         for await (const value of response.body!) {
+          chunks++;
           const jsonString = new TextDecoder().decode(value.chunk?.bytes);
           const parsedResponse = JSON.parse(jsonString);
 
           content += parsedResponse["completion"];
           result = { ...parsedResponse };
         }
+
+        assert.ok(
+          chunks > 1,
+          `expected multiple streamed chunks, got ${chunks}`,
+        );
 
         const spans = memoryExporter.getFinishedSpans();
 

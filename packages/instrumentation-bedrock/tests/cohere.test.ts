@@ -194,52 +194,51 @@ describe("Test Cohere with AWS Bedrock Instrumentation", () => {
 
     const command = new bedrock.InvokeModelWithResponseStreamCommand(input);
     const response = await bedrockRuntimeClient.send(command);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let parsedResponse: any;
+    let chunks = 0;
     if (response.body) {
       for await (const value of response.body!) {
+        chunks++;
         const jsonString = new TextDecoder().decode(value.chunk?.bytes);
-        const parsedResponse = JSON.parse(jsonString);
-
-        const spans = memoryExporter.getFinishedSpans();
-
-        const attributes = spans[0].attributes;
-
-        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
-        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
-        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.k);
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
-          params.temperature,
-        );
-        assert.strictEqual(
-          attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
-          params.max_tokens,
-        );
-        assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
-
-        if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
-          assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
-            parsedResponse["amazon-bedrock-invocationMetrics"][
-              "inputTokenCount"
-            ],
-          );
-          assert.strictEqual(
-            attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
-            parsedResponse["amazon-bedrock-invocationMetrics"][
-              "outputTokenCount"
-            ],
-          );
-          assert.strictEqual(
-            attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
-            parsedResponse["amazon-bedrock-invocationMetrics"][
-              "inputTokenCount"
-            ] +
-              parsedResponse["amazon-bedrock-invocationMetrics"][
-                "outputTokenCount"
-              ],
-          );
-        }
+        parsedResponse = JSON.parse(jsonString);
       }
+    }
+    assert.ok(chunks > 0);
+
+    const spans = memoryExporter.getFinishedSpans();
+
+    const attributes = spans[0].attributes;
+
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_P], params.p);
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_TOP_K], params.k);
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE],
+      params.temperature,
+    );
+    assert.strictEqual(
+      attributes[ATTR_GEN_AI_REQUEST_MAX_TOKENS],
+      params.max_tokens,
+    );
+    assert.strictEqual(attributes[ATTR_GEN_AI_REQUEST_MODEL], model);
+
+    if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
+      assert.strictEqual(
+        attributes[ATTR_GEN_AI_USAGE_INPUT_TOKENS],
+        parsedResponse["amazon-bedrock-invocationMetrics"]["inputTokenCount"],
+      );
+      assert.strictEqual(
+        attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS],
+        parsedResponse["amazon-bedrock-invocationMetrics"]["outputTokenCount"],
+      );
+      assert.strictEqual(
+        attributes[SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS],
+        parsedResponse["amazon-bedrock-invocationMetrics"]["inputTokenCount"] +
+          parsedResponse["amazon-bedrock-invocationMetrics"][
+            "outputTokenCount"
+          ],
+      );
     }
   });
 });

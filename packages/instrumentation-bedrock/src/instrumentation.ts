@@ -271,78 +271,13 @@ export class BedrockInstrumentation extends InstrumentationBase {
           span.setAttribute(ATTR_GEN_AI_RESPONSE_MODEL, model);
 
           if (!(result.body instanceof Object.getPrototypeOf(Uint8Array))) {
-            const rawRes = result.body as AsyncIterable<bedrock.ResponseStream>;
-
-            let streamedContent = "";
-            for await (const value of rawRes) {
-              // Convert it to a JSON String
-              const jsonString = new TextDecoder().decode(value.chunk?.bytes);
-              // Parse the JSON string
-              const parsedResponse = JSON.parse(jsonString);
-
-              if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
-                span.setAttribute(
-                  ATTR_GEN_AI_USAGE_INPUT_TOKENS,
-                  parsedResponse["amazon-bedrock-invocationMetrics"][
-                    "inputTokenCount"
-                  ],
-                );
-                span.setAttribute(
-                  ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
-                  parsedResponse["amazon-bedrock-invocationMetrics"][
-                    "outputTokenCount"
-                  ],
-                );
-
-                const totalTokens =
-                  parsedResponse["amazon-bedrock-invocationMetrics"][
-                    "inputTokenCount"
-                  ] +
-                  parsedResponse["amazon-bedrock-invocationMetrics"][
-                    "outputTokenCount"
-                  ];
-                span.setAttribute(
-                  SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
-                  totalTokens,
-                );
-              }
-
-              this._handleNovaStreamingMetadata(span, parsedResponse);
-
-              const responseAttributes = this._setResponseAttributes(
-                modelVendor,
-                parsedResponse,
-                true,
-              );
-
-              // ! NOTE: This make sure the content always have all streamed chunks
-              if (this._shouldSendPrompts()) {
-                const chunkContent = this._getStreamChunkContent(
-                  modelVendor,
-                  parsedResponse,
-                );
-                if (chunkContent !== undefined) {
-                  streamedContent += chunkContent;
-                }
-
-                // When finish reason is available (final chunk), set OTel 1.40 output message
-                if (responseAttributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS]) {
-                  const finishReasons = responseAttributes[
-                    ATTR_GEN_AI_RESPONSE_FINISH_REASONS
-                  ] as string[];
-                  responseAttributes[ATTR_GEN_AI_OUTPUT_MESSAGES] =
-                    formatOutputMessage(
-                      streamedContent,
-                      finishReasons[0] ?? null,
-                      {}, // already mapped by _setResponseAttributes
-                      attributes[ATTR_GEN_AI_OPERATION_NAME],
-                      mapBedrockContentBlock,
-                    );
-                }
-              }
-
-              span.setAttributes(responseAttributes);
-            }
+            (result as { body: unknown }).body = this._wrapStream({
+              span,
+              stream: result.body as AsyncIterable<bedrock.ResponseStream>,
+              modelVendor,
+              operationName: attributes[ATTR_GEN_AI_OPERATION_NAME],
+            });
+            return;
           } else if (result.body instanceof Object.getPrototypeOf(Uint8Array)) {
             // Convert it to a JSON String
             const jsonString = new TextDecoder().decode(
@@ -367,6 +302,134 @@ export class BedrockInstrumentation extends InstrumentationBase {
 
     span.setStatus({ code: SpanStatusCode.OK });
     span.end();
+  }
+
+  private _wrapStream({
+    span,
+    stream,
+    modelVendor,
+    operationName,
+  }: {
+    span: Span;
+    stream: AsyncIterable<bedrock.ResponseStream>;
+    modelVendor: string;
+    operationName: string;
+  }): AsyncIterable<bedrock.ResponseStream> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const plugin = this;
+    let ended = false;
+    return {
+      [Symbol.asyncIterator]: async function* () {
+        let streamedContent = "";
+        let failed = false;
+        try {
+          for await (const value of stream) {
+            if (!ended) {
+              try {
+                streamedContent = plugin._recordStreamChunk({
+                  span,
+                  value,
+                  modelVendor,
+                  operationName,
+                  streamedContent,
+                });
+              } catch (e) {
+                plugin._diag.debug(e);
+                plugin._config.exceptionLogger?.(e);
+              }
+            }
+            yield value;
+          }
+        } catch (e) {
+          failed = true;
+          if (!ended) {
+            span.setStatus({
+              code: SpanStatusCode.ERROR,
+              message: e instanceof Error ? e.message : String(e),
+            });
+            span.recordException(e as Error);
+          }
+          throw e;
+        } finally {
+          if (!ended) {
+            ended = true;
+            if (!failed) {
+              span.setStatus({ code: SpanStatusCode.OK });
+            }
+            span.end();
+          }
+        }
+      },
+    };
+  }
+
+  private _recordStreamChunk({
+    span,
+    value,
+    modelVendor,
+    operationName,
+    streamedContent,
+  }: {
+    span: Span;
+    value: bedrock.ResponseStream;
+    modelVendor: string;
+    operationName: string;
+    streamedContent: string;
+  }): string {
+    const jsonString = new TextDecoder().decode(value.chunk?.bytes);
+    const parsedResponse = JSON.parse(jsonString);
+
+    if ("amazon-bedrock-invocationMetrics" in parsedResponse) {
+      const metrics = parsedResponse["amazon-bedrock-invocationMetrics"];
+      span.setAttribute(
+        ATTR_GEN_AI_USAGE_INPUT_TOKENS,
+        metrics["inputTokenCount"],
+      );
+      span.setAttribute(
+        ATTR_GEN_AI_USAGE_OUTPUT_TOKENS,
+        metrics["outputTokenCount"],
+      );
+      span.setAttribute(
+        SpanAttributes.GEN_AI_USAGE_TOTAL_TOKENS,
+        metrics["inputTokenCount"] + metrics["outputTokenCount"],
+      );
+    }
+
+    this._handleNovaStreamingMetadata(span, parsedResponse);
+
+    const responseAttributes = this._setResponseAttributes(
+      modelVendor,
+      parsedResponse,
+      true,
+    );
+
+    // ! NOTE: This make sure the content always have all streamed chunks
+    if (this._shouldSendPrompts()) {
+      const chunkContent = this._getStreamChunkContent(
+        modelVendor,
+        parsedResponse,
+      );
+      if (chunkContent !== undefined) {
+        streamedContent += chunkContent;
+      }
+
+      // When finish reason is available (final chunk), set OTel 1.40 output message
+      if (responseAttributes[ATTR_GEN_AI_RESPONSE_FINISH_REASONS]) {
+        const finishReasons = responseAttributes[
+          ATTR_GEN_AI_RESPONSE_FINISH_REASONS
+        ] as string[];
+        responseAttributes[ATTR_GEN_AI_OUTPUT_MESSAGES] = formatOutputMessage(
+          streamedContent,
+          finishReasons[0] ?? null,
+          {}, // already mapped by _setResponseAttributes
+          operationName,
+          mapBedrockContentBlock,
+        );
+      }
+    }
+
+    span.setAttributes(responseAttributes);
+    return streamedContent;
   }
 
   private _setRequestAttributes(
