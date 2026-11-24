@@ -160,27 +160,31 @@ export class CohereInstrumentation extends InstrumentationBase {
       .then(async (result) => {
         const awaitedResult = await result;
         if (type === "completion" && streaming) {
-          await this._endSpan({
-            type,
+          return this._wrapStream(
             span,
-            streaming,
-            result:
-              (await awaitedResult) as AsyncIterable<cohere.Cohere.GenerateStreamedResponse>,
-          });
+            awaitedResult as AsyncIterable<cohere.Cohere.GenerateStreamedResponse>,
+            (message) => {
+              if (message.eventType === "stream-end") {
+                this._setResponseSpanForGenerate(span, message.response);
+              }
+            },
+          ) as T;
+        } else if (type === "chat" && streaming) {
+          return this._wrapStream(
+            span,
+            awaitedResult as AsyncIterable<cohere.Cohere.StreamedChatResponse>,
+            (message) => {
+              if (message.eventType === "stream-end") {
+                this._setResponseSpanForChat(span, message.response);
+              }
+            },
+          ) as T;
         } else if (type === "completion" && !streaming) {
           await this._endSpan({
             type,
             span,
             streaming,
             result: awaitedResult as cohere.Cohere.Generation,
-          });
-        } else if (type === "chat" && streaming) {
-          await this._endSpan({
-            type,
-            span,
-            streaming,
-            result:
-              (await awaitedResult) as AsyncIterable<cohere.Cohere.StreamedChatResponse>,
           });
         } else if (type === "chat" && !streaming) {
           await this._endSpan({
@@ -288,10 +292,32 @@ export class CohereInstrumentation extends InstrumentationBase {
     });
   }
 
+  private async *_wrapStream<M>(
+    span: Span,
+    stream: AsyncIterable<M>,
+    onMessage: (message: M) => void,
+  ): AsyncGenerator<M> {
+    try {
+      for await (const message of stream) {
+        onMessage(message);
+        yield message;
+      }
+      span.setStatus({ code: SpanStatusCode.OK });
+    } catch (error) {
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: (error as Error).message,
+      });
+      span.recordException(error as Error);
+      throw error;
+    } finally {
+      span.end();
+    }
+  }
+
   private async _endSpan({
     type,
     span,
-    streaming,
     result,
   }:
     | {
@@ -301,22 +327,10 @@ export class CohereInstrumentation extends InstrumentationBase {
         result: cohere.Cohere.Generation;
       }
     | {
-        type: "completion";
-        span: Span;
-        streaming: true;
-        result: AsyncIterable<cohere.Cohere.GenerateStreamedResponse>;
-      }
-    | {
         type: "chat";
         span: Span;
         streaming: false;
         result: cohere.Cohere.NonStreamedChatResponse;
-      }
-    | {
-        type: "chat";
-        span: Span;
-        streaming: true;
-        result: AsyncIterable<cohere.Cohere.StreamedChatResponse>;
       }
     | {
         type: "rerank";
@@ -325,23 +339,11 @@ export class CohereInstrumentation extends InstrumentationBase {
         result: cohere.Cohere.RerankResponse;
       }) {
     if (type === "completion") {
-      if (streaming) {
-        for await (const message of result) {
-          if (message.eventType === "stream-end") {
-            this._setResponseSpanForGenerate(span, message.response);
-          }
-        }
-      } else if ("generations" in result) {
+      if ("generations" in result) {
         this._setResponseSpanForGenerate(span, result);
       }
     } else if (type === "chat") {
-      if (streaming) {
-        for await (const message of result) {
-          if (message.eventType === "stream-end") {
-            this._setResponseSpanForChat(span, message.response);
-          }
-        }
-      } else if ("text" in result) {
+      if ("text" in result) {
         this._setResponseSpanForChat(
           span,
           result as cohere.Cohere.NonStreamedChatResponse,
