@@ -61,6 +61,11 @@ import {
   GEN_AI_OPERATION_NAME_VALUE_TEXT_COMPLETION,
 } from "@opentelemetry/semantic-conventions/incubating";
 import { AnthropicInstrumentationConfig } from "./types";
+import {
+  accumulateContentBlockEvent,
+  flushPartialJson,
+  type PartialJsonBuffers,
+} from "./stream-accumulator";
 import { version } from "../package.json";
 import type * as anthropic from "@anthropic-ai/sdk";
 import type {
@@ -348,6 +353,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
             },
             content: [],
           } as unknown as Message;
+          const partialJson: PartialJsonBuffers = new Map();
 
           for await (const chunk of stream) {
             yield chunk;
@@ -365,25 +371,12 @@ export class AnthropicInstrumentation extends InstrumentationBase {
                   }
                   break;
                 case "content_block_start":
-                  if (result.content.length <= chunk.index) {
-                    result.content.push({ ...chunk.content_block });
-                  }
-                  break;
-
                 case "content_block_delta":
-                  if (chunk.index < result.content.length) {
-                    const current = result.content[chunk.index];
-                    if (
-                      current.type === "text" &&
-                      chunk.delta.type === "text_delta"
-                    ) {
-                      result.content[chunk.index] = {
-                        type: "text",
-                        text: current.text + chunk.delta.text,
-                        citations: current.citations,
-                      };
-                    }
-                  }
+                  accumulateContentBlockEvent(
+                    result.content,
+                    chunk,
+                    partialJson,
+                  );
                   break;
               }
             } catch (e) {
@@ -392,6 +385,7 @@ export class AnthropicInstrumentation extends InstrumentationBase {
             }
           }
 
+          flushPartialJson(result.content, partialJson);
           this._endSpan({ span, type, result });
         } else {
           const result: Completion = {
