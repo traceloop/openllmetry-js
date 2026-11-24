@@ -58,6 +58,7 @@ import {
   GEN_AI_PROVIDER_NAME_VALUE_GCP_VERTEX_AI,
   GEN_AI_PROVIDER_NAME_VALUE_AZURE_AI_OPENAI,
 } from "@opentelemetry/semantic-conventions/incubating";
+import { ATTR_ERROR_TYPE } from "@opentelemetry/semantic-conventions";
 import { OpenAIInstrumentationConfig } from "./types";
 import {
   buildOpenAIInputMessages,
@@ -83,7 +84,10 @@ import { encodingForModel, TiktokenModel, Tiktoken } from "js-tiktoken";
 // The actual import is handled at runtime via require() calls in the _wrapPromise method
 type APIPromiseType<T> = Promise<T> & {
   _thenUnwrap: <U>(onFulfilled: (value: T) => U) => APIPromiseType<U>;
+  asResponse: () => Promise<Response>;
 };
+
+type StreamChunk<P> = Awaited<P> extends AsyncIterable<infer U> ? U : never;
 
 // Internal tag for the Responses API instrumentation path. Distinct from the
 // OTel `gen_ai.operation.name` value (which is still `"chat"`); this is only
@@ -630,7 +634,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         ],
         object: "chat.completion",
       };
-      for await (const chunk of await promise) {
+      for await (const chunk of this._recordStreamErrors(span, promise)) {
         yield chunk;
 
         result.id = chunk.id;
@@ -738,7 +742,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
         ],
         object: "text_completion",
       };
-      for await (const chunk of await promise) {
+      for await (const chunk of this._recordStreamErrors(span, promise)) {
         yield chunk;
 
         try {
@@ -792,6 +796,27 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     }
   }
 
+  private async *_recordStreamErrors<
+    P extends PromiseLike<AsyncIterable<unknown>>,
+  >(span: Span, promise: P): AsyncGenerator<StreamChunk<P>> {
+    try {
+      for await (const chunk of await promise) {
+        yield chunk as StreamChunk<P>;
+      }
+    } catch (err) {
+      this._endSpanWithError(span, err);
+      throw err;
+    }
+  }
+
+  private _endSpanWithError(span: Span, err: unknown) {
+    const e = err instanceof Error ? err : new Error(String(err));
+    span.recordException(e);
+    span.setStatus({ code: SpanStatusCode.ERROR, message: e.message });
+    span.setAttribute(ATTR_ERROR_TYPE, e.constructor.name);
+    span.end();
+  }
+
   private _wrapPromise<T>(
     type:
       | typeof GEN_AI_OPERATION_NAME_VALUE_CHAT
@@ -801,7 +826,7 @@ export class OpenAIInstrumentation extends InstrumentationBase {
     span: Span,
     promise: APIPromiseType<T>,
   ): APIPromiseType<T> {
-    return promise._thenUnwrap((result) => {
+    const wrapped = promise._thenUnwrap((result) => {
       if (type === RESPONSES_TYPE) {
         this._endSpan({
           type: RESPONSES_TYPE,
@@ -850,6 +875,10 @@ export class OpenAIInstrumentation extends InstrumentationBase {
 
       return result;
     });
+    promise
+      .asResponse()
+      .then(undefined, (err: unknown) => this._endSpanWithError(span, err));
+    return wrapped;
   }
 
   private _endSpan({

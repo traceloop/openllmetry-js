@@ -17,7 +17,7 @@
 
 import * as assert from "assert";
 
-import { context } from "@opentelemetry/api";
+import { context, SpanStatusCode } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
   NodeTracerProvider,
@@ -35,6 +35,7 @@ import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ATTR_ERROR_TYPE } from "@opentelemetry/semantic-conventions";
 import {
   ATTR_GEN_AI_REQUEST_MODEL,
   ATTR_GEN_AI_PROVIDER_NAME,
@@ -349,6 +350,206 @@ describe("Test OpenAI instrumentation", async function () {
       inputMessages[0].parts[0].content,
       "Tell me a joke about OpenTelemetry",
     );
+  });
+
+  it("should end the span with error status when the chat request fails", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.openai.com/v1/chat/completions")
+      .intercept((_req, res) => {
+        res.status(500).json({ error: { message: "boom" } });
+      });
+
+    const openAIModule: typeof OpenAIModule = await import("openai");
+    const fetch = (await import("node-fetch")).default;
+    const client = new openAIModule.OpenAI({
+      fetch: fetch as any,
+      maxRetries: 0,
+    });
+
+    await assert.rejects(
+      client.chat.completions.create({
+        messages: [{ role: "user", content: "Tell me a joke" }],
+        model: "gpt-3.5-turbo",
+      }),
+    );
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].status.code, SpanStatusCode.ERROR);
+    assert.strictEqual(
+      spans[0].attributes[ATTR_ERROR_TYPE],
+      "InternalServerError",
+    );
+    assert.strictEqual(spans[0].events[0].name, "exception");
+    assert.ok(spans[0].status.message);
+  });
+
+  it("should not consume the response body when asResponse() is used", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.openai.com/v1/chat/completions")
+      .intercept((_req, res) => {
+        res.status(200).json({
+          id: "chatcmpl-asresponse",
+          object: "chat.completion",
+          created: 1,
+          model: "gpt-3.5-turbo",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: "Hi" },
+              finish_reason: "stop",
+            },
+          ],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        });
+      });
+
+    const openAIModule: typeof OpenAIModule = await import("openai");
+    const fetch = (await import("node-fetch")).default;
+    const client = new openAIModule.OpenAI({
+      fetch: fetch as any,
+      maxRetries: 0,
+    });
+
+    const res = await client.chat.completions
+      .create({
+        messages: [{ role: "user", content: "Tell me a joke" }],
+        model: "gpt-3.5-turbo",
+      })
+      .asResponse();
+
+    assert.strictEqual((await res.json()).id, "chatcmpl-asresponse");
+  });
+
+  it("should end the span with error status when the responses request fails", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.openai.com/v1/responses")
+      .intercept((_req, res) => {
+        res.status(500).json({ error: { message: "boom" } });
+      });
+
+    const openAIModule: typeof OpenAIModule = await import("openai");
+    const fetch = (await import("node-fetch")).default;
+    const client = new openAIModule.OpenAI({
+      fetch: fetch as any,
+      maxRetries: 0,
+    });
+
+    await assert.rejects(
+      client.responses.create({
+        model: "gpt-4o-mini",
+        input: "Tell me a joke",
+      }),
+    );
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].status.code, SpanStatusCode.ERROR);
+  });
+
+  it("should end the span with error status when the streaming chat request fails", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.openai.com/v1/chat/completions")
+      .intercept((_req, res) => {
+        res.status(500).json({ error: { message: "boom" } });
+      });
+
+    const openAIModule: typeof OpenAIModule = await import("openai");
+    const fetch = (await import("node-fetch")).default;
+    const client = new openAIModule.OpenAI({
+      fetch: fetch as any,
+      maxRetries: 0,
+    });
+
+    await assert.rejects(async () => {
+      const stream = await client.chat.completions.create({
+        messages: [{ role: "user", content: "Tell me a joke" }],
+        model: "gpt-3.5-turbo",
+        stream: true,
+      });
+      for await (const chunk of stream) {
+        assert.ok(chunk);
+      }
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].status.code, SpanStatusCode.ERROR);
+    assert.strictEqual(
+      spans[0].attributes[ATTR_ERROR_TYPE],
+      "InternalServerError",
+    );
+  });
+
+  it("should end the span with error status when the streaming completion request fails", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.openai.com/v1/completions")
+      .intercept((_req, res) => {
+        res.status(500).json({ error: { message: "boom" } });
+      });
+
+    const openAIModule: typeof OpenAIModule = await import("openai");
+    const fetch = (await import("node-fetch")).default;
+    const client = new openAIModule.OpenAI({
+      fetch: fetch as any,
+      maxRetries: 0,
+    });
+
+    await assert.rejects(async () => {
+      const stream = await client.completions.create({
+        prompt: "Tell me a joke",
+        model: "gpt-3.5-turbo-instruct",
+        stream: true,
+      });
+      for await (const chunk of stream) {
+        assert.ok(chunk);
+      }
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].status.code, SpanStatusCode.ERROR);
+  });
+
+  it("should end the span with error status when the stream breaks mid-response", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.openai.com/v1/chat/completions")
+      .intercept((_req, res) => {
+        res
+          .status(200)
+          .setHeader("content-type", "text/event-stream")
+          .send(
+            'data: {"id":"c1","object":"chat.completion.chunk","created":1,"model":"gpt-3.5-turbo","choices":[{"index":0,"delta":{"content":"Hi"},"finish_reason":null}]}\n\ndata: {not json\n\n',
+          );
+      });
+
+    const openAIModule: typeof OpenAIModule = await import("openai");
+    const fetch = (await import("node-fetch")).default;
+    const client = new openAIModule.OpenAI({
+      fetch: fetch as any,
+      maxRetries: 0,
+    });
+
+    await assert.rejects(async () => {
+      const stream = await client.chat.completions.create({
+        messages: [{ role: "user", content: "Tell me a joke" }],
+        model: "gpt-3.5-turbo",
+        stream: true,
+      });
+      for await (const chunk of stream) {
+        assert.ok(chunk);
+      }
+    });
+
+    const spans = memoryExporter.getFinishedSpans();
+    assert.strictEqual(spans.length, 1);
+    assert.strictEqual(spans[0].status.code, SpanStatusCode.ERROR);
   });
 
   it("should emit logprobs span event for chat completion", async () => {
