@@ -36,7 +36,11 @@ import FetchAdapter from "@pollyjs/adapter-fetch";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
+  ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY,
   ATTR_GEN_AI_REQUEST_MODEL,
+  ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_PROVIDER_NAME,
   ATTR_GEN_AI_OPERATION_NAME,
   ATTR_GEN_AI_INPUT_MESSAGES,
@@ -191,6 +195,53 @@ describe("Test OpenAI instrumentation", async function () {
       "15",
     );
     assert.ok(+completionSpan.attributes[ATTR_GEN_AI_USAGE_OUTPUT_TOKENS]! > 0);
+  });
+
+  it("should record zero-valued request parameters in span for chat", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.openai.com/v1/chat/completions")
+      .intercept((_req, res) => {
+        res.status(200).json({
+          id: "chatcmpl-zero-params-001",
+          object: "chat.completion",
+          created: 1700000000,
+          model: "gpt-3.5-turbo",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: "Hello." },
+              finish_reason: "stop",
+            },
+          ],
+          usage: { prompt_tokens: 9, completion_tokens: 2, total_tokens: 11 },
+        });
+      });
+
+    await openai.chat.completions.create({
+      messages: [{ role: "user", content: "Say hello" }],
+      model: "gpt-3.5-turbo",
+      temperature: 0,
+      top_p: 0,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    });
+
+    const span = memoryExporter
+      .getFinishedSpans()
+      .find((s) => s.name.startsWith("chat "));
+
+    assert.ok(span);
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE], 0);
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_REQUEST_TOP_P], 0);
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_REQUEST_FREQUENCY_PENALTY],
+      0,
+    );
+    assert.strictEqual(
+      span.attributes[ATTR_GEN_AI_REQUEST_PRESENCE_PENALTY],
+      0,
+    );
   });
 
   it("should set attributes in span for responses (non-streaming)", async () => {
