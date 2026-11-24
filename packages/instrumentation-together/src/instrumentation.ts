@@ -14,7 +14,14 @@
  * limitations under the License.
  */
 import type * as togetherai from "together-ai";
-import { context, trace, Span, Attributes, SpanKind } from "@opentelemetry/api";
+import {
+  context,
+  trace,
+  Span,
+  Attributes,
+  SpanKind,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 import {
   InstrumentationBase,
   InstrumentationModuleDefinition,
@@ -38,6 +45,7 @@ import {
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
   ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
 } from "@opentelemetry/semantic-conventions/incubating";
+import { ATTR_ERROR_TYPE } from "@opentelemetry/semantic-conventions";
 import { TogetherAIInstrumentationConfig } from "./types";
 import type { Completion } from "together-ai/resources";
 
@@ -313,126 +321,31 @@ export class TogetherInstrumentation extends InstrumentationBase {
         type: "completion";
         promise: APIPromise<Stream<Completion>>;
       }) {
-    if (type === "chat") {
-      const result: ChatCompletion = {
-        id: "0",
-        created: -1,
-        model: "",
-        choices: [
-          {
-            index: 0,
-            logprobs: null,
-            finish_reason: "stop",
-            message: {
-              role: "assistant",
-              content: "",
-              tool_calls: [],
-            },
-          },
-        ],
-        object: "chat.completion",
-      };
-
-      const stream = await promise;
-      for await (const chunk of stream) {
-        yield chunk;
-
-        result.id = chunk.id;
-        result.created = chunk.created;
-        result.model = chunk.model;
-
-        if (chunk.choices[0]?.finish_reason) {
-          result.choices[0].finish_reason = chunk.choices[0].finish_reason;
-        }
-
-        if (result.choices[0].message && chunk.choices[0]?.delta.content) {
-          result.choices[0].message.content += chunk.choices[0].delta.content;
-        }
-
-        if (
-          result.choices[0].message &&
-          chunk.choices[0]?.delta.function_call &&
-          chunk.choices[0]?.delta.function_call.arguments &&
-          chunk.choices[0]?.delta.function_call.name
-        ) {
-          result.choices[0].message.function_call = {
-            name: chunk.choices[0].delta.function_call.name,
-            arguments: chunk.choices[0].delta.function_call.arguments,
-          };
-        }
-
-        for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {
-          if (
-            result.choices[0].message &&
-            (result.choices[0].message?.tool_calls?.length ?? 0) <
-              toolCall.index + 1
-          ) {
-            result.choices[0].message.tool_calls?.push({
-              function: {
-                name: "",
-                arguments: "",
+    try {
+      if (type === "chat") {
+        const result: ChatCompletion = {
+          id: "0",
+          created: -1,
+          model: "",
+          choices: [
+            {
+              index: 0,
+              logprobs: null,
+              finish_reason: "stop",
+              message: {
+                role: "assistant",
+                content: "",
+                tool_calls: [],
               },
-              id: "",
-              type: "function",
-              index: toolCall.index,
-            });
-          }
+            },
+          ],
+          object: "chat.completion",
+        };
 
-          if (
-            result.choices[0].message &&
-            result.choices[0].message.tool_calls
-          ) {
-            if (toolCall.id) {
-              result.choices[0].message.tool_calls[toolCall.index].id +=
-                toolCall.id;
-            }
-            if (result.choices[0].message && toolCall.type) {
-              result.choices[0].message.tool_calls[toolCall.index].type +=
-                toolCall.type;
-            }
-            if (result.choices[0].message && toolCall.function?.name) {
-              result.choices[0].message.tool_calls[
-                toolCall.index
-              ].function.name += toolCall.function.name;
-            }
-            if (result.choices[0].message && toolCall.function?.arguments) {
-              result.choices[0].message.tool_calls[
-                toolCall.index
-              ].function.arguments += toolCall.function.arguments;
-            }
-          }
-        }
+        const stream = await promise;
+        for await (const chunk of stream) {
+          yield chunk;
 
-        // Use token usage information from the final chunk if available
-        if (chunk.usage) {
-          result.usage = chunk.usage;
-        }
-      }
-
-      this._endSpan({ span, type, result });
-    } else {
-      const result: Completion = {
-        id: "0",
-        created: -1,
-        model: "",
-        choices: [
-          {
-            finish_reason: "stop",
-            text: "",
-          },
-        ],
-        object: "text.completion",
-        usage: {
-          prompt_tokens: 0,
-          completion_tokens: 0,
-          total_tokens: 0,
-        },
-      };
-
-      for await (const chunk of await promise) {
-        yield chunk;
-
-        try {
           result.id = chunk.id;
           result.created = chunk.created;
           result.model = chunk.model;
@@ -440,25 +353,125 @@ export class TogetherInstrumentation extends InstrumentationBase {
           if (chunk.choices[0]?.finish_reason) {
             result.choices[0].finish_reason = chunk.choices[0].finish_reason;
           }
-          if (chunk.choices[0]?.logprobs) {
-            result.choices[0].logprobs = chunk.choices[0].logprobs;
-          }
-          if (chunk.choices[0]?.text) {
-            result.choices[0].text += chunk.choices[0].text;
+
+          if (result.choices[0].message && chunk.choices[0]?.delta.content) {
+            result.choices[0].message.content += chunk.choices[0].delta.content;
           }
 
-          // Log any usage info from chunk
+          if (
+            result.choices[0].message &&
+            chunk.choices[0]?.delta.function_call &&
+            chunk.choices[0]?.delta.function_call.arguments &&
+            chunk.choices[0]?.delta.function_call.name
+          ) {
+            result.choices[0].message.function_call = {
+              name: chunk.choices[0].delta.function_call.name,
+              arguments: chunk.choices[0].delta.function_call.arguments,
+            };
+          }
+
+          for (const toolCall of chunk.choices[0]?.delta?.tool_calls ?? []) {
+            if (
+              result.choices[0].message &&
+              (result.choices[0].message?.tool_calls?.length ?? 0) <
+                toolCall.index + 1
+            ) {
+              result.choices[0].message.tool_calls?.push({
+                function: {
+                  name: "",
+                  arguments: "",
+                },
+                id: "",
+                type: "function",
+                index: toolCall.index,
+              });
+            }
+
+            if (
+              result.choices[0].message &&
+              result.choices[0].message.tool_calls
+            ) {
+              if (toolCall.id) {
+                result.choices[0].message.tool_calls[toolCall.index].id +=
+                  toolCall.id;
+              }
+              if (result.choices[0].message && toolCall.type) {
+                result.choices[0].message.tool_calls[toolCall.index].type +=
+                  toolCall.type;
+              }
+              if (result.choices[0].message && toolCall.function?.name) {
+                result.choices[0].message.tool_calls[
+                  toolCall.index
+                ].function.name += toolCall.function.name;
+              }
+              if (result.choices[0].message && toolCall.function?.arguments) {
+                result.choices[0].message.tool_calls[
+                  toolCall.index
+                ].function.arguments += toolCall.function.arguments;
+              }
+            }
+          }
+
+          // Use token usage information from the final chunk if available
           if (chunk.usage) {
             result.usage = chunk.usage;
           }
-        } catch (e) {
-          console.error("Error processing chunk:", e);
-          this._diag.debug(e);
-          this._config.exceptionLogger?.(e);
         }
-      }
 
-      this._endSpan({ span, type, result });
+        this._endSpan({ span, type, result });
+      } else {
+        const result: Completion = {
+          id: "0",
+          created: -1,
+          model: "",
+          choices: [
+            {
+              finish_reason: "stop",
+              text: "",
+            },
+          ],
+          object: "text.completion",
+          usage: {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0,
+          },
+        };
+
+        for await (const chunk of await promise) {
+          yield chunk;
+
+          try {
+            result.id = chunk.id;
+            result.created = chunk.created;
+            result.model = chunk.model;
+
+            if (chunk.choices[0]?.finish_reason) {
+              result.choices[0].finish_reason = chunk.choices[0].finish_reason;
+            }
+            if (chunk.choices[0]?.logprobs) {
+              result.choices[0].logprobs = chunk.choices[0].logprobs;
+            }
+            if (chunk.choices[0]?.text) {
+              result.choices[0].text += chunk.choices[0].text;
+            }
+
+            // Log any usage info from chunk
+            if (chunk.usage) {
+              result.usage = chunk.usage;
+            }
+          } catch (e) {
+            console.error("Error processing chunk:", e);
+            this._diag.debug(e);
+            this._config.exceptionLogger?.(e);
+          }
+        }
+
+        this._endSpan({ span, type, result });
+      }
+    } catch (error) {
+      this._recordError(span, error);
+      throw error;
     }
   }
 
@@ -467,6 +480,10 @@ export class TogetherInstrumentation extends InstrumentationBase {
     span: Span,
     promise: APIPromise<T>,
   ): APIPromise<T> {
+    promise.asResponse().then(undefined, (error: unknown) => {
+      this._recordError(span, error);
+    });
+
     return promise._thenUnwrap((result) => {
       if (type === "chat") {
         this._endSpan({
@@ -485,6 +502,15 @@ export class TogetherInstrumentation extends InstrumentationBase {
       return result;
     });
   }
+
+  private _recordError(span: Span, error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    span.setAttribute(ATTR_ERROR_TYPE, err.constructor.name);
+    span.recordException(err);
+    span.setStatus({ code: SpanStatusCode.ERROR, message: err.message });
+    span.end();
+  }
+
   private _shouldSendPrompts() {
     const contextShouldSendPrompts = context
       .active()
@@ -608,6 +634,7 @@ export class TogetherInstrumentation extends InstrumentationBase {
       this._config.exceptionLogger?.(e);
     }
 
+    span.setStatus({ code: SpanStatusCode.OK });
     span.end();
   }
 }

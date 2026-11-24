@@ -16,7 +16,7 @@
 
 import * as assert from "assert";
 
-import { context } from "@opentelemetry/api";
+import { context, SpanStatusCode } from "@opentelemetry/api";
 import { AsyncHooksContextManager } from "@opentelemetry/context-async-hooks";
 import {
   NodeTracerProvider,
@@ -32,6 +32,7 @@ import { Polly, setupMocha as setupPolly } from "@pollyjs/core";
 import NodeHttpAdapter from "@pollyjs/adapter-node-http";
 import FSPersister from "@pollyjs/persister-fs";
 import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
+import { ATTR_ERROR_TYPE } from "@opentelemetry/semantic-conventions";
 import {
   ATTR_GEN_AI_COMPLETION,
   ATTR_GEN_AI_PROMPT,
@@ -631,5 +632,118 @@ describe("Test Together instrumentation", async function () {
       span.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
       12,
     );
+  });
+
+  describe("API errors", () => {
+    let failingClient: TogetherAIModule.Together;
+
+    beforeEach(async () => {
+      const togetherModule: typeof TogetherAIModule = await import(
+        "together-ai"
+      );
+      failingClient = new togetherModule.Together({
+        apiKey: "test",
+        maxRetries: 0,
+      });
+    });
+
+    const mockFailure = (polly: Polly, path: string) => {
+      polly.server
+        .post(`https://api.together.xyz/v1/${path}`)
+        .intercept((_req, res) => {
+          res.status(500).json({ error: { message: "upstream failure" } });
+        });
+    };
+
+    const assertErrorSpan = (name: string) => {
+      const spans = memoryExporter.getFinishedSpans();
+      assert.strictEqual(spans.length, 1);
+      const span = spans[0];
+      assert.strictEqual(span.name, name);
+      assert.strictEqual(span.status.code, SpanStatusCode.ERROR);
+      assert.ok(span.status.message);
+      assert.strictEqual(
+        span.attributes[ATTR_ERROR_TYPE],
+        "InternalServerError",
+      );
+      assert.ok(span.events.some((e) => e.name === "exception"));
+    };
+
+    it("should end a chat span with error status when the request fails", async function () {
+      mockFailure(this.polly as Polly, "chat/completions");
+      await assert.rejects(
+        failingClient.chat.completions.create({
+          model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+          messages: [{ role: "user", content: "Hello" }],
+        }),
+        (e: { status?: number }) => e.status === 500,
+      );
+
+      assertErrorSpan("together.chat");
+    });
+
+    it("should end a completion span with error status when the request fails", async function () {
+      mockFailure(this.polly as Polly, "completions");
+      await assert.rejects(
+        failingClient.completions.create({
+          model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+          prompt: "Hello",
+        }),
+        (e: { status?: number }) => e.status === 500,
+      );
+
+      assertErrorSpan("together.completion");
+    });
+
+    it("should end a streaming chat span with error status when the request fails", async function () {
+      mockFailure(this.polly as Polly, "chat/completions");
+      await assert.rejects(
+        (async () => {
+          const stream = await failingClient.chat.completions.create({
+            model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+            messages: [{ role: "user", content: "Hello" }],
+            stream: true,
+          });
+          const chunks = [];
+          for await (const chunk of stream) {
+            chunks.push(chunk);
+          }
+        })(),
+        (e: { status?: number }) => e.status === 500,
+      );
+
+      assertErrorSpan("together.chat");
+    });
+
+    it("should set OK status on a successful call", async function () {
+      const { server } = this.polly as Polly;
+      server
+        .post("https://api.together.xyz/v1/chat/completions")
+        .intercept((_req, res) => {
+          res.status(200).json({
+            id: "together-ok-test-001",
+            object: "chat.completion",
+            created: 1700000000,
+            model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+            choices: [
+              {
+                index: 0,
+                message: { role: "assistant", content: "Hi" },
+                finish_reason: "stop",
+              },
+            ],
+            usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+          });
+        });
+
+      await failingClient.chat.completions.create({
+        model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+        messages: [{ role: "user", content: "Hello" }],
+      });
+
+      const spans = memoryExporter.getFinishedSpans();
+      assert.strictEqual(spans.length, 1);
+      assert.strictEqual(spans[0].status.code, SpanStatusCode.OK);
+    });
   });
 });
