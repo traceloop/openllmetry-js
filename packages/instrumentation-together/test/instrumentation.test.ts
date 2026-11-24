@@ -35,6 +35,8 @@ import { SpanAttributes } from "@traceloop/ai-semantic-conventions";
 import {
   ATTR_GEN_AI_COMPLETION,
   ATTR_GEN_AI_PROMPT,
+  ATTR_GEN_AI_REQUEST_TEMPERATURE,
+  ATTR_GEN_AI_REQUEST_TOP_P,
   ATTR_GEN_AI_USAGE_COMPLETION_TOKENS,
   ATTR_GEN_AI_USAGE_PROMPT_TOKENS,
   ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
@@ -631,5 +633,49 @@ describe("Test Together instrumentation", async function () {
       span.attributes[ATTR_GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS],
       12,
     );
+  });
+
+  it("should record zero-valued request parameters in span", async function () {
+    const { server } = this.polly as Polly;
+    server
+      .post("https://api.together.xyz/v1/chat/completions")
+      .intercept((_req, res) => {
+        res.status(200).json({
+          id: "together-zero-params-001",
+          object: "chat.completion",
+          created: 1700000000,
+          model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: "North, South." },
+              finish_reason: "stop",
+            },
+          ],
+          usage: { prompt_tokens: 20, completion_tokens: 4, total_tokens: 24 },
+        });
+      });
+
+    await together.chat.completions.create({
+      model: "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      messages: [{ role: "user", content: "Name two cardinal directions." }],
+      temperature: 0,
+      top_p: 0,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    });
+
+    const span = memoryExporter
+      .getFinishedSpans()
+      .find((s) => s.name === "together.chat");
+
+    assert.ok(span);
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_REQUEST_TEMPERATURE], 0);
+    assert.strictEqual(span.attributes[ATTR_GEN_AI_REQUEST_TOP_P], 0);
+    assert.strictEqual(
+      span.attributes[SpanAttributes.LLM_FREQUENCY_PENALTY],
+      0,
+    );
+    assert.strictEqual(span.attributes[SpanAttributes.LLM_PRESENCE_PENALTY], 0);
   });
 });
