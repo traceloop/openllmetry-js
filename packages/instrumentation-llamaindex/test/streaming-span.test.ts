@@ -91,6 +91,45 @@ describe("genericWrapper streaming span lifecycle", () => {
     );
   });
 
+  const nonErrorThrows: Array<[string, unknown, string]> = [
+    ["undefined", undefined, "undefined"],
+    ["null", null, "null"],
+    ["a string", "boom", "boom"],
+    ["a plain object", { code: 42 }, "[object Object]"],
+  ];
+
+  for (const [label, thrown, expectedMessage] of nonErrorThrows) {
+    it(`ends the span with ERROR status and rethrows the original value when the stream throws ${label}`, async () => {
+      const stream = await startStream(async function* () {
+        yield "a";
+        throw thrown;
+      });
+
+      let caught: unknown = Symbol("not thrown");
+      try {
+        for await (const chunk of stream) {
+          assert.strictEqual(chunk, "a");
+        }
+      } catch (err) {
+        caught = err;
+      }
+
+      assert.strictEqual(caught, thrown);
+      const spans = memoryExporter.getFinishedSpans();
+      assert.strictEqual(spans.length, 1);
+      assert.strictEqual(spans[0].status.code, SpanStatusCode.ERROR);
+      assert.strictEqual(spans[0].status.message, expectedMessage);
+      const exceptionEvents = spans[0].events.filter(
+        (event) => event.name === "exception",
+      );
+      assert.strictEqual(exceptionEvents.length, 1);
+      assert.strictEqual(
+        exceptionEvents[0].attributes?.["exception.message"],
+        expectedMessage,
+      );
+    });
+  }
+
   it("ends the span once when the consumer breaks early", async () => {
     let sourceFinalized = false;
     const stream = await startStream(async function* () {

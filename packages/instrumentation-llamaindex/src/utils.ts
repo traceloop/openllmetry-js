@@ -55,7 +55,7 @@ export async function* generatorWrapper(
   } catch (err) {
     if (!fnCalled) {
       fnCalled = true;
-      fn(err as Error);
+      fn(err instanceof Error ? err : new Error(String(err)));
     }
     throw err;
   } finally {
