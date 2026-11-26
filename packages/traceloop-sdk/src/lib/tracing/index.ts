@@ -308,6 +308,15 @@ export const startTracing = (options: InitializeOptions) => {
     genaiInstrumentation?.setConfig({
       traceContent: false,
     });
+    anthropicInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    langchainInstrumentation?.setConfig({
+      traceContent: false,
+    });
+    mcpInstrumentation?.setConfig({
+      traceContent: false,
+    });
   }
 
   const headers =
