@@ -32,6 +32,10 @@ export class LangChainInstrumentation extends InstrumentationBase {
     this.instrumentCallbackManagerDirectly();
   }
 
+  public override setConfig(config: LangChainInstrumentationConfig = {}) {
+    super.setConfig(config);
+  }
+
   public manuallyInstrument({
     callbackManagerModule,
   }: {
